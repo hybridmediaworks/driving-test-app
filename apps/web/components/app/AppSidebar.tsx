@@ -18,7 +18,7 @@ const mainNavItems = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers },
   { title: "Quizzes", href: "/admin/quizzes", icon: Library },
-  { title: "User Management", href: "/user-management", icon: UserRound },
+  { title: "User Management", href: "/admin/user-management", icon: UserRound },
 ];
 
 const footerNavItems = [

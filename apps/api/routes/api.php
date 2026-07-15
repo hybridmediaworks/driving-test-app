@@ -27,7 +27,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::delete('/profile', [ProfileController::class, 'destroy']);
     Route::put('/password', [ProfileController::class, 'updatePassword']);
 
-    Route::prefix('admin')->group(function (): void {
+    Route::prefix('admin')->middleware('admin')->group(function (): void {
         Route::apiResource('quiz-categories', QuizCategoryController::class)->except(['show'])->parameters([
             'quiz-categories' => 'quizCategory',
         ]);
