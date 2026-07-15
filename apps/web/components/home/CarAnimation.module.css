@@ -1,0 +1,84 @@
+@keyframes carTwoPasses {
+  0% {
+    transform: translateX(105vw);
+    animation-timing-function: linear;
+  }
+  66% {
+    transform: translateX(-120%);
+    animation-timing-function: step-end;
+  }
+  68% {
+    transform: translateX(105vw);
+    animation-timing-function: linear;
+  }
+  100% {
+    transform: translateX(calc(50vw - var(--car-half-width)));
+  }
+}
+
+@keyframes wheelTwoPasses {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: linear;
+  }
+  66% {
+    transform: rotate(var(--wheel-mid));
+    animation-timing-function: step-end;
+  }
+  68% {
+    transform: rotate(var(--wheel-mid));
+    animation-timing-function: linear;
+  }
+  100% {
+    transform: rotate(var(--wheel-end));
+  }
+}
+
+.carTrack {
+  --car-half-width: 475px;
+  --wheel-mid: -1620deg;
+  --wheel-end: -2376deg;
+  overflow: hidden;
+  width: 100%;
+}
+
+.carSvgBox {
+  display: inline-block;
+  transform: translateX(105vw);
+}
+
+.carSvgBox.carAnimate {
+  animation: carTwoPasses 5s 1 forwards;
+}
+
+.carSvgBox svg {
+  display: block;
+  width: 950px;
+  height: auto;
+  margin-inline: auto;
+}
+
+.carAnimate :global(#back-rim),
+.carAnimate :global(#front-rim) {
+  animation: wheelTwoPasses 5s 1 forwards;
+}
+
+@media (max-width: 1024px) {
+  .carTrack {
+    --car-half-width: 350px;
+    --wheel-mid: -810deg;
+    --wheel-end: -1188deg;
+  }
+  .carSvgBox svg {
+    width: 700px;
+  }
+}
+
+@media (max-width: 640px) {
+  .carTrack {
+    --car-half-width: 45vw;
+  }
+  .carSvgBox svg {
+    width: 90vw;
+  }
+}
