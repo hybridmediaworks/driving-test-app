@@ -35,6 +35,7 @@ type HeadingProps = {
   color?: keyof typeof colorClasses;
   gradient?: boolean;
   className?: string;
+  id?: string;
   children: ReactNode;
 };
 
@@ -44,6 +45,7 @@ export default function Heading({
   color = "default",
   gradient = false,
   className = "",
+  id,
   children,
 }: HeadingProps) {
   const activeSize = size ?? defaultSizeByTag[as];
@@ -57,5 +59,5 @@ export default function Heading({
     .filter(Boolean)
     .join(" ");
 
-  return createElement(as, { className: classes }, children);
+  return createElement(as, { className: classes, id }, children);
 }

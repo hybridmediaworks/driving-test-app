@@ -31,6 +31,7 @@ type ButtonProps = {
   iconPosition?: "left" | "right";
   href?: string;
   className?: string;
+  id?: string;
   children?: ReactNode;
   onClick?: () => void;
   type?: "button" | "submit" | "reset";
@@ -45,6 +46,7 @@ export default function Button({
   iconPosition = "left",
   href,
   className = "",
+  id,
   children,
   onClick,
   type = "button",
@@ -70,14 +72,14 @@ export default function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link id={id} href={href} className={classes}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={classes}>
+    <button id={id} type={type} onClick={onClick} disabled={disabled} className={classes}>
       {content}
     </button>
   );

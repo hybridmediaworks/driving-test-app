@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Button from "@/components/ui/Button";
 import { stateToSlug, usStates } from "@/lib/usStates";
@@ -45,6 +46,7 @@ export default function Header({
   variant?: string;
   hideNav?: boolean;
 }) {
+  const router = useRouter();
   const { selectedState, hasStoredState, selectedVehicle, setSelectedVehicle } = useWebLayout();
   const [selectedTestType, setSelectedTestType] = useState("Permit Tests");
   const [activeDropdown, setActiveDropdown] = useState<Dropdown>(null);
@@ -75,6 +77,10 @@ export default function Header({
     setActiveDropdown(null);
     setMobileCarOpen(false);
     setMobileMenuOpen(false);
+
+    if (!selectedState) return;
+
+    router.push(`/${stateToSlug(selectedState)}${vehiclePaths[vehicle]}`);
   }
 
   function stateHref(state: string) {
