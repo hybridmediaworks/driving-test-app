@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/Accordion";
+import { cn } from "@/lib/utils";
 
 const faqs = [
   {
@@ -66,9 +67,13 @@ const faqs = [
   },
 ];
 
-export default function FAQSection() {
+type FAQSectionProps = {
+  className?: string;
+};
+
+export default function FAQSection({ className }: FAQSectionProps) {
   return (
-    <section className="px-5 pb-15 lg:pt-15 lg:pb-30">
+    <section className={cn("px-5 pb-15 lg:pt-15 lg:pb-30", className)}>
       <div className="mx-auto max-w-226.5 space-y-15 rounded-xl bg-white px-5 py-5 lg:py-10">
         <div className="flex flex-col items-center justify-center gap-6">
           <Paragraph

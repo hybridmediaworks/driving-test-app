@@ -17,9 +17,10 @@ const iconSizeClasses: Record<Size, string> = {
 };
 
 const variantClasses: Record<Variant, string> = {
-  primary: "bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-xs",
+  primary: "bg-linear-to-r from-blue-500 to-blue-700 text-white shadow-xs",
   secondary: "bg-neutral-100 text-neutral-700 hover:bg-neutral-200",
-  outline: "border border-blue-600 text-blue-600 bg-transparent hover:bg-blue-50",
+  outline:
+    "border border-border text-neutral-900 bg-transparent hover:bg-blue-50",
   ghost: "text-blue-500 bg-transparent",
 };
 
@@ -64,9 +65,13 @@ export default function Button({
 
   const content = (
     <>
-      {Icon && iconPosition === "left" && <Icon className={iconSizeClasses[size]} />}
+      {Icon && iconPosition === "left" && (
+        <Icon className={iconSizeClasses[size]} />
+      )}
       {text ? <span>{text}</span> : children}
-      {Icon && iconPosition === "right" && <Icon className={iconSizeClasses[size]} />}
+      {Icon && iconPosition === "right" && (
+        <Icon className={iconSizeClasses[size]} />
+      )}
     </>
   );
 
@@ -79,7 +84,13 @@ export default function Button({
   }
 
   return (
-    <button id={id} type={type} onClick={onClick} disabled={disabled} className={classes}>
+    <button
+      id={id}
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={classes}
+    >
       {content}
     </button>
   );
