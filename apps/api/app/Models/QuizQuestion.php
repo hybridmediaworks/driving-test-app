@@ -4,12 +4,19 @@ namespace App\Models;
 
 use App\Enums\QuestionDifficulty;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class QuizQuestion extends Model
+class QuizQuestion extends Model implements HasMedia
 {
+    use HasFactory, InteractsWithMedia;
+
+    public const MEDIA_COLLECTION_IMAGES = 'images';
+
     protected $fillable = [
         'quiz_id',
         'question_text',
@@ -17,7 +24,6 @@ class QuizQuestion extends Model
         'difficulty',
         'topic',
         'sort_order',
-        'images',
     ];
 
     protected $appends = [
@@ -28,47 +34,24 @@ class QuizQuestion extends Model
     {
         return [
             'difficulty' => QuestionDifficulty::class,
-            'images' => 'array',
         ];
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection(self::MEDIA_COLLECTION_IMAGES)
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+    }
+
     /**
-     * Public URLs for stored image paths (disk `public`).
-     *
-     * Uses the current request host when available so previews work on Laragon
-     * or other hosts even when APP_URL in .env still says http://localhost.
-     *
      * @return Attribute<list<string>, never>
      */
     protected function imageUrls(): Attribute
     {
-        return Attribute::get(function (): array {
-            $paths = $this->images ?? [];
-
-            return array_values(array_filter(array_map(
-                function (?string $path): ?string {
-                    if ($path === null || $path === '') {
-                        return null;
-                    }
-
-                    $path = ltrim(str_replace('\\', '/', $path), '/');
-
-                    if (! app()->runningInConsole() && app()->has('request')) {
-                        $request = request();
-                        $origin = rtrim($request->getSchemeAndHttpHost(), '/');
-                        $appPath = parse_url((string) config('app.url'), PHP_URL_PATH);
-                        $appPath = is_string($appPath) ? rtrim($appPath, '/') : '';
-
-                        return ($appPath !== '' && $appPath !== '/')
-                            ? $origin.$appPath.'/storage/'.$path
-                            : $origin.'/storage/'.$path;
-                    }
-
-                    return rtrim((string) config('app.url'), '/').'/storage/'.$path;
-                },
-                $paths,
-            )));
-        });
+        return Attribute::get(fn (): array => $this->getMedia(self::MEDIA_COLLECTION_IMAGES)
+            ->map(fn ($media) => $media->getUrl())
+            ->values()
+            ->all());
     }
 
     /**

@@ -10,10 +10,14 @@ return new class extends Migration
     {
         Schema::create('quizzes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('quiz_category_id')->constrained('quiz_categories')->cascadeOnDelete();
+            $table->foreignId('quiz_category_id')->constrained('quiz_categories')->restrictOnDelete();
             $table->foreignId('quiz_type_id')->constrained('quiz_types')->restrictOnDelete();
+            $table->foreignId('state_id')->constrained('states')->restrictOnDelete();
+            $table->foreignId('vehicle_type_id')->constrained('vehicle_types')->restrictOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
+            $table->string('test_track')->default('permit_test');
+            $table->unsignedInteger('order_no')->default(0);
             $table->unsignedInteger('total_questions')->default(0);
             $table->unsignedInteger('duration_seconds')->nullable();
             $table->boolean('is_premium')->default(false);
@@ -21,6 +25,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['quiz_category_id', 'quiz_type_id']);
+            $table->index(['state_id', 'vehicle_type_id', 'test_track']);
         });
     }
 

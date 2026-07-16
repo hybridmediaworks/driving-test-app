@@ -2,14 +2,22 @@
 
 namespace App\Models;
 
+use App\Enums\TestTrack;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Quiz extends Model
+class Quiz extends Model implements HasMedia
 {
+    use HasFactory, InteractsWithMedia;
+
+    public const MEDIA_COLLECTION_COVER = 'cover';
+
     protected $fillable = [
         'quiz_category_id',
         'quiz_type_id',
@@ -18,7 +26,6 @@ class Quiz extends Model
         'title',
         'slug',
         'order_no',
-        'cover_image_path',
         'test_track',
         'total_questions',
         'duration_seconds',
@@ -33,20 +40,17 @@ class Quiz extends Model
     protected function casts(): array
     {
         return [
+            'test_track' => TestTrack::class,
             'is_premium' => 'boolean',
             'is_active' => 'boolean',
         ];
     }
 
-    protected static function booted(): void
+    public function registerMediaCollections(): void
     {
-        static::deleting(function (Quiz $quiz): void {
-            if ($quiz->cover_image_path !== null && $quiz->cover_image_path !== '') {
-                Storage::disk('public')->delete(
-                    str_replace('\\', '/', $quiz->cover_image_path),
-                );
-            }
-        });
+        $this->addMediaCollection(self::MEDIA_COLLECTION_COVER)
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
     }
 
     /**
@@ -89,6 +93,14 @@ class Quiz extends Model
         return $this->hasMany(QuizQuestion::class)->orderBy('sort_order');
     }
 
+    /**
+     * @return HasMany<QuizAttempt, $this>
+     */
+    public function attempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+
     public function syncTotalQuestions(): void
     {
         $this->update([
@@ -97,32 +109,15 @@ class Quiz extends Model
     }
 
     /**
-     * Public URL for the cover image (disk `public`).
-     *
      * @return Attribute<string|null, never>
      */
     protected function coverImageUrl(): Attribute
     {
-        return Attribute::get(function (): ?string {
-            $path = $this->cover_image_path;
-            if ($path === null || $path === '') {
-                return null;
-            }
+        return Attribute::get(fn (): ?string => $this->getFirstMediaUrl(self::MEDIA_COLLECTION_COVER) ?: null);
+    }
 
-            $path = ltrim(str_replace('\\', '/', $path), '/');
-
-            if (! app()->runningInConsole() && app()->has('request')) {
-                $request = request();
-                $origin = rtrim($request->getSchemeAndHttpHost(), '/');
-                $appPath = parse_url((string) config('app.url'), PHP_URL_PATH);
-                $appPath = is_string($appPath) ? rtrim($appPath, '/') : '';
-
-                return ($appPath !== '' && $appPath !== '/')
-                    ? $origin.$appPath.'/storage/'.$path
-                    : $origin.'/storage/'.$path;
-            }
-
-            return rtrim((string) config('app.url'), '/').'/storage/'.$path;
-        });
+    public function coverMedia(): ?Media
+    {
+        return $this->getFirstMedia(self::MEDIA_COLLECTION_COVER);
     }
 }
