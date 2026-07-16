@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, Sora } from "next/font/google";
+import { Sora } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-
-const instrumentSans = Instrument_Sans({
-  variable: "--font-instrument-sans",
-  subsets: ["latin"],
-});
 
 const sora = Sora({
   variable: "--font-sora",
@@ -30,9 +25,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", instrumentSans.variable, sora.variable, "font-sans")}
+      className={cn("h-full", "antialiased", sora.variable, "font-sans")}
     >
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
         <script
           // Applies the saved theme before paint to avoid a flash of the wrong theme.
           // Defaults to "light" (not "system") — components have no dark: variants,
