@@ -16,7 +16,7 @@ const colorClasses: Record<Color, string> = {
   default: "text-neutral-700",
   dark: "text-neutral-900",
   muted: "text-neutral-500",
-  primary: "text-blue-700",
+  primary: "text-blue-600",
   white: "text-white",
 };
 
