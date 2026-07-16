@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type Size = "xs" | "sm" | "md" | "lg" | "xl";
+type Size = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 type Color = "default" | "dark" | "muted" | "primary" | "white";
 
 const sizeClasses: Record<Size, string> = {
@@ -9,6 +9,7 @@ const sizeClasses: Record<Size, string> = {
   md: "text-base leading-6",
   lg: "text-lg",
   xl: "text-xl leading-7.5",
+  "2xl": "md:text-2xl md:leading-8 text-xl leading-7",
 };
 
 const colorClasses: Record<Color, string> = {
@@ -32,7 +33,12 @@ export default function Paragraph({
   className = "",
   children,
 }: ParagraphProps) {
-  const classes = ["leading-relaxed", sizeClasses[size], colorClasses[color], className]
+  const classes = [
+    "leading-relaxed",
+    sizeClasses[size],
+    colorClasses[color],
+    className,
+  ]
     .filter(Boolean)
     .join(" ");
 

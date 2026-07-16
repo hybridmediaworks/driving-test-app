@@ -3,10 +3,17 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestimonialCarousel from "@/components/home/TestimonialCarousel";
+import { cn } from "@/lib/utils";
 
-export default function SuccessStories() {
+type SuccessStoriesProps = {
+  className?: string;
+};
+
+export default function SuccessStories({ className }: SuccessStoriesProps) {
   return (
-    <section className="overflow-x-hidden px-5 pt-10 pb-15 lg:pt-30">
+    <section
+      className={cn("overflow-x-hidden px-5 pt-10 pb-15 lg:pt-30", className)}
+    >
       <div className="mx-auto max-w-container space-y-12">
         <div className="flex flex-wrap items-center justify-center gap-6 lg:justify-between">
           <div className="flex flex-col items-center justify-center gap-6 lg:max-w-170 lg:items-start">
