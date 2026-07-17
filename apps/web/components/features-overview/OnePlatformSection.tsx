@@ -1,6 +1,8 @@
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { cn } from "@/lib/utils";
+import { Circle } from "lucide-react";
+import { Separator } from "../ui/separator";
 
 const highlights = [
   {
@@ -61,55 +63,30 @@ export default function OnePlatformSection() {
             ))}
           </div>
 
-          <div className="h-px w-full bg-[#E7E6E1]" />
+          <Separator />
 
-          <div>
+          <div className="pb-18.5">
             <div className="grid grid-cols-7">
               {timelineSteps.map((step) => (
-                <div
-                  key={step.label}
-                  className="flex flex-col items-center gap-2"
-                >
-                  <Paragraph size="xs" color="muted" className="text-center">
+                <div key={step.label} className="flex flex-col items-center">
+                  <Paragraph
+                    size="sm"
+                    color="muted"
+                    className="text-center pb-1"
+                  >
                     {step.label}
                   </Paragraph>
-                  <div
-                    className={cn(
-                      "w-px border-l border-dashed",
-                      step.active
-                        ? "h-8 border-blue-500"
-                        : "h-6 border-blue-200",
-                    )}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="relative h-8">
-              <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-blue-200" />
-              <div className="relative z-10 grid h-full grid-cols-7">
-                {timelineSteps.map((step) => (
-                  <div
-                    key={step.label}
-                    className="flex items-center justify-center"
+                  <Paragraph
+                    size="xs"
+                    color="primary"
+                    className=" font-bold w-7 h-7 flex items-center justify-center rounded-full border-2 border-blue-500"
                   >
-                    {step.active ? (
-                      <span className="h-3 w-3 rounded-full bg-blue-600" />
-                    ) : (
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-200 bg-white text-xs font-semibold text-blue-600">
-                        {step.number}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7">
-              {timelineSteps.map((step) => (
-                <div key={step.label} className="flex justify-center">
+                    {step.number}
+                  </Paragraph>
+                  <div className="border-l border-dashed border-blue-300 w-px h-8.5" />
                   {step.active && (
-                    <div className="flex flex-col items-center gap-3 pt-2">
+                    <div className="flex justify-center flex-col items-center z-10">
+                      <Circle className="w-3 h-3 fill-blue-500 text-blue-500 z-10" />
                       <div className="h-6 w-px bg-blue-500" />
                       <div className="flex items-center gap-2 rounded-lg bg-[#0D142C] px-4 py-2.5 text-white">
                         <Paragraph
@@ -128,6 +105,7 @@ export default function OnePlatformSection() {
                 </div>
               ))}
             </div>
+            <Separator className="bg-blue-300 -mt-18.5 z-0" />
           </div>
         </div>
       </div>
