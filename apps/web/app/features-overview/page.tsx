@@ -1,5 +1,6 @@
 import HeroSection from "@/components/features-overview/HeroSection";
 import OnePlatformSection from "@/components/features-overview/OnePlatformSection";
+import ProofSection from "@/components/features-overview/ProofSection";
 import TheToolkitSection from "@/components/features-overview/TheToolkitSection";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -16,6 +17,7 @@ export default function FeaturesOverview() {
           <HeroSection />
           <TheToolkitSection />
           <OnePlatformSection />
+          <ProofSection />
           <SuccessStories />
           <CTASection />
         </main>

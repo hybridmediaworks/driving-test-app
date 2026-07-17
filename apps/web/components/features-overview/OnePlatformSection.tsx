@@ -1,8 +1,7 @@
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import { cn } from "@/lib/utils";
 import { Circle } from "lucide-react";
-import { Separator } from "../ui/separator";
+import { Separator } from "@/components/ui/separator";
 
 const highlights = [
   {
