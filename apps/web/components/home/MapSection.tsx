@@ -2,7 +2,7 @@
 
 import { geoAlbersUsa } from "d3-geo";
 import * as echarts from "echarts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 
@@ -74,36 +74,22 @@ const userData = [
 
 export default function MapSection() {
   const chartRef = useRef<HTMLDivElement | null>(null);
-  const chartInstanceRef = useRef<echarts.ECharts | null>(null);
-  const [chartHeight, setChartHeight] = useState(340);
-
-  // Re-sync the chart's canvas whenever chartHeight settles to its real value —
-  // echarts.init() below measures the container synchronously, before React has
-  // committed the corrected height to the DOM, so an explicit resize() is needed.
-  useEffect(() => {
-    chartInstanceRef.current?.resize();
-  }, [chartHeight]);
 
   useEffect(() => {
-    // Hydration-safe: server/first client render both use the default 340,
-    // then sync to the real viewport-based value once mounted.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setChartHeight(window.innerWidth >= 1024 ? 626 : 340);
+    if (!chartRef.current) return;
 
-    function updateChartHeight() {
-      setChartHeight(window.innerWidth >= 1024 ? 626 : 340);
-    }
-    window.addEventListener("resize", updateChartHeight);
-
-    let chart: echarts.ECharts | null = null;
+    const chart = echarts.init(chartRef.current);
     let disposed = false;
 
-    (async () => {
-      if (!chartRef.current) return;
-      chart = echarts.init(chartRef.current);
-      chartInstanceRef.current = chart;
-      chart.showLoading();
+    // Keeps the canvas in sync with the container's actual box size —
+    // including the mobile/desktop height switch below — instead of racing
+    // React's render commit with a manually tracked height.
+    const resizeObserver = new ResizeObserver(() => chart.resize());
+    resizeObserver.observe(chartRef.current);
 
+    chart.showLoading();
+
+    (async () => {
       const res = await fetch("/maps/USA.json");
       const usaJson = await res.json();
 
@@ -164,15 +150,12 @@ export default function MapSection() {
         const slug = params.name.toLowerCase().replace(/\s+/g, "-");
         window.location.href = `/states/${slug}`;
       });
-
-      window.addEventListener("resize", () => chart?.resize());
     })();
 
     return () => {
       disposed = true;
-      window.removeEventListener("resize", updateChartHeight);
-      chart?.dispose();
-      chartInstanceRef.current = null;
+      resizeObserver.disconnect();
+      chart.dispose();
     };
   }, []);
 
@@ -203,7 +186,7 @@ export default function MapSection() {
         </div>
 
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:justify-between lg:gap-5">
-          <div ref={chartRef} className="w-full" style={{ height: chartHeight + "px", maxWidth: "974px" }} />
+          <div ref={chartRef} className="h-85 w-full max-w-[974px] lg:h-156.5" />
 
           <div className="w-full space-y-6 lg:w-auto lg:min-w-fit">
             <Paragraph className="text-center font-bold lg:text-left">Activity Level:</Paragraph>

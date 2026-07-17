@@ -93,7 +93,7 @@ function CompareCell({ value }: { value: CompareValue }) {
   );
 }
 
-export default function Home() {
+export default function Pricing() {
   const [showAllRows, setShowAllRows] = useState(false);
   const visibleRows = showAllRows
     ? compareRows

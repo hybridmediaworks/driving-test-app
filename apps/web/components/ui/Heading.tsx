@@ -13,18 +13,20 @@ const defaultSizeByTag: Record<Tag, Size> = {
 };
 
 const sizeClasses: Record<Size, string> = {
-  "2xl": "text-[40px] leading-tight md:text-[50px] md:leading-snug lg:text-[64px] lg:leading-18",
+  "2xl":
+    "text-[40px] leading-tight md:text-[50px] md:leading-snug lg:text-[64px] lg:leading-18",
   xl: "text-[36px] leading-tight md:text-[44px] md:leading-snug lg:text-[56px] lg:leading-16",
   lg: "text-[32px] leading-tight md:text-[40px] md:leading-snug lg:text-5xl lg:leading-15",
   md: "text-[28px] leading-tight md:text-[34px] md:leading-snug lg:text-[40px] lg:leading-10.5",
   sm: "text-[26px] leading-tight md:text-[30px] md:leading-snug lg:text-4xl lg:leading-11",
   xs: "text-[22px] leading-tight md:text-[26px] md:leading-snug lg:text-3xl lg:leading-9.5",
-  "2xs": "text-[20px] leading-tight md:text-[22px] md:leading-snug lg:text-2xl lg:leading-8",
+  "2xs":
+    "text-[20px] leading-tight md:text-[22px] md:leading-snug lg:text-2xl lg:leading-8",
 };
 
 const colorClasses = {
   default: "text-neutral-900",
-  primary: "text-blue-500",
+  primary: "text-blue-600",
   muted: "text-gray-500",
   white: "text-white",
 };
@@ -53,7 +55,9 @@ export default function Heading({
   const classes = [
     "font-sora font-semibold tracking-tight",
     sizeClasses[activeSize],
-    gradient ? "bg-linear-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent" : colorClasses[color],
+    gradient
+      ? "bg-linear-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent"
+      : colorClasses[color],
     className,
   ]
     .filter(Boolean)
