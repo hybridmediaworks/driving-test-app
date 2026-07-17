@@ -3,10 +3,15 @@
 use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
 use App\Http\Controllers\Api\V1\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Api\V1\Admin\QuizQuestionController;
+use App\Http\Controllers\Api\V1\Admin\StatsController;
+use App\Http\Controllers\Api\V1\Admin\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
+use App\Http\Controllers\Api\V1\Public\QuizCategoryController as PublicQuizCategoryController;
 use App\Http\Controllers\Api\V1\Public\QuizController as PublicQuizController;
+use App\Http\Controllers\Api\V1\Public\StateController;
+use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
 use App\Http\Controllers\Api\V1\QuizAttemptController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +30,11 @@ Route::prefix('v1')->group(function (): void {
     Route::get('quizzes/{quiz}', [PublicQuizController::class, 'show']);
     Route::post('quizzes/{quiz}/attempts', [PublicQuizController::class, 'storeAttempt'])
         ->middleware('throttle:20,1');
+
+    // Public read-only reference data — the valid values for the filters above.
+    Route::get('states', [StateController::class, 'index']);
+    Route::get('vehicle-types', [VehicleTypeController::class, 'index']);
+    Route::get('quiz-categories', [PublicQuizCategoryController::class, 'index']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -54,6 +64,10 @@ Route::prefix('v1')->group(function (): void {
             Route::delete('quizzes/{quiz}/questions/{question}', [QuizQuestionController::class, 'destroy']);
             Route::post('quizzes/{quiz}/questions/reorder', [QuizQuestionController::class, 'reorder']);
             Route::post('quizzes/{quiz}/questions/{question}/move', [QuizQuestionController::class, 'move']);
+
+            Route::apiResource('users', UserController::class);
+
+            Route::get('stats', [StatsController::class, 'index']);
         });
     });
 });

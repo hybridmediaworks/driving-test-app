@@ -87,11 +87,14 @@ class QuizQuestionController extends Controller
     /**
      * Update a question (admin)
      *
-     * Multipart request (send as POST with `_method=PUT`). `answers` fully replaces the existing
-     * answer set (same one-correct-answer rule as create). Existing images are **kept only if
-     * their media ID is included in `keep_media_ids`** — a JSON-encoded array of integers sent as
-     * a single string form field, e.g. `keep_media_ids=[3,5]`. Any existing image whose ID is
-     * omitted is deleted; new files go in `images[]` same as create. Max 10 images total
+     * This route accepts both `PUT` and `POST`, but **must be sent as `POST` with
+     * `_method=PUT`** whenever you're uploading images — PHP does not populate `$_FILES` on a
+     * native `PUT` request, so a literal `PUT` with multipart data silently drops any files. A
+     * `PUT` request works fine as long as no files are attached. `answers` fully replaces the
+     * existing answer set (same one-correct-answer rule as create). Existing images are **kept
+     * only if their media ID is included in `keep_media_ids`** — a JSON-encoded array of integers
+     * sent as a single string form field, e.g. `keep_media_ids=[3,5]`. Any existing image whose ID
+     * is omitted is deleted; new files go in `images[]` same as create. Max 10 images total
      * (kept + new combined) is enforced.
      */
     public function update(UpdateQuizQuestionRequest $request, Quiz $quiz, QuizQuestion $question): JsonResponse
