@@ -6,7 +6,7 @@ type Color = "default" | "dark" | "muted" | "primary" | "white";
 const sizeClasses: Record<Size, string> = {
   xs: "text-xs",
   sm: "text-sm",
-  md: "text-base leading-6",
+  md: "text-base leading-6!",
   lg: "text-lg",
   xl: "text-xl leading-7.5",
   "2xl": "md:text-2xl md:leading-8 text-xl leading-7",
