@@ -49,7 +49,16 @@ cp .env.example .env.local
 
 ## Running locally
 
-Run each app in its own terminal:
+Fastest way — one command from the repo root runs both API and web together (color-coded, prefixed logs; `Ctrl+C` stops both):
+
+```bash
+pnpm dev:local
+```
+
+- API — http://127.0.0.1:8001
+- Web — http://localhost:3000
+
+Or run each app in its own terminal if you want separate log output:
 
 ```bash
 # API — http://127.0.0.1:8001
