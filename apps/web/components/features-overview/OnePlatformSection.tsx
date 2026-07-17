@@ -15,24 +15,25 @@ const highlights = [
   },
   {
     title: "One finish line",
-    description: "We tell you when you're test-ready — and we don't say it early.",
+    description:
+      "We tell you when you're test-ready — and we don't say it early.",
   },
 ];
 
 const timelineSteps = [
-  { label: "AI Tutor", number: 1 },
-  { label: "Mock Exams", number: 2 },
-  { label: "Simulations", number: 3 },
+  { label: "AI Tutor", number: 1, active: false },
+  { label: "Mock Exams", number: 2, active: false },
+  { label: "Simulations", number: 3, active: false },
   { label: "Voice", number: 4, active: true },
-  { label: "Progress", number: 5 },
-  { label: "Flashcards", number: 6 },
-  { label: "Video", number: 7 },
+  { label: "Progress", number: 5, active: false },
+  { label: "Flashcards", number: 6, active: false },
+  { label: "Video", number: 7, active: false },
 ] as const;
 
 export default function OnePlatformSection() {
   return (
     <section className="px-5 py-10  lg:py-30 ">
-      <div className="mx-auto max-w-container space-y-15">
+      <div className="mx-auto max-w-282 space-y-15">
         <div className="flex max-w-162.25 mx-auto flex-col items-center gap-4 text-center">
           <Paragraph
             className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
@@ -52,10 +53,10 @@ export default function OnePlatformSection() {
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-10">
             {highlights.map((item) => (
               <div key={item.title} className="space-y-1.5">
-                <Paragraph size="lg" className="font-semibold" color="dark">
+                <Paragraph size="2xl" className="font-semibold" color="dark">
                   {item.title}
                 </Paragraph>
-                <Paragraph>{item.description}</Paragraph>
+                <Paragraph size="sm">{item.description}</Paragraph>
               </div>
             ))}
           </div>
@@ -65,14 +66,19 @@ export default function OnePlatformSection() {
           <div>
             <div className="grid grid-cols-7">
               {timelineSteps.map((step) => (
-                <div key={step.label} className="flex flex-col items-center gap-2">
+                <div
+                  key={step.label}
+                  className="flex flex-col items-center gap-2"
+                >
                   <Paragraph size="xs" color="muted" className="text-center">
                     {step.label}
                   </Paragraph>
                   <div
                     className={cn(
                       "w-px border-l border-dashed",
-                      step.active ? "h-8 border-blue-500" : "h-6 border-blue-200",
+                      step.active
+                        ? "h-8 border-blue-500"
+                        : "h-6 border-blue-200",
                     )}
                   />
                 </div>
@@ -83,7 +89,10 @@ export default function OnePlatformSection() {
               <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-blue-200" />
               <div className="relative z-10 grid h-full grid-cols-7">
                 {timelineSteps.map((step) => (
-                  <div key={step.label} className="flex items-center justify-center">
+                  <div
+                    key={step.label}
+                    className="flex items-center justify-center"
+                  >
                     {step.active ? (
                       <span className="h-3 w-3 rounded-full bg-blue-600" />
                     ) : (
@@ -103,7 +112,11 @@ export default function OnePlatformSection() {
                     <div className="flex flex-col items-center gap-3 pt-2">
                       <div className="h-6 w-px bg-blue-500" />
                       <div className="flex items-center gap-2 rounded-lg bg-[#0D142C] px-4 py-2.5 text-white">
-                        <Paragraph size="sm" color="white" className="font-medium">
+                        <Paragraph
+                          size="sm"
+                          color="white"
+                          className="font-medium"
+                        >
                           Readiness
                         </Paragraph>
                         <span className="flex items-center gap-1 text-base font-semibold">
