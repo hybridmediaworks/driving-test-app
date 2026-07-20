@@ -1,4 +1,4 @@
-import { BookOpen, ClipboardList, FolderGit2, LayoutGrid, Layers, Library, ListChecks, UserRound } from "lucide-react";
+import { ClipboardList, LayoutGrid, Layers, Library, ListChecks, UserRound } from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -10,7 +10,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import AppLogo from "./AppLogo";
-import NavFooter from "./NavFooter";
 import NavMain from "./NavMain";
 import UserMenu from "./UserMenu";
 
@@ -21,11 +20,6 @@ const mainNavItems = [
   { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers },
   { title: "Quizzes", href: "/admin/quizzes", icon: Library },
   { title: "User Management", href: "/admin/user-management", icon: UserRound },
-];
-
-const footerNavItems = [
-  { title: "Repository", href: "https://github.com/laravel/vue-starter-kit", icon: FolderGit2 },
-  { title: "Documentation", href: "https://laravel.com/docs/starter-kits#vue", icon: BookOpen },
 ];
 
 export default function AppSidebar() {
@@ -46,7 +40,6 @@ export default function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <NavFooter items={footerNavItems} />
         <UserMenu />
       </SidebarFooter>
     </Sidebar>
