@@ -1,9 +1,26 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
+import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
+import StateSelectModal from "@/components/home/StateSelectModal";
+import { stateToSlug } from "@/lib/usStates";
+import { useWebLayout } from "@/lib/web-layout-context";
 
 export default function CTASection() {
+  const { selectedState, hasStoredState } = useWebLayout();
+  const [showStateModal, setShowStateModal] = useState(false);
+
+  const stateHref = hasStoredState ? `/${stateToSlug(selectedState)}` : undefined;
+
+  function onStartClick() {
+    if (!hasStoredState) {
+      setShowStateModal(true);
+    }
+  }
+
   return (
     <section className="px-5 py-10 lg:py-20" style={{ backgroundImage: "url('/bottom-sec.webp')" }}>
       <div className="mx-auto max-w-4xl space-y-3 text-center">
@@ -29,9 +46,17 @@ export default function CTASection() {
           />
         </div>
 
-        <Button size="lg" icon={ArrowRight} iconPosition="right">
-          Start Free West Virginia Practice Test
+        <Button
+          size="lg"
+          icon={ArrowRight}
+          iconPosition="right"
+          href={stateHref}
+          onClick={onStartClick}
+        >
+          {hasStoredState ? `Start Free ${selectedState} Practice Test` : "Try it for free"}
         </Button>
+
+        <StateSelectModal open={showStateModal} onClose={() => setShowStateModal(false)} />
       </div>
     </section>
   );

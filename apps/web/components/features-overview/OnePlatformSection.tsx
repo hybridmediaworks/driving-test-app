@@ -22,19 +22,19 @@ const highlights = [
 ];
 
 const timelineSteps = [
-  { label: "AI Tutor", number: 1, active: false },
-  { label: "Mock Exams", number: 2, active: false },
-  { label: "Simulations", number: 3, active: false },
-  { label: "Voice", number: 4, active: true },
-  { label: "Progress", number: 5, active: false },
-  { label: "Flashcards", number: 6, active: false },
-  { label: "Video", number: 7, active: false },
+  { label: "AI Tutor", number: 1 },
+  { label: "Mock Exams", number: 2 },
+  { label: "Simulations", number: 3 },
+  { label: "Voice", number: 4 },
+  { label: "Progress", number: 5 },
+  { label: "Flashcards", number: 6 },
+  { label: "Video", number: 7 },
 ] as const;
 
 export default function OnePlatformSection() {
   return (
-    <section className="px-5 py-10  lg:py-30 ">
-      <div className="mx-auto max-w-282 space-y-15">
+    <section className="px-5 py-10 lg:py-30 ">
+      <div className="mx-auto max-w-282 md:space-y-15 space-y-8">
         <div className="flex max-w-162.25 mx-auto flex-col items-center gap-4 text-center">
           <Paragraph
             className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
@@ -50,8 +50,8 @@ export default function OnePlatformSection() {
             what you study next.
           </Paragraph>
         </div>
-        <div className="px-12.5 py-15 space-y-10 border rounded-xl bg-white shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)]">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-10">
+        <div className="lg:px-12.5 px-5 sm:px-8 md:py-15 py-6 space-y-10 border rounded-xl bg-white shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)]">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 lg:gap-10">
             {highlights.map((item) => (
               <div key={item.title} className="space-y-1.5">
                 <Paragraph size="2xl" className="font-semibold" color="dark">
@@ -64,47 +64,45 @@ export default function OnePlatformSection() {
 
           <Separator />
 
-          <div className="pb-18.5">
-            <div className="grid grid-cols-7">
+          <div className="mb-0">
+            <div className="grid md:grid-cols-7 grid-cols-1">
               {timelineSteps.map((step) => (
-                <div key={step.label} className="flex flex-col items-center">
+                <div
+                  key={step.label}
+                  className="flex md:flex-col even:md:flex-col even:flex-row-reverse relative justify-end even:box-content gap-2 md:gap-0 items-center md:border-none md:w-full w-1/2 odd:border-r even:border-l even:ms-auto border-dashed border-blue-300"
+                >
                   <Paragraph
                     size="sm"
                     color="muted"
-                    className="text-center pb-1"
+                    className="md:text-center md:pb-1"
                   >
                     {step.label}
                   </Paragraph>
                   <Paragraph
                     size="xs"
                     color="primary"
-                    className=" font-bold w-7 h-7 flex items-center justify-center rounded-full border-2 border-blue-500"
+                    className="font-bold min-w-7 h-7 flex items-center justify-center rounded-full border-2 border-blue-500"
                   >
                     {step.number}
                   </Paragraph>
-                  <div className="border-l border-dashed border-blue-300 w-px h-8.5" />
-                  {step.active && (
-                    <div className="flex justify-center flex-col items-center z-10">
-                      <Circle className="w-3 h-3 fill-blue-500 text-blue-500 z-10" />
-                      <div className="h-6 w-px bg-blue-500" />
-                      <div className="flex items-center gap-2 rounded-lg bg-[#0D142C] px-4 py-2.5 text-white">
-                        <Paragraph
-                          size="sm"
-                          color="white"
-                          className="font-medium"
-                        >
-                          Readiness
-                        </Paragraph>
-                        <span className="flex items-center gap-1 text-base font-semibold">
-                          84% <span className="text-blue-400">▲</span>
-                        </span>
-                      </div>
-                    </div>
-                  )}
+
+                  <div className="border-t md:border-l border-dashed border-blue-300 md:min-w-px min-w-8 md:h-8.5 h-px" />
                 </div>
               ))}
             </div>
-            <Separator className="bg-blue-300 -mt-18.5 z-0" />
+            <div className="bg-blue-300 w-px md:w-full h-auto md:h-px" />
+          </div>
+          <div className="flex items-center justify-center flex-col -mt-1.5">
+            <Circle className="w-3 h-3 fill-blue-500 text-blue-500 z-10" />
+            <div className=" h-6 w-px bg-blue-500" />
+            <div className="flex items-center gap-2 rounded-lg bg-[#0D142C] px-4 py-2.5 text-white">
+              <Paragraph size="sm" color="white" className="font-medium">
+                Readiness
+              </Paragraph>
+              <span className="flex items-center gap-1 text-base font-semibold">
+                84% <span className="text-blue-400">▲</span>
+              </span>
+            </div>
           </div>
         </div>
       </div>

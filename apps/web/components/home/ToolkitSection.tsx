@@ -1,9 +1,26 @@
+"use client";
+
 import { ArrowRight, Check } from "lucide-react";
+import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
+import StateSelectModal from "@/components/home/StateSelectModal";
+import { stateToSlug } from "@/lib/usStates";
+import { useWebLayout } from "@/lib/web-layout-context";
 
 export default function ToolkitSection() {
+  const { selectedState, hasStoredState } = useWebLayout();
+  const [showStateModal, setShowStateModal] = useState(false);
+
+  const stateHref = hasStoredState ? `/${stateToSlug(selectedState)}` : undefined;
+
+  function onStartClick() {
+    if (!hasStoredState) {
+      setShowStateModal(true);
+    }
+  }
+
   return (
     <section className="px-5 pt-0 pb-10 lg:pt-30 lg:pb-15">
       <div className="mx-auto max-w-container space-y-5.5">
@@ -46,8 +63,14 @@ export default function ToolkitSection() {
                 <Paragraph>Ask follow-ups in plain language, any time</Paragraph>
               </li>
             </ul>
-            <Button variant="ghost" className="mt-2.5 p-0!">
-              Start Free West Virginia Practice Test <ArrowRight />
+            <Button
+              variant="ghost"
+              className="mt-2.5 p-0!"
+              href={stateHref}
+              onClick={onStartClick}
+            >
+              {hasStoredState ? `Start Free ${selectedState} Practice Test` : "Try it for free"}{" "}
+              <ArrowRight />
             </Button>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -132,6 +155,8 @@ export default function ToolkitSection() {
             <Paragraph>Two-wheel rules, control drills, and the full MSF-style question bank.</Paragraph>
           </div>
         </div>
+
+        <StateSelectModal open={showStateModal} onClose={() => setShowStateModal(false)} />
       </div>
     </section>
   );

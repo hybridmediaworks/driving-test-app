@@ -34,8 +34,8 @@ export default function TheToolkitSection() {
           </Paragraph>
         </div>
         <div className="space-y-5">
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            <div className="col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-[#0D142C] p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 md:grid-cols-2">
+            <div className="md:col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-[#0D142C] p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
               <div className="space-y-6">
                 <BrainCircuit className="bg-white/8 p-3.5 rounded-[11px] w-14 h-14 text-blue-300" />
                 <Heading as="h3" size="lg" className="mb-2" color="white">
@@ -236,7 +236,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-[#0D142C] p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="md:col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-[#0D142C] p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
               <div className="space-y-6">
                 <TvMinimalPlay className="bg-white/8 p-3.5 rounded-[11px] w-14 h-14 text-blue-300" />
                 <Heading as="h3" size="lg" className="mb-2" color="white">
