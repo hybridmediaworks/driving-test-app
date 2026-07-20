@@ -1,24 +1,13 @@
 import Link from "next/link";
-import type { LaravelPageLink } from "@driving-test-app/shared";
+import type { PaginatedResponse } from "@driving-test-app/shared";
 import { Button } from "@/components/ui/ShadcnButton";
 
 function linkLabel(label: string): string {
   return label.replace(/&laquo;/g, "«").replace(/&raquo;/g, "»").replace(/&hellip;/g, "…").replace(/&nbsp;/g, " ");
 }
 
-export default function Paginator({
-  links,
-  from,
-  to,
-  total,
-  lastPage,
-}: {
-  links: LaravelPageLink[];
-  from: number | null;
-  to: number | null;
-  total: number;
-  lastPage: number;
-}) {
+export default function Paginator({ meta }: { meta: PaginatedResponse<unknown>["meta"] }) {
+  const { from, to, total, last_page: lastPage, links } = meta;
   const summary = total === 0 ? "No results" : from == null || to == null ? `${total} total` : `Showing ${from}–${to} of ${total}`;
 
   return (

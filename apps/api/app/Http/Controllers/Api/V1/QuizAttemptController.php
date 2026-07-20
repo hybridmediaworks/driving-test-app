@@ -13,8 +13,10 @@ class QuizAttemptController extends Controller
      * List my attempt history
      *
      * Requires authentication. Returns only the current user's completed attempts, most recent
-     * first, each including a summary of the quiz it belongs to. Guest attempts (no account) are
-     * never returned here — there is currently no endpoint to look up an attempt by guest_token.
+     * first, each including a summary of the quiz it belongs to and its full per-question answer
+     * breakdown (so a client can render a review view straight from this list — there is no
+     * separate show endpoint). Guest attempts (no account) are never returned here — there is
+     * currently no endpoint to look up an attempt by guest_token.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -22,7 +24,7 @@ class QuizAttemptController extends Controller
 
         $attempts = $request->user()
             ->quizAttempts()
-            ->with(['quiz.category', 'quiz.quizType'])
+            ->with(['quiz.category', 'quiz.quizType', 'answers.question.answers'])
             ->latest('completed_at')
             ->paginate($perPage)
             ->withQueryString();

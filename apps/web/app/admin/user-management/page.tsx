@@ -1,199 +1,159 @@
 "use client";
 
-import { SquarePen, Trash } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import type { User } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
+import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
+import Paginator from "@/components/ui/Paginator";
 import AppLayout from "@/components/app/AppLayout";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/ShadcnButton";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/Label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/Input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { useDeleteConfirm, usePaginatedList } from "@/hooks/use-paginated-list";
 
-type MockUser = {
-  name: string;
-  email: string;
-  profileImage: string;
-  phoneNumber: string;
-  status: "Active" | "Inactive";
-};
+function UserManagementInner() {
+  const { user: me } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const query = searchParams.toString();
 
-const initialUsers: MockUser[] = [
-  { name: "Ali", email: "ali@test.com", profileImage: "https://i.pravatar.cc/40?img=1", phoneNumber: "+123 456 7890", status: "Active" },
-  { name: "Ahmed", email: "ahmed@test.com", profileImage: "https://i.pravatar.cc/40?img=2", phoneNumber: "+987 654 3210", status: "Inactive" },
-  { name: "Sara", email: "sara@test.com", profileImage: "https://i.pravatar.cc/40?img=3", phoneNumber: "+111 222 3333", status: "Active" },
-  { name: "Usman", email: "usman@test.com", profileImage: "https://i.pravatar.cc/40?img=4", phoneNumber: "+444 555 6666", status: "Inactive" },
-  { name: "Ali", email: "ali@test.com", profileImage: "https://i.pravatar.cc/40?img=1", phoneNumber: "+123 456 7890", status: "Active" },
-  { name: "Ahmed", email: "ahmed@test.com", profileImage: "https://i.pravatar.cc/40?img=2", phoneNumber: "+987 654 3210", status: "Inactive" },
-  { name: "Sara", email: "sara@test.com", profileImage: "https://i.pravatar.cc/40?img=3", phoneNumber: "+111 222 3333", status: "Active" },
-  { name: "Usman", email: "usman@test.com", profileImage: "https://i.pravatar.cc/40?img=4", phoneNumber: "+444 555 6666", status: "Inactive" },
-  { name: "Ali", email: "ali@test.com", profileImage: "https://i.pravatar.cc/40?img=1", phoneNumber: "+123 456 7890", status: "Active" },
-  { name: "Ahmed", email: "ahmed@test.com", profileImage: "https://i.pravatar.cc/40?img=2", phoneNumber: "+987 654 3210", status: "Inactive" },
-  { name: "Sara", email: "sara@test.com", profileImage: "https://i.pravatar.cc/40?img=3", phoneNumber: "+111 222 3333", status: "Active" },
-  { name: "Usman", email: "usman@test.com", profileImage: "https://i.pravatar.cc/40?img=4", phoneNumber: "+444 555 6666", status: "Inactive" },
-];
+  const { data: users, reload } = usePaginatedList<User>(`/admin/users${query ? `?${query}` : ""}`);
+  const del = useDeleteConfirm<User>((u) => api.delete(`/admin/users/${u.id}`), reload, "Failed to delete user.");
 
-export default function UserManagementPage() {
-  const [users, setUsers] = useState<MockUser[]>(initialUsers);
-  const [editOpen, setEditOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<MockUser | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<MockUser | null>(null);
-
-  function handleEdit(row: MockUser) {
-    setSelectedUser({ ...row });
-    setEditOpen(true);
+  function updateFilter(key: string, value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    router.replace(`/admin/user-management?${params.toString()}`);
   }
 
-  function handleDelete(row: MockUser) {
-    setUserToDelete(row);
-    setDeleteOpen(true);
-  }
-
-  function confirmDelete() {
-    setUsers((prev) => prev.filter((u) => u !== userToDelete));
-    setDeleteOpen(false);
-  }
+  const rows = users?.data ?? [];
 
   return (
     <AdminGuard>
       <AppLayout breadcrumbs={[{ title: "Dashboard", href: "/dashboard" }, { title: "User Management", href: "/admin/user-management" }]}>
-        <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Profile Image</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone Number</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((row, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={row.profileImage} alt="profile" className="h-10 w-10 rounded-full object-cover" />
-                  </TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>{row.phoneNumber}</TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        row.status === "Active"
-                          ? "rounded-full bg-green-600/15 px-2.5 py-1 text-green-600"
-                          : "rounded-full bg-red-600/15 px-2.5 py-1 text-red-600"
-                      }
-                    >
-                      {row.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <button className="rounded bg-blue-600 p-2 text-white hover:bg-blue-800" onClick={() => handleEdit(row)}>
-                        <SquarePen className="h-4 w-4" />
-                      </button>
-                      <button className="rounded bg-red-600 p-2 text-white hover:bg-red-800" onClick={() => handleDelete(row)}>
-                        <Trash className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="app-page">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-0.5">
+              <h1 className="text-lg font-semibold">User management</h1>
+              <p className="text-sm text-muted-foreground">Accounts, admin access, and verification status</p>
+            </div>
+            <Button className="w-full shrink-0 sm:w-auto" render={<Link href="/admin/user-management/create" />}>
+              New user
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
+            <div className="flex w-full flex-col gap-1 sm:col-span-1">
+              <label className="text-sm font-medium" htmlFor="f-search">Search</label>
+              <Input
+                id="f-search"
+                placeholder="Name or email"
+                defaultValue={searchParams.get("search") ?? ""}
+                onChange={(e) => updateFilter("search", e.target.value)}
+              />
+            </div>
+            <div className="flex w-full flex-col gap-1">
+              <label className="text-sm font-medium" htmlFor="f-admin">Role</label>
+              <select
+                id="f-admin"
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                value={searchParams.get("is_admin") ?? ""}
+                onChange={(e) => updateFilter("is_admin", e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="1">Admins</option>
+                <option value="0">Regular users</option>
+              </select>
+            </div>
+            <div className="flex w-full flex-col gap-1">
+              <label className="text-sm font-medium" htmlFor="f-verified">Verification</label>
+              <select
+                id="f-verified"
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                value={searchParams.get("verified") ?? ""}
+                onChange={(e) => updateFilter("verified", e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="1">Verified</option>
+                <option value="0">Unverified</option>
+              </select>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                Users <span className="font-normal text-muted-foreground">({users?.meta.total ?? 0})</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {rows.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No users found.</div>
+              ) : (
+                <ul className="divide-y divide-border rounded-md border">
+                  {rows.map((u) => (
+                    <li key={u.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0 space-y-1">
+                        <Link href={`/admin/user-management/${u.id}/edit`} className="font-medium hover:underline">
+                          {u.name}
+                        </Link>
+                        <p className="text-sm text-muted-foreground">{u.email}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {u.is_admin && (
+                            <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">Admin</span>
+                          )}
+                          {u.email_verified_at ? (
+                            <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Verified</span>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-neutral-500/15 px-2 py-0.5 text-xs">Unverified</span>
+                          )}
+                          <span className="text-xs text-muted-foreground">Joined {new Date(u.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <Button variant="outline" size="sm" render={<Link href={`/admin/user-management/${u.id}/edit`} />}>
+                          Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" disabled={me?.id === u.id} onClick={() => del.request(u)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {users && users.meta.total > 0 && <Paginator meta={users.meta} />}
+            </CardContent>
+          </Card>
+
+          <ConfirmDeleteDialog
+            open={del.open}
+            onOpenChange={del.setOpen}
+            title="Delete user?"
+            description={
+              del.error ??
+              (del.target ? `Are you sure you want to delete "${del.target.name}" (${del.target.email})? This cannot be undone.` : "")
+            }
+            onConfirm={del.confirm}
+          />
         </div>
-
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>Update user information below.</DialogDescription>
-            </DialogHeader>
-
-            {selectedUser && (
-              <div className="space-y-3 py-2">
-                <div>
-                  <Label className="text-sm font-medium">Name</Label>
-                  <Input
-                    value={selectedUser.name}
-                    onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Email</Label>
-                  <Input
-                    type="email"
-                    value={selectedUser.email}
-                    onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Phone</Label>
-                  <Input
-                    value={selectedUser.phoneNumber}
-                    onChange={(e) => setSelectedUser({ ...selectedUser, phoneNumber: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Status</Label>
-                  <select
-                    className="w-full rounded border bg-white p-2 text-gray-900"
-                    value={selectedUser.status}
-                    onChange={(e) => setSelectedUser({ ...selectedUser, status: e.target.value as "Active" | "Inactive" })}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            <DialogFooter className="flex justify-end gap-2">
-              <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-              <Button onClick={() => console.log("Save user:", selectedUser)}>Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete User?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete <span className="font-medium">{userToDelete?.name}</span>?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction variant="destructive" onClick={confirmDelete}>
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </AppLayout>
     </AdminGuard>
+  );
+}
+
+export default function UserManagementPage() {
+  return (
+    <Suspense>
+      <UserManagementInner />
+    </Suspense>
   );
 }

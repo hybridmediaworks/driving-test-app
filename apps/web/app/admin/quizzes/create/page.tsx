@@ -14,9 +14,9 @@ import { api, ApiError } from "@/lib/api";
 
 type FormOptions = {
   categories: Pick<QuizCategory, "id" | "name" | "title">[];
-  quizTypes: QuizType[];
+  quiz_types: QuizType[];
   states: State[];
-  vehicleTypes: Pick<VehicleType, "id" | "name" | "title">[];
+  vehicle_types: Pick<VehicleType, "id" | "name" | "title">[];
 };
 
 export default function CreateQuizPage() {
@@ -120,7 +120,7 @@ export default function CreateQuizPage() {
                 onChange={(e) => setQuizTypeId(e.target.value)}
               >
                 <option value="" disabled>Select</option>
-                {options?.quizTypes.map((t) => (
+                {options?.quiz_types.map((t) => (
                   <option key={t.id} value={String(t.id)}>{t.title}</option>
                 ))}
               </select>
@@ -156,7 +156,7 @@ export default function CreateQuizPage() {
                   onChange={(e) => setVehicleTypeId(e.target.value)}
                 >
                   <option value="" disabled>Select</option>
-                  {options?.vehicleTypes.map((v) => (
+                  {options?.vehicle_types.map((v) => (
                     <option key={v.id} value={String(v.id)}>{v.title}</option>
                   ))}
                 </select>

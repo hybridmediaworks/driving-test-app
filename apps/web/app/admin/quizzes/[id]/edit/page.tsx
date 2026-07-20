@@ -14,9 +14,9 @@ import { api, ApiError } from "@/lib/api";
 
 type FormOptions = {
   categories: Pick<QuizCategory, "id" | "name" | "title">[];
-  quizTypes: QuizType[];
+  quiz_types: QuizType[];
   states: State[];
-  vehicleTypes: Pick<VehicleType, "id" | "name" | "title">[];
+  vehicle_types: Pick<VehicleType, "id" | "name" | "title">[];
 };
 
 export default function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
@@ -148,7 +148,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
                 value={quizTypeId}
                 onChange={(e) => setQuizTypeId(e.target.value)}
               >
-                {options.quizTypes.map((t) => (
+                {options.quiz_types.map((t) => (
                   <option key={t.id} value={String(t.id)}>{t.title}</option>
                 ))}
               </select>
@@ -182,7 +182,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
                   value={vehicleTypeId}
                   onChange={(e) => setVehicleTypeId(e.target.value)}
                 >
-                  {options.vehicleTypes.map((v) => (
+                  {options.vehicle_types.map((v) => (
                     <option key={v.id} value={String(v.id)}>{v.title}</option>
                   ))}
                 </select>
