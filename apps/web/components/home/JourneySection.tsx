@@ -1,5 +1,7 @@
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
+import Button from "../ui/Button";
+import { ArrowRight } from "lucide-react";
 
 export default function JourneySection() {
   return (
@@ -19,6 +21,9 @@ export default function JourneySection() {
           <Paragraph className="max-w-161 text-center" size="xl">
             Three steps. One outcome. The card in your wallet.
           </Paragraph>
+          <Button href="/how-it-works">
+            How It Works <ArrowRight />
+          </Button>
         </div>
         <div className="relative">
           <div className="absolute top-7 left-[16%] z-0 hidden h-px w-[68%] bg-linear-to-r from-[#2B59FF] to-[#B49CFF] lg:block" />
@@ -34,7 +39,8 @@ export default function JourneySection() {
               <div className="space-y-3 py-6">
                 <Heading size="xs">Start your journey</Heading>
                 <Paragraph className="mx-auto max-w-75">
-                  Tell us your state and test type. Your plan builds itself in seconds.
+                  Tell us your state and test type. Your plan builds itself in
+                  seconds.
                 </Paragraph>
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -51,7 +57,8 @@ export default function JourneySection() {
               <div className="space-y-3 py-6">
                 <Heading size="xs">Train like you mean it</Heading>
                 <Paragraph className="mx-auto max-w-75">
-                  AI tutor, mock exams, and drills sharpen exactly the areas you fail.
+                  AI tutor, mock exams, and drills sharpen exactly the areas you
+                  fail.
                 </Paragraph>
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}

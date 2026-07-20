@@ -29,16 +29,16 @@ const stats = [
 export default function ProofSection() {
   return (
     <section className="px-5 py-10  lg:py-30 bg-[#F2F1EC]">
-      <div className="mx-auto max-w-container space-y-15 flex flex-col lg:flex-row justify-between items-center">
-        <div className="max-w-147.5 space-y-4">
+      <div className="mx-auto max-w-container space-y-8 flex flex-col lg:flex-row justify-between items-center">
+        <div className="lg:max-w-147.5 space-y-4">
           <Paragraph
-            className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
+            className="border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
             size="xs"
             color="primary"
           >
             ✦ Proof
           </Paragraph>
-          <div className="flex gap-1 justify-center md:justify-start">
+          <div className="flex gap-1 justify-start">
             {Array.from({ length: 5 }).map((_, index) => (
               <Star
                 key={index}
@@ -68,7 +68,7 @@ export default function ProofSection() {
             </Paragraph>
           </div>
         </div>
-        <div className="grid gap-6 grid-cols-1 lg:grid-cols-3 max-w-168.5">
+        <div className="grid md:gap-6 gap-4 grid-cols-1 md:grid-cols-3 lg:max-w-168.5">
           {stats.map((stat) => (
             <div
               key={stat.label}

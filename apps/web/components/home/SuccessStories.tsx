@@ -1,8 +1,14 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
+import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestimonialCarousel from "@/components/home/TestimonialCarousel";
+import StateSelectModal from "@/components/home/StateSelectModal";
+import { stateToSlug } from "@/lib/usStates";
+import { useWebLayout } from "@/lib/web-layout-context";
 import { cn } from "@/lib/utils";
 
 type SuccessStoriesProps = {
@@ -10,6 +16,17 @@ type SuccessStoriesProps = {
 };
 
 export default function SuccessStories({ className }: SuccessStoriesProps) {
+  const { selectedState, hasStoredState } = useWebLayout();
+  const [showStateModal, setShowStateModal] = useState(false);
+
+  const stateHref = hasStoredState ? `/${stateToSlug(selectedState)}` : undefined;
+
+  function onStartClick() {
+    if (!hasStoredState) {
+      setShowStateModal(true);
+    }
+  }
+
   return (
     <section
       className={cn("overflow-x-hidden px-5 pt-10 pb-15 lg:pt-30", className)}
@@ -28,11 +45,18 @@ export default function SuccessStories({ className }: SuccessStoriesProps) {
               4.8 million passed and counting
             </Heading>
           </div>
-          <Button className="self-start lg:self-auto">
-            Start Free West Virginia Practice Test <ArrowRight />
+          <Button
+            className="self-start lg:self-auto"
+            href={stateHref}
+            onClick={onStartClick}
+          >
+            {hasStoredState ? `Start Free ${selectedState} Practice Test` : "Try it for free"}{" "}
+            <ArrowRight />
           </Button>
         </div>
         <TestimonialCarousel />
+
+        <StateSelectModal open={showStateModal} onClose={() => setShowStateModal(false)} />
       </div>
     </section>
   );
