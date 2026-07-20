@@ -1,3 +1,5 @@
+"use client";
+
 import { ClipboardList, LayoutGrid, Layers, Library, ListChecks, UserRound } from "lucide-react";
 import Link from "next/link";
 import {
@@ -9,20 +11,24 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth-context";
 import AppLogo from "./AppLogo";
 import NavMain from "./NavMain";
 import UserMenu from "./UserMenu";
 
 const mainNavItems = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutGrid },
-  { title: "Browse Quizzes", href: "/quizzes", icon: ListChecks },
-  { title: "My Results", href: "/dashboard/attempts", icon: ClipboardList },
-  { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers },
-  { title: "Quizzes", href: "/admin/quizzes", icon: Library },
-  { title: "User Management", href: "/admin/user-management", icon: UserRound },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutGrid, adminOnly: false },
+  { title: "Browse Quizzes", href: "/quizzes", icon: ListChecks, adminOnly: false },
+  { title: "My Results", href: "/dashboard/attempts", icon: ClipboardList, adminOnly: false },
+  { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers, adminOnly: true },
+  { title: "Quizzes", href: "/admin/quizzes", icon: Library, adminOnly: true },
+  { title: "User Management", href: "/admin/user-management", icon: UserRound, adminOnly: true },
 ];
 
 export default function AppSidebar() {
+  const { user } = useAuth();
+  const items = mainNavItems.filter((item) => !item.adminOnly || user?.is_admin);
+
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
@@ -36,7 +42,7 @@ export default function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={mainNavItems} />
+        <NavMain items={items} />
       </SidebarContent>
 
       <SidebarFooter>
