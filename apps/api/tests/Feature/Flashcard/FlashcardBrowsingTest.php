@@ -3,8 +3,10 @@
 namespace Tests\Feature\Flashcard;
 
 use App\Models\Flashcard;
+use App\Models\Plan;
 use App\Models\QuizCategory;
 use App\Models\State;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,6 +14,27 @@ use Tests\TestCase;
 class FlashcardBrowsingTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function makeActiveSubscriber(): User
+    {
+        Plan::query()->firstOrCreate(
+            ['key' => 'monthly'],
+            ['name' => 'Monthly', 'type' => 'recurring', 'billing_interval' => 'month', 'price_cents' => 7500, 'stripe_price_id' => 'price_monthly_flashcard_test'],
+        );
+
+        $user = User::factory()->create(['is_admin' => false]);
+
+        Subscription::query()->create([
+            'user_id' => $user->id,
+            'type' => 'default',
+            'stripe_id' => 'sub_'.uniqid(),
+            'stripe_status' => 'active',
+            'stripe_price' => 'price_monthly_flashcard_test',
+            'quantity' => 1,
+        ]);
+
+        return $user;
+    }
 
     public function test_guest_sees_front_text_but_not_back_text_for_a_premium_card(): void
     {
@@ -44,6 +67,18 @@ class FlashcardBrowsingTest extends TestCase
         $card = Flashcard::factory()->create(['is_premium' => true, 'is_active' => true]);
 
         $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/flashcards');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.0.back_text', $card->back_text);
+        $response->assertJsonPath('data.0.locked', false);
+    }
+
+    public function test_active_subscriber_sees_back_text_for_a_premium_card(): void
+    {
+        $subscriber = $this->makeActiveSubscriber();
+        $card = Flashcard::factory()->create(['is_premium' => true, 'is_active' => true]);
+
+        $response = $this->actingAs($subscriber, 'sanctum')->getJson('/api/v1/flashcards');
 
         $response->assertOk();
         $response->assertJsonPath('data.0.back_text', $card->back_text);

@@ -67,4 +67,21 @@ export function useAuth(): AuthContextValue {
   return ctx;
 }
 
+/**
+ * Derives straight from `user.entitlement` (already riding on `/me`) — no extra fetch. This is
+ * UX-only: the backend re-checks entitlement on every gated request regardless of what this
+ * reports, so it's safe to use for showing/hiding upgrade prompts but never the actual gate.
+ */
+export function useEntitlement() {
+  const { user, loading } = useAuth();
+  const entitlement = user?.entitlement ?? null;
+
+  return {
+    entitlement,
+    loading,
+    isPremium: entitlement?.is_premium ?? false,
+    tier: entitlement?.tier ?? "guest",
+  } as const;
+}
+
 export { ApiError };

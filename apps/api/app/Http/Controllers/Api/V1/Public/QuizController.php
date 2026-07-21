@@ -12,6 +12,7 @@ use App\Models\Quiz;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class QuizController extends Controller
@@ -60,21 +61,30 @@ class QuizController extends Controller
     /**
      * Show a quiz and its questions
      *
-     * Public — no authentication required. Returns 403 if the quiz is inactive. Questions and
-     * their answer options are included, but **`is_correct` and `explanation` are deliberately
-     * omitted** on every answer — the client has no way to know the right answer before
-     * submitting. Those fields only appear in the response from `storeAttempt` below, after
-     * grading, and only for the questions actually answered.
+     * Public — no authentication required. Returns 403 if the quiz is inactive. For a premium
+     * quiz the caller isn't entitled to attempt, `questions` is omitted entirely and `locked` is
+     * `true` — the quiz's existence/metadata (title, question count, cover) still shows as a
+     * teaser, but question/answer text never leaves the server for content the caller can't pay
+     * for. For an unlocked quiz, questions and their answer options are included, but
+     * **`is_correct` and `explanation` are deliberately omitted** on every answer — the client has
+     * no way to know the right answer before submitting. Those fields only appear in the response
+     * from `storeAttempt` below, after grading, and only for the questions actually answered.
      */
     public function show(Request $request, Quiz $quiz): JsonResponse
     {
         $this->authorize('view', $quiz);
 
-        $quiz->load(['category', 'quizType', 'state', 'vehicleType', 'quizQuestions.answers', 'quizQuestions.media']);
+        $quiz->load(['category', 'quizType', 'state', 'vehicleType']);
+        $unlocked = Gate::allows('attempt', $quiz);
+
+        if ($unlocked) {
+            $quiz->load(['quizQuestions.answers', 'quizQuestions.media']);
+        }
 
         return response()->json([
             'quiz' => new QuizResource($quiz),
-            'questions' => QuizQuestionResource::collection($quiz->quizQuestions),
+            'locked' => ! $unlocked,
+            'questions' => $unlocked ? QuizQuestionResource::collection($quiz->quizQuestions) : null,
         ]);
     }
 
@@ -98,7 +108,7 @@ class QuizController extends Controller
      */
     public function storeAttempt(StoreQuizAttemptRequest $request, Quiz $quiz): JsonResponse
     {
-        $this->authorize('view', $quiz);
+        $this->authorize('attempt', $quiz);
 
         $user = $request->user('sanctum');
         $guestToken = $user === null

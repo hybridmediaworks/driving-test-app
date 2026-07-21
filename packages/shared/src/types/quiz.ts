@@ -132,6 +132,12 @@ export type PublicQuizQuestion = {
   answers: PublicAnswerOption[];
 };
 
+export type QuizShowResponse = {
+  quiz: PublicQuiz;
+  locked: boolean;
+  questions: PublicQuizQuestion[] | null;
+};
+
 export type QuizAttemptStatus = "in_progress" | "completed";
 
 export type QuizAttemptAnswer = {

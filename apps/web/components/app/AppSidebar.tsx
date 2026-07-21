@@ -10,6 +10,8 @@ import {
   Library,
   ListChecks,
   NotebookText,
+  Receipt,
+  ShieldCheck,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -33,12 +35,14 @@ const mainNavItems = [
   { title: "Browse Flashcards", href: "/flashcards", icon: Copy, adminOnly: false },
   { title: "Browse Cheat Sheets", href: "/cheat-sheets", icon: NotebookText, adminOnly: false },
   { title: "My Results", href: "/dashboard/attempts", icon: ClipboardList, adminOnly: false },
+  { title: "Pass Guarantee", href: "/pass-guarantee", icon: ShieldCheck, adminOnly: false },
   { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers, adminOnly: true },
   { title: "Quizzes", href: "/admin/quizzes", icon: Library, adminOnly: true },
   { title: "Flashcards", href: "/admin/flashcards", icon: Layers2, adminOnly: true },
   { title: "Cheat Sheets", href: "/admin/cheat-sheets", icon: NotebookText, adminOnly: true },
   { title: "User Management", href: "/admin/user-management", icon: UserRound, adminOnly: true },
   { title: "All Results", href: "/admin/attempts", icon: ClipboardCheck, adminOnly: true },
+  { title: "Pass Guarantee Claims", href: "/admin/pass-guarantee-claims", icon: Receipt, adminOnly: true },
 ];
 
 export default function AppSidebar() {

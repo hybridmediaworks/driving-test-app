@@ -5,8 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import Slider from "@/components/ui/Slider";
+import PremiumDialog from "@/components/billing/PremiumDialog";
 import Switch from "@/components/ui/Switch";
-import PremiumDialog from "./PremiumDialog";
 import QuestionCard from "./QuestionCard";
 import type { QuizQuestionStatic } from "./types";
 

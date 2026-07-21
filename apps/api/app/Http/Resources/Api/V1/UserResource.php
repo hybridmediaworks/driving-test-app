@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Models\User;
+use App\Services\Entitlement\EntitlementResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,6 +15,8 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $entitlement = app(EntitlementResolver::class)->resolve($this->resource);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -22,6 +25,13 @@ class UserResource extends JsonResource
             'email_verified_at' => $this->email_verified_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'entitlement' => [
+                'tier' => $entitlement->tier,
+                'status' => $entitlement->status,
+                'access_until' => $entitlement->accessUntil,
+                'family_group_id' => $entitlement->familyGroupId,
+                'is_premium' => $entitlement->isPremium(),
+            ],
         ];
     }
 }

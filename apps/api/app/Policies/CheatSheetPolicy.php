@@ -2,11 +2,17 @@
 
 namespace App\Policies;
 
+use App\Enums\Feature;
 use App\Models\CheatSheet;
 use App\Models\User;
+use App\Services\Entitlement\EntitlementResolver;
 
 class CheatSheetPolicy
 {
+    public function __construct(
+        private readonly EntitlementResolver $entitlement,
+    ) {}
+
     /**
      * Can see the sheet exists (title, summary, cover) — matches QuizPolicy::view().
      */
@@ -17,10 +23,6 @@ class CheatSheetPolicy
 
     /**
      * Can read the full sections and download the PDF.
-     *
-     * Interim gate — swap the body for
-     * `$this->entitlement->resolve($user)->hasFeature(Feature::CheatSheets)` the moment
-     * EntitlementResolver exists (see docs/SUBSCRIPTION_ROADMAP.md); nothing upstream changes.
      */
     public function readFull(?User $user, CheatSheet $cheatSheet): bool
     {
@@ -32,6 +34,6 @@ class CheatSheetPolicy
             return true;
         }
 
-        return $user?->is_admin ?? false;
+        return $this->entitlement->resolve($user)->hasFeature(Feature::CheatSheets);
     }
 }

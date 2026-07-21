@@ -4,8 +4,10 @@ namespace Tests\Feature\CheatSheet;
 
 use App\Models\CheatSheet;
 use App\Models\CheatSheetSection;
+use App\Models\Plan;
 use App\Models\QuizCategory;
 use App\Models\State;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -13,6 +15,27 @@ use Tests\TestCase;
 class CheatSheetBrowsingTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function makeActiveSubscriber(): User
+    {
+        Plan::query()->firstOrCreate(
+            ['key' => 'monthly'],
+            ['name' => 'Monthly', 'type' => 'recurring', 'billing_interval' => 'month', 'price_cents' => 7500, 'stripe_price_id' => 'price_monthly_cheatsheet_test'],
+        );
+
+        $user = User::factory()->create(['is_admin' => false]);
+
+        Subscription::query()->create([
+            'user_id' => $user->id,
+            'type' => 'default',
+            'stripe_id' => 'sub_'.uniqid(),
+            'stripe_status' => 'active',
+            'stripe_price' => 'price_monthly_cheatsheet_test',
+            'quantity' => 1,
+        ]);
+
+        return $user;
+    }
 
     public function test_guest_sees_the_teaser_but_not_sections_for_a_premium_sheet(): void
     {
@@ -48,6 +71,19 @@ class CheatSheetBrowsingTest extends TestCase
         CheatSheetSection::factory()->create(['cheat_sheet_id' => $sheet->id]);
 
         $response = $this->actingAs($admin, 'sanctum')->getJson("/api/v1/cheat-sheets/{$sheet->id}");
+
+        $response->assertOk();
+        $response->assertJsonPath('locked', false);
+        $this->assertCount(1, $response->json('sections'));
+    }
+
+    public function test_active_subscriber_sees_sections_for_a_premium_sheet(): void
+    {
+        $subscriber = $this->makeActiveSubscriber();
+        $sheet = CheatSheet::factory()->create(['is_premium' => true, 'is_active' => true]);
+        CheatSheetSection::factory()->create(['cheat_sheet_id' => $sheet->id]);
+
+        $response = $this->actingAs($subscriber, 'sanctum')->getJson("/api/v1/cheat-sheets/{$sheet->id}");
 
         $response->assertOk();
         $response->assertJsonPath('locked', false);

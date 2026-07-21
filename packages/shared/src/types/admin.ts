@@ -18,4 +18,17 @@ export type AdminStats = {
     average_score: number | null;
     last_7_days: number;
   };
+  content: {
+    flashcards: {
+      total: number;
+      active: number;
+      premium: number;
+      reviews: number;
+    };
+    cheat_sheets: {
+      total: number;
+      active: number;
+      premium: number;
+    };
+  };
 };

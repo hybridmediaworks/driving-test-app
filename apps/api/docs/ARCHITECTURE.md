@@ -20,6 +20,7 @@ routes/api.php
       Route::middleware('auth:sanctum')->group(function () {
           Route::get('attempts', ...);                // "my history"
           Route::prefix('admin')->middleware('admin')->group(function () {
+              Route::get('attempts', ...);             // every user's history, filterable
               // admin CRUD
           });
       });
@@ -60,7 +61,7 @@ app/
       QuizAttemptAnswerResource.php
   Models/                          // stays flat — DDD folders are overhead at this scale
   Policies/
-    QuizPolicy.php                 // Phase 5's is_premium gating will extend view() here
+    QuizPolicy.php                 // Phase 5 added attempt() here for is_premium gating — view() stays untouched (teaser visibility)
   Enums/
     QuestionDifficulty.php
     TestTrack.php
@@ -89,7 +90,7 @@ Video/audio (hazard-perception clips, simulated-driving footage — Phase 3) sho
 
 The one exception was a one-time pre-launch cleanup, not a standing practice: while this project had zero data and a single local environment, the original incremental migrations (`add_images_to_quiz_questions_table`, `add_cover_image_path_to_quizzes_table`, `add_is_admin_to_users_table`, etc.) were squashed into their base `create_*` migrations for a clean history. That move is only safe pre-launch.
 
-From here on, every new column — including ones added by packages — gets a new migration. This isn't optional even in principle: Laravel Cashier (Phase 5) will add its own `stripe_id`/`pm_type`/etc. columns to `users` via its own published migration; it cannot and will not edit `create_users_table`. Never edit a migration that's already shipped.
+From here on, every new column — including ones added by packages — gets a new migration. This isn't optional even in principle: Laravel Cashier (Phase 5, now implemented) added its own `stripe_id`/`pm_type`/etc. columns to `users` via its own published migration, exactly as predicted — it couldn't and didn't edit `create_users_table`. Never edit a migration that's already shipped.
 
 ## Phase 2 schema (implemented)
 
@@ -106,17 +107,19 @@ Full API reference (endpoints, request/response shapes, verification) lives in [
 
 `Api\V1\QuizAttemptController::index` — auth-only "my history," paginated `QuizAttemptResource`.
 
+`Api\V1\Admin\AttemptController::index` — admin-only, every user's attempts (filterable by `user_id`, `quiz_id`, `status`), same `QuizAttemptResource` (now also carries a `user` field, `null` for guest attempts). Shares `QuizAttempt::scopeWithReviewDetails()` — the `quiz.category`/`quiz.quizType`/`answers.question.answers` eager-load — with the self-service endpoint above, so the two list queries can't drift apart; the only difference between them is the base query (`$request->user()->quizAttempts()` vs. `QuizAttempt::query()`). Verified via a seeded query-count test: 15 attempts × 60 questions each stays at 9 SQL queries total (no N+1), though the response payload itself isn't capped — every attempt's full per-question answer breakdown ships inline regardless of whether its review is ever opened (~190KB for that same page), same tradeoff the self-service endpoint already made.
+
 ## Hooks for later phases (cost ~nothing now, expensive to retrofit)
 
 - **Phase 3 (media)**: video/audio get their own asset table + streaming store — see [Media](#media) above.
-- **Phase 5 (premium)**: gate through `QuizPolicy::view()`, already called from the public controller — Phase 5 just fills in the policy body, nothing upstream needs to change.
+- **Phase 5 (premium) — done**: `QuizPolicy::attempt()` (a new method, sitting alongside the unchanged `view()`) is the real hard gate, backed by `App\Services\Entitlement\EntitlementResolver`. See `docs/SUBSCRIPTION_ROADMAP.md` for the full design.
 - **Phase 7 (AI assistant)**: retrieval layer should read through the same Resources/Actions as the rest of the API rather than querying models directly, so it can't drift from what a human-facing endpoint would return.
 - **Phase 9 (mobile)**: consumes `/api/v1` directly — this is the entire reason for versioning now.
 
 ## Packages worth adding
 
 - `spatie/laravel-query-builder` — standardizes filtering (`/quizzes?state=CA&vehicle_type=motorcycle`), a shape you'll need repeatedly across quizzes, cheat sheets, and attempt history.
-- `laravel/cashier` — planned for Phase 5.
+- `laravel/cashier` — installed for Phase 5 (subscriptions/billing), now implemented.
 
 ## API docs (OpenAPI / Swagger)
 

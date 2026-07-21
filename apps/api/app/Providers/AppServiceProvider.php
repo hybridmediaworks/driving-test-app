@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Our Subscription subclass exists solely to cast the app-owned `past_due_since` column
+        // (see app/Models/Subscription.php) that stock Cashier's model doesn't know about.
+        Cashier::useSubscriptionModel(Subscription::class);
+
         // Gates the /docs/api Swagger UI in any non-local environment (RestrictedDocsAccess
         // middleware falls back to this once APP_ENV isn't 'local'). Admins only — the docs
         // expose the full endpoint map, including admin routes, which is real recon value for

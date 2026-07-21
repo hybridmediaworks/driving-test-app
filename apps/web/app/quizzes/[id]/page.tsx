@@ -1,7 +1,8 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import type { PublicQuiz, PublicQuizQuestion, QuizAttempt } from "@driving-test-app/shared";
+import { Lock } from "lucide-react";
+import type { QuizAttempt, QuizShowResponse } from "@driving-test-app/shared";
 import ExamPlayer from "@/components/exam/ExamPlayer";
 import ExamResults from "@/components/exam/ExamResults";
 import Footer from "@/components/Footer";
@@ -12,11 +13,6 @@ import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import { api, ApiError } from "@/lib/api";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
-
-type QuizShowResponse = {
-  quiz: PublicQuiz;
-  questions: PublicQuizQuestion[];
-};
 
 type Stage = "preview" | "playing" | "results";
 
@@ -63,17 +59,28 @@ export default function QuizDetailPage({ params }: { params: Promise<{ id: strin
                   {data.quiz.duration_seconds && ` · ${Math.round(data.quiz.duration_seconds / 60)} min`}
                   {isExam && data.quiz.passing_score_percent != null && ` · pass mark ${data.quiz.passing_score_percent}%`}
                 </Paragraph>
-                {isExam && (
+                {isExam && !data.locked && (
                   <Paragraph color="muted" size="sm">
                     This is a timed exam simulation. Once started, the clock cannot be paused and questions can&apos;t be
                     revisited.
                   </Paragraph>
                 )}
-                <Button onClick={() => setStage("playing")}>{isExam ? "Start exam" : "Start test"}</Button>
+                {data.locked ? (
+                  <div className="space-y-3 rounded-2xl bg-blue-50 p-6">
+                    <Lock className="mx-auto h-8 w-8 text-amber-600" />
+                    <p className="text-sm font-semibold text-neutral-900">This is a premium quiz</p>
+                    <Paragraph color="muted" size="sm">
+                      Upgrade to unlock this quiz and start practicing.
+                    </Paragraph>
+                    <Button href="/pricing">View plans</Button>
+                  </div>
+                ) : (
+                  <Button onClick={() => setStage("playing")}>{isExam ? "Start exam" : "Start test"}</Button>
+                )}
               </div>
             )}
 
-            {data && stage === "playing" && isExam && (
+            {data && data.questions && stage === "playing" && isExam && (
               <ExamPlayer
                 quiz={data.quiz}
                 questions={data.questions}
@@ -84,7 +91,7 @@ export default function QuizDetailPage({ params }: { params: Promise<{ id: strin
               />
             )}
 
-            {data && stage === "playing" && !isExam && (
+            {data && data.questions && stage === "playing" && !isExam && (
               <QuizPlayer
                 quiz={data.quiz}
                 questions={data.questions}
@@ -95,11 +102,11 @@ export default function QuizDetailPage({ params }: { params: Promise<{ id: strin
               />
             )}
 
-            {data && stage === "results" && attempt && isExam && (
+            {data && data.questions && stage === "results" && attempt && isExam && (
               <ExamResults attempt={attempt} questions={data.questions} quizId={data.quiz.id} />
             )}
 
-            {data && stage === "results" && attempt && !isExam && (
+            {data && data.questions && stage === "results" && attempt && !isExam && (
               <QuizResults attempt={attempt} questions={data.questions} quizId={data.quiz.id} />
             )}
           </div>

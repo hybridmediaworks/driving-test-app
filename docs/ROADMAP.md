@@ -50,11 +50,17 @@ Three distinct content types, not just "images" — each has different storage/d
 
 ## Phase 5 — Monetization (subscriptions/paywall)
 
-Access control has two independent axes — keep them separate, don't merge into one "role" field: `User.is_admin` (already exists, controls content-management access) and subscription/premium status (this phase, controls paid-content access via `Quiz.is_premium` gating). A user can be an admin, a subscriber, both, or neither — a single `role` enum can't express that.
+**Done.** Full Free/Weekly/Monthly/Lifetime-Family subscription system, real Stripe Checkout + webhooks, self-service billing, Lifetime-Family seat invites, and a real Pass Guarantee refund workflow. See [`docs/SUBSCRIPTION_ROADMAP.md`](./SUBSCRIPTION_ROADMAP.md) for the full design, what shipped vs. the original plan (§8 "Implementation notes"), and how to test it end-to-end (§9 "Testing steps").
 
-- [ ] Laravel Cashier + Stripe integration
-- [ ] Checkout session + webhook endpoints
-- [ ] Upgrade/upsell UI wherever `is_premium` currently gates content
+Access control kept its two independent axes as planned — `User.is_admin` (content-management access) and subscription/premium status via `EntitlementResolver` (paid-content access) never merged into one "role" field.
+
+- [x] Laravel Cashier + Stripe integration
+- [x] Checkout session + webhook endpoints
+- [x] Upgrade/upsell UI wherever `is_premium` gates content (`PremiumGuard`, `PremiumDialog`, locked-teaser paywalls on quizzes/flashcards/cheat sheets)
+- [x] Billing self-service (`/settings/billing`: cancel, invoices, Stripe Customer Portal)
+- [x] Lifetime-Family seat invites + roster management
+- [x] Pass Guarantee claim submission, admin review, and refund issuance
+- [x] Admin billing visibility (subscriber/claim counts on the stats dashboard)
 
 ## Phase 6 — Cheat sheets, handbook content & full SEO rollout
 

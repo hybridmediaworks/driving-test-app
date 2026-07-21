@@ -10,6 +10,7 @@ import HeadingSmall from "./HeadingSmall";
 const navItems = [
   { title: "Profile", href: "/settings/profile" },
   { title: "Security", href: "/settings/security" },
+  { title: "Billing", href: "/settings/billing" },
   { title: "Appearance", href: "/settings/appearance" },
 ];
 

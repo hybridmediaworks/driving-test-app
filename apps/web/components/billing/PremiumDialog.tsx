@@ -7,7 +7,7 @@ export default function PremiumDialog({
   open,
   onOpenChange,
   title = "Premium Members Only",
-  description = "Adding difficult questions to Challenge Bank™ is an exclusive Premium feature. Unlock access to 650+ exam-like questions, a Pass Guarantee, personalized study plans, and more.",
+  description = "This is a premium feature. Unlock full access to premium quizzes, the Exam Simulator, cheat sheets, flashcards, a Pass Guarantee, and more.",
   ctaLabel = "View All Plans",
 }: {
   open: boolean;
@@ -28,7 +28,7 @@ export default function PremiumDialog({
           <Heading size="xs">{title}</Heading>
           <Paragraph className="text-center">{description}</Paragraph>
 
-          <Button href="/premium" className="w-full">
+          <Button href="/pricing" className="w-full">
             {ctaLabel}
           </Button>
         </div>

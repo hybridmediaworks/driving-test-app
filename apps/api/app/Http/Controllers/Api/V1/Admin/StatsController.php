@@ -3,11 +3,19 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Enums\AttemptStatus;
+use App\Enums\PassGuaranteeClaimStatus;
 use App\Http\Controllers\Controller;
+use App\Models\CheatSheet;
+use App\Models\FamilyGroup;
+use App\Models\Flashcard;
+use App\Models\FlashcardReview;
+use App\Models\PassGuaranteeClaim;
+use App\Models\Plan;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizCategory;
 use App\Models\QuizQuestion;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 
@@ -23,6 +31,14 @@ class StatsController extends Controller
     {
         $completedAttempts = QuizAttempt::query()->where('status', AttemptStatus::Completed);
         $averageScore = (clone $completedAttempts)->avg('score');
+
+        $weeklyPlan = Plan::query()->where('key', 'weekly')->first();
+        $monthlyPlan = Plan::query()->where('key', 'monthly')->first();
+
+        $activeWeekly = $weeklyPlan?->stripe_price_id === null ? 0 : Subscription::query()
+            ->where('stripe_status', 'active')->where('stripe_price', $weeklyPlan->stripe_price_id)->count();
+        $activeMonthly = $monthlyPlan?->stripe_price_id === null ? 0 : Subscription::query()
+            ->where('stripe_status', 'active')->where('stripe_price', $monthlyPlan->stripe_price_id)->count();
 
         return response()->json([
             'users' => [
@@ -43,6 +59,32 @@ class StatsController extends Controller
                 'in_progress' => QuizAttempt::query()->where('status', AttemptStatus::InProgress)->count(),
                 'average_score' => $averageScore === null ? null : round((float) $averageScore, 1),
                 'last_7_days' => QuizAttempt::query()->where('created_at', '>=', now()->subDays(7))->count(),
+            ],
+            'content' => [
+                'flashcards' => [
+                    'total' => Flashcard::query()->count(),
+                    'active' => Flashcard::query()->where('is_active', true)->count(),
+                    'premium' => Flashcard::query()->where('is_premium', true)->count(),
+                    'reviews' => FlashcardReview::query()->count(),
+                ],
+                'cheat_sheets' => [
+                    'total' => CheatSheet::query()->count(),
+                    'active' => CheatSheet::query()->where('is_active', true)->count(),
+                    'premium' => CheatSheet::query()->where('is_premium', true)->count(),
+                ],
+            ],
+            'billing' => [
+                'active_weekly_subscribers' => $activeWeekly,
+                'active_monthly_subscribers' => $activeMonthly,
+                'active_family_groups' => FamilyGroup::query()->where('status', 'active')->count(),
+                'recurring_revenue_cents' => $activeWeekly * ($weeklyPlan->price_cents ?? 0) + $activeMonthly * ($monthlyPlan->price_cents ?? 0),
+                'claims' => [
+                    'submitted' => PassGuaranteeClaim::query()->where('status', PassGuaranteeClaimStatus::Submitted)->count(),
+                    'under_review' => PassGuaranteeClaim::query()->where('status', PassGuaranteeClaimStatus::UnderReview)->count(),
+                    'approved' => PassGuaranteeClaim::query()->where('status', PassGuaranteeClaimStatus::Approved)->count(),
+                    'denied' => PassGuaranteeClaim::query()->where('status', PassGuaranteeClaimStatus::Denied)->count(),
+                    'refunded' => PassGuaranteeClaim::query()->where('status', PassGuaranteeClaimStatus::Refunded)->count(),
+                ],
             ],
         ]);
     }

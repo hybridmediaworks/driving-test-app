@@ -2,11 +2,17 @@
 
 namespace App\Policies;
 
+use App\Enums\Feature;
 use App\Models\Flashcard;
 use App\Models\User;
+use App\Services\Entitlement\EntitlementResolver;
 
 class FlashcardPolicy
 {
+    public function __construct(
+        private readonly EntitlementResolver $entitlement,
+    ) {}
+
     /**
      * Can see the card exists (front text, teaser) — matches QuizPolicy::view().
      */
@@ -17,10 +23,6 @@ class FlashcardPolicy
 
     /**
      * Can see the back of the card (the actual study content).
-     *
-     * Interim gate — swap the body for
-     * `$this->entitlement->resolve($user)->hasFeature(Feature::Flashcards)` the moment
-     * EntitlementResolver exists (see docs/SUBSCRIPTION_ROADMAP.md); nothing upstream changes.
      */
     public function readFull(?User $user, Flashcard $flashcard): bool
     {
@@ -32,6 +34,6 @@ class FlashcardPolicy
             return true;
         }
 
-        return $user?->is_admin ?? false;
+        return $this->entitlement->resolve($user)->hasFeature(Feature::Flashcards);
     }
 }

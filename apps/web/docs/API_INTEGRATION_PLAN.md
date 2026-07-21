@@ -18,7 +18,8 @@ Written after directly verifying the backend (route list, `php artisan test` —
 | QuizCategory (admin) | full CRUD under `/admin/quiz-categories` | ✅ Wired, pagination bug fixed |
 | Quiz (admin) | full CRUD under `/admin/quizzes` | ✅ Wired, pagination + field-casing bugs fixed |
 | QuizQuestion (admin) | full CRUD + `reorder`/`move` under `/admin/quizzes/{quiz}/questions` | ✅ Wired, pagination + field-casing bugs fixed |
-| Stats | `GET /admin/stats` | ✅ Wired — `app/dashboard/page.tsx` (was a static placeholder) |
+| Stats (admin) | `GET /admin/stats` | ✅ Wired — `app/dashboard/page.tsx` (was a static placeholder) |
+| Stats (self) | `GET /me/stats` | ✅ Wired — `app/dashboard/page.tsx` (regular-user branch was a static placeholder with no data fetching at all) |
 | User (admin) | full CRUD under `/admin/users` | ✅ Wired — `app/admin/user-management/{page,create,[id]/edit}.tsx` (was 100% hardcoded mock data) |
 | Quiz (public) | `GET /quizzes`, `GET /quizzes/{quiz}`, `POST /quizzes/{quiz}/attempts` | ✅ Wired — `app/quizzes/{page,[id]/page}.tsx` (was no frontend at all) |
 | QuizAttempt | `GET /attempts` | ✅ Wired — `app/dashboard/attempts/page.tsx` (was no frontend at all) |
@@ -53,9 +54,16 @@ Separate from the pagination envelope, `Admin\QuizResource` and `Admin\QuizContr
 
 ### Stats → Admin Dashboard
 
-- **Backend**: `GET /admin/stats` → `{ users: {total,admins,verified,new_last_7_days}, quizzes: {total,active,categories,questions}, attempts: {total,completed,in_progress,average_score,last_7_days} }`. Admin-only (403 otherwise).
+- **Backend**: `GET /admin/stats` → `{ users: {total,admins,verified,new_last_7_days}, quizzes: {total,active,categories,questions}, attempts: {total,completed,in_progress,average_score,last_7_days}, content: {flashcards:{total,active,premium,reviews}, cheat_sheets:{total,active,premium}}, billing: {...} }`. Admin-only (403 otherwise). The `content` block was added alongside the Flashcard/CheatSheet content-library models so the admin dashboard actually reflects that content type — it was previously invisible in stats despite full admin CRUD existing for both.
 - **Frontend**: `app/dashboard/page.tsx`. Fetch only when `user.is_admin` (the same check `components/admin/AdminGuard.tsx` uses) — regular users hit this page too. Render as stat cards using the existing `Card` primitives.
 - **Types**: `packages/shared/src/types/admin.ts` → `AdminStats`.
+
+### Stats → User Dashboard
+
+- **Backend**: new `GET /me/stats` (auth-only, not admin-gated) → `{ attempts: {total,completed,in_progress,passed,average_score,last_7_days}, flashcards: {total_active,known,unknown}, cheat_sheets: {total_active} }`, all scoped to `$request->user()` via the existing `quizAttempts()`/`flashcardReviews()` relations on `User`. Controller: `App\Http\Controllers\Api\V1\StatsController` (aliased `AdminStatsController` for the admin one in `routes/api.php` to avoid a naming clash).
+- **No per-user cheat-sheet progress exists** — unlike `FlashcardReview`, there's no read/viewed tracking for cheat sheets, so that block is just the library size, not a personal stat. Adding real per-user progress there would need a new pivot table analogous to `flashcard_reviews`.
+- **Frontend**: `app/dashboard/page.tsx`'s non-admin branch — previously three hardcoded `PlaceholderPattern` divs with no data fetching whatsoever, now a real `UserDashboard` component fetching `/me/stats` on mount.
+- **Types**: `packages/shared/src/types/stats.ts` → `UserStats`.
 
 ### User → Admin User Management
 
