@@ -157,5 +157,6 @@ export type QuizAttempt = {
     slug: string;
     category: string | null;
   };
+  user?: { id: number; name: string; email: string } | null;
   answers?: QuizAttemptAnswer[];
 };

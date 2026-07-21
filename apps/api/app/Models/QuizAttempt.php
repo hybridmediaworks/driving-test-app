@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AttemptStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -53,5 +54,17 @@ class QuizAttempt extends Model
     public function answers(): HasMany
     {
         return $this->hasMany(QuizAttemptAnswer::class);
+    }
+
+    /**
+     * Shared eager-load set for rendering an attempt list with full per-question review data —
+     * used by both the self-service and admin attempt listings so they stay in sync.
+     *
+     * @param  Builder<QuizAttempt>  $query
+     * @return Builder<QuizAttempt>
+     */
+    public function scopeWithReviewDetails(Builder $query): Builder
+    {
+        return $query->with(['quiz.category', 'quiz.quizType', 'answers.question.answers']);
     }
 }

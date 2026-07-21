@@ -24,7 +24,7 @@ class QuizAttemptController extends Controller
 
         $attempts = $request->user()
             ->quizAttempts()
-            ->with(['quiz.category', 'quiz.quizType', 'answers.question.answers'])
+            ->withReviewDetails()
             ->latest('completed_at')
             ->paginate($perPage)
             ->withQueryString();

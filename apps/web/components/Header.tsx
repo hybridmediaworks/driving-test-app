@@ -16,7 +16,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import PublicAccountMenu from "@/components/PublicAccountMenu";
 import Button from "@/components/ui/Button";
+import { useAuth } from "@/lib/auth-context";
 import { stateToSlug, usStates } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
@@ -47,6 +49,7 @@ export default function Header({
   hideNav?: boolean;
 }) {
   const router = useRouter();
+  const { user } = useAuth();
   const { selectedState, hasStoredState, selectedVehicle, setSelectedVehicle } = useWebLayout();
   const [selectedTestType, setSelectedTestType] = useState("Permit Tests");
   const [activeDropdown, setActiveDropdown] = useState<Dropdown>(null);
@@ -208,12 +211,18 @@ export default function Header({
           <Button className="p-0!" variant="ghost">
             <HelpCircle className="h-6 w-6 text-neutral-500" />
           </Button>
-          <Button className="p-3! font-medium" variant="ghost" href="/login">
-            Login
-          </Button>
-          <Button className="py-3! font-semibold" href="/register">
-            Signup
-          </Button>
+          {user ? (
+            <PublicAccountMenu user={user} />
+          ) : (
+            <>
+              <Button className="p-3! font-medium" variant="ghost" href="/login">
+                Login
+              </Button>
+              <Button className="py-3! font-semibold" href="/register">
+                Signup
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -330,12 +339,18 @@ export default function Header({
           )}
 
           <div className="mt-4 flex justify-center gap-3 border-t border-gray-100 pt-4">
-            <Button className="flex-1 justify-center py-3! font-medium" variant="ghost" href="/login">
-              Login
-            </Button>
-            <Button className="flex-1 justify-center py-3! font-semibold" href="/register">
-              Signup
-            </Button>
+            {user ? (
+              <PublicAccountMenu user={user} />
+            ) : (
+              <>
+                <Button className="flex-1 justify-center py-3! font-medium" variant="ghost" href="/login">
+                  Login
+                </Button>
+                <Button className="flex-1 justify-center py-3! font-semibold" href="/register">
+                  Signup
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

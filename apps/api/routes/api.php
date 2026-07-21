@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptController;
 use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
 use App\Http\Controllers\Api\V1\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Api\V1\Admin\QuizQuestionController;
@@ -66,6 +67,8 @@ Route::prefix('v1')->group(function (): void {
             Route::post('quizzes/{quiz}/questions/{question}/move', [QuizQuestionController::class, 'move']);
 
             Route::apiResource('users', UserController::class);
+
+            Route::get('attempts', [AdminAttemptController::class, 'index']);
 
             Route::get('stats', [StatsController::class, 'index']);
         });

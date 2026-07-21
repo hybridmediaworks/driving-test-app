@@ -30,6 +30,11 @@ class QuizAttemptResource extends JsonResource
                 'slug' => $this->quiz->slug,
                 'category' => $this->quiz->relationLoaded('category') ? $this->quiz->category?->title : null,
             ]),
+            'user' => $this->whenLoaded('user', fn () => $this->user === null ? null : [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+            ]),
             'answers' => QuizAttemptAnswerResource::collection($this->whenLoaded('answers')),
         ];
     }

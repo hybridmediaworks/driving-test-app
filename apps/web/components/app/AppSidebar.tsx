@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, LayoutGrid, Layers, Library, ListChecks, UserRound } from "lucide-react";
+import { ClipboardCheck, ClipboardList, LayoutGrid, Layers, Library, ListChecks, UserRound } from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -23,6 +23,7 @@ const mainNavItems = [
   { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers, adminOnly: true },
   { title: "Quizzes", href: "/admin/quizzes", icon: Library, adminOnly: true },
   { title: "User Management", href: "/admin/user-management", icon: UserRound, adminOnly: true },
+  { title: "All Results", href: "/admin/attempts", icon: ClipboardCheck, adminOnly: true },
 ];
 
 export default function AppSidebar() {
