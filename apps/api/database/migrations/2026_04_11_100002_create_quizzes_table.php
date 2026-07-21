@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedInteger('order_no')->default(0);
             $table->unsignedInteger('total_questions')->default(0);
             $table->unsignedInteger('duration_seconds')->nullable();
+            $table->unsignedTinyInteger('passing_score_percent')->nullable();
             $table->boolean('is_premium')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

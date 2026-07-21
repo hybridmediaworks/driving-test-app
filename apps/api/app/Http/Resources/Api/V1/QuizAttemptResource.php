@@ -19,6 +19,7 @@ class QuizAttemptResource extends JsonResource
             'quiz_id' => $this->quiz_id,
             'status' => $this->status,
             'score' => $this->score,
+            'passed' => $this->passed,
             'correct_count' => $this->correct_count,
             'total_questions' => $this->total_questions,
             'started_at' => $this->started_at,

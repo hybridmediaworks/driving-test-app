@@ -1,41 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { PublicQuiz, QuizCategory, State, VehicleType } from "@driving-test-app/shared";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import QuizCard from "@/components/quiz/QuizCard";
 import Paginator from "@/components/ui/Paginator";
 import { api } from "@/lib/api";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 import { usePaginatedList } from "@/hooks/use-paginated-list";
-
-function QuizCard({ quiz }: { quiz: PublicQuiz }) {
-  return (
-    <Link
-      href={`/quizzes/${quiz.id}`}
-      className="flex flex-col gap-3 rounded-2xl border border-gray-100 p-5 shadow-sm transition-shadow hover:shadow-md"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-neutral-900">{quiz.title}</h3>
-        {quiz.is_premium && (
-          <span className="inline-flex shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">Premium</span>
-        )}
-      </div>
-      <p className="text-sm text-neutral-500">
-        {quiz.category?.title}
-        {quiz.state && ` · ${quiz.state.name}`}
-        {quiz.vehicle_type && ` · ${quiz.vehicle_type.title}`}
-      </p>
-      <p className="text-sm text-neutral-500">
-        {quiz.total_questions} questions
-        {quiz.duration_seconds && ` · ${Math.round(quiz.duration_seconds / 60)} min`}
-        {` · ${quiz.test_track === "permit_test" ? "Permit Test" : "Driving Test"}`}
-      </p>
-    </Link>
-  );
-}
 
 function QuizzesBrowseInner() {
   const router = useRouter();

@@ -113,7 +113,7 @@ export default function TheToolkitSection() {
                     </Paragraph>
                   </div>
                 </div>
-                <Button variant="ghost" className="p-0!">
+                <Button variant="ghost" className="p-0!" href="/exam-simulator">
                   Explore Mock Exams <ArrowRight className="w-5" />
                 </Button>
               </div>
@@ -231,7 +231,7 @@ export default function TheToolkitSection() {
                   </div>
                   <img src="flashcards.svg" alt="" />
                 </div>
-                <Button variant="ghost" className="p-0!">
+                <Button variant="ghost" className="p-0!" href="/flashcards">
                   Explore Flashcards <ArrowRight className="w-5" />
                 </Button>
               </div>

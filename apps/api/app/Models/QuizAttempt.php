@@ -16,6 +16,7 @@ class QuizAttempt extends Model
         'quiz_id',
         'status',
         'score',
+        'passed',
         'correct_count',
         'total_questions',
         'started_at',
@@ -27,6 +28,7 @@ class QuizAttempt extends Model
     {
         return [
             'status' => AttemptStatus::class,
+            'passed' => 'boolean',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

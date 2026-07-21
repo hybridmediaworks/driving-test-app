@@ -66,6 +66,7 @@ export type Quiz = {
   test_track: "permit_test" | "driving_test";
   total_questions: number;
   duration_seconds: number | null;
+  passing_score_percent: number | null;
   is_premium: boolean;
   is_active: boolean;
   category?: QuizCategory;
@@ -108,6 +109,7 @@ export type PublicQuiz = {
   test_track: "permit_test" | "driving_test";
   total_questions: number;
   duration_seconds: number | null;
+  passing_score_percent: number | null;
   is_premium: boolean;
   cover_image_url: string | null;
   category?: { id: number; name: string; title: string };
@@ -146,6 +148,7 @@ export type QuizAttempt = {
   quiz_id: number;
   status: QuizAttemptStatus;
   score: number;
+  passed: boolean | null;
   correct_count: number;
   total_questions: number;
   started_at: string;

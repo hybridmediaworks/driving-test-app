@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptController;
+use App\Http\Controllers\Api\V1\Admin\CheatSheetController as AdminCheatSheetController;
+use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
 use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
 use App\Http\Controllers\Api\V1\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Api\V1\Admin\QuizQuestionController;
@@ -9,6 +11,9 @@ use App\Http\Controllers\Api\V1\Admin\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
+use App\Http\Controllers\Api\V1\FlashcardReviewController;
+use App\Http\Controllers\Api\V1\Public\CheatSheetController as PublicCheatSheetController;
+use App\Http\Controllers\Api\V1\Public\FlashcardController as PublicFlashcardController;
 use App\Http\Controllers\Api\V1\Public\QuizCategoryController as PublicQuizCategoryController;
 use App\Http\Controllers\Api\V1\Public\QuizController as PublicQuizController;
 use App\Http\Controllers\Api\V1\Public\StateController;
@@ -32,6 +37,17 @@ Route::prefix('v1')->group(function (): void {
     Route::post('quizzes/{quiz}/attempts', [PublicQuizController::class, 'storeAttempt'])
         ->middleware('throttle:20,1');
 
+    // Public flashcard browsing/study — front text is always visible; back_text/image_url are
+    // withheld per-card by FlashcardResource for premium cards the caller isn't entitled to.
+    Route::get('flashcards', [PublicFlashcardController::class, 'index']);
+    Route::get('flashcards/study', [PublicFlashcardController::class, 'study']);
+
+    // Public cheat-sheet browsing — title/summary/cover always visible; sections/PDF are gated
+    // by CheatSheetPolicy::readFull, same locked-teaser shape as flashcards.
+    Route::get('cheat-sheets', [PublicCheatSheetController::class, 'index']);
+    Route::get('cheat-sheets/{cheatSheet}', [PublicCheatSheetController::class, 'show']);
+    Route::get('cheat-sheets/{cheatSheet}/download', [PublicCheatSheetController::class, 'download']);
+
     // Public read-only reference data — the valid values for the filters above.
     Route::get('states', [StateController::class, 'index']);
     Route::get('vehicle-types', [VehicleTypeController::class, 'index']);
@@ -49,6 +65,9 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('/attempts', [QuizAttemptController::class, 'index']);
 
+        Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
+            ->middleware('throttle:60,1');
+
         Route::prefix('admin')->middleware('admin')->group(function (): void {
             Route::apiResource('quiz-categories', QuizCategoryController::class)->except(['show'])->parameters([
                 'quiz-categories' => 'quizCategory',
@@ -65,6 +84,14 @@ Route::prefix('v1')->group(function (): void {
             Route::delete('quizzes/{quiz}/questions/{question}', [QuizQuestionController::class, 'destroy']);
             Route::post('quizzes/{quiz}/questions/reorder', [QuizQuestionController::class, 'reorder']);
             Route::post('quizzes/{quiz}/questions/{question}/move', [QuizQuestionController::class, 'move']);
+
+            Route::apiResource('flashcards', AdminFlashcardController::class)->except(['show']);
+            Route::get('flashcards/{flashcard}', [AdminFlashcardController::class, 'show']);
+
+            Route::apiResource('cheat-sheets', AdminCheatSheetController::class)->except(['show'])->parameters([
+                'cheat-sheets' => 'cheatSheet',
+            ]);
+            Route::get('cheat-sheets/{cheatSheet}', [AdminCheatSheetController::class, 'show']);
 
             Route::apiResource('users', UserController::class);
 

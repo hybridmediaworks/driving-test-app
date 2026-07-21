@@ -15,6 +15,7 @@ class QuizSeeder extends Seeder
     public function run(): void
     {
         $practiceType = QuizType::query()->where('name', 'practice')->firstOrFail();
+        $finalType = QuizType::query()->where('name', 'final')->firstOrFail();
         $california = State::query()->where('code', 'CA')->firstOrFail();
         $car = VehicleType::query()->where('name', 'car')->firstOrFail();
 
@@ -177,6 +178,119 @@ class QuizSeeder extends Seeder
                 ],
             ],
         );
+
+        $this->seedQuiz(
+            title: 'California DMV Exam Simulation',
+            categoryName: 'traffic-laws',
+            quizType: $finalType,
+            state: $california,
+            vehicleType: $car,
+            questions: [
+                [
+                    'text' => 'When approaching an intersection with a four-way stop and another vehicle arrives at the same time from your right, who has the right of way?',
+                    'topic' => 'right-of-way',
+                    'answers' => [
+                        ['text' => 'The vehicle on the right', 'correct' => true],
+                        ['text' => 'The vehicle on the left'],
+                        ['text' => 'Whichever vehicle is larger'],
+                        ['text' => 'Whichever vehicle honks first'],
+                    ],
+                ],
+                [
+                    'text' => 'Unless otherwise posted, what is the typical speed limit in a residential district?',
+                    'topic' => 'speed-limits',
+                    'answers' => [
+                        ['text' => '15 mph'],
+                        ['text' => '25 mph', 'correct' => true],
+                        ['text' => '35 mph'],
+                        ['text' => '45 mph'],
+                    ],
+                ],
+                [
+                    'text' => 'A triangular sign with a red border and the word "YIELD" means you must:',
+                    'topic' => 'regulatory-signs',
+                    'answers' => [
+                        ['text' => 'Stop completely, always'],
+                        ['text' => 'Slow down and give the right of way to traffic and pedestrians as needed', 'correct' => true],
+                        ['text' => 'Speed up to merge quickly'],
+                        ['text' => 'Ignore it if no other cars are visible'],
+                    ],
+                ],
+                [
+                    'text' => 'What should you do when a school bus ahead of you on your side of the road stops with red lights flashing?',
+                    'topic' => 'school-buses',
+                    'answers' => [
+                        ['text' => 'Slow down and pass carefully'],
+                        ['text' => 'Stop and wait until the lights stop flashing', 'correct' => true],
+                        ['text' => 'Honk and proceed'],
+                        ['text' => 'Only stop if children are visible'],
+                    ],
+                ],
+                [
+                    'text' => 'What does a solid red octagon sign require you to do?',
+                    'topic' => 'regulatory-signs',
+                    'answers' => [
+                        ['text' => 'Slow down only'],
+                        ['text' => 'Come to a complete stop', 'correct' => true],
+                        ['text' => 'Yield if traffic is present'],
+                        ['text' => 'Stop only at night'],
+                    ],
+                ],
+                [
+                    'text' => 'What does a solid yellow line on your side of the center line mean?',
+                    'topic' => 'lane-markings',
+                    'answers' => [
+                        ['text' => 'Passing is not allowed from your side', 'correct' => true],
+                        ['text' => 'Passing is allowed at any time'],
+                        ['text' => 'The lane is closed ahead'],
+                        ['text' => 'You must merge left immediately'],
+                    ],
+                ],
+                [
+                    'text' => 'How far in advance should you signal before making a turn?',
+                    'topic' => 'signaling',
+                    'answers' => [
+                        ['text' => 'At least 100 feet before the turn', 'correct' => true],
+                        ['text' => 'Only after you start turning'],
+                        ['text' => 'Signaling is optional in light traffic'],
+                        ['text' => '10 feet before the turn'],
+                    ],
+                ],
+                [
+                    'text' => 'What is the legal blood alcohol concentration (BAC) limit for drivers 21 and older in most states?',
+                    'topic' => 'impaired-driving',
+                    'answers' => [
+                        ['text' => '0.08%', 'correct' => true],
+                        ['text' => '0.05%'],
+                        ['text' => '0.10%'],
+                        ['text' => '0.02%'],
+                    ],
+                ],
+                [
+                    'text' => 'A round orange sign along the roadway most likely indicates:',
+                    'topic' => 'warning-signs',
+                    'answers' => [
+                        ['text' => 'A railroad crossing ahead', 'correct' => true],
+                        ['text' => 'A school zone'],
+                        ['text' => 'A hospital nearby'],
+                        ['text' => 'A rest area'],
+                    ],
+                ],
+                [
+                    'text' => 'When driving in fog, you should use your:',
+                    'topic' => 'weather-conditions',
+                    'answers' => [
+                        ['text' => 'High-beam headlights'],
+                        ['text' => 'Low-beam headlights', 'correct' => true],
+                        ['text' => 'Hazard lights only'],
+                        ['text' => 'Parking lights only'],
+                    ],
+                ],
+            ],
+            durationSeconds: 600,
+            passingScorePercent: 80,
+            isPremium: true,
+        );
     }
 
     /**
@@ -189,6 +303,9 @@ class QuizSeeder extends Seeder
         State $state,
         VehicleType $vehicleType,
         array $questions,
+        int $durationSeconds = 1800,
+        ?int $passingScorePercent = null,
+        bool $isPremium = false,
     ): void {
         $category = QuizCategory::query()->where('name', $categoryName)->firstOrFail();
 
@@ -202,8 +319,9 @@ class QuizSeeder extends Seeder
                 'title' => $title,
                 'test_track' => 'permit_test',
                 'order_no' => 0,
-                'duration_seconds' => 1800,
-                'is_premium' => false,
+                'duration_seconds' => $durationSeconds,
+                'passing_score_percent' => $passingScorePercent,
+                'is_premium' => $isPremium,
                 'is_active' => true,
             ],
         );

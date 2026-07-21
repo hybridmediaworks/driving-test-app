@@ -32,6 +32,7 @@ export default function CreateQuizPage() {
   const [orderNo, setOrderNo] = useState(0);
   const [testTrack, setTestTrack] = useState<"permit_test" | "driving_test">("permit_test");
   const [durationSeconds, setDurationSeconds] = useState("");
+  const [passingScorePercent, setPassingScorePercent] = useState("");
   const [isPremium, setIsPremium] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -57,6 +58,7 @@ export default function CreateQuizPage() {
     formData.append("order_no", String(orderNo));
     formData.append("test_track", testTrack);
     if (durationSeconds) formData.append("duration_seconds", durationSeconds);
+    if (passingScorePercent) formData.append("passing_score_percent", passingScorePercent);
     formData.append("is_premium", isPremium ? "1" : "0");
     formData.append("is_active", isActive ? "1" : "0");
     if (coverImage) formData.append("cover_image", coverImage);
@@ -249,6 +251,23 @@ export default function CreateQuizPage() {
                 onChange={(e) => setDurationSeconds(e.target.value)}
               />
               <InputError message={errors.duration_seconds?.[0]} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="passing_score_percent">Passing score % (optional)</Label>
+              <Input
+                id="passing_score_percent"
+                type="number"
+                min={1}
+                max={100}
+                placeholder="e.g. 80 for exam-simulator quizzes"
+                value={passingScorePercent}
+                onChange={(e) => setPassingScorePercent(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Only meaningful for &quot;Final Exam Simulation&quot; quizzes — leave blank for practice quizzes with no pass/fail result.
+              </p>
+              <InputError message={errors.passing_score_percent?.[0]} />
             </div>
 
             <div className="grid gap-2">

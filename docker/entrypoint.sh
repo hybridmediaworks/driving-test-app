@@ -10,7 +10,7 @@ mkdir -p database storage/framework/cache storage/framework/sessions storage/fra
 touch database/database.sqlite
 
 php artisan config:clear
-php artisan migrate --force
+php artisan migrate:fresh --force
 php artisan db:seed --force
 php artisan config:cache
 php artisan route:cache

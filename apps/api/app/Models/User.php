@@ -40,4 +40,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(QuizAttempt::class);
     }
+
+    /**
+     * @return HasMany<FlashcardReview, $this>
+     */
+    public function flashcardReviews(): HasMany
+    {
+        return $this->hasMany(FlashcardReview::class);
+    }
 }

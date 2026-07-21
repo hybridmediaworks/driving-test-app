@@ -29,6 +29,7 @@ class Quiz extends Model implements HasMedia
         'test_track',
         'total_questions',
         'duration_seconds',
+        'passing_score_percent',
         'is_premium',
         'is_active',
     ];

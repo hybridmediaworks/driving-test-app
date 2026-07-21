@@ -57,9 +57,12 @@ class GradeQuizAttempt
                 ]);
             }
 
+            $score = $questions->isNotEmpty() ? (int) round($correctCount / $questions->count() * 100) : 0;
+
             $attempt->update([
                 'correct_count' => $correctCount,
-                'score' => $questions->isNotEmpty() ? (int) round($correctCount / $questions->count() * 100) : 0,
+                'score' => $score,
+                'passed' => $quiz->passing_score_percent !== null ? $score >= $quiz->passing_score_percent : null,
             ]);
 
             return $attempt->load(['answers.question.answers', 'answers.answer']);

@@ -21,6 +21,7 @@ class QuizResource extends JsonResource
             'test_track' => $this->test_track,
             'total_questions' => $this->total_questions,
             'duration_seconds' => $this->duration_seconds,
+            'passing_score_percent' => $this->passing_score_percent,
             'is_premium' => $this->is_premium,
             'cover_image_url' => $this->cover_image_url,
             'category' => $this->whenLoaded('category', fn () => [

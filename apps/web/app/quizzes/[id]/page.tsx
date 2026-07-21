@@ -2,6 +2,8 @@
 
 import { use, useEffect, useState } from "react";
 import type { PublicQuiz, PublicQuizQuestion, QuizAttempt } from "@driving-test-app/shared";
+import ExamPlayer from "@/components/exam/ExamPlayer";
+import ExamResults from "@/components/exam/ExamResults";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import QuizPlayer from "@/components/quiz/QuizPlayer";
@@ -32,6 +34,8 @@ export default function QuizDetailPage({ params }: { params: Promise<{ id: strin
       .catch((err) => setNotFoundError(err instanceof ApiError ? err.message : "This quiz isn't available."));
   }, [id]);
 
+  const isExam = data?.quiz.quiz_type?.name === "final";
+
   return (
     <WebLayoutProvider>
       <div className="flex min-h-screen flex-col bg-background">
@@ -57,12 +61,30 @@ export default function QuizDetailPage({ params }: { params: Promise<{ id: strin
                 <Paragraph color="muted">
                   {data.quiz.total_questions} questions
                   {data.quiz.duration_seconds && ` · ${Math.round(data.quiz.duration_seconds / 60)} min`}
+                  {isExam && data.quiz.passing_score_percent != null && ` · pass mark ${data.quiz.passing_score_percent}%`}
                 </Paragraph>
-                <Button onClick={() => setStage("playing")}>Start test</Button>
+                {isExam && (
+                  <Paragraph color="muted" size="sm">
+                    This is a timed exam simulation. Once started, the clock cannot be paused and questions can&apos;t be
+                    revisited.
+                  </Paragraph>
+                )}
+                <Button onClick={() => setStage("playing")}>{isExam ? "Start exam" : "Start test"}</Button>
               </div>
             )}
 
-            {data && stage === "playing" && (
+            {data && stage === "playing" && isExam && (
+              <ExamPlayer
+                quiz={data.quiz}
+                questions={data.questions}
+                onComplete={(a) => {
+                  setAttempt(a);
+                  setStage("results");
+                }}
+              />
+            )}
+
+            {data && stage === "playing" && !isExam && (
               <QuizPlayer
                 quiz={data.quiz}
                 questions={data.questions}
@@ -73,7 +95,11 @@ export default function QuizDetailPage({ params }: { params: Promise<{ id: strin
               />
             )}
 
-            {data && stage === "results" && attempt && (
+            {data && stage === "results" && attempt && isExam && (
+              <ExamResults attempt={attempt} questions={data.questions} quizId={data.quiz.id} />
+            )}
+
+            {data && stage === "results" && attempt && !isExam && (
               <QuizResults attempt={attempt} questions={data.questions} quizId={data.quiz.id} />
             )}
           </div>

@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             QuizCategorySeeder::class,
             UserSeeder::class,
             QuizSeeder::class,
+            FlashcardSeeder::class,
+            CheatSheetSeeder::class,
         ]);
     }
 }

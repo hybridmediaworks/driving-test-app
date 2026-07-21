@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { ChevronRight, ChevronRightIcon, Play, ShieldCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import ChallangeBankBanner from "@/components/cdl/ChallangeBankBanner";
+import CheatSheetsBanner from "@/components/cdl/CheatSheetsBanner";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import HandbookBanner from "@/components/cdl/HandbookBanner";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import PremiumBanner from "@/components/cdl/PremiumBanner";
@@ -532,7 +532,7 @@ export default async function CdlPage({ params }: { params: Promise<{ state: str
             </section>
 
             <section className="mb-10">
-              <HandbookBanner />
+              <CheatSheetsBanner />
             </section>
 
             <section className="mb-10 flex items-center justify-between gap-15 rounded-3xl bg-blue-50 ps-5 pr-15 max-md:flex-col max-md:items-start">

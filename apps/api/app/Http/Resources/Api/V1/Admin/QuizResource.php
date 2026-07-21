@@ -26,6 +26,7 @@ class QuizResource extends JsonResource
             'order_no' => $this->order_no,
             'total_questions' => $this->total_questions,
             'duration_seconds' => $this->duration_seconds,
+            'passing_score_percent' => $this->passing_score_percent,
             'is_premium' => $this->is_premium,
             'is_active' => $this->is_active,
             'created_at' => $this->created_at,

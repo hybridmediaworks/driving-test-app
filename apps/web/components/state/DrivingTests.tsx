@@ -1,6 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 import ChallangeBankBanner from "@/components/cdl/ChallangeBankBanner";
-import HandbookBanner from "@/components/cdl/HandbookBanner";
+import CheatSheetsBanner from "@/components/cdl/CheatSheetsBanner";
 import PremiumBanner from "@/components/cdl/PremiumBanner";
 import StepsFlow from "./StepsFlow";
 import StepsHeader from "./StepsHeader";
@@ -99,7 +99,7 @@ export default function DrivingTests() {
           {index === 0 && <PremiumBanner premiumInfo={premiumBannerInfo[0]} />}
           {index === 2 && <PremiumBanner premiumInfo={premiumBannerInfo[1]} />}
           {index === 5 && <ChallangeBankBanner />}
-          {index === 6 && <HandbookBanner />}
+          {index === 6 && <CheatSheetsBanner />}
         </div>
       ))}
 
