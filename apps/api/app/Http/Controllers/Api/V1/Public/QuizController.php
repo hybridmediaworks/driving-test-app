@@ -26,8 +26,8 @@ class QuizController extends Controller
      *
      * Public — no authentication required. Returns only active quizzes, paginated. Optionally
      * filter by `state` (state code, e.g. `CA`), `vehicle_type` (name, e.g. `car`), `category`
-     * (name, e.g. `road-signs`), and `quiz_type` (name, e.g. `final` for exam-simulator quizzes).
-     * All filters are exact-match and combinable.
+     * (name, e.g. `road-signs`), `quiz_type` (name, e.g. `final` for exam-simulator quizzes), and
+     * `test_track` (`permit_test` or `driving_test`). All filters are exact-match and combinable.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -51,6 +51,10 @@ class QuizController extends Controller
 
         if ($request->filled('quiz_type')) {
             $query->whereHas('quizType', fn ($q) => $q->where('name', $request->string('quiz_type')));
+        }
+
+        if ($request->filled('test_track')) {
+            $query->where('test_track', $request->string('test_track'));
         }
 
         $perPage = min(max($request->integer('per_page', 15), 5), 100);

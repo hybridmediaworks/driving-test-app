@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             QuizCategorySeeder::class,
             UserSeeder::class,
             QuizSeeder::class,
+            StateCoverageSeeder::class,
             FlashcardSeeder::class,
             CheatSheetSeeder::class,
             PlanSeeder::class,
