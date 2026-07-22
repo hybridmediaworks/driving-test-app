@@ -2,6 +2,7 @@ import { Check, Circle, Volume2, XIcon } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import type { QuizQuestionStatic } from "./types";
+import Heading from "@/components/ui/Heading";
 
 export default function QuestionCard({
   question,
@@ -44,79 +45,105 @@ export default function QuestionCard({
 
   return (
     <>
-      <div className="rounded-3xl border border-[#e5e7eb80] bg-white shadow-xl">
+      <div className="space-y-4">
+        <div className="relative" style={{ zoom: fontScale }}>
+          {voiceOver && (
+            <Volume2 className="absolute top-1 -left-9 h-7 w-7 rounded-full bg-blue-600 p-1.5 text-white" />
+          )}
+          <Paragraph
+            size="2xl"
+            className="font-semibold font-sora"
+            color="dark"
+          >
+            {question.question}
+          </Paragraph>
+        </div>
         {question.img && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={question.img}
             alt={question.question}
-            className="max-h-64 w-full rounded-t-xl object-cover"
+            className="max-h-64 w-full rounded-xl object-cover"
           />
         )}
-        <div style={{ zoom: fontScale }} className="p-6">
-          <Paragraph color="primary" size="sm" className="mb-2 font-semibold">
-            {question.category}
-          </Paragraph>
-          <div className="relative">
-            {voiceOver && (
-              <Volume2 className="absolute top-1 -left-9 h-7 w-7 rounded-full bg-blue-600 p-1.5 text-white" />
-            )}
-            <h2 className="mb-5 text-2xl leading-snug font-bold">{question.question}</h2>
-          </div>
+        <div style={{ zoom: fontScale }}>
+          <div className="space-y-3">
+            {question.options.map((option, index) => {
+              const isWrongSelected =
+                isAnswered &&
+                option.id === selectedOptionId &&
+                !option.isCorrect;
+              const isCorrectAnswer = isAnswered && option.isCorrect;
+              const optionLetter = String.fromCharCode(65 + index);
 
-          <div className="space-y-1">
-            {question.options.map((option) => (
-              <div key={option.id}>
-                <div
-                  onClick={() => onSelectOption(option.id)}
-                  className={`group flex items-start justify-start gap-3 rounded-xl p-3 ${
-                    !isAnswered ? "cursor-pointer hover:bg-neutral-50" : ""
-                  } ${isAnswered && option.id === selectedOptionId ? "bg-neutral-100" : ""}`}
-                >
-                  <div className="w-6 pt-0.5">
-                    {!isAnswered || (option.id !== selectedOptionId && !option.isCorrect) ? (
-                      <Circle className="rounded-full stroke-neutral-300 transition-all group-hover:stroke-12" />
-                    ) : option.id === selectedOptionId && !option.isCorrect ? (
-                      <XIcon className="rounded-full bg-red-500 stroke-white p-0.5" />
-                    ) : (
-                      <div className="flex h-4.5 w-4.5 rotate-45 items-center justify-center bg-green-600">
-                        <Check className="w-7 -rotate-45 stroke-white p-0.5" />
+              return (
+                <div key={option.id}>
+                  <div
+                    onClick={() => onSelectOption(option.id)}
+                    className={`group rounded-lg p-3 border space-y-4 ${
+                      !isAnswered ? "cursor-pointer hover:bg-neutral-50" : ""
+                    } ${isWrongSelected ? "bg-red-50 border-red-500" : isCorrectAnswer ? "bg-green-50 border-green-500" : ""}`}
+                  >
+                    <div className="flex items-center justify-start gap-3">
+                      <div
+                        className={`font-bold text-sm min-w-7.5 min-h-7.5 rounded-full flex items-center justify-center ${
+                          isWrongSelected
+                            ? "bg-red-500 text-white"
+                            : isCorrectAnswer
+                              ? "bg-green-600 text-white"
+                              : "bg-neutral-100 text-neutral-500"
+                        }`}
+                      >
+                        {optionLetter}
                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <Paragraph
-                      className={
-                        option.id === selectedOptionId && !option.isCorrect ? "line-through" : ""
-                      }
-                    >
-                      {option.text}
-                    </Paragraph>
+                      <Paragraph
+                        className={`font-medium ${
+                          option.id === selectedOptionId && !option.isCorrect
+                            ? "line-through"
+                            : ""
+                        }`}
+                      >
+                        {option.text}
+                      </Paragraph>
+                      {(isWrongSelected || isCorrectAnswer) && (
+                        <Paragraph
+                          className="ml-auto flex shrink-0 items-center font-semibold leading-6!"
+                          size="xs"
+                        >
+                          {isWrongSelected ? (
+                            <span className="flex items-center gap-1.5">
+                              <span className="rounded-full border border-red-500 bg-white px-2.5 py-1 text-red-600">
+                                Your answer
+                              </span>
+                              <XIcon className="min-h-4 min-w-4 rounded-full bg-red-500 stroke-white p-0.5" />
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1.5">
+                              <span className="rounded-full border border-green-500 bg-white px-2.5 py-1 text-green-600">
+                                Correct answer
+                              </span>
+                              <Check className="min-h-4 min-w-4 rounded-full bg-green-600 stroke-white p-0.5" />
+                            </span>
+                          )}
+                        </Paragraph>
+                      )}
+                    </div>
+
                     {isAnswered && option.id === selectedOptionId && (
                       <div className="relative">
                         {voiceOver && (
                           <Volume2 className="absolute top-0 -left-8.5 mt-2 h-6 w-6 rounded-full bg-blue-600 p-1 text-white" />
                         )}
-                        <Paragraph className="flex min-h-9 items-center" size="sm">
-                          {option.explanation}
-                        </Paragraph>
+                        <Paragraph>{option.explanation}</Paragraph>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
-
-        {footerPosition === "inside" && footer && (
-          <div className="flex items-center justify-end gap-4 border-t border-neutral-100 p-6">{footer}</div>
-        )}
       </div>
-
-      {footerPosition === "outside" && footer && (
-        <div className="mt-5 flex items-center justify-end gap-4">{footer}</div>
-      )}
     </>
   );
 }

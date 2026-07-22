@@ -5,14 +5,63 @@ import PremiumBanner from "@/components/cdl/PremiumBanner";
 import StepsFlow from "./StepsFlow";
 import StepsHeader from "./StepsHeader";
 
+const toSlug = (title: string) =>
+  title.toLowerCase().replace(/\s+/g, "-");
+
 const essentialsSteps = [
-  { title: "OR DMV Diagnostic Test", questions: 8, type: "free" as const, image: "/driving-tests.jpg" },
-  { title: "OR Practice Test 1", questions: 20, type: "free" as const, image: "/driving-tests.jpg", status: "next" as const },
-  { title: "OR Practice Test 2", questions: 20, type: "free" as const, image: "/driving-tests.jpg" },
-  { title: "OR Practice Test 3", questions: 20, type: "free" as const, image: "/driving-tests.jpg" },
-  { title: "OR Practice Test 4", questions: 40, type: "premium" as const, locked: true, image: "/driving-tests.jpg" },
-  { title: "OR Practice Test 5", questions: 40, type: "premium" as const, locked: true, image: "/driving-tests.jpg" },
-  { title: "OR Practice Test 6", questions: 40, type: "premium" as const, locked: true, image: "/driving-tests.jpg" },
+  {
+    title: "OR DMV Diagnostic Test",
+    slug: toSlug("OR DMV Diagnostic Test"),
+    questions: 8,
+    type: "free" as const,
+    image: "/driving-tests.jpg",
+  },
+  {
+    title: "OR Practice Test 1",
+    slug: toSlug("OR Practice Test 1"),
+    questions: 20,
+    type: "free" as const,
+    image: "/driving-tests.jpg",
+    status: "next" as const,
+  },
+  {
+    title: "OR Practice Test 2",
+    slug: toSlug("OR Practice Test 2"),
+    questions: 20,
+    type: "free" as const,
+    image: "/driving-tests.jpg",
+  },
+  {
+    title: "OR Practice Test 3",
+    slug: toSlug("OR Practice Test 3"),
+    questions: 20,
+    type: "free" as const,
+    image: "/driving-tests.jpg",
+  },
+  {
+    title: "OR Practice Test 4",
+    slug: toSlug("OR Practice Test 4"),
+    questions: 40,
+    type: "premium" as const,
+    locked: true,
+    image: "/driving-tests.jpg",
+  },
+  {
+    title: "OR Practice Test 5",
+    slug: toSlug("OR Practice Test 5"),
+    questions: 40,
+    type: "premium" as const,
+    locked: true,
+    image: "/driving-tests.jpg",
+  },
+  {
+    title: "OR Practice Test 6",
+    slug: toSlug("OR Practice Test 6"),
+    questions: 40,
+    type: "premium" as const,
+    locked: true,
+    image: "/driving-tests.jpg",
+  },
 ];
 
 const sections = [
@@ -20,7 +69,8 @@ const sections = [
     header: {
       headerSequence: "1",
       headerTitle: "The Essentials",
-      headerDesc: "Your journey begins here. These tests cover key concepts and essential knowledge.",
+      headerDesc:
+        "Your journey begins here. These tests cover key concepts and essential knowledge.",
       totalQuestions: "140",
     },
     steps: essentialsSteps,
@@ -33,10 +83,32 @@ const sections = [
       totalQuestions: "325",
     },
     steps: [
-      { title: "Intersections", questions: 25, type: "free" as const, image: "/driving-tests.jpg" },
-      { title: "Right of Way", questions: 30, type: "free" as const, status: "next" as const, image: "/driving-tests.jpg" },
-      { title: "Lane Rules", questions: 25, type: "free" as const, image: "/driving-tests.jpg" },
-      { title: "Advanced Signs", questions: 40, type: "premium" as const, locked: true, image: "/driving-tests.jpg" },
+      {
+        title: "Intersections",
+        questions: 25,
+        type: "free" as const,
+        image: "/driving-tests.jpg",
+      },
+      {
+        title: "Right of Way",
+        questions: 30,
+        type: "free" as const,
+        status: "next" as const,
+        image: "/driving-tests.jpg",
+      },
+      {
+        title: "Lane Rules",
+        questions: 25,
+        type: "free" as const,
+        image: "/driving-tests.jpg",
+      },
+      {
+        title: "Advanced Signs",
+        questions: 40,
+        type: "premium" as const,
+        locked: true,
+        image: "/driving-tests.jpg",
+      },
     ],
   },
   {
@@ -47,29 +119,97 @@ const sections = [
       totalQuestions: "93",
     },
     steps: [
-      { title: "Traffic Violations", questions: 20, type: "free" as const, image: "/driving-tests.jpg" },
-      { title: "Speed Limits", questions: 25, type: "free" as const, status: "next" as const, image: "/driving-tests.jpg" },
-      { title: "DUI Laws", questions: 30, type: "premium" as const, locked: true, image: "/driving-tests.jpg" },
+      {
+        title: "Traffic Violations",
+        questions: 20,
+        type: "free" as const,
+        image: "/driving-tests.jpg",
+      },
+      {
+        title: "Speed Limits",
+        questions: 25,
+        type: "free" as const,
+        status: "next" as const,
+        image: "/driving-tests.jpg",
+      },
+      {
+        title: "DUI Laws",
+        questions: 30,
+        type: "premium" as const,
+        locked: true,
+        image: "/driving-tests.jpg",
+      },
     ],
   },
   {
-    header: { headerSequence: "4", headerTitle: "The exam simulator", headerDesc: "Includes random questions from all topics." },
-    steps: [{ title: "Simulator 1", questions: 35, type: "premium" as const, locked: true, image: "/driving-tests.jpg" }],
-  },
-  {
-    header: { headerSequence: "5", headerTitle: "The extra support", headerDesc: "Downloadable guides to keep your knowledge fresh." },
+    header: {
+      headerSequence: "4",
+      headerTitle: "The exam simulator",
+      headerDesc: "Includes random questions from all topics.",
+    },
     steps: [
-      { title: "Simulator 1", questions: 35, type: "premium" as const, locked: true, image: "/driving-tests.jpg" },
-      { title: "Simulator 2", questions: 35, type: "premium" as const, locked: true, image: "/driving-tests.jpg" },
+      {
+        title: "Simulator 1",
+        questions: 35,
+        type: "premium" as const,
+        locked: true,
+        image: "/driving-tests.jpg",
+      },
     ],
   },
-  { header: { headerSequence: "6", headerTitle: "The Challenge Bank™" }, steps: undefined },
-  { header: { headerSequence: "7", headerTitle: "Explore OR Driver's Handbook" }, steps: undefined },
   {
-    header: { headerSequence: "8", headerTitle: "More ways to prepare", headerDesc: "Tools and guides to help you get your license." },
+    header: {
+      headerSequence: "5",
+      headerTitle: "The extra support",
+      headerDesc: "Downloadable guides to keep your knowledge fresh.",
+    },
     steps: [
-      { title: "Video Lessons", questions: 0, type: "free" as const, image: "/driving-tests.jpg" },
-      { title: "Tips & Tricks", questions: 0, type: "free" as const, image: "/driving-tests.jpg" },
+      {
+        title: "Simulator 1",
+        questions: 35,
+        type: "premium" as const,
+        locked: true,
+        image: "/driving-tests.jpg",
+      },
+      {
+        title: "Simulator 2",
+        questions: 35,
+        type: "premium" as const,
+        locked: true,
+        image: "/driving-tests.jpg",
+      },
+    ],
+  },
+  {
+    header: { headerSequence: "6", headerTitle: "The Challenge Bank™" },
+    steps: undefined,
+  },
+  {
+    header: {
+      headerSequence: "7",
+      headerTitle: "Explore OR Driver's Handbook",
+    },
+    steps: undefined,
+  },
+  {
+    header: {
+      headerSequence: "8",
+      headerTitle: "More ways to prepare",
+      headerDesc: "Tools and guides to help you get your license.",
+    },
+    steps: [
+      {
+        title: "Video Lessons",
+        questions: 0,
+        type: "free" as const,
+        image: "/driving-tests.jpg",
+      },
+      {
+        title: "Tips & Tricks",
+        questions: 0,
+        type: "free" as const,
+        image: "/driving-tests.jpg",
+      },
     ],
   },
 ];
@@ -89,13 +229,13 @@ const premiumBannerInfo = [
   },
 ];
 
-export default function DrivingTests() {
+export default function DrivingTests({ state }: { state: string }) {
   return (
     <section className="my-10 space-y-10">
       {sections.map((section, index) => (
         <div key={index}>
           <StepsHeader headerInfo={section.header} />
-          <StepsFlow steps={section.steps} />
+          <StepsFlow steps={section.steps} state={state} />
           {index === 0 && <PremiumBanner premiumInfo={premiumBannerInfo[0]} />}
           {index === 2 && <PremiumBanner premiumInfo={premiumBannerInfo[1]} />}
           {index === 5 && <ChallangeBankBanner />}
@@ -107,9 +247,12 @@ export default function DrivingTests() {
         <button className="rounded-lg bg-[#9747ff]/30 px-4 py-2 text-center text-xl font-semibold text-white">
           End of theory exam preparation
         </button>
-        <h3 className="mt-4 text-2xl font-bold">Pass official DMV written exam</h3>
+        <h3 className="mt-4 text-2xl font-bold">
+          Pass official DMV written exam
+        </h3>
         <p className="mx-auto mt-4 max-w-2xl text-grey">
-          Once you reach this place with 80% <b className="text-blue-primary">Passing Probability</b>, you will be
+          Once you reach this place with 80%{" "}
+          <b className="text-blue-primary">Passing Probability</b>, you will be
           ready to pass the official DMV written exam with ease and confidence.
         </p>
       </div>
@@ -124,11 +267,16 @@ export default function DrivingTests() {
           </div>
 
           <div>
-            <h4 className="text-base font-bold">Reviewed for legal and handbook accuracy</h4>
+            <h4 className="text-base font-bold">
+              Reviewed for legal and handbook accuracy
+            </h4>
             <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
               Steven Litvintchouk
             </h5>
-            <p className="text-sm text-grey">M.S., Chief Educational Researcher (ACES member) Last verified for accuracy on Mar 23, 2026</p>
+            <p className="text-sm text-grey">
+              M.S., Chief Educational Researcher (ACES member) Last verified for
+              accuracy on Mar 23, 2026
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-4 rounded-[20px] bg-[#f2f7ff] p-4">
@@ -141,20 +289,33 @@ export default function DrivingTests() {
           </div>
 
           <div>
-            <h4 className="text-base font-bold lg:whitespace-nowrap">Test design and learning experience oversight</h4>
+            <h4 className="text-base font-bold lg:whitespace-nowrap">
+              Test design and learning experience oversight
+            </h4>
             <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
               Andrei Zakhareuski
             </h5>
-            <p className="text-sm text-grey">Co-founder &amp; CEO, Driving-Tests.org</p>
+            <p className="text-sm text-grey">
+              Co-founder &amp; CEO, Driving-Tests.org
+            </p>
           </div>
         </div>
       </div>
       <p className="text-sm">
-        Questions are created and maintained by the Driving-Tests.org content team following our{" "}
-        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">multi-layer editorial process</span> and
-        updated whenever the Oregon DMV changes its handbook or website information. Official sources we check:{" "}
-        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">Oregon Driver Handbook (2026 edition)</span>,{" "}
-        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">Oregon DMV website.</span>
+        Questions are created and maintained by the Driving-Tests.org content
+        team following our{" "}
+        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">
+          multi-layer editorial process
+        </span>{" "}
+        and updated whenever the Oregon DMV changes its handbook or website
+        information. Official sources we check:{" "}
+        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">
+          Oregon Driver Handbook (2026 edition)
+        </span>
+        ,{" "}
+        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">
+          Oregon DMV website.
+        </span>
       </p>
     </section>
   );

@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { LockKeyhole } from "lucide-react";
 
 type Step = {
   title: string;
+  slug?: string;
   questions: number;
   type: "free" | "premium";
   locked?: boolean;
@@ -9,8 +11,8 @@ type Step = {
   status?: "next";
 };
 
-export default function StepCard({ step }: { step: Step }) {
-  return (
+export default function StepCard({ step, state }: { step: Step; state?: string }) {
+  const content = (
     <div className="relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1">
       {step.type === "free" && (
         <span className="absolute top-2 left-2 z-10 rounded bg-green-500 px-2 py-0.5 text-[9px] font-semibold text-white">
@@ -59,4 +61,14 @@ export default function StepCard({ step }: { step: Step }) {
       </div>
     </div>
   );
+
+  if (state && step.slug) {
+    return (
+      <Link href={`/${state}/${step.slug}`} className="block">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }

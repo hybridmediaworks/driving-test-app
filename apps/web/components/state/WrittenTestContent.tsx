@@ -8,7 +8,6 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import QuizPlayer from "@/components/state/quiz/QuizPlayer";
 import { stateAbbreviations, stateToSlug, usStates } from "@/lib/usStates";
 import { otherStateLinks } from "@/lib/otherStateLinks";
 
@@ -21,13 +20,12 @@ function slugToStateName(slug: string): string {
 
 const studySections = ["carSiblingFacts", "carSiblingIntent", "carSiblingTopics", "carSiblingPath"];
 
-export default function WrittenTestContent({ state }: { state: string }) {
+export default function WrittenTestContent({ state, testSlug }: { state: string; testSlug: string }) {
   const stateName = usStates.includes(slugToStateName(state)) ? slugToStateName(state) : "Alaska";
   const stateCode = stateAbbreviations[stateName] ?? "";
   const stateSlug = stateToSlug(stateName);
+  const quizHref = `/${stateSlug}/${testSlug}/quiz`;
 
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [showQuizResults, setShowQuizResults] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [activeStudySection, setActiveStudySection] = useState(studySections[0]);
 
@@ -56,24 +54,12 @@ export default function WrittenTestContent({ state }: { state: string }) {
     }`;
   }
 
-  function goToStatePage() {
-    window.location.href = `/${stateSlug}`;
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {!(showQuiz && showQuizResults) && <Header variant="states" hideNav />}
+      <Header variant="states" hideNav />
 
       <main className="flex-1">
-        {showQuiz ? (
-          <QuizPlayer
-            stateName={stateName}
-            showResults={showQuizResults}
-            onShowResultsChange={setShowQuizResults}
-            onExit={goToStatePage}
-          />
-        ) : (
-          <div id="atWrap" className="relative mx-auto block max-w-container" role="main">
+        <div id="atWrap" className="relative mx-auto block max-w-container" role="main">
             <nav id="breadcrumbs" className="text-sm text-[#888]" data-nosnippet="">
               <div id="bcrumbs" className="mx-auto box-border py-2.5 max-md:py-0 max-md:pb-2">
                 <Paragraph className="flex items-center gap-0.5" color="muted" size="sm">
@@ -168,7 +154,7 @@ export default function WrittenTestContent({ state }: { state: string }) {
                     id="btnStartWrp"
                     className="absolute bottom-[-30px] left-1/2 flex w-[calc(100vw-80px)] max-w-[904px] -translate-x-1/2 flex-nowrap items-center justify-center gap-2 max-md:fixed max-md:static max-md:inset-x-0 max-md:bottom-0 max-md:z-[1000] max-md:m-0 max-md:w-full max-md:translate-x-0 max-md:flex-col max-md:border-0 max-md:bg-white max-md:px-4 max-md:py-[13px] max-md:shadow-none max-md:transition-all max-md:duration-300"
                   >
-                    <Button id="atBtnStart" size="lg" className="h-15.5 w-full max-w-139 min-w-100" onClick={() => setShowQuiz(true)}>
+                    <Button id="atBtnStart" href={quizHref} size="lg" className="h-15.5 w-full max-w-139 min-w-100">
                       <span id="spnTestStart">Start free {stateCode} permit practice test</span>
                     </Button>
                     <Button id="atBtnPremium" variant="outline" size="lg" className="h-15.5 max-w-139">
@@ -744,10 +730,9 @@ export default function WrittenTestContent({ state }: { state: string }) {
               </div>
             </section>
           </div>
-        )}
       </main>
 
-      {!showQuiz && <Footer />}
+      <Footer />
     </div>
   );
 }

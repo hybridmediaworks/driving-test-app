@@ -19,10 +19,10 @@ export default function StateLandingPage({ state = "" }: { state?: string }) {
   const propStateName = state ? slugToStateName(state) : "";
   const stateName = (isValidState(propStateName) ? propStateName : "") || selectedState || "Oregon";
   const stateAbbr = stateAbbreviations[stateName] || "OR";
+  const stateSlug = state || stateToSlug(stateName);
 
   function goToWrittenTest() {
-    const slug = state || stateToSlug(stateName);
-    router.push(`/${slug}/dmv-written-test`);
+    router.push(`/${stateSlug}/dmv-written-test`);
   }
 
   return (
@@ -189,7 +189,7 @@ export default function StateLandingPage({ state = "" }: { state?: string }) {
                 </div>
               </div>
             </div>
-            <DrivingTests />
+            <DrivingTests state={stateSlug} />
           </div>
         </section>
       </main>
