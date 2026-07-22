@@ -9,11 +9,13 @@ use App\Models\State;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AuthenticatesWithBearerToken;
 use Tests\TestCase;
 
 class FlashcardBrowsingTest extends TestCase
 {
     use RefreshDatabase;
+    use AuthenticatesWithBearerToken;
 
     private function makeActiveSubscriber(): User
     {
@@ -66,7 +68,7 @@ class FlashcardBrowsingTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $card = Flashcard::factory()->create(['is_premium' => true, 'is_active' => true]);
 
-        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/flashcards');
+        $response = $this->withUserToken($admin)->getJson('/api/v1/flashcards');
 
         $response->assertOk();
         $response->assertJsonPath('data.0.back_text', $card->back_text);
@@ -78,7 +80,7 @@ class FlashcardBrowsingTest extends TestCase
         $subscriber = $this->makeActiveSubscriber();
         $card = Flashcard::factory()->create(['is_premium' => true, 'is_active' => true]);
 
-        $response = $this->actingAs($subscriber, 'sanctum')->getJson('/api/v1/flashcards');
+        $response = $this->withUserToken($subscriber)->getJson('/api/v1/flashcards');
 
         $response->assertOk();
         $response->assertJsonPath('data.0.back_text', $card->back_text);

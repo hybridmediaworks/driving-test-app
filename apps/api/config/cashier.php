@@ -49,7 +49,14 @@ return [
     'webhook' => [
         'secret' => env('STRIPE_WEBHOOK_SECRET'),
         'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
-        'events' => WebhookCommand::DEFAULT_EVENTS,
+        // Cashier's own defaults, plus checkout.session.completed — needed by our own
+        // StripeWebhookController override, which creates a family_groups/family_members
+        // record for the one-time Lifetime-Family purchase (Cashier itself doesn't listen for
+        // this event since it only auto-tracks recurring subscriptions).
+        'events' => [
+            ...WebhookCommand::DEFAULT_EVENTS,
+            'checkout.session.completed',
+        ],
     ],
 
     /*

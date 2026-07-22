@@ -21,7 +21,10 @@ class FlashcardResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $unlocked = Gate::forUser($request->user())->allows('readFull', $this->resource);
+        // This resource is only ever served from routes with no auth:sanctum middleware (guests
+        // may browse) — $request->user() with no guard resolves via the ambient default guard,
+        // which never sees the Sanctum token. Resolve explicitly.
+        $unlocked = Gate::forUser($request->user('sanctum'))->allows('readFull', $this->resource);
 
         return [
             'id' => $this->id,

@@ -9,11 +9,13 @@ use App\Models\QuizQuestion;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AuthenticatesWithBearerToken;
 use Tests\TestCase;
 
 class QuizEntitlementGatingTest extends TestCase
 {
     use RefreshDatabase;
+    use AuthenticatesWithBearerToken;
 
     private function makePremiumQuizWithQuestion(): array
     {
@@ -61,7 +63,7 @@ class QuizEntitlementGatingTest extends TestCase
         ['quiz' => $quiz] = $this->makePremiumQuizWithQuestion();
         $user = User::factory()->create(['is_admin' => false]);
 
-        $response = $this->actingAs($user, 'sanctum')->getJson("/api/v1/quizzes/{$quiz->id}");
+        $response = $this->withUserToken($user)->getJson("/api/v1/quizzes/{$quiz->id}");
 
         $response->assertOk();
         $response->assertJsonPath('locked', true);
@@ -73,7 +75,7 @@ class QuizEntitlementGatingTest extends TestCase
         ['quiz' => $quiz] = $this->makePremiumQuizWithQuestion();
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = $this->actingAs($admin, 'sanctum')->getJson("/api/v1/quizzes/{$quiz->id}");
+        $response = $this->withUserToken($admin)->getJson("/api/v1/quizzes/{$quiz->id}");
 
         $response->assertOk();
         $response->assertJsonPath('locked', false);
@@ -85,7 +87,7 @@ class QuizEntitlementGatingTest extends TestCase
         ['quiz' => $quiz] = $this->makePremiumQuizWithQuestion();
         $subscriber = $this->makeActiveSubscriber();
 
-        $response = $this->actingAs($subscriber, 'sanctum')->getJson("/api/v1/quizzes/{$quiz->id}");
+        $response = $this->withUserToken($subscriber)->getJson("/api/v1/quizzes/{$quiz->id}");
 
         $response->assertOk();
         $response->assertJsonPath('locked', false);
@@ -111,7 +113,7 @@ class QuizEntitlementGatingTest extends TestCase
         ['quiz' => $quiz, 'question' => $question, 'correct' => $correct] = $this->makePremiumQuizWithQuestion();
         $user = User::factory()->create(['is_admin' => false]);
 
-        $response = $this->actingAs($user, 'sanctum')->postJson("/api/v1/quizzes/{$quiz->id}/attempts", [
+        $response = $this->withUserToken($user)->postJson("/api/v1/quizzes/{$quiz->id}/attempts", [
             'answers' => [
                 ['question_id' => $question->id, 'answer_id' => $correct->id],
             ],
@@ -126,7 +128,7 @@ class QuizEntitlementGatingTest extends TestCase
         ['quiz' => $quiz, 'question' => $question, 'correct' => $correct] = $this->makePremiumQuizWithQuestion();
         $subscriber = $this->makeActiveSubscriber();
 
-        $response = $this->actingAs($subscriber, 'sanctum')->postJson("/api/v1/quizzes/{$quiz->id}/attempts", [
+        $response = $this->withUserToken($subscriber)->postJson("/api/v1/quizzes/{$quiz->id}/attempts", [
             'answers' => [
                 ['question_id' => $question->id, 'answer_id' => $correct->id],
             ],
@@ -141,7 +143,7 @@ class QuizEntitlementGatingTest extends TestCase
         ['quiz' => $quiz, 'question' => $question, 'correct' => $correct] = $this->makePremiumQuizWithQuestion();
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = $this->actingAs($admin, 'sanctum')->postJson("/api/v1/quizzes/{$quiz->id}/attempts", [
+        $response = $this->withUserToken($admin)->postJson("/api/v1/quizzes/{$quiz->id}/attempts", [
             'answers' => [
                 ['question_id' => $question->id, 'answer_id' => $correct->id],
             ],

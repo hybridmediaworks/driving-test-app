@@ -75,7 +75,10 @@ class QuizController extends Controller
         $this->authorize('view', $quiz);
 
         $quiz->load(['category', 'quizType', 'state', 'vehicleType']);
-        $unlocked = Gate::allows('attempt', $quiz);
+        // This route intentionally carries no auth:sanctum middleware (guests may browse) — that
+        // means Gate's ambient/default-guard user resolution never sees the Sanctum token even
+        // when one is sent, so the entitled user must be resolved explicitly here.
+        $unlocked = Gate::forUser($request->user('sanctum'))->allows('attempt', $quiz);
 
         if ($unlocked) {
             $quiz->load(['quizQuestions.answers', 'quizQuestions.media']);
@@ -108,9 +111,10 @@ class QuizController extends Controller
      */
     public function storeAttempt(StoreQuizAttemptRequest $request, Quiz $quiz): JsonResponse
     {
-        $this->authorize('attempt', $quiz);
-
         $user = $request->user('sanctum');
+        // Same reason as show() above — no auth:sanctum middleware on this route, so the user
+        // must be passed explicitly rather than relying on $this->authorize()'s ambient resolution.
+        Gate::forUser($user)->authorize('attempt', $quiz);
         $guestToken = $user === null
             ? ($request->string('guest_token')->toString() ?: (string) Str::uuid())
             : null;

@@ -64,12 +64,14 @@ class CheatSheetController extends Controller
      * otherwise `sections` is omitted entirely and `locked: true`, same shape planned for premium
      * quizzes in the subscription roadmap.
      */
-    public function show(CheatSheet $cheatSheet): JsonResponse
+    public function show(Request $request, CheatSheet $cheatSheet): JsonResponse
     {
         $this->authorize('view', $cheatSheet);
 
         $cheatSheet->load(['category', 'state', 'vehicleType']);
-        $unlocked = Gate::allows('readFull', $cheatSheet);
+        // No auth:sanctum middleware on this route (guests may browse) — Gate's ambient/
+        // default-guard user resolution never sees the Sanctum token, so resolve explicitly.
+        $unlocked = Gate::forUser($request->user('sanctum'))->allows('readFull', $cheatSheet);
 
         return response()->json([
             'cheat_sheet' => new CheatSheetResource($cheatSheet),
@@ -84,9 +86,10 @@ class CheatSheetController extends Controller
      * Requires the caller to be able to read the full sheet — same gate as the `sections` field
      * on `show`. The PDF is rendered on first request and cached; see `GenerateCheatSheetPdf`.
      */
-    public function download(CheatSheet $cheatSheet): BinaryFileResponse
+    public function download(Request $request, CheatSheet $cheatSheet): BinaryFileResponse
     {
-        $this->authorize('readFull', $cheatSheet);
+        // Same reason as show() above — no auth:sanctum middleware on this route.
+        Gate::forUser($request->user('sanctum'))->authorize('readFull', $cheatSheet);
 
         $media = ($this->generatePdf)($cheatSheet);
 

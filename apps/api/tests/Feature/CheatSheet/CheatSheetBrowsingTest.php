@@ -10,11 +10,13 @@ use App\Models\State;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AuthenticatesWithBearerToken;
 use Tests\TestCase;
 
 class CheatSheetBrowsingTest extends TestCase
 {
     use RefreshDatabase;
+    use AuthenticatesWithBearerToken;
 
     private function makeActiveSubscriber(): User
     {
@@ -70,7 +72,7 @@ class CheatSheetBrowsingTest extends TestCase
         $sheet = CheatSheet::factory()->create(['is_premium' => true, 'is_active' => true]);
         CheatSheetSection::factory()->create(['cheat_sheet_id' => $sheet->id]);
 
-        $response = $this->actingAs($admin, 'sanctum')->getJson("/api/v1/cheat-sheets/{$sheet->id}");
+        $response = $this->withUserToken($admin)->getJson("/api/v1/cheat-sheets/{$sheet->id}");
 
         $response->assertOk();
         $response->assertJsonPath('locked', false);
@@ -83,7 +85,7 @@ class CheatSheetBrowsingTest extends TestCase
         $sheet = CheatSheet::factory()->create(['is_premium' => true, 'is_active' => true]);
         CheatSheetSection::factory()->create(['cheat_sheet_id' => $sheet->id]);
 
-        $response = $this->actingAs($subscriber, 'sanctum')->getJson("/api/v1/cheat-sheets/{$sheet->id}");
+        $response = $this->withUserToken($subscriber)->getJson("/api/v1/cheat-sheets/{$sheet->id}");
 
         $response->assertOk();
         $response->assertJsonPath('locked', false);
