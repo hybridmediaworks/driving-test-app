@@ -6,6 +6,7 @@ export type UserStats = {
     passed: number;
     average_score: number | null;
     last_7_days: number;
+    recent_scores: number[];
   };
   flashcards: {
     total_active: number;
@@ -15,4 +16,10 @@ export type UserStats = {
   cheat_sheets: {
     total_active: number;
   };
+  categories: {
+    id: number;
+    name: string;
+    average_score: number;
+    attempts_count: number;
+  }[];
 };

@@ -32,6 +32,15 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-chart-wash: var(--chart-wash);
+  --color-chart-track: var(--chart-track);
+  --color-chart-grid: var(--chart-grid);
+  --color-status-good: var(--status-good);
+  --color-status-good-wash: var(--status-good-wash);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-wash: var(--status-warning-wash);
+  --color-status-critical: var(--status-critical);
+  --color-status-critical-wash: var(--status-critical-wash);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-destructive: var(--destructive);
@@ -84,11 +93,29 @@
   --destructive: oklch(0.577 0.245 27.325);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+
+  /* Chart palette — categorical hues in fixed order (blue/orange/aqua/yellow/magenta),
+     slot 1 pinned to the app's own accent blue. Validated colorblind-safe + contrast-checked
+     against a white chart surface via the dataviz skill's validator; re-run it if these change. */
+  --chart-1: #007aff;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-wash: rgb(0 122 255 / 10%);
+  --chart-track: #cfe4ff;
+  --chart-grid: oklch(0.922 0 0);
+
+  /* Status colors — reserved for state (pass/fail, claim status), never reused as a categorical
+     series color. Fixed across light/dark per the palette spec (never themed) — always paired
+     with an icon, since the warm hues sit below 4.5:1 text contrast on their own. */
+  --status-good: #0ca30c;
+  --status-good-wash: rgb(12 163 12 / 10%);
+  --status-warning: #fab219;
+  --status-warning-wash: rgb(250 178 25 / 14%);
+  --status-critical: #d03b3b;
+  --status-critical-wash: rgb(208 59 59 / 10%);
+
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
 }
@@ -177,11 +204,18 @@ button {
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+
+  /* Same 5 slots, re-stepped for the dark card surface — not a naive invert, re-validated
+     against it (see the dataviz skill's palette validator). */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-wash: rgb(57 135 229 / 16%);
+  --chart-track: rgb(57 135 229 / 22%);
+  --chart-grid: oklch(1 0 0 / 10%);
+
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);

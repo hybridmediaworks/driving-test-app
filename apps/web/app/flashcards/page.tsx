@@ -1,6 +1,7 @@
 "use client";
 
 import { Lock } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { PublicFlashcard, QuizCategory, State, VehicleType } from "@driving-test-app/shared";
@@ -12,19 +13,30 @@ import { api } from "@/lib/api";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 import { usePaginatedList } from "@/hooks/use-paginated-list";
 
-function FlashcardPreviewCard({ card }: { card: PublicFlashcard }) {
+function FlashcardPreviewCard({ card, studyHref }: { card: PublicFlashcard; studyHref: string }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-gray-100 p-5 shadow-sm">
+    <Link
+      href={studyHref}
+      className="flex flex-col gap-2 rounded-2xl border border-gray-100 p-5 shadow-sm transition-shadow hover:shadow-md"
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="font-semibold text-neutral-900">{card.front_text}</p>
-        {card.locked && <Lock className="h-4 w-4 shrink-0 text-amber-600" />}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {/* Always visible when the card is marked premium, regardless of whether the
+              current viewer (e.g. an admin) is actually locked out of it — distinct from the
+              lock icon below, which reflects this viewer's own access. */}
+          {card.is_premium && (
+            <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">Premium</span>
+          )}
+          {card.locked && <Lock className="h-4 w-4 text-amber-600" />}
+        </div>
       </div>
       <p className="text-sm text-neutral-500">
         {card.category?.title}
         {card.state && ` · ${card.state.name}`}
         {card.vehicle_type && ` · ${card.vehicle_type.title}`}
       </p>
-    </div>
+    </Link>
   );
 }
 
@@ -110,7 +122,7 @@ function FlashcardsBrowseInner() {
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((card) => (
-                  <FlashcardPreviewCard key={card.id} card={card} />
+                  <FlashcardPreviewCard key={card.id} card={card} studyHref={studyHref} />
                 ))}
               </div>
             )}

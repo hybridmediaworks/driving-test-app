@@ -30,6 +30,29 @@ class StatsController extends Controller
 
         $reviews = $user->flashcardReviews();
 
+        // Chronological (oldest → newest) so a trend chart can plot it left-to-right without
+        // the client having to know the API returns newest-first.
+        $recentScores = (clone $completedAttempts)
+            ->latest('completed_at')
+            ->limit(10)
+            ->pluck('score')
+            ->reverse()
+            ->values();
+
+        $categories = (clone $completedAttempts)
+            ->join('quizzes', 'quizzes.id', '=', 'quiz_attempts.quiz_id')
+            ->join('quiz_categories', 'quiz_categories.id', '=', 'quizzes.quiz_category_id')
+            ->selectRaw('quiz_categories.id as id, quiz_categories.title as name, avg(quiz_attempts.score) as average_score, count(*) as attempts_count')
+            ->groupBy('quiz_categories.id', 'quiz_categories.title')
+            ->orderByDesc('average_score')
+            ->get()
+            ->map(fn ($row) => [
+                'id' => $row->id,
+                'name' => $row->name,
+                'average_score' => round((float) $row->average_score, 1),
+                'attempts_count' => (int) $row->attempts_count,
+            ]);
+
         return response()->json([
             'attempts' => [
                 'total' => (clone $attempts)->count(),
@@ -38,6 +61,7 @@ class StatsController extends Controller
                 'passed' => (clone $completedAttempts)->where('passed', true)->count(),
                 'average_score' => $averageScore === null ? null : round((float) $averageScore, 1),
                 'last_7_days' => (clone $attempts)->where('created_at', '>=', now()->subDays(7))->count(),
+                'recent_scores' => $recentScores,
             ],
             'flashcards' => [
                 'total_active' => Flashcard::query()->where('is_active', true)->count(),
@@ -47,6 +71,7 @@ class StatsController extends Controller
             'cheat_sheets' => [
                 'total_active' => CheatSheet::query()->where('is_active', true)->count(),
             ],
+            'categories' => $categories,
         ]);
     }
 }

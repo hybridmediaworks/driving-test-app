@@ -8,6 +8,7 @@ use App\Models\Flashcard;
 use App\Models\FlashcardReview;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
+use App\Models\QuizCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -75,9 +76,10 @@ class StatsTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonStructure([
-            'attempts' => ['total', 'completed', 'in_progress', 'passed', 'average_score', 'last_7_days'],
+            'attempts' => ['total', 'completed', 'in_progress', 'passed', 'average_score', 'last_7_days', 'recent_scores'],
             'flashcards' => ['total_active', 'known', 'unknown'],
             'cheat_sheets' => ['total_active'],
+            'categories',
         ]);
 
         $response->assertJsonPath('attempts.total', 2);
@@ -85,11 +87,81 @@ class StatsTest extends TestCase
         $response->assertJsonPath('attempts.in_progress', 1);
         $response->assertJsonPath('attempts.passed', 1);
         $this->assertEquals(100.0, $response->json('attempts.average_score'));
+        $response->assertJsonPath('attempts.recent_scores', [100]);
 
         $response->assertJsonPath('flashcards.total_active', 2);
         $response->assertJsonPath('flashcards.known', 1);
         $response->assertJsonPath('flashcards.unknown', 1);
 
         $response->assertJsonPath('cheat_sheets.total_active', 1);
+    }
+
+    public function test_recent_scores_are_chronological_and_capped_at_ten(): void
+    {
+        $user = User::factory()->create();
+        $quiz = Quiz::factory()->create();
+
+        foreach ([60, 70, 80] as $i => $score) {
+            QuizAttempt::query()->create([
+                'user_id' => $user->id,
+                'quiz_id' => $quiz->id,
+                'status' => AttemptStatus::Completed,
+                'total_questions' => 2,
+                'correct_count' => 1,
+                'score' => $score,
+                'passed' => true,
+                'started_at' => now(),
+                'completed_at' => now()->addMinutes($i),
+            ]);
+        }
+
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/me/stats');
+
+        $response->assertOk();
+        $response->assertJsonPath('attempts.recent_scores', [60, 70, 80]);
+    }
+
+    public function test_categories_report_average_score_per_quiz_category_for_completed_attempts_only(): void
+    {
+        $user = User::factory()->create();
+        $signs = QuizCategory::factory()->create(['title' => 'Road Signs']);
+        $rules = QuizCategory::factory()->create(['title' => 'Right of Way']);
+        $signQuiz = Quiz::factory()->create(['quiz_category_id' => $signs->id]);
+        $ruleQuiz = Quiz::factory()->create(['quiz_category_id' => $rules->id]);
+
+        QuizAttempt::query()->create([
+            'user_id' => $user->id, 'quiz_id' => $signQuiz->id, 'status' => AttemptStatus::Completed,
+            'total_questions' => 2, 'correct_count' => 2, 'score' => 90, 'passed' => true,
+            'started_at' => now(), 'completed_at' => now(),
+        ]);
+        QuizAttempt::query()->create([
+            'user_id' => $user->id, 'quiz_id' => $signQuiz->id, 'status' => AttemptStatus::Completed,
+            'total_questions' => 2, 'correct_count' => 2, 'score' => 70, 'passed' => true,
+            'started_at' => now(), 'completed_at' => now(),
+        ]);
+        QuizAttempt::query()->create([
+            'user_id' => $user->id, 'quiz_id' => $ruleQuiz->id, 'status' => AttemptStatus::Completed,
+            'total_questions' => 2, 'correct_count' => 1, 'score' => 50, 'passed' => false,
+            'started_at' => now(), 'completed_at' => now(),
+        ]);
+        QuizAttempt::query()->create([
+            'user_id' => $user->id, 'quiz_id' => $signQuiz->id, 'status' => AttemptStatus::InProgress,
+            'total_questions' => 2, 'correct_count' => 0, 'score' => 0,
+            'started_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/me/stats');
+
+        $response->assertOk();
+        $categories = collect($response->json('categories'));
+        $this->assertCount(2, $categories);
+
+        $signsRow = $categories->firstWhere('name', 'Road Signs');
+        $this->assertEquals(80.0, $signsRow['average_score']);
+        $this->assertSame(2, $signsRow['attempts_count']);
+
+        $rulesRow = $categories->firstWhere('name', 'Right of Way');
+        $this->assertEquals(50.0, $rulesRow['average_score']);
+        $this->assertSame(1, $rulesRow['attempts_count']);
     }
 }
