@@ -84,7 +84,7 @@ export default function QuestionCard({
                       !isAnswered ? "cursor-pointer hover:bg-neutral-50" : ""
                     } ${isWrongSelected ? "bg-red-50 border-red-500" : isCorrectAnswer ? "bg-green-50 border-green-500" : ""}`}
                   >
-                    <div className="flex items-center justify-start gap-3">
+                    <div className="flex items-start justify-start gap-3">
                       <div
                         className={`font-bold text-sm min-w-7.5 min-h-7.5 rounded-full flex items-center justify-center ${
                           isWrongSelected
@@ -97,7 +97,7 @@ export default function QuestionCard({
                         {optionLetter}
                       </div>
                       <Paragraph
-                        className={`font-medium ${
+                        className={`font-medium min-h-7.5 flex items-center ${
                           option.id === selectedOptionId && !option.isCorrect
                             ? "line-through"
                             : ""

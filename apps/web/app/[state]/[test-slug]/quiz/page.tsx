@@ -259,8 +259,8 @@ export default function TestQuizPage({
               />
             ) : (
               <section className="pt-6 lg:pt-15 pb-35">
-                <div className="max-w-container mx-auto grid grid-cols-1 gap-4 lg:grid-cols-[1fr_333px]">
-                  <div className="p-5 lg:p-8 rounded-3xl border border-[#e5e7eb80] bg-white shadow-xl space-y-4">
+                <div className="max-w-container mx-auto grid grid-cols-1 gap-4 lg:grid-cols-[1fr_440px]">
+                  <div className="p-5 lg:p-8 rounded-3xl border border-border bg-white shadow-[0_20px_50px_-26px_rgba(23,37,84,0.25)] space-y-4">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex shrink-0 items-center justify-center gap-4">
                         <Paragraph
@@ -438,12 +438,22 @@ export default function TestQuizPage({
                   </div>
 
                   <div className="space-y-4">
-                    <div className="rounded-3xl border border-[#e5e7eb80] bg-white p-5 shadow-xl">
+                    <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
                       <div className="mb-4 flex items-center justify-between">
-                        <Paragraph size="xl" color="dark" className="font-bold">
-                          Your Progress
-                        </Paragraph>
-                        <Button variant="secondary" size="sm" onClick={restart}>
+                        <div>
+                          <Paragraph
+                            size="2xl"
+                            color="dark"
+                            className="font-semibold"
+                          >
+                            Your Progress
+                          </Paragraph>
+                          <Paragraph size="sm">
+                            {allowedToFail} allowed to pass
+                          </Paragraph>
+                        </div>
+
+                        <Button variant="outline" size="sm" onClick={restart}>
                           <RotateCcw className="h-3.5 w-3.5" /> Restart
                         </Button>
                       </div>
@@ -455,7 +465,7 @@ export default function TestQuizPage({
                         <span className="flex items-center gap-1.5">
                           <span className="h-2 w-2 rounded-full bg-red-500" />
                           <strong>{incorrectCount} </strong>
-                          Incorrect ({allowedToFail} allowed to pass)
+                          Incorrect
                         </span>
                         <span className="flex items-center gap-1.5">
                           <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -470,18 +480,16 @@ export default function TestQuizPage({
                             key={question.id}
                             disabled={index > furthestIndex}
                             onClick={() => goToQuestion(index)}
-                            className={`flex aspect-square items-center justify-center rounded-md text-sm font-semibold ${
+                            className={`flex aspect-square border items-center justify-center rounded-md text-sm font-semibold ${
                               questionStatuses[index] === "correct"
-                                ? "bg-green-200 text-green-800"
+                                ? "bg-green-50 text-green-500 border-green-200"
                                 : ""
-                            } ${questionStatuses[index] === "incorrect" ? "bg-red-200 text-red-800" : ""} ${
+                            } ${questionStatuses[index] === "incorrect" ? "bg-red-50 border-red-200 text-red-500" : ""} ${
                               questionStatuses[index] === "unanswered"
-                                ? "bg-neutral-100 text-neutral-500"
+                                ? "bg-[#FAFAF7] text-neutral-500"
                                 : ""
-                            } ${index === furthestIndex || index === currentIndex ? "ring-2 ring-blue-primary" : ""} ${
-                              index > furthestIndex
-                                ? "cursor-not-allowed opacity-60"
-                                : ""
+                            } ${index === furthestIndex ? "bg-linear-to-r from-blue-500 to-blue-700 text-white" : ""} ${index === currentIndex && index !== furthestIndex ? "ring-2 ring-blue-500" : ""} ${
+                              index > furthestIndex ? "cursor-not-allowed!" : ""
                             }`}
                           >
                             {index + 1}
@@ -490,7 +498,7 @@ export default function TestQuizPage({
                       </div>
                     </div>
 
-                    <div className="rounded-3xl border border-[#e5e7eb80] bg-white p-5 shadow-xl">
+                    <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
                       <button
                         onClick={() => setHintOpen((v) => !v)}
                         className="flex w-full items-start justify-between gap-2 text-left text-sm text-neutral-600"
@@ -503,7 +511,10 @@ export default function TestQuizPage({
                       </button>
 
                       {hintOpen && (
-                        <div className="mt-3 space-y-3">
+                        <div className="mt-3 space-y-3 space-x-2">
+                          <Button variant="secondary" size="sm">
+                            Give me a hint
+                          </Button>
                           <Button variant="secondary" size="sm">
                             Explain further
                           </Button>
@@ -536,7 +547,7 @@ export default function TestQuizPage({
                     {currentIndex + 1 === loadedQuestions.length ? (
                       <Button
                         size="md"
-                        disabled={!isAnswered}
+                        disabled={!isAnswered || !isViewingFurthest}
                         onClick={() => setShowResults(true)}
                       >
                         See Results
@@ -544,7 +555,7 @@ export default function TestQuizPage({
                     ) : (
                       <Button
                         size="md"
-                        disabled={!isAnswered}
+                        disabled={!isAnswered || !isViewingFurthest}
                         onClick={nextQuestion}
                       >
                         Next Question <ArrowRight />
