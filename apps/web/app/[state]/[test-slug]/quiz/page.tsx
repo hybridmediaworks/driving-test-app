@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Bookmark,
   ChevronDown,
-  EllipsisVertical,
   Flag,
   Gem,
   LogOut,
@@ -204,11 +203,11 @@ export default function TestQuizPage({
       <div className="flex min-h-screen flex-col bg-background">
         <main className="flex-1 relative">
           <div className="bg-white sticky top-0 z-90">
-            <div className="max-w-container mx-auto flex items-center justify-between gap-3 py-3.5">
+            <div className="max-w-container lg:mx-auto mx-5  flex items-center justify-between gap-3 py-3.5">
               <Button
                 href={`/${state}/${testSlug}`}
                 variant="ghost"
-                className=" text-neutral-700"
+                className=" text-neutral-700 p-0!"
                 size="sm"
               >
                 <LogOut className="w-5 h-5 text-neutral-500" />
@@ -218,7 +217,7 @@ export default function TestQuizPage({
                 <Paragraph
                   size="sm"
                   color="primary"
-                  className=" rounded-full border border-blue-300 bg-blue-50 px-3 py-0.5 font-semibold"
+                  className="hidden md:block rounded-full border border-blue-300 bg-blue-50 px-3 py-0.5 font-semibold"
                 >
                   ✦ Practice
                 </Paragraph>
@@ -258,11 +257,11 @@ export default function TestQuizPage({
                 onExit={goToTestPage}
               />
             ) : (
-              <section className="pt-6 lg:pt-15 pb-35">
-                <div className="max-w-container mx-auto grid grid-cols-1 gap-4 lg:grid-cols-[1fr_440px]">
-                  <div className="p-5 lg:p-8 rounded-3xl border border-border bg-white shadow-[0_20px_50px_-26px_rgba(23,37,84,0.25)] space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex shrink-0 items-center justify-center gap-4">
+              <section className="pt-6 lg:pt-15 pb-35 px-5">
+                <div className="max-w-container mx-auto grid lg:grid-cols-3 grid-cols-1 gap-4">
+                  <div className="lg:col-span-2 p-5 lg:p-8 rounded-3xl border border-border bg-white shadow-[0_20px_50px_-26px_rgba(23,37,84,0.25)] space-y-4">
+                    <div className="flex items-center justify-between gap-1 ">
+                      <div className="flex items-center sm:gap-4 gap-2 flex-wrap">
                         <Paragraph
                           size="sm"
                           color="primary"
@@ -275,7 +274,7 @@ export default function TestQuizPage({
                           {loadedQuestions.length}
                         </Paragraph>
                       </div>
-                      <div className="flex gap-3 items-center justify-center">
+                      <div className="flex sm:gap-3 gap-2 items-center justify-center">
                         <Bookmark
                           onClick={handleBookmarkClick}
                           className="h-6 w-6 cursor-pointer text-neutral-500"
@@ -438,7 +437,7 @@ export default function TestQuizPage({
                   </div>
 
                   <div className="space-y-4">
-                    <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
+                    <div className=" rounded-2xl border border-border bg-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
                       <div className="mb-4 flex items-center justify-between">
                         <div>
                           <Paragraph
@@ -454,7 +453,10 @@ export default function TestQuizPage({
                         </div>
 
                         <Button variant="outline" size="sm" onClick={restart}>
-                          <RotateCcw className="h-3.5 w-3.5" /> Restart
+                          <RotateCcw className="h-3.5 w-3.5" />{" "}
+                          <span className="hidden md:inline-block">
+                            Restart
+                          </span>
                         </Button>
                       </div>
 
@@ -474,13 +476,13 @@ export default function TestQuizPage({
                         </span>
                       </Paragraph>
 
-                      <div className="grid grid-cols-8 gap-1.5">
+                      <div className="flex justify-start flex-wrap gap-1.5">
                         {loadedQuestions.map((question, index) => (
                           <button
                             key={question.id}
                             disabled={index > furthestIndex}
                             onClick={() => goToQuestion(index)}
-                            className={`flex aspect-square border items-center justify-center rounded-md text-sm font-semibold ${
+                            className={`w-10.5 flex aspect-square border items-center justify-center rounded-md text-sm font-semibold ${
                               questionStatuses[index] === "correct"
                                 ? "bg-green-50 text-green-500 border-green-200"
                                 : ""
@@ -534,11 +536,11 @@ export default function TestQuizPage({
                     </div>
                   </div>
                 </div>
-                <div className="bg-white border-t border py-4 px-5 h-20 fixed w-full bottom-0">
+                <div className="bg-white border-t border py-4 px-5 h-20 fixed w-full bottom-0 left-0">
                   <div className="max-w-container mx-auto flex items-center justify-between gap-2">
                     <Button
                       variant="ghost"
-                      className=" text-neutral-700"
+                      className=" text-neutral-700 p-0!"
                       size="sm"
                     >
                       <Flag className="w-5 stroke-neutral-500" />

@@ -1,21 +1,14 @@
 import { Check, Circle, Volume2, XIcon } from "lucide-react";
-import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import type { QuizQuestionStatic } from "./types";
-import Heading from "@/components/ui/Heading";
 
 export default function QuestionCard({
   question,
   selectedOptionId,
   isAnswered,
-  isLastQuestion,
-  isViewingFurthest,
   voiceOver = false,
   fontScale = 1,
-  footerPosition = "inside",
   onSelectOption,
-  onNextQuestion,
-  onSeeResults,
 }: {
   question: QuizQuestionStatic;
   selectedOptionId: number | undefined;
@@ -29,20 +22,6 @@ export default function QuestionCard({
   onNextQuestion: () => void;
   onSeeResults: () => void;
 }) {
-  const footer = isAnswered && isViewingFurthest && (
-    <>
-      {!isLastQuestion ? (
-        <Button variant="outline" onClick={onNextQuestion}>
-          Next question
-        </Button>
-      ) : (
-        <Button variant="outline" onClick={onSeeResults}>
-          See Results
-        </Button>
-      )}
-    </>
-  );
-
   return (
     <>
       <div className="space-y-4">
@@ -112,14 +91,14 @@ export default function QuestionCard({
                         >
                           {isWrongSelected ? (
                             <span className="flex items-center gap-1.5">
-                              <span className="rounded-full border border-red-500 bg-white px-2.5 py-1 text-red-600">
+                              <span className="hidden sm:block rounded-full border border-red-500 bg-white px-2.5 py-1 text-red-600">
                                 Your answer
                               </span>
                               <XIcon className="min-h-4 min-w-4 rounded-full bg-red-500 stroke-white p-0.5" />
                             </span>
                           ) : (
                             <span className="flex items-center gap-1.5">
-                              <span className="rounded-full border border-green-500 bg-white px-2.5 py-1 text-green-600">
+                              <span className="hidden sm:block rounded-full border border-green-500 bg-white px-2.5 py-1 text-green-600">
                                 Correct answer
                               </span>
                               <Check className="min-h-4 min-w-4 rounded-full bg-green-600 stroke-white p-0.5" />
