@@ -27,6 +27,7 @@ const sizeClasses: Record<Size, string> = {
 const colorClasses = {
   default: "text-neutral-900",
   primary: "text-blue-600",
+  secoundry: "text-neutral-700",
   muted: "text-gray-500",
   white: "text-white",
 };
