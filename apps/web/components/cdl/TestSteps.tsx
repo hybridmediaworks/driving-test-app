@@ -1,9 +1,10 @@
-import { LockKeyhole } from "lucide-react";
+import { Diamond, Gem, LockKeyhole } from "lucide-react";
 import Paragraph from "@/components/ui/Paragraph";
 
 type Step = {
   title: string;
-  questions: number;
+  totalQuestions: string;
+  totalTime: string;
   type: "free" | "premium";
   locked?: boolean;
   image: string;
@@ -24,7 +25,13 @@ function rowWidth(columns: number, count: number): string {
   return `calc((100% - ${(columns - 1) * GAP_REM}rem) / ${columns} * ${count} + ${Math.max(count - 1, 0)} * ${GAP_REM}rem)`;
 }
 
-export default function TestSteps({ steps, columns = 5 }: { steps: Step[]; columns?: number }) {
+export default function TestSteps({
+  steps,
+  columns = 5,
+}: {
+  steps: Step[];
+  columns?: number;
+}) {
   const rows = chunk(steps, columns);
 
   return (
@@ -36,7 +43,7 @@ export default function TestSteps({ steps, columns = 5 }: { steps: Step[]; colum
           style={{ "--ts-cols": columns } as React.CSSProperties}
         >
           <div
-            className={`before_row pointer-events-none absolute -top-6.75 h-19.5 w-20 border-dashed border-purple-300 max-md:hidden ${
+            className={`before_row pointer-events-none absolute -top-6.75 h-19.5 w-20 border-dashed border-blue-300 max-md:hidden ${
               rowIndex === 0
                 ? "left-0 border-b"
                 : rowIndex % 2 === 0
@@ -45,63 +52,72 @@ export default function TestSteps({ steps, columns = 5 }: { steps: Step[]; colum
             }`}
           />
           <div
-            className={`after_row pointer-events-none absolute top-12 h-[calc(100%-30px)] border-dashed border-purple-300 max-md:hidden ${
+            className={`after_row pointer-events-none absolute top-12 h-[calc(100%-30px)] border-dashed border-blue-300 max-md:hidden ${
               rowIndex === rows.length - 1
                 ? "left-0 border-t"
                 : rowIndex % 2 === 0
                   ? "-right-10 w-full rounded-r-[28px] border border-l-0"
                   : "left-6 w-full rounded-l-[28px] border border-l"
             }`}
-            style={rowIndex === rows.length - 1 ? { width: rowWidth(columns, row.length) } : undefined}
+            style={
+              rowIndex === rows.length - 1
+                ? { width: rowWidth(columns, row.length) }
+                : undefined
+            }
           />
 
           {row.map((step, index) => (
             <div
               key={index}
-              className="group cursor-pointer space-y-3 rounded transition-all duration-300 hover:-translate-y-0.75"
+              className="group cursor-pointer rounded transition-all duration-300 hover:-translate-y-0.75"
             >
-              <div className="relative overflow-hidden rounded-lg">
+              <div className="relative overflow-hidden rounded-xl">
                 {step.image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={step.image}
                     alt=""
-                    className="h-25 w-full rounded-lg object-cover transition-all duration-300"
+                    className="h-32 w-full rounded-xl object-cover transition-all duration-300"
                   />
                 )}
                 <div
-                  className={`absolute inset-0 flex items-center justify-center rounded-lg ${
-                    step.locked ? "bg-white/55 backdrop-blur-[2px] group-hover:bg-white/40" : ""
+                  className={`absolute inset-0 flex items-center justify-center rounded-xl ${
+                    step.type === "premium"
+                      ? "bg-white/60 backdrop-blur-[2px] group-hover:bg-white/50"
+                      : ""
                   }`}
                 >
-                  {step.locked && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-4xl bg-blue-500 p-2 text-white">
-                      <LockKeyhole className="text-white" />
+                  {step.type === "premium" && (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-4xl ">
+                      <Gem className="text-blue-600 w-8 h-8 " />
                     </div>
                   )}
                   {step.status === "next" && (
-                    <Paragraph size="sm" color="primary" className="rounded-full bg-white px-3 py-0.5 font-semibold">
+                    <Paragraph
+                      size="sm"
+                      color="primary"
+                      className="rounded-full bg-white px-3 py-0.5 font-semibold"
+                    >
                       Next
                     </Paragraph>
                   )}
                 </div>
-                <Paragraph
-                  color="white"
-                  className={`absolute top-2 rounded-sm px-1.75 py-0.5 text-[10px]! font-semibold tracking-wide uppercase ${
-                    step.type === "premium"
-                      ? "right-2 bg-linear-to-br from-[#f0c27f] to-[#fc5c7d]"
-                      : "left-2 bg-green-500"
-                  }`}
-                >
-                  {step.type}
-                </Paragraph>
+                {step.type === "free" && (
+                  <Paragraph
+                    color="white"
+                    size="xs"
+                    className="absolute top-2 rounded-sm px-1.75 py-0.5 font-semibold tracking-wide uppercase right-2 bg-green-500"
+                  >
+                    Free
+                  </Paragraph>
+                )}
               </div>
-              <div>
-                <Paragraph color="dark" size="sm" className="font-semibold">
+              <div className="p-4 space-y-2">
+                <Paragraph color="dark" className="font-semibold">
                   {step.title}
                 </Paragraph>
-                <Paragraph color="muted" size="xs">
-                  {step.questions} questions
+                <Paragraph color="primary" size="sm" className="font-semibold">
+                  {step.totalQuestions} questions · ~{step.totalTime} min
                 </Paragraph>
               </div>
             </div>

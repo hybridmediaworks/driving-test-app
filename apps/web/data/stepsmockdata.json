@@ -1,0 +1,108 @@
+[
+  {
+    "phase": 1,
+    "phaseStatus": "active",
+    "header": {
+      "headerTitle": "The essentials",
+      "headerDesc": "Right-of-way, signals, speed limits, lane rules — the core of the West Virginia written exam. Master these first.",
+      "totalQuestions": "140",
+      "totalTime": "35"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "title": "AK DMV Permit Practice Test 1",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "free",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 2,
+        "title": "AK Practice Test 2",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "free",
+        "image": "/driving-tests.jpg",
+        "status": "next"
+      },
+      {
+        "step": 3,
+        "title": "AK Practice Test 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 4,
+        "title": "AK Practice Test 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 5,
+        "title": "AK Practice Test 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      }
+    ]
+  },
+  {
+    "phase": 1,
+    "phaseStatus": "active",
+    "header": {
+      "headerTitle": "The essentials",
+      "headerDesc": "Right-of-way, signals, speed limits, lane rules — the core of the West Virginia written exam. Master these first.",
+      "totalQuestions": "140",
+      "totalTime": "35"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "title": "AK DMV Permit Practice Test 1",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "free",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 2,
+        "title": "AK Practice Test 2",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "free",
+        "image": "/driving-tests.jpg",
+        "status": "next"
+      },
+      {
+        "step": 3,
+        "title": "AK Practice Test 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 4,
+        "title": "AK Practice Test 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 5,
+        "title": "AK Practice Test 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      }
+    ]
+  }
+]
