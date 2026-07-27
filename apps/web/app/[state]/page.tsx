@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import StateLandingPage from "@/components/state/StateLandingPage";
 import { slugToStateName, usStates } from "@/lib/usStates";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 import Header from "@/components/Header";
@@ -9,6 +8,13 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestSteps from "@/components/cdl/TestSteps";
 import { fetchStateSteps } from "@/data/stepsMockData";
+import PremiumCTA from "@/components/state/PremiumCTA";
+import HandBookSection from "@/components/state/HandBookSection";
+import ReviewAccuracy from "@/components/state/ReviewAccuracy";
+import GoFurtherSection from "@/components/state/GoFurtherSection";
+import EmailCaptureSection from "@/components/state/EmailCaptureSection";
+import CTASection from "@/components/home/CTASection";
+import Footer from "@/components/Footer";
 
 function resolveStateName(stateSlug: string): string {
   const name = stateSlug ? slugToStateName(stateSlug) : "";
@@ -48,48 +54,53 @@ export default async function StateDynamicPage({
         <main className="flex-1">
           <HeroSection />
           <LiveDataSection />
-          {phases.map((phase) => (
-            <section
-              key={phase.phase}
-              className="px-5 pt-0 pb-10 lg:pt-30 lg:pb-15 bg-[#F2F1EC]"
-            >
-              <div className="mx-auto max-w-container space-y-12">
-                <div className="flex items-start gap-4 max-w-2xl">
-                  <Heading
-                    as="h3"
-                    size="xs"
-                    className={`rounded-full flex items-center justify-center min-w-25 min-h-25 border-14 ${phase.phaseStatus === "active" ? "border-blue-100 bg-linear-to-r from-blue-600 to-blue-500 text-white" : "border-[#E7E6E1] bg-white"}`}
-                  >
-                    {phase.phase}
-                  </Heading>
-                  <div className="space-y-2">
-                    <Paragraph color="primary" className="font-semibold">
-                      {phase.header.totalQuestions} questions · ~
-                      {phase.header.totalTime} min
-                    </Paragraph>
-                    <Heading as="h2">{phase.header.headerTitle}</Heading>
-                    <Paragraph color="muted" className="pt-1">
-                      {phase.header.headerDesc}
-                    </Paragraph>
+          <section className="px-5 pt-0 pb-10 lg:pt-30 lg:pb-15 bg-[#F2F1EC]">
+            <div className="mx-auto max-w-container space-y-12">
+              {phases.map((phase) => (
+                <div key={phase.phase} className="space-y-10">
+                  <div className="flex items-start gap-4 max-w-2xl">
+                    <Heading
+                      as="h3"
+                      size="xs"
+                      className={`rounded-full flex items-center justify-center min-w-25 min-h-25 border-14 ${phase.phaseStatus === "active" ? "border-blue-100 bg-linear-to-r from-blue-600 to-blue-500 text-white" : "border-[#E7E6E1] bg-white"}`}
+                    >
+                      {phase.phase}
+                    </Heading>
+                    <div className="space-y-2">
+                      <Paragraph color="primary" className="font-semibold">
+                        {phase.header.totalQuestions} questions · ~
+                        {phase.header.totalTime} min
+                      </Paragraph>
+                      <Heading as="h2">{phase.header.headerTitle}</Heading>
+                      <Paragraph color="muted" className="pt-1">
+                        {phase.header.headerDesc}
+                      </Paragraph>
+                    </div>
                   </div>
+                  <TestSteps
+                    steps={phase.steps.map((step) => ({
+                      title: step.title,
+                      totalQuestions: Number(step.totalQuestions),
+                      totalTime: Number(step.totalTime),
+                      type: step.type,
+                      image: step.image,
+                      status: step.status,
+                    }))}
+                    columns={4}
+                  />
                 </div>
-                <TestSteps
-                  steps={phase.steps.map((step) => ({
-                    title: step.title,
-                    totalQuestions: Number(step.totalQuestions),
-                    totalTime: Number(step.totalTime),
-                    type: step.type,
-                    image: step.image,
-                    status: step.status,
-                  }))}
-                  columns={4}
-                />
-              </div>
-            </section>
-          ))}
+              ))}
+              <PremiumCTA />
+              <HandBookSection />
+            </div>
+          </section>
+          <ReviewAccuracy />
+          <GoFurtherSection />
+          <EmailCaptureSection />
+          <CTASection />
+          <Footer />
         </main>
       </div>
-      <StateLandingPage state={state} />
     </WebLayoutProvider>
   );
 }

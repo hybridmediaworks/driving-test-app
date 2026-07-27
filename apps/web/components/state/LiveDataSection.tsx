@@ -5,17 +5,19 @@ import Paragraph from "@/components/ui/Paragraph";
 import Subheading from "../ui/Subheading";
 import StudentChart from "./StudentChart";
 import { Calendar, Clock, Star, TrendingUp } from "lucide-react";
+import { useWebLayout } from "@/lib/web-layout-context";
 
 export default function LiveDataSection() {
+  const { selectedState } = useWebLayout();
   return (
     <section className="px-5 pt-0 pb-10 lg:pt-30 lg:pb-15">
       <div className="mx-auto max-w-container space-y-5.5">
         <div className="max-w-170 space-y-4">
           <Subheading text="Live Data" />
-          <Heading as="h2">How West Virginia students are practicing</Heading>
+          <Heading as="h2">How {selectedState} students are practicing</Heading>
           <Paragraph>
-            A live snapshot of West Virginia learners on DriveLane over the last
-            30 days.
+            A live snapshot of {selectedState} learners on DriveLane over the
+            last 30 days.
           </Paragraph>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">

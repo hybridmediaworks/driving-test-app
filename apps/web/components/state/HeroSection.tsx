@@ -33,9 +33,10 @@ export default function HeroSection() {
               Practice Test.
             </Heading>
             <Paragraph size="lg">
-              Real exam-style questions, pulled straight from the current West
-              Virginia driver's handbook and updated for 2026. Stop wasting
-              hours on the manual — practice the questions you'll actually see.
+              Real exam-style questions, pulled straight from the current{" "}
+              {selectedState} driver's handbook and updated for 2026. Stop
+              wasting hours on the manual — practice the questions you'll
+              actually see.
             </Paragraph>
             <Paragraph className="flex gap-3 items-center flex-wrap font-semibold">
               <img src="/trustpilotstar.svg" alt="" /> Trustpilot 4.7/5 from
@@ -86,17 +87,17 @@ export default function HeroSection() {
             color="dark"
             className="font-semibold font-sora"
           >
-            Everything you need to pass the West Virginia permit test — in one
+            Everything you need to pass the {selectedState} permit test — in one
             place.
           </Paragraph>
           <Paragraph size="lg">
-            DriveLane turns the West Virginia driver's handbook into short,
+            DriveLane turns the {selectedState} driver's handbook into short,
             exam-style practice tests, an AI tutor that explains every wrong
             answer, full DMV exam simulations, and a personalized retest of the
             questions you miss. Practice free, or unlock Premium for the full
-            West Virginia question bank and a documented 97% pass rate.
+            {selectedState} question bank and a documented 97% pass rate.
             DriveLane is an independent study platform and is not affiliated
-            with the West Virginia Division of Motor Vehicles.
+            with the {selectedState} Division of Motor Vehicles.
           </Paragraph>
         </div>
       </section>

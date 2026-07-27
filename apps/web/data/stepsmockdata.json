@@ -53,12 +53,12 @@
     ]
   },
   {
-    "phase": 1,
-    "phaseStatus": "active",
+    "phase": 2,
+    "phaseStatus": "",
     "header": {
-      "headerTitle": "The essentials",
-      "headerDesc": "Right-of-way, signals, speed limits, lane rules — the core of the West Virginia written exam. Master these first.",
-      "totalQuestions": "140",
+      "headerTitle": "The more complicated stuff",
+      "headerDesc": "The rules of the road are abundant. This set of tests helps you master complex driving scenarios and every ambiguous road sign you’ll ever encounter.",
+      "totalQuestions": "325",
       "totalTime": "35"
     },
     "steps": [
