@@ -10,7 +10,7 @@ import { useWebLayout } from "@/lib/web-layout-context";
 export default function LiveDataSection() {
   const { selectedState } = useWebLayout();
   return (
-    <section className="px-5 pt-0 pb-10 lg:pt-30 lg:pb-15">
+    <section className="px-5 pt-15 pb-15 lg:pt-30 lg:pb-15">
       <div className="mx-auto max-w-container space-y-5.5">
         <div className="max-w-170 space-y-4">
           <Subheading text="Live Data" />
@@ -22,7 +22,7 @@ export default function LiveDataSection() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="bg-white p-6 border rounded-xl flex items-center justify-between xl:flex-nowrap lg:flex-wrap flex-nowrap">
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-fit">
               <Paragraph className="font-medium">Students practiced</Paragraph>
               <Heading size="lg">14200</Heading>
               <Paragraph
@@ -36,7 +36,7 @@ export default function LiveDataSection() {
             <StudentChart />
           </div>
           <div className="bg-white p-6 border rounded-xl flex items-center justify-between xl:flex-nowrap lg:flex-wrap flex-nowrap">
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-fit">
               <Paragraph className="font-medium">Questions answered</Paragraph>
               <Heading size="lg">1.2M</Heading>
               <Paragraph
@@ -50,7 +50,7 @@ export default function LiveDataSection() {
             <StudentChart />
           </div>
           <div className="bg-white p-6 border rounded-xl flex items-center justify-between xl:flex-nowrap lg:flex-wrap flex-nowrap">
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-fit">
               <Paragraph className="font-medium">Avg. session length</Paragraph>
               <Heading size="lg">18 min</Heading>
               <Paragraph

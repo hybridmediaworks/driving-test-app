@@ -11,8 +11,8 @@ export default function HeroSection() {
 
   return (
     <>
-      <section className="py-15 md:space-y-15 lg:py-30 px-5">
-        <div className="mx-auto max-w-container space-y-12  flex flex-col xl:flex-row justify-between items-center xl:gap-4 gap-8">
+      <section className="py-15 lg:py-30 px-5">
+        <div className="mx-auto max-w-container  flex flex-col xl:flex-row justify-between items-center xl:gap-4 md:gap-26 gap-18">
           <div className="space-y-4 xl:max-w-155">
             <Paragraph
               size="md"
@@ -70,7 +70,11 @@ export default function HeroSection() {
               className="rotate-9 w-full relative rounded-xl md:rounded-[34px] -mt-7 shadow-[inset_0_1.451px_0_0_rgba(255,255,255,0.22),inset_0_0_0_1.451px_rgba(255,255,255,0.09),0_34.813px_72.527px_-31.912px_rgba(8,9,12,0.55),0_11.604px_29.011px_-17.407px_rgba(8,9,12,0.45)]"
             />
             <div>
-              <Heading className="text-[96px]! leading-20!" color="primary">
+              <Heading
+                className="md:text-[96px]! md:leading-20!"
+                size="2xl"
+                color="primary"
+              >
                 97%
               </Heading>
               <Heading size="xs" className="" color="secoundry">

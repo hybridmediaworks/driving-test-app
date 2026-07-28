@@ -9,6 +9,7 @@ export type StepsMockStep = {
   image?: string;
   status?: "next";
   style?: "large";
+  "quiz-valut"?: boolean;
 };
 
 export type StepsMockPhase = {

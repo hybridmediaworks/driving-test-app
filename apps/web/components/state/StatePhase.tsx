@@ -40,16 +40,16 @@ export default function StatePhase({
       <div className="flex gap-4 max-w-3xl">
         <div className="relative">
           {previousConnector && (
-            <div className="w-15 ms-auto border-l-14 border-t-14 rounded-tl-[28px] border-white h-12 -mt-11.75" />
+            <div className="md:w-15 w-8.5 ms-auto md:border-l-14 border-l-8 md:border-t-14 md:rounded-tl-[28px] border-white h-12 -mt-11.75" />
           )}
           <Heading
             as="h3"
             size="xs"
-            className={`rounded-full flex items-center justify-center min-w-25 min-h-25 border-14 ${phaseData.phaseStatus === "active" ? "border-blue-100 bg-linear-to-r from-blue-600 to-blue-500 text-white" : "border-[#E7E6E1] bg-white"}`}
+            className={`rounded-full flex items-center justify-center md:min-w-25 md:min-h-25 min-w-15 min-h-15 md:border-14 border-6 ${phaseData.phaseStatus === "active" ? "border-blue-100 bg-linear-to-r from-blue-600 to-blue-500 text-white" : "border-[#E7E6E1] bg-white"}`}
           >
             {phaseData.phase}
           </Heading>
-          <div className="w-15 ms-auto border-l-14 border-b-14 rounded-bl-[28px] border-white h-full " />
+          <div className="md:w-15 w-8.5 ms-auto md:border-l-14 border-l-8 md:border-b-14 border-b-8 rounded-bl-[28px] border-white h-full " />
         </div>
 
         <div className="space-y-2">
@@ -75,6 +75,7 @@ export default function StatePhase({
             image: step.image,
             status: step.status,
             style: step.style,
+            "quiz-valut": step["quiz-valut"],
           }))}
           columns={4}
           nextConnector={nextConnector}

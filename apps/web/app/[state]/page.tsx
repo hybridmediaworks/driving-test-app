@@ -49,16 +49,16 @@ export default async function StateDynamicPage({
         <main className="flex-1">
           <HeroSection />
           <LiveDataSection />
-          <section className="px-15 pt-15 pb-15 lg:pt-30 lg:pb-15 bg-[#F2F1EC]">
+          <section className="md:px-15 px-5 pt-15 pb-15 lg:pt-30 lg:pb-15 bg-[#F2F1EC]">
             <div className="mx-auto max-w-container space-y-12">
               <StatePhase phase={1} nextConnector />
               <StatePhase phase={2} previousConnector nextConnector />
               <PremiumCTA previousConnector nextConnector />
-              <StatePhase phase={3} previousConnector nextConnector />
+              <StatePhase phase={3} nextConnector />
               <StatePhase phase={4} previousConnector nextConnector />
               <StatePhase phase={5} previousConnector nextConnector />
               <PremiumCTA previousConnector nextConnector />
-              <StatePhase phase={6} previousConnector nextConnector />
+              <StatePhase phase={6} nextConnector />
               <StatePhase phase={7} previousConnector />
             </div>
           </section>
