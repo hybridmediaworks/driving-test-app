@@ -21,7 +21,7 @@ export default function LiveDataSection() {
           </Paragraph>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="bg-white p-6 border rounded-xl flex items-center justify-between">
+          <div className="bg-white p-6 border rounded-xl flex items-center justify-between xl:flex-nowrap lg:flex-wrap flex-nowrap">
             <div className="space-y-3">
               <Paragraph className="font-medium">Students practiced</Paragraph>
               <Heading size="lg">14200</Heading>
@@ -35,7 +35,7 @@ export default function LiveDataSection() {
             </div>
             <StudentChart />
           </div>
-          <div className="bg-white p-6 border rounded-xl flex items-center justify-between">
+          <div className="bg-white p-6 border rounded-xl flex items-center justify-between xl:flex-nowrap lg:flex-wrap flex-nowrap">
             <div className="space-y-3">
               <Paragraph className="font-medium">Questions answered</Paragraph>
               <Heading size="lg">1.2M</Heading>
@@ -49,7 +49,7 @@ export default function LiveDataSection() {
             </div>
             <StudentChart />
           </div>
-          <div className="bg-white p-6 border rounded-xl flex items-center justify-between">
+          <div className="bg-white p-6 border rounded-xl flex items-center justify-between xl:flex-nowrap lg:flex-wrap flex-nowrap">
             <div className="space-y-3">
               <Paragraph className="font-medium">Avg. session length</Paragraph>
               <Heading size="lg">18 min</Heading>

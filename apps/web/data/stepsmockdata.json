@@ -31,12 +31,12 @@
         "title": "AK Practice Test 3",
         "totalQuestions": "20",
         "totalTime": "35",
-        "type": "premium",
+        "type": "free",
         "image": "/driving-tests.jpg"
       },
       {
         "step": 4,
-        "title": "AK Practice Test 3",
+        "title": "AK Practice Test 4",
         "totalQuestions": "20",
         "totalTime": "35",
         "type": "premium",
@@ -44,10 +44,26 @@
       },
       {
         "step": 5,
-        "title": "AK Practice Test 3",
+        "title": "AK Practice Test 5",
         "totalQuestions": "20",
         "totalTime": "35",
         "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 6,
+        "title": "AK Practice Test 6",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 7,
+        "title": "AK Practice Test 7",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "free",
         "image": "/driving-tests.jpg"
       }
     ]
@@ -64,24 +80,23 @@
     "steps": [
       {
         "step": 1,
-        "title": "AK DMV Permit Practice Test 1",
+        "title": "AK Complex Situations 1",
         "totalQuestions": "20",
         "totalTime": "35",
-        "type": "free",
+        "type": "premium",
         "image": "/driving-tests.jpg"
       },
       {
         "step": 2,
-        "title": "AK Practice Test 2",
+        "title": "AK Complex Situations 2",
         "totalQuestions": "20",
         "totalTime": "35",
-        "type": "free",
-        "image": "/driving-tests.jpg",
-        "status": "next"
+        "type": "premium",
+        "image": "/driving-tests.jpg"
       },
       {
         "step": 3,
-        "title": "AK Practice Test 3",
+        "title": "AK Complex Situations 3",
         "totalQuestions": "20",
         "totalTime": "35",
         "type": "premium",
@@ -89,7 +104,7 @@
       },
       {
         "step": 4,
-        "title": "AK Practice Test 3",
+        "title": "AK Complex Situations 4",
         "totalQuestions": "20",
         "totalTime": "35",
         "type": "premium",
@@ -97,11 +112,179 @@
       },
       {
         "step": 5,
-        "title": "AK Practice Test 3",
+        "title": "AK Complex Situations 5",
         "totalQuestions": "20",
         "totalTime": "35",
         "type": "premium",
         "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 6,
+        "title": "AK Complex Situations 6",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 7,
+        "title": "AK Complex Situations 7",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 8,
+        "title": "AK Complex Situations 8",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      }
+    ]
+  },
+  {
+    "phase": 3,
+    "phaseStatus": "",
+    "header": {
+      "headerTitle": "The things that could get you in trouble",
+      "headerDesc": "If you thought the DMV was bad, traffic court may just be worse, so let’s not go there. Master the details here - maximize safety and sanity for everyone on the road.",
+      "totalQuestions": "93",
+      "totalTime": "35"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "title": "AK Fines and Limits",
+        "totalQuestions": "50",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 2,
+        "title": "AK Fines and Limits 2",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 3,
+        "title": "AK Fines and Limits 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 4,
+        "title": "AK Fines and Limits 4",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      }
+    ]
+  },
+  {
+    "phase": 4,
+    "phaseStatus": "",
+    "header": {
+      "headerTitle": "The exam simulator",
+      "headerDesc": "Includes 20 random questions from all topics and all prep areas.",
+      "totalQuestions": "20",
+      "totalTime": "35"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "title": "AK DMV Exam Simulator",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg",
+        "style": "large"
+      }
+    ]
+  },
+  {
+    "phase": 5,
+    "phaseStatus": "",
+    "header": {
+      "headerTitle": "The extra support",
+      "headerDesc": "Now that you’ve got all this Driver’s Ed knowledge in your brain, let’s keep it fresh. Take these downloadable guides and references with you on-the-go. Brush up whenever you need.",
+      "totalQuestions": "93",
+      "totalTime": "35"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "title": "AK Fines and Limits",
+        "totalQuestions": "50",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 2,
+        "title": "AK Fines and Limits 2",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 3,
+        "title": "AK Fines and Limits 3",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      },
+      {
+        "step": 4,
+        "title": "AK Fines and Limits 4",
+        "totalQuestions": "20",
+        "totalTime": "35",
+        "type": "premium",
+        "image": "/driving-tests.jpg"
+      }
+    ]
+  },
+  {
+    "phase": 6,
+    "phaseStatus": "",
+    "header": {
+      "headerTitle": "The Quiz Vault",
+      "headerDesc": "Your personalized Quiz Vault automatically retests you on all your missed questions until you nail every single one. No shame - we all have weaknesses!",
+      "totalQuestions": "20",
+      "totalTime": "35"
+    },
+    "steps": [
+      {
+        "step": 1,
+        "image": "/driving-tests.jpg",
+        "style": "large"
+      }
+    ]
+  },
+  {
+    "phase": 7,
+    "phaseStatus": "",
+    "header": {
+      "headerTitle": "Explore the West Virginia Driver's Handbook",
+      "headerDesc": "Your personalized Quiz Vault automatically retests you on all your missed questions until you nail every single one. No shame - we all have weaknesses!",
+      "totalQuestions": "20",
+      "totalTime": "35",
+      "handbook": true
+    },
+    "steps": [
+      {
+        "step": 1,
+        "image": "/driving-tests.jpg",
+        "style": "large"
       }
     ]
   }

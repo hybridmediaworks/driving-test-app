@@ -57,7 +57,7 @@ export default function StudentChart() {
   const series = [{ data: values }];
 
   return (
-    <div className="max-w-47.5">
+    <div className="flex-1 xl:max-w-47.5 lg:max-w-full w-full max-w-47.5">
       <Chart
         options={options}
         series={series}

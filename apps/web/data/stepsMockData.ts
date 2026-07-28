@@ -2,12 +2,13 @@ import rawPhases from "./stepsmockdata.json";
 
 export type StepsMockStep = {
   step: number;
-  title: string;
-  totalQuestions: string;
-  totalTime: string;
-  type: "free" | "premium";
-  image: string;
+  title?: string;
+  totalQuestions?: string;
+  totalTime?: string;
+  type?: "free" | "premium";
+  image?: string;
   status?: "next";
+  style?: "large";
 };
 
 export type StepsMockPhase = {
@@ -18,6 +19,7 @@ export type StepsMockPhase = {
     headerDesc: string;
     totalQuestions: string;
     totalTime: string;
+    handbook?: boolean;
   };
   steps: StepsMockStep[];
 };

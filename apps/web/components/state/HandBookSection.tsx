@@ -14,7 +14,7 @@ export default function HandBookSection() {
   const { selectedState } = useWebLayout();
 
   return (
-    <div className="mx-auto max-w-226 p-6 bg-white rounded-2xl flex flex-col lg:flex-row justify-between items-center xl:gap-4 gap-6">
+    <div className="relative max-w-226 p-6 bg-white rounded-2xl flex flex-col lg:flex-row justify-between items-center xl:gap-4 gap-6">
       <div className="min-h-73.25 shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)] bg-[linear-gradient(157deg,#1E3A8A_0%,#0D142C_100%)] max-w-55 rounded-lg overflow-hidden flex items-stretch">
         <div className="bg-black/25 min-w-2.5" />
         <div className=" pt-6 ps-2.5 flex flex-col justify-between gap-5">
