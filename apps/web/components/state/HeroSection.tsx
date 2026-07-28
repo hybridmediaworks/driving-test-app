@@ -4,10 +4,12 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
+import { stateToSlug } from "@/lib/usStates";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 
 export default function HeroSection() {
   const { selectedState } = useWebLayout();
+  const stateSlug = stateToSlug(selectedState);
 
   return (
     <>
@@ -42,7 +44,10 @@ export default function HeroSection() {
               <img src="/trustpilotstar.svg" alt="" /> Trustpilot 4.7/5 from
               38,000+ students
             </Paragraph>
-            <Button className="w-full md:w-fit">
+            <Button
+              className="w-full md:w-fit"
+              href={`/${stateSlug}/dmv-written-test`}
+            >
               Start Free Practice Test <ArrowRight />
             </Button>
 

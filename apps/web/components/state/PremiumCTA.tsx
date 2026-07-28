@@ -36,6 +36,7 @@ export default function PremiumCTA({
           <Button
             className="w-full md:w-fit bg-yellow-500! border-yellow-500!"
             variant="outline"
+            href="/pricing"
           >
             <Gem /> Upgrade to Premium
           </Button>

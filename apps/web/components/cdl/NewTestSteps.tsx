@@ -165,6 +165,7 @@ export default function NewTestSteps({
                                 variant="outline"
                                 className="w-full md:w-fit bg-yellow-500! border-yellow-500!"
                                 size="sm"
+                                href="/pricing"
                               >
                                 <Gem /> Upgrade to Premium
                               </Button>

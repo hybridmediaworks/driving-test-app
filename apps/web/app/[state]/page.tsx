@@ -65,7 +65,7 @@ export default async function StateDynamicPage({
           <ReviewAccuracy />
           <GoFurtherSection />
           <EmailCaptureSection />
-          <CTASection />
+          <CTASection href={`/${state}/dmv-written-test`} />
           <Footer />
         </main>
       </div>
