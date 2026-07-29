@@ -15,6 +15,8 @@ type Step = {
   status?: "next";
   style?: "large";
   "quiz-valut"?: boolean;
+  completed?: boolean;
+  justCompleted?: boolean;
 };
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -23,6 +25,19 @@ function chunk<T>(items: T[], size: number): T[][] {
     groups.push(items.slice(i, i + size));
   }
   return groups;
+}
+
+// A row's trailing connector is really drawn by two divs (this row's
+// after_row + the next row's before_row) that must always agree, since
+// they're two halves of what reads as one continuous line.
+function rowFillState(row: Step[]): { trigger: boolean; filled: boolean } {
+  const triggerIndex = row.findIndex((s) => s.justCompleted);
+  const hasTrigger = triggerIndex !== -1;
+  const fullyDone = row.every((s) => s.completed && !s.justCompleted);
+  return {
+    trigger: hasTrigger && triggerIndex === row.length - 1,
+    filled: fullyDone && !hasTrigger,
+  };
 }
 
 const GAP_REM = 1.25;
@@ -67,10 +82,16 @@ export default function TestSteps({
   steps,
   columns = 5,
   nextConnector = false,
+  phaseActive = false,
+  phaseJustActivated = false,
 }: {
   steps: Step[];
   columns?: number;
   nextConnector?: boolean;
+  /** Phase is already active (steps in progress) — first row's entry connector renders filled, no animation. */
+  phaseActive?: boolean;
+  /** Phase just became active (previous phase's last step just completed) — first row's entry connector animates in. */
+  phaseJustActivated?: boolean;
 }) {
   const tier = useResponsiveTier();
   const isDesktop = tier === "desktop";
@@ -94,6 +115,24 @@ export default function TestSteps({
         const shrinkConnectorBelow =
           isPartialRow || (isLastRow && nextConnector);
 
+        // Progress-fill: the row's trailing connector animates only when the
+        // just-finished step is the last one in this row (a real row boundary);
+        // it's already blue (no animation) once every step in the row is done.
+        const { trigger: afterRowTriggers, filled: afterRowFilled } =
+          rowFillState(row);
+
+        // The row's LEADING connector (before_row) must mirror the state of
+        // whatever feeds into it: the previous row's trailing connector, or —
+        // for the first row — the phase circle itself.
+        const isFirstRow = rowIndex === 0;
+        const prevRowState = !isFirstRow ? rowFillState(rows[rowIndex - 1]) : null;
+        const beforeRowFilled = isFirstRow
+          ? phaseActive && !phaseJustActivated
+          : !!prevRowState?.filled;
+        const beforeRowTriggers = isFirstRow
+          ? phaseJustActivated
+          : !!prevRowState?.trigger;
+
         return (
           <div
             key={rowIndex}
@@ -101,35 +140,66 @@ export default function TestSteps({
             style={{ "--ts-cols": effectiveColumns } as React.CSSProperties}
           >
             <div
-              className={`before_row pointer-events-none absolute -top-11.75 h-30.5 w-20 border-solid border-white max-md:hidden ${
-                rowIndex === 0
+              className={`before_row pointer-events-none absolute -top-11.75 h-30.5 w-20 border-solid max-md:hidden ${
+                isFirstRow
                   ? "left-0 border-b"
                   : "-left-10 rounded-l-[28px] border-14 border-r-0"
+              } ${
+                beforeRowFilled
+                  ? "border-blue-500"
+                  : beforeRowTriggers
+                    ? "connector-fill border-white"
+                    : "border-white"
               }`}
+              style={
+                beforeRowTriggers
+                  ? ({ "--fill-index": isFirstRow ? 5 : 1 } as React.CSSProperties)
+                  : undefined
+              }
             />
             {showConnectorBelow && (
               <div
-                className={`after_row pointer-events-none absolute top-15.25 h-[calc(100%-30px)] -right-10 rounded-r-[28px] border-14 border-solid border-white border-l-0 max-md:hidden ${
-                  shrinkConnectorBelow ? "left-15" : "w-full"
-                }`}
-                style={
-                  shrinkConnectorBelow
+                className={`after_row pointer-events-none absolute top-15.25 h-[calc(100%-30px)] -right-10 rounded-r-[28px] border-14 border-solid border-l-0 max-md:hidden ${
+                  afterRowFilled
+                    ? "border-blue-500"
+                    : afterRowTriggers
+                      ? "connector-fill border-white"
+                      : "border-white"
+                } ${shrinkConnectorBelow ? "left-15" : "w-full"}`}
+                style={{
+                  ...(shrinkConnectorBelow
                     ? {
                         width: `calc(${rowWidth(effectiveColumns, rowSpan)} - 20px)`,
                       }
-                    : undefined
-                }
+                    : undefined),
+                  ...(afterRowTriggers
+                    ? ({ "--fill-index": 1 } as React.CSSProperties)
+                    : undefined),
+                }}
               />
             )}
 
-            {row.map((step, index) => (
+            {row.map((step, index) => {
+              const isFilled = !!step.completed && !step.justCompleted;
+              const isTrigger = !!step.justCompleted;
+
+              return (
               <div
                 key={index}
                 className={`group flex md:flex-col items-center md:items-start cursor-pointer rounded transition-all duration-300 hover:-translate-y-0.75 ${
                   step.style === "large" ? "lg:col-span-2" : ""
                 }`}
               >
-                <div className="md:hidden md:w-15 w-8.5 absolute left-6.5 ms-auto md:border-l-14 border-l-8 top-4 border-white h-full z-0" />
+                <div
+                  className={`md:hidden md:w-15 w-8.5 absolute left-6.5 ms-auto md:border-l-14 border-l-8 top-4 h-full z-0 ${
+                    isFilled
+                      ? "border-blue-500"
+                      : isTrigger
+                        ? "connector-fill border-white"
+                        : "border-white"
+                  }`}
+                  style={isTrigger ? ({ "--fill-index": 0 } as React.CSSProperties) : undefined}
+                />
                 {(step.image ||
                   step.type === "premium" ||
                   step.status === "next" ||
@@ -150,12 +220,12 @@ export default function TestSteps({
                     {(step.type === "premium" || step.status === "next") && (
                       <div
                         className={`absolute inset-0 flex items-center justify-center md:rounded-xl rounded-md ${
-                          step.type === "premium"
+                          step.type === "premium" && step.status !== "next"
                             ? "bg-white/60 backdrop-blur-[2px] group-hover:bg-linear-to-r group-hover:from-blue-500 group-hover:to-blue-700"
                             : ""
                         }`}
                       >
-                        {step.type === "premium" && (
+                        {step.type === "premium" && step.status !== "next" && (
                           <>
                             <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
                               <Gem className="text-blue-600 w-8 h-8 " />
@@ -216,7 +286,8 @@ export default function TestSteps({
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         );
       })}

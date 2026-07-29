@@ -4,21 +4,41 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
+import { usePhaseCompletion } from "@/lib/usePhaseCompletion";
 import { Gem } from "lucide-react";
 
 export default function PremiumCTA({
   previousConnector = false,
   nextConnector = false,
+  afterPhase,
 }: {
   previousConnector?: boolean;
   nextConnector?: boolean;
+  /** The phase whose completion state drives this CTA's own connectors — it sits right after that phase in the page. */
+  afterPhase?: number;
 }) {
   const { selectedState } = useWebLayout();
+  const { isJustFinished, isFullyCompleted } = usePhaseCompletion(
+    afterPhase ?? -1,
+  );
 
   return (
     <section className="pt-0 md:pt-12 relative mb-0">
       {previousConnector && (
-        <div className="md:left-10 left-6.5 z-0 md:w-30 w-16 md:border-14 border-8 md:border-r-0 border-r-0 absolute md:rounded-tl-[28px] border-t-0 border-white h-28 -top-12" />
+        <div
+          className={`md:left-10 left-6.5 z-0 md:w-30 w-16 md:border-14 border-8 md:border-r-0 border-r-0 absolute md:rounded-tl-[28px] border-t-0 h-28 -top-12 ${
+            isFullyCompleted
+              ? "border-blue-500"
+              : isJustFinished
+                ? "connector-fill border-white"
+                : "border-white"
+          }`}
+          style={
+            isJustFinished
+              ? ({ "--fill-index": 2 } as React.CSSProperties)
+              : undefined
+          }
+        />
       )}
       <div
         className="relative z-10 mx-auto max-w-container xl:ps-24 bg-cover bg-blue-950 border border-blue-200 rounded-xl  flex flex-col xl:flex-row justify-between items-center xl:gap-4 gap-6"
@@ -50,7 +70,20 @@ export default function PremiumCTA({
         </div>
       </div>
       {nextConnector && (
-        <div className="w-15 md:ms-10 ms-6.5 md:border-l-14 border-l-8 border-white md:h-22 h-12" />
+        <div
+          className={`w-15 md:ms-10 ms-6.5 md:border-l-14 border-l-8 md:h-22 h-12 ${
+            isFullyCompleted
+              ? "border-blue-500"
+              : isJustFinished
+                ? "connector-fill border-white"
+                : "border-white"
+          }`}
+          style={
+            isJustFinished
+              ? ({ "--fill-index": 3 } as React.CSSProperties)
+              : undefined
+          }
+        />
       )}
     </section>
   );

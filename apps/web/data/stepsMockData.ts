@@ -10,6 +10,12 @@ export type StepsMockStep = {
   status?: "next";
   style?: "large";
   "quiz-valut"?: boolean;
+  completed?: boolean;
+  /** True only on the step the user finished in this session — tells the UI to
+   * animate the fill (this step + its trailing connector) instead of rendering
+   * the completed state directly. The frontend acks it back to the backend
+   * after playing the animation once, so it never replays on a later reload. */
+  justCompleted?: boolean;
 };
 
 export type StepsMockPhase = {

@@ -53,11 +53,11 @@ export default async function StateDynamicPage({
             <div className="mx-auto max-w-container space-y-12">
               <StatePhase phase={1} nextConnector />
               <StatePhase phase={2} previousConnector nextConnector />
-              <PremiumCTA previousConnector nextConnector />
+              <PremiumCTA previousConnector nextConnector afterPhase={2} />
               <StatePhase phase={3} nextConnector />
               <StatePhase phase={4} previousConnector nextConnector />
               <StatePhase phase={5} previousConnector nextConnector />
-              <PremiumCTA previousConnector nextConnector />
+              <PremiumCTA previousConnector nextConnector afterPhase={5} />
               <StatePhase phase={6} nextConnector />
               <StatePhase phase={7} previousConnector />
             </div>

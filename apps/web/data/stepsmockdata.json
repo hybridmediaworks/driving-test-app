@@ -15,7 +15,8 @@
         "totalQuestions": "20",
         "totalTime": "35",
         "type": "free",
-        "image": "/driving-tests.jpg"
+        "image": "/driving-tests.jpg",
+        "status": "next"
       },
       {
         "step": 2,
@@ -23,8 +24,7 @@
         "totalQuestions": "20",
         "totalTime": "35",
         "type": "free",
-        "image": "/driving-tests.jpg",
-        "status": "next"
+        "image": "/driving-tests.jpg"
       },
       {
         "step": 3,
