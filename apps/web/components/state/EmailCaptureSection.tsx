@@ -18,7 +18,7 @@ export default function EmailCaptureSection() {
   }
 
   return (
-    <section className="py-15 md:space-y-15 lg:py-30 px-5 bg-[linear-gradient(115deg,#1E3A8A_0%,#0D142C_70%)]">
+    <section className="py-15 md:space-y-15 lg:py-30 px-5 bg-[linear-gradient(115deg,#1E3A8A_0%,var(--color-blue-1000)_70%)]">
       <div className="mx-auto max-w-container  flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8 xl:gap-4">
         <div className="space-y-4 max-w-206">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-blue-800 px-3.5 py-1.5 text-blue-400 text-xs font-semibold">

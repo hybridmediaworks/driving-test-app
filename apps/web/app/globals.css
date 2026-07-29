@@ -9,8 +9,11 @@
   --font-sora: var(--font-sora);
 
   --color-background: var(--background);
+  --color-background2: var(--background2);
+  --color-background3: var(--background3);
   --color-foreground: var(--foreground);
   --color-blue-primary: var(--blue-primary);
+  --color-blue-1000: var(--blue-1000);
   --color-grey: var(--grey);
 
   --color-border: var(--border);
@@ -55,6 +58,7 @@
 
 :root {
   --blue-primary: #007aff;
+  --blue-1000: #0d142c;
   --grey: #8c8c9a;
 
   --border: oklch(0.922 0 0);
@@ -71,6 +75,8 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --background: #fafaf7;
+  --background2: #f2f1ec;
+  --background3: #e7e6e1;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);

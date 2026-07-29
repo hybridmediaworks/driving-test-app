@@ -67,9 +67,9 @@ export default function GoFurtherSection() {
           </Paragraph>
         </div>
         <div className="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4">
-          <div className="p-6 bg-[#FAFAFA] border rounded-lg flex flex-col justify-between gap-4">
+          <div className="p-6 bg-neutral-50 border rounded-lg flex flex-col justify-between gap-4">
             <div className="space-y-4">
-              <div className="aspect-video flex items-center justify-center rounded-lg shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)] bg-[linear-gradient(157deg,#1E3A8A_0%,#0D142C_100%)]">
+              <div className="aspect-video flex items-center justify-center rounded-lg shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)] bg-[linear-gradient(157deg,#1E3A8A_0%,var(--color-blue-1000)_100%)]">
                 <Play className="text-white" />
               </div>
               <Paragraph size="lg" className="font-semibold" color="dark">
@@ -85,7 +85,7 @@ export default function GoFurtherSection() {
             ({ icon: Icon, title, description, buttonText }) => (
               <div
                 key={title}
-                className="p-6 bg-[#FAFAFA] border rounded-lg space-y-4.5 flex flex-col justify-between gap-4"
+                className="p-6 bg-neutral-50 border rounded-lg space-y-4.5 flex flex-col justify-between gap-4"
               >
                 <div className="space-y-4">
                   <Icon className="bg-blue-100 py-3 rounded-[11px] min-w-12.5 min-h-12.5 text-blue-700" />

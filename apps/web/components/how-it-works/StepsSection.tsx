@@ -63,7 +63,7 @@ const stepCards: StepCard[] = [
 
 export default function StepsSection() {
   return (
-    <section className="py-15 md:space-y-15 lg:py-30 bg-[#F2F1EC]">
+    <section className="py-15 md:space-y-15 lg:py-30 bg-background2">
       <div className="mx-auto max-w-container space-y-12 px-5">
         <div className="space-y-4 max-w-167">
           <Paragraph
@@ -102,7 +102,7 @@ export default function StepsSection() {
                   />
                   <path
                     d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
-                    stroke="#E7E6E1"
+                    stroke="var(--background3)"
                     stroke-width="1.2"
                   />
                 </svg>

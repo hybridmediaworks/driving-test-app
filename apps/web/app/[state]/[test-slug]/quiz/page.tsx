@@ -229,7 +229,7 @@ export default function TestQuizPage({
                 <Gem className="w-5" /> Upgrade
               </Button>
             </div>
-            <div className="h-2.5 flex-1 overflow-hidden bg-[#F2F1EC]">
+            <div className="h-2.5 flex-1 overflow-hidden bg-background2">
               <div
                 className="h-2.5 bg-linear-to-r rounded-tr-2xl rounded-br-2xl from-blue-500 to-blue-700 transition-all"
                 style={{
@@ -488,7 +488,7 @@ export default function TestQuizPage({
                                 : ""
                             } ${questionStatuses[index] === "incorrect" ? "bg-red-50 border-red-200 text-red-500" : ""} ${
                               questionStatuses[index] === "unanswered"
-                                ? "bg-[#FAFAF7] text-neutral-500"
+                                ? "bg-background text-neutral-500"
                                 : ""
                             } ${index === furthestIndex ? "bg-linear-to-r from-blue-500 to-blue-700 text-white" : ""} ${index === currentIndex && index !== furthestIndex ? "ring-2 ring-blue-500" : ""} ${
                               index > furthestIndex ? "cursor-not-allowed!" : ""

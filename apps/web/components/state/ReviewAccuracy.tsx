@@ -21,9 +21,9 @@ export default function ReviewAccuracy() {
           </Paragraph>
         </div>
         <div className="flex-1 grid md:grid-cols-2 grid-cols-1 gap-4">
-          <div className="p-6 bg-[#FAFAFA] border rounded-lg space-y-4.5">
+          <div className="p-6 bg-neutral-50 border rounded-lg space-y-4.5">
             <div className="flex gap-4 items-center">
-              <div className="w-16.5 h-16.5 rounded-full border bg-[#F5F5F5] text-xs flex items-center justify-center text-center text-neutral-400">
+              <div className="w-16.5 h-16.5 rounded-full border bg-neutral-100 text-xs flex items-center justify-center text-center text-neutral-400">
                 [IMAGE] headshot
               </div>
 
@@ -49,9 +49,9 @@ export default function ReviewAccuracy() {
               earns its keep."{" "}
             </Paragraph>
           </div>
-          <div className="p-6 bg-[#FAFAFA] border rounded-lg space-y-4.5">
+          <div className="p-6 bg-neutral-50 border rounded-lg space-y-4.5">
             <div className="flex gap-4 items-center">
-              <div className="w-16.5 h-16.5 rounded-full border bg-[#F5F5F5] text-xs flex items-center justify-center text-center text-neutral-400">
+              <div className="w-16.5 h-16.5 rounded-full border bg-neutral-100 text-xs flex items-center justify-center text-center text-neutral-400">
                 [IMAGE] headshot
               </div>
 

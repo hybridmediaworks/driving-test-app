@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import NewTestSteps from "@/components/cdl/NewTestSteps";
+import TestSteps from "@/components/cdl/TestSteps";
 import HandBookSection from "@/components/state/HandBookSection";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { fetchStateSteps, type StepsMockPhase } from "@/data/stepsMockData";
@@ -45,7 +45,7 @@ export default function StatePhase({
           <Heading
             as="h3"
             size="xs"
-            className={`rounded-full flex items-center justify-center md:min-w-25 md:min-h-25 min-w-15 min-h-15 md:border-14 border-6 ${phaseData.phaseStatus === "active" ? "border-blue-100 bg-linear-to-r from-blue-600 to-blue-500 text-white" : "border-[#E7E6E1] bg-white"}`}
+            className={`rounded-full flex items-center justify-center md:min-w-25 md:min-h-25 min-w-15 min-h-15 md:border-14 border-6 ${phaseData.phaseStatus === "active" ? "border-blue-100 bg-linear-to-r from-blue-600 to-blue-500 text-white" : "border-background3 bg-white"}`}
           >
             {phaseData.phase}
           </Heading>
@@ -66,7 +66,7 @@ export default function StatePhase({
       {phaseData.header.handbook ? (
         <HandBookSection />
       ) : (
-        <NewTestSteps
+        <TestSteps
           steps={phaseData.steps.map((step) => ({
             title: step.title,
             totalQuestions: step.totalQuestions,

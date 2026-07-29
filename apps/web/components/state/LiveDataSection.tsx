@@ -63,21 +63,21 @@ export default function LiveDataSection() {
             </div>
             <StudentChart />
           </div>
-          <div className="bg-[#FAFAFA] p-6 border rounded-xl gap-4 flex items-center justify-between">
+          <div className="bg-neutral-50 p-6 border rounded-xl gap-4 flex items-center justify-between">
             <Calendar className="bg-blue-100 p-3.5 rounded-[11px] min-w-15 min-h-15 text-blue-700" />
             <div className="w-full">
               <Heading size="xs">4,930 days</Heading>
               <Paragraph size="sm">Combined practice this month</Paragraph>
             </div>
           </div>
-          <div className="bg-[#FAFAFA] p-6 border rounded-xl gap-4 flex items-center justify-between">
+          <div className="bg-neutral-50 p-6 border rounded-xl gap-4 flex items-center justify-between">
             <Clock className="bg-blue-100 p-3.5 rounded-[11px] min-w-15 min-h-15 text-blue-700" />
             <div className="w-full">
               <Heading size="xs">7–9 PM</Heading>
               <Paragraph size="sm">Peak practice time</Paragraph>
             </div>
           </div>
-          <div className="bg-[#FAFAFA] p-6 border rounded-xl gap-4 flex items-center justify-between">
+          <div className="bg-neutral-50 p-6 border rounded-xl gap-4 flex items-center justify-between">
             <Star className="bg-blue-100 p-3.5 rounded-[11px] min-w-15 min-h-15 text-blue-700" />
             <div className="w-full">
               <Heading size="xs">#12 nationwide</Heading>

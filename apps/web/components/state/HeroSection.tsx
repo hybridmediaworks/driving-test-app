@@ -20,10 +20,10 @@ export default function HeroSection() {
               size="md"
               className="flex max-w-fit font-semibold items-center gap-2 rounded-full border bg-white px-3.75 py-2.25 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]"
             >
-              <div className="relative flex h-2 w-2">
+              <span className="relative inline-flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-200" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-              </div>
+              </span>
               <span className=" text-green-500">Live</span>
               <span>
                 Active learners today: <strong>2,847</strong>
@@ -89,7 +89,7 @@ export default function HeroSection() {
           </div>
         </div>
       </section>
-      <section className="py-15 md:space-y-15 lg:py-30 px-5 bg-[#F2F1EC]">
+      <section className="py-15 md:space-y-15 lg:py-30 px-5 bg-background2">
         <div className="mx-auto max-w-225 space-y-4 text-center">
           <Paragraph
             size="2xl"
