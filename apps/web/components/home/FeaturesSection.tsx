@@ -35,7 +35,7 @@ export default function FeaturesSection() {
         <div className="space-y-5">
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="group">
-              <div className="flex h-1/2 min-h-fit flex-col justify-between gap-5.5 rounded-xl bg-blue-1000 p-6 transition-[height] duration-500 group-hover:h-full hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+              <div className="flex h-1/2 min-h-fit flex-col justify-between gap-5.5 rounded-xl bg-blue-1000 p-6 transition-[height] duration-500 group-hover:h-full hover:shadow-hover">
                 <div className="space-y-1.5">
                   <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-900 text-blue-300">
                     ✦
@@ -68,7 +68,7 @@ export default function FeaturesSection() {
                 </div>
               </div>
             </div>
-            <div className="group space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+            <div className="group space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-hover">
               <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 ▣
               </div>
@@ -90,7 +90,7 @@ export default function FeaturesSection() {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)] md:min-h-65">
+            <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-hover md:min-h-65">
               <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 ◴
               </div>
@@ -101,7 +101,7 @@ export default function FeaturesSection() {
                 Know exactly when you&rsquo;re ready.
               </Paragraph>
             </div>
-            <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)] md:min-h-65">
+            <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-hover md:min-h-65">
               <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 ◗
               </div>
@@ -110,7 +110,7 @@ export default function FeaturesSection() {
               </Heading>
               <Paragraph>Study hands-free, on the move.</Paragraph>
             </div>
-            <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)] md:min-h-65">
+            <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-hover md:min-h-65">
               <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 ⬡
               </div>

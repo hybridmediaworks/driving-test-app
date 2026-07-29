@@ -18,7 +18,7 @@ export default function HeroSection() {
           <div className="space-y-4 xl:max-w-155">
             <Paragraph
               size="md"
-              className="flex max-w-fit font-semibold items-center gap-2 rounded-full border bg-white px-3.75 py-2.25 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]"
+              className="flex max-w-fit font-semibold items-center gap-2 rounded-full border bg-white px-3.75 py-2.25 shadow-card"
             >
               <span className="relative inline-flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-200" />

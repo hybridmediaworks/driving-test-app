@@ -86,7 +86,7 @@ export default function StepsSection() {
           {stepCards.map((step) => (
             <div
               key={step.number}
-              className="relative rounded-2xl border bg-white p-5 lg:p-8 flex flex-col justify-between gap-14 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]"
+              className="relative rounded-2xl border bg-white p-5 lg:p-8 flex flex-col justify-between gap-14 shadow-card"
             >
               <div className="hidden lg:flex items-center justify-center absolute left-0 -top-10.75 w-full">
                 <svg
@@ -108,7 +108,7 @@ export default function StepsSection() {
                 </svg>
               </div>
               <div className="space-y-5">
-                <div className="flex h-15 w-15 items-center justify-center rounded-full border shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+                <div className="flex h-15 w-15 items-center justify-center rounded-full border shadow-card">
                   <Heading size="xs" color="primary">
                     {step.number}
                   </Heading>

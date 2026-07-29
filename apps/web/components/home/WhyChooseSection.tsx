@@ -23,7 +23,7 @@ export default function WhyChooseSection() {
           </Paragraph>
         </div>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          <div className="space-y-3 rounded-xl bg-white p-7 shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="space-y-3 rounded-xl bg-white p-7 shadow-hover">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/car-icon.svg" alt="car-icon" />
             <Heading as="h3" size="sm" className="pt-3">
@@ -34,7 +34,7 @@ export default function WhyChooseSection() {
               labore et dolore magna aliqua.
             </Paragraph>
           </div>
-          <div className="space-y-3 rounded-xl p-7 hover:bg-white hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="space-y-3 rounded-xl p-7 hover:bg-white hover:shadow-hover">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/truck-icon.svg" alt="truck-icon" />
             <Heading as="h3" size="sm" className="pt-3">
@@ -45,7 +45,7 @@ export default function WhyChooseSection() {
               labore et dolore magna aliqua.
             </Paragraph>
           </div>
-          <div className="space-y-3 rounded-xl p-7 hover:bg-white hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="space-y-3 rounded-xl p-7 hover:bg-white hover:shadow-hover">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/bike-icon.svg" alt="bike-icon" />
             <Heading as="h3" size="sm" className="pt-3">

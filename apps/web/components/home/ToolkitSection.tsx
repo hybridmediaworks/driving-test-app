@@ -89,7 +89,7 @@ export default function ToolkitSection() {
           <img
             src="/ai-tutor.png"
             alt=""
-            className="w-full rounded-3xl shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)] lg:w-auto"
+            className="w-full rounded-3xl shadow-hover lg:w-auto"
           />
         </div>
         <div className="flex items-center gap-3.5 pt-5 md:pt-17">
@@ -102,7 +102,7 @@ export default function ToolkitSection() {
           <div className="h-px w-full bg-background3" />
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="overflow-hidden rounded-2xl border border-background3 bg-white hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="overflow-hidden rounded-2xl border border-background3 bg-white hover:shadow-hover">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/progress-tracking.png" alt="" className="w-full" />
             <div className="space-y-1.5 p-5">
@@ -115,7 +115,7 @@ export default function ToolkitSection() {
               </Paragraph>
             </div>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-background3 bg-white hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="overflow-hidden rounded-2xl border border-background3 bg-white hover:shadow-hover">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/vioce-learning.png" alt="" className="w-full" />
             <div className="space-y-1.5 p-5">
@@ -128,7 +128,7 @@ export default function ToolkitSection() {
               </Paragraph>
             </div>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-background3 bg-white hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="overflow-hidden rounded-2xl border border-background3 bg-white hover:shadow-hover">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/flashcards.png" alt="" className="w-full" />
             <div className="space-y-1.5 p-5">
@@ -152,7 +152,7 @@ export default function ToolkitSection() {
           <div className="h-px w-full bg-background3" />
         </div>
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.20fr)_minmax(0,0.80fr)]">
-          <div className="row-span-2 space-y-4.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="row-span-2 space-y-4.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-hover">
             <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               ▣
             </div>
@@ -166,7 +166,7 @@ export default function ToolkitSection() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/mockexams.svg" alt="" className="w-full" />
           </div>
-          <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-hover">
             <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               ▥
             </div>
@@ -177,7 +177,7 @@ export default function ToolkitSection() {
               Air brakes, combination vehicles, and endorsements — covered.
             </Paragraph>
           </div>
-          <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-[0_24px_50px_-26px_rgba(11,11,13,0.35)]">
+          <div className="space-y-1.5 rounded-xl border border-background3 bg-white p-6 hover:shadow-hover">
             <div className="h9.5 flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               ◍
             </div>
