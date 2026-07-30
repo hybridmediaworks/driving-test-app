@@ -157,7 +157,7 @@ export default function QuizResults({
     <section className="relative grid min-h-screen items-center mx-auto w-full max-w-container px-5 py-10">
       {percent >= 80 && <ConfettiBurst intensity={isPerfect ? 170 : 90} />}
 
-      <div className="flex justify-between gap-6">
+      <div className="flex justify-between gap-6 md:flex-row flex-col">
         <div
           className="bg-blue-1000 flex flex-col justify-center w-full quiz-hero rounded-3xl px-6 pt-9 pb-8 text-center text-white shadow-[0_20px_46px_-20px_rgba(13,20,44,0.55)]"
           style={{ backgroundImage: "url('/state-premium-cta.png')" }}
