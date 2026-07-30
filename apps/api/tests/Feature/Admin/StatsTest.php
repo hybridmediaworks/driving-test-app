@@ -68,9 +68,9 @@ class StatsTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonStructure([
-            'users' => ['total', 'admins', 'verified', 'new_last_7_days'],
+            'users' => ['total', 'admins', 'verified', 'new_last_7_days', 'daily_new_last_7_days'],
             'quizzes' => ['total', 'active', 'categories', 'questions'],
-            'attempts' => ['total', 'completed', 'in_progress', 'average_score', 'last_7_days'],
+            'attempts' => ['total', 'completed', 'in_progress', 'average_score', 'last_7_days', 'daily_last_7_days'],
             'content' => [
                 'flashcards' => ['total', 'active', 'premium', 'reviews'],
                 'cheat_sheets' => ['total', 'active', 'premium'],
@@ -90,6 +90,41 @@ class StatsTest extends TestCase
         $response->assertJsonPath('attempts.completed', 1);
         $response->assertJsonPath('attempts.in_progress', 1);
         $this->assertEquals(100.0, $response->json('attempts.average_score'));
+        $this->assertCount(7, $response->json('users.daily_new_last_7_days'));
+        $this->assertCount(7, $response->json('attempts.daily_last_7_days'));
+    }
+
+    public function test_daily_series_are_zero_filled_and_bucketed_by_day(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $quiz = Quiz::factory()->create();
+
+        // One user created "today" and one attempt created "today" — every other day in the
+        // 7-day window has no rows and must still appear as an explicit 0, not be omitted.
+        User::factory()->create(['created_at' => now()]);
+        QuizAttempt::query()->create([
+            'quiz_id' => $quiz->id,
+            'status' => AttemptStatus::InProgress,
+            'total_questions' => 2,
+            'correct_count' => 0,
+            'score' => 0,
+            'started_at' => now(),
+            'created_at' => now(),
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/stats');
+
+        $response->assertOk();
+        $dailyUsers = $response->json('users.daily_new_last_7_days');
+        $dailyAttempts = $response->json('attempts.daily_last_7_days');
+
+        $this->assertCount(7, $dailyUsers);
+        $this->assertCount(7, $dailyAttempts);
+        // admin + the one seeded user were both created "today" → last element (today) is 2.
+        $this->assertSame(2, $dailyUsers[6]);
+        $this->assertSame(0, array_sum(array_slice($dailyUsers, 0, 6)));
+        $this->assertSame(1, $dailyAttempts[6]);
+        $this->assertSame(0, array_sum(array_slice($dailyAttempts, 0, 6)));
     }
 
     public function test_admin_sees_content_library_counts(): void

@@ -41,6 +41,18 @@ class QuizBrowsingTest extends TestCase
         $this->assertEquals([$match->id], $ids->all());
     }
 
+    public function test_index_filters_by_test_track(): void
+    {
+        $permitQuiz = Quiz::factory()->create(['is_active' => true, 'test_track' => 'permit_test']);
+        Quiz::factory()->create(['is_active' => true, 'test_track' => 'driving_test']);
+
+        $response = $this->getJson('/api/v1/quizzes?test_track=permit_test');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertEquals([$permitQuiz->id], $ids->all());
+    }
+
     public function test_show_returns_questions_but_never_leaks_correctness_or_explanation(): void
     {
         $quiz = Quiz::factory()->create(['is_active' => true]);

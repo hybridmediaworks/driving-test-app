@@ -19,7 +19,7 @@ export default function StateLandingPage({ state = "" }: { state?: string }) {
   const router = useRouter();
   // WebLayoutProvider is rendered by the page's root, so `selectedState` acts
   // as a fallback only when the route itself doesn't carry a state slug.
-  const { selectedState } = useWebLayout();
+  const { selectedState, selectedVehicle, selectedTestType } = useWebLayout();
 
   const propStateName = state ? slugToStateName(state) : "";
   const stateName =

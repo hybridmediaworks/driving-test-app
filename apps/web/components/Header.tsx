@@ -37,8 +37,8 @@ const vehicleOptions = [
 ];
 
 const testTypeOptions = [
-  { label: "Permit Tests", icon: GraduationCap },
-  { label: "Driving Test", icon: Route },
+  { label: "Permit Tests", value: "permit_test", icon: GraduationCap },
+  { label: "Driving Test", value: "driving_test", icon: Route },
 ];
 
 export default function Header({
@@ -50,8 +50,14 @@ export default function Header({
 }) {
   const router = useRouter();
   const { user } = useAuth();
-  const { selectedState, hasStoredState, selectedVehicle, setSelectedVehicle } = useWebLayout();
-  const [selectedTestType, setSelectedTestType] = useState("Permit Tests");
+  const {
+    selectedState,
+    hasStoredState,
+    selectedVehicle,
+    setSelectedVehicle,
+    selectedTestType,
+    setSelectedTestType,
+  } = useWebLayout();
   const [activeDropdown, setActiveDropdown] = useState<Dropdown>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileStatesOpen, setMobileStatesOpen] = useState(false);
@@ -90,8 +96,8 @@ export default function Header({
     return `/${stateToSlug(state)}${vehiclePaths[selectedVehicle] ?? ""}`;
   }
 
-  function selectTestType(testType: string) {
-    setSelectedTestType(testType);
+  function selectTestType(testTypeValue: string) {
+    setSelectedTestType(testTypeValue);
     setActiveDropdown(null);
     setMobileTestTypeOpen(false);
     setMobileMenuOpen(false);
@@ -102,7 +108,8 @@ export default function Header({
   }
 
   const VehicleIcon = vehicleOptions.find((v) => v.label === selectedVehicle)?.icon ?? Car;
-  const TestTypeIcon = testTypeOptions.find((t) => t.label === selectedTestType)?.icon ?? GraduationCap;
+  const selectedTestTypeOption = testTypeOptions.find((t) => t.value === selectedTestType) ?? testTypeOptions[0];
+  const TestTypeIcon = selectedTestTypeOption.icon;
   const showNav = !hideNav && (variant === "states" || hasStoredState);
 
   return (
@@ -182,7 +189,7 @@ export default function Header({
                   className="flex h-11.5 items-center gap-2 rounded-full bg-neutral-100 p-3 text-base font-medium text-neutral-700 transition-shadow hover:shadow-md"
                 >
                   <TestTypeIcon className="h-6 w-6 text-neutral-500" />
-                  {selectedTestType}
+                  {selectedTestTypeOption.label}
                   <ChevronDown className="h-5 w-5 text-neutral-400" />
                 </button>
 
@@ -190,10 +197,10 @@ export default function Header({
                   <div className="absolute top-full left-0 z-50 mt-2 w-52 rounded-2xl border border-gray-100 bg-white py-2 shadow-xl">
                     {testTypeOptions.map((item) => (
                       <a
-                        key={item.label}
-                        onClick={() => selectTestType(item.label)}
+                        key={item.value}
+                        onClick={() => selectTestType(item.value)}
                         className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                          selectedTestType === item.label ? "bg-blue-50 font-medium text-blue-600" : ""
+                          selectedTestType === item.value ? "bg-blue-50 font-medium text-blue-600" : ""
                         }`}
                       >
                         <item.icon className="h-4 w-4 text-blue-500" />
@@ -313,7 +320,7 @@ export default function Header({
               >
                 <span className="flex items-center gap-2">
                   <TestTypeIcon className="h-5 w-5 text-neutral-500" />
-                  {selectedTestType}
+                  {selectedTestTypeOption.label}
                 </span>
                 <ChevronDown
                   className={`h-5 w-5 text-neutral-400 transition-transform ${mobileTestTypeOpen ? "rotate-180" : ""}`}
@@ -323,10 +330,10 @@ export default function Header({
                 <div className="space-y-1 pt-1">
                   {testTypeOptions.map((item) => (
                     <a
-                      key={item.label}
-                      onClick={() => selectTestType(item.label)}
+                      key={item.value}
+                      onClick={() => selectTestType(item.value)}
                       className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 ${
-                        selectedTestType === item.label ? "bg-blue-50 font-medium text-blue-600" : ""
+                        selectedTestType === item.value ? "bg-blue-50 font-medium text-blue-600" : ""
                       }`}
                     >
                       <item.icon className="h-4 w-4 text-blue-500" />

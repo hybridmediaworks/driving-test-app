@@ -12,12 +12,22 @@ import { api } from "@/lib/api";
  * dead "Open Handbook" button with a real count pulled from the API and a working link — no
  * audio/listen feature exists (that would be a separate Phase 3 asset type), so it isn't promised.
  */
-export default function CheatSheetsBanner() {
+export default function CheatSheetsBanner({
+  stateCode,
+  vehicleType,
+}: {
+  stateCode?: string;
+  vehicleType?: string;
+} = {}) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
-    api.get<PaginatedResponse<PublicCheatSheet>>("/cheat-sheets?per_page=1").then((res) => setCount(res.meta.total));
-  }, []);
+    const params = new URLSearchParams({ per_page: "1" });
+    if (stateCode) params.set("state", stateCode);
+    if (vehicleType) params.set("vehicle_type", vehicleType.toLowerCase());
+
+    api.get<PaginatedResponse<PublicCheatSheet>>(`/cheat-sheets?${params.toString()}`).then((res) => setCount(res.meta.total));
+  }, [stateCode, vehicleType]);
 
   return (
     <div className="relative flex items-center justify-between overflow-hidden rounded-2xl bg-blue-50 ps-5 pr-15">

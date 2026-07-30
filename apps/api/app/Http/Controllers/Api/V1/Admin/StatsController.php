@@ -17,6 +17,7 @@ use App\Models\QuizCategory;
 use App\Models\QuizQuestion;
 use App\Models\Subscription;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 
 class StatsController extends Controller
@@ -46,6 +47,7 @@ class StatsController extends Controller
                 'admins' => User::query()->where('is_admin', true)->count(),
                 'verified' => User::query()->whereNotNull('email_verified_at')->count(),
                 'new_last_7_days' => User::query()->where('created_at', '>=', now()->subDays(7))->count(),
+                'daily_new_last_7_days' => $this->dailyCounts(User::query()),
             ],
             'quizzes' => [
                 'total' => Quiz::query()->count(),
@@ -59,6 +61,7 @@ class StatsController extends Controller
                 'in_progress' => QuizAttempt::query()->where('status', AttemptStatus::InProgress)->count(),
                 'average_score' => $averageScore === null ? null : round((float) $averageScore, 1),
                 'last_7_days' => QuizAttempt::query()->where('created_at', '>=', now()->subDays(7))->count(),
+                'daily_last_7_days' => $this->dailyCounts(QuizAttempt::query()),
             ],
             'content' => [
                 'flashcards' => [
@@ -87,5 +90,27 @@ class StatsController extends Controller
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Row counts per calendar day for the last 7 days (oldest first), zero-filled for days with
+     * no rows — powers a dashboard sparkline without the client needing to know which dates
+     * were empty. Accepts any model query builder filterable by `created_at`.
+     *
+     * @return list<int>
+     */
+    private function dailyCounts(Builder $query): array
+    {
+        $counts = $query
+            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as count')
+            ->groupBy('day')
+            ->pluck('count', 'day');
+
+        return collect(range(6, 0))
+            ->map(fn (int $daysAgo) => now()->subDays($daysAgo)->toDateString())
+            ->map(fn (string $day) => (int) ($counts[$day] ?? 0))
+            ->values()
+            ->all();
     }
 }

@@ -25,6 +25,11 @@ export default function Flashcard({
       >
         {/* Front */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-3xl border border-gray-100 bg-white p-8 text-center shadow-sm [backface-visibility:hidden]">
+          {card.is_premium && (
+            <span className="absolute top-4 right-4 inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">
+              Premium
+            </span>
+          )}
           {card.image_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={card.image_url} alt="" className="max-h-32 object-contain" />
