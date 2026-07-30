@@ -41,7 +41,7 @@ export default function PremiumCTA({
         />
       )}
       <div
-        className="relative z-10 mx-auto max-w-container xl:ps-24 bg-cover bg-blue-950 border border-blue-200 rounded-xl  flex flex-col xl:flex-row justify-between items-center xl:gap-4 gap-6"
+        className="relative z-10 mx-auto max-w-container xl:ps-24 bg-cover bg-blue-1000 border border-blue-200 rounded-xl  flex flex-col xl:flex-row justify-between items-center xl:gap-4 gap-6"
         style={{ backgroundImage: "url('/state-premium-cta.png')" }}
       >
         <div className="space-y-4 xl:max-w-161 xl:py-14 py-5 px-5 xl:px-0 h-full">
