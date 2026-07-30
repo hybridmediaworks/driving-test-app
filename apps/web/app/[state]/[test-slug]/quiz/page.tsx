@@ -26,7 +26,6 @@ import { isValidState, slugToStateName } from "@/lib/usStates";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
 const allowedToFail = 4;
-const totalQuestionPool = 500;
 
 const ambientTracks = [
   { value: "chasing-horizons", label: "Chasing Horizons" },
@@ -131,27 +130,6 @@ export default function TestQuizPage({
     [loadedQuestions, answers],
   );
 
-  const missedCategories = useMemo(
-    () =>
-      loadedQuestions
-        .filter((q) => {
-          const pick = answers[q.id];
-          return (
-            pick !== undefined &&
-            !q.options.find((o) => o.id === pick)?.isCorrect
-          );
-        })
-        .map((q) => q.category)
-        .filter((category, index, all) => all.indexOf(category) === index),
-    [loadedQuestions, answers],
-  );
-
-  const visibleRiskAreas = missedCategories.slice(0, 3);
-  const extraRiskAreaCount = Math.max(
-    0,
-    missedCategories.length - visibleRiskAreas.length,
-  );
-
   function questionStatus(
     question: QuizQuestionStatic,
   ): "correct" | "incorrect" | "unanswered" {
@@ -192,6 +170,10 @@ export default function TestQuizPage({
   function goToTestPage() {
     router.push(`/${state}/${testSlug}`);
   }
+  function viewQuestion(index: number) {
+    setShowResults(false);
+    setCurrentIndex(index);
+  }
   function handleBookmarkClick() {
     if (!isPremiumUser) {
       setShowPremiumDialog(true);
@@ -202,61 +184,63 @@ export default function TestQuizPage({
     <WebLayoutProvider stateSlug={state}>
       <div className="flex min-h-screen flex-col bg-background">
         <main className="flex-1 relative">
-          <div className="bg-white sticky top-0 z-90">
-            <div className="max-w-container lg:mx-auto mx-5  flex items-center justify-between gap-3 py-3.5">
-              <Button
-                href={`/${state}/${testSlug}`}
-                variant="ghost"
-                className=" text-neutral-700 p-0!"
-                size="sm"
-              >
-                <LogOut className="w-5 h-5 text-neutral-500" />
-                Exit
-              </Button>
-              <div className="flex shrink-0 items-center justify-center gap-4">
-                <Paragraph
-                  size="sm"
-                  color="primary"
-                  className="hidden md:block rounded-full border border-blue-300 bg-blue-50 px-3 py-0.5 font-semibold"
-                >
-                  ✦ Practice
-                </Paragraph>
-                <Paragraph size="sm" color="dark" className=" font-semibold">
-                  {stateName} Permit
-                </Paragraph>
+          {!questions ? (
+            <Paragraph className="py-20 text-center" color="muted">
+              Loading test…
+            </Paragraph>
+          ) : showResults ? (
+            <QuizResults
+              quizName={`${stateName} Permit`}
+              results={questionStatuses.map((s) => s === "correct")}
+              onRetry={restart}
+              onContinue={goToTestPage}
+              onSelectQuestion={viewQuestion}
+            />
+          ) : (
+            <>
+              <div className="bg-white sticky top-0 z-90">
+                <div className="max-w-container lg:mx-auto mx-5  flex items-center justify-between gap-3 py-3.5">
+                  <Button
+                    href={`/${state}/${testSlug}`}
+                    variant="ghost"
+                    className=" text-neutral-700 p-0!"
+                    size="sm"
+                  >
+                    <LogOut className="w-5 h-5 text-neutral-500" />
+                    Exit
+                  </Button>
+                  <div className="flex shrink-0 items-center justify-center gap-4">
+                    <Paragraph
+                      size="sm"
+                      color="primary"
+                      className="hidden md:block rounded-full border border-blue-300 bg-blue-50 px-3 py-0.5 font-semibold"
+                    >
+                      ✦ Practice
+                    </Paragraph>
+                    <Paragraph
+                      size="sm"
+                      color="dark"
+                      className=" font-semibold"
+                    >
+                      {stateName} Permit
+                    </Paragraph>
+                  </div>
+                  <Button href={`/${state}/${testSlug}`} size="sm">
+                    <Gem className="w-5" /> Upgrade
+                  </Button>
+                </div>
+                <div className="h-2.5 flex-1 overflow-hidden bg-background2">
+                  <div
+                    className="h-2.5 bg-linear-to-r rounded-tr-2xl rounded-br-2xl from-blue-500 to-blue-700 transition-all"
+                    style={{
+                      width: loadedQuestions.length
+                        ? `${((currentIndex + 1) / loadedQuestions.length) * 100}%`
+                        : "0%",
+                    }}
+                  />
+                </div>
               </div>
-              <Button href={`/${state}/${testSlug}`} size="sm">
-                <Gem className="w-5" /> Upgrade
-              </Button>
-            </div>
-            <div className="h-2.5 flex-1 overflow-hidden bg-background2">
-              <div
-                className="h-2.5 bg-linear-to-r rounded-tr-2xl rounded-br-2xl from-blue-500 to-blue-700 transition-all"
-                style={{
-                  width: loadedQuestions.length
-                    ? `${((currentIndex + 1) / loadedQuestions.length) * 100}%`
-                    : "0%",
-                }}
-              />
-            </div>
-          </div>
 
-          <div className="">
-            {!questions ? (
-              <Paragraph className="py-20 text-center" color="muted">
-                Loading test…
-              </Paragraph>
-            ) : showResults ? (
-              <QuizResults
-                stateName={stateName}
-                incorrectCount={incorrectCount}
-                questionsLength={loadedQuestions.length}
-                totalQuestionPool={totalQuestionPool}
-                riskAreas={visibleRiskAreas}
-                extraRiskAreaCount={extraRiskAreaCount}
-                onExit={goToTestPage}
-              />
-            ) : (
               <section className="pt-6 lg:pt-15 pb-35 px-5">
                 <div className="max-w-container mx-auto grid lg:grid-cols-3 grid-cols-1 gap-4">
                   <div className="lg:col-span-2 p-5 lg:p-8 rounded-3xl border border-border bg-white shadow-[0_20px_50px_-26px_rgba(23,37,84,0.25)] space-y-4">
@@ -566,8 +550,8 @@ export default function TestQuizPage({
                   </div>
                 </div>
               </section>
-            )}
-          </div>
+            </>
+          )}
         </main>
       </div>
 
