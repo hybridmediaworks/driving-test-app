@@ -14,7 +14,9 @@ export default function HeroSection() {
   const { selectedState, hasStoredState } = useWebLayout();
   const [showStateModal, setShowStateModal] = useState(false);
 
-  const stateHref = hasStoredState ? `/${stateToSlug(selectedState)}` : undefined;
+  const stateHref = hasStoredState
+    ? `/${stateToSlug(selectedState)}`
+    : undefined;
 
   function onStartClick() {
     if (!hasStoredState) {
@@ -29,28 +31,35 @@ export default function HeroSection() {
         <div className="space-y-8 pt-0 lg:max-w-183.25 lg:pt-15">
           <div className="space-y-4">
             <Heading as="h1">
-              Ace your <span className="text-blue-500">{selectedState}</span> DMV Driving Test.
+              Ace your <span className="text-blue-500">{selectedState}</span>{" "}
+              DMV Driving Test.
             </Heading>
             <Paragraph size="xl">
-              Stop wasting hours on the manual. DriveLane adapts to how you learn — with smart practice
-              tests, AI explanations, and a guaranteed path to your license.
+              Stop wasting hours on the manual. DriveLane adapts to how you
+              learn — with smart practice tests, AI explanations, and a
+              guaranteed path to your license.
             </Paragraph>
           </div>
 
           <Button href={stateHref} onClick={onStartClick}>
-            {hasStoredState ? `Start Free ${selectedState} Practice Test` : "Try it for free"}
+            {hasStoredState
+              ? `Start Free ${selectedState} Practice Test`
+              : "Try it for free"}
             <ArrowRight />
           </Button>
 
-          <StateSelectModal open={showStateModal} onClose={() => setShowStateModal(false)} />
+          <StateSelectModal
+            open={showStateModal}
+            onClose={() => setShowStateModal(false)}
+          />
         </div>
-        <div className="w-full lg:w-auto">
+        <div className="w-full">
           <Image
-            src="/banner-image.png"
+            src="/banner-image.svg"
             alt=""
             width={600}
             height={600}
-            className="mx-auto w-full max-w-lg lg:max-w-none"
+            className="mx-auto w-full"
           />
         </div>
       </div>
