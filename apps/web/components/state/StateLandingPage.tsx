@@ -39,7 +39,7 @@ export default function StateLandingPage({ state = "" }: { state?: string }) {
       <main className="flex-1">
         <section className="px-3.5 py-10">
           <div className="mx-auto max-w-container">
-            <DrivingTests state={stateSlug} />
+            <DrivingTests stateCode={stateAbbr} stateName={stateName} />
           </div>
         </section>
       </main>
