@@ -9,11 +9,12 @@ import StateSelectModal from "@/components/home/StateSelectModal";
 import { stateToSlug } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
-export default function CTASection() {
+export default function CTASection({ href }: { href?: string } = {}) {
   const { selectedState, hasStoredState } = useWebLayout();
   const [showStateModal, setShowStateModal] = useState(false);
 
-  const stateHref = hasStoredState ? `/${stateToSlug(selectedState)}` : undefined;
+  const stateHref =
+    href ?? (hasStoredState ? `/${stateToSlug(selectedState)}` : undefined);
 
   function onStartClick() {
     if (!hasStoredState) {

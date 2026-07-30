@@ -122,7 +122,7 @@ export default function Pricing() {
                         className={
                           isMonthly
                             ? "relative space-y-5 rounded-xl border border-blue-600 bg-white p-8 shadow-[0_24px_50px_-26px_rgba(20,60,120,0.25),0_4px_6px_-2px_rgba(20,60,120,0.03)]"
-                            : "flex flex-col justify-between space-y-5 rounded-xl border bg-white p-8 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)] lg:my-11.5"
+                            : "flex flex-col justify-between space-y-5 rounded-xl border bg-white p-8 shadow-card lg:my-11.5"
                         }
                       >
                         {isMonthly && (

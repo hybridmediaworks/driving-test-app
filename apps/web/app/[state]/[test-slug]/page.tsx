@@ -18,12 +18,16 @@ export async function generateMetadata({ params }: { params: Promise<{ state: st
   return { title, description, openGraph: { title, description, type: "website" } };
 }
 
-export default async function WrittenTestPage({ params }: { params: Promise<{ state: string }> }) {
-  const { state } = await params;
+export default async function WrittenTestPage({
+  params,
+}: {
+  params: Promise<{ state: string; "test-slug": string }>;
+}) {
+  const { state, "test-slug": testSlug } = await params;
 
   return (
     <WebLayoutProvider stateSlug={state}>
-      <WrittenTestContent state={state} />
+      <WrittenTestContent state={state} testSlug={testSlug} />
     </WebLayoutProvider>
   );
 }

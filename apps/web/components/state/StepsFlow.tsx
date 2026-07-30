@@ -2,6 +2,7 @@ import StepCard from "./StepCard";
 
 type Step = {
   title: string;
+  slug?: string;
   questions: number;
   type: "free" | "premium";
   locked?: boolean;
@@ -9,7 +10,7 @@ type Step = {
   status?: "next";
 };
 
-export default function StepsFlow({ steps }: { steps?: Step[] }) {
+export default function StepsFlow({ steps, state }: { steps?: Step[]; state?: string }) {
   if (!steps) return null;
 
   return (
@@ -20,7 +21,7 @@ export default function StepsFlow({ steps }: { steps?: Step[] }) {
             key={index}
             className={`${steps.length === 1 ? "col-span-2" : ""} ${steps.length > 5 && index < 5 ? "mb-12" : ""}`}
           >
-            <StepCard step={step} />
+            <StepCard step={step} state={state} />
           </div>
         ))}
       </div>

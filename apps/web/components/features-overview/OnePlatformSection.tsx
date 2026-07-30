@@ -95,7 +95,7 @@ export default function OnePlatformSection() {
           <div className="flex items-center justify-center flex-col -mt-1.5">
             <Circle className="w-3 h-3 fill-blue-500 text-blue-500 z-10" />
             <div className=" h-6 w-px bg-blue-500" />
-            <div className="flex items-center gap-2 rounded-lg bg-[#0D142C] px-4 py-2.5 text-white">
+            <div className="flex items-center gap-2 rounded-lg bg-blue-1000 px-4 py-2.5 text-white">
               <Paragraph size="sm" color="white" className="font-medium">
                 Readiness
               </Paragraph>

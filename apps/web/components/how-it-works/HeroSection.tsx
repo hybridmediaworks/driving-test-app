@@ -1,10 +1,29 @@
+"use client";
+
+import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { Separator } from "@/components/ui/separator";
+import StateSelectModal from "@/components/home/StateSelectModal";
+import { stateToSlug } from "@/lib/usStates";
+import { useWebLayout } from "@/lib/web-layout-context";
 import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
+  const { selectedState, hasStoredState } = useWebLayout();
+  const [showStateModal, setShowStateModal] = useState(false);
+
+  const stateHref = hasStoredState
+    ? `/${stateToSlug(selectedState)}/dmv-written-test`
+    : undefined;
+
+  function onStartClick() {
+    if (!hasStoredState) {
+      setShowStateModal(true);
+    }
+  }
+
   return (
     <section className="py-15 md:space-y-15 lg:py-30">
       <div className="mx-auto max-w-container space-y-12 px-5 flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -26,7 +45,11 @@ export default function HeroSection() {
             that tells you the day you're ready.
           </Paragraph>
           <div className="flex gap-6 pt-4 flex-wrap">
-            <Button className="w-full md:w-fit">
+            <Button
+              className="w-full md:w-fit"
+              href={stateHref}
+              onClick={onStartClick}
+            >
               Start Free Practice Test <ArrowRight />
             </Button>
             <Button variant="outline" className="w-full md:w-fit">
@@ -89,6 +112,10 @@ export default function HeroSection() {
           </Paragraph>
         </div>
       </div>
+      <StateSelectModal
+        open={showStateModal}
+        onClose={() => setShowStateModal(false)}
+      />
     </section>
   );
 }

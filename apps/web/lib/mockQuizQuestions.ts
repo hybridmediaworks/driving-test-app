@@ -1,11 +1,15 @@
-"use client";
+import type { QuizQuestionStatic } from "@/components/state/quiz/types";
 
-import { useMemo, useState } from "react";
-import QuizPlay from "./QuizPlay";
-import QuizResults from "./QuizResults";
-import type { QuizQuestionStatic } from "./types";
+/**
+ * Stand-in for a real endpoint (e.g. `api.get<QuizQuestionStatic[]>(`/states/${state}/tests/${testSlug}/quiz`)`).
+ * No backend exists yet for this state/test-slug quiz flow, so this resolves to the mock set
+ * below — callers already treat it as async so swapping the body in later is a one-line change.
+ */
+export async function fetchQuizQuestions(_state: string, _testSlug: string): Promise<QuizQuestionStatic[]> {
+  return mockQuizQuestions;
+}
 
-const questions: QuizQuestionStatic[] = [
+export const mockQuizQuestions: QuizQuestionStatic[] = [
   {
     id: 1,
     category: "Signs & Signals",
@@ -200,129 +204,3 @@ const questions: QuizQuestionStatic[] = [
     ],
   },
 ];
-
-const allowedToFail = 4;
-const totalQuestionPool = 500;
-
-export default function QuizPlayer({
-  stateName = "Alaska",
-  showResults,
-  onShowResultsChange,
-  onExit,
-}: {
-  stateName?: string;
-  showResults: boolean;
-  onShowResultsChange: (value: boolean) => void;
-  onExit: () => void;
-}) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [furthestIndex, setFurthestIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-
-  const isViewingFurthest = currentIndex === furthestIndex;
-  const currentQuestion = questions[currentIndex];
-  const selectedOptionId = answers[currentQuestion.id];
-  const isAnswered = selectedOptionId !== undefined;
-
-  const correctCount = useMemo(
-    () =>
-      questions.filter((q) => {
-        const pick = answers[q.id];
-        return pick !== undefined && q.options.find((o) => o.id === pick)?.isCorrect;
-      }).length,
-    [answers],
-  );
-
-  const incorrectCount = useMemo(
-    () =>
-      questions.filter((q) => {
-        const pick = answers[q.id];
-        return pick !== undefined && !q.options.find((o) => o.id === pick)?.isCorrect;
-      }).length,
-    [answers],
-  );
-
-  const missedCategories = useMemo(
-    () =>
-      questions
-        .filter((q) => {
-          const pick = answers[q.id];
-          return pick !== undefined && !q.options.find((o) => o.id === pick)?.isCorrect;
-        })
-        .map((q) => q.category)
-        .filter((category, index, all) => all.indexOf(category) === index),
-    [answers],
-  );
-
-  const visibleRiskAreas = missedCategories.slice(0, 3);
-  const extraRiskAreaCount = Math.max(0, missedCategories.length - visibleRiskAreas.length);
-
-  function questionStatus(question: QuizQuestionStatic): "correct" | "incorrect" | "unanswered" {
-    const pick = answers[question.id];
-    if (pick === undefined) return "unanswered";
-    return question.options.find((o) => o.id === pick)?.isCorrect ? "correct" : "incorrect";
-  }
-
-  const questionStatuses = questions.map((q) => questionStatus(q));
-
-  function selectOption(optionId: number) {
-    if (isAnswered) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
-  }
-
-  function goToQuestion(index: number) {
-    if (index > furthestIndex) return;
-    setCurrentIndex(index);
-  }
-
-  function nextQuestion() {
-    if (currentIndex < questions.length - 1) {
-      const next = currentIndex + 1;
-      setCurrentIndex(next);
-      if (next > furthestIndex) setFurthestIndex(next);
-    }
-  }
-
-  function restart() {
-    setAnswers({});
-    setCurrentIndex(0);
-    setFurthestIndex(0);
-    onShowResultsChange(false);
-  }
-
-  if (showResults) {
-    return (
-      <QuizResults
-        stateName={stateName}
-        incorrectCount={incorrectCount}
-        questionsLength={questions.length}
-        totalQuestionPool={totalQuestionPool}
-        riskAreas={visibleRiskAreas}
-        extraRiskAreaCount={extraRiskAreaCount}
-        onExit={onExit}
-      />
-    );
-  }
-
-  return (
-    <QuizPlay
-      questions={questions}
-      currentIndex={currentIndex}
-      furthestIndex={furthestIndex}
-      currentQuestion={currentQuestion}
-      selectedOptionId={selectedOptionId}
-      isAnswered={isAnswered}
-      isViewingFurthest={isViewingFurthest}
-      correctCount={correctCount}
-      incorrectCount={incorrectCount}
-      allowedToFail={allowedToFail}
-      questionStatuses={questionStatuses}
-      onExit={onExit}
-      onRestart={restart}
-      onSelectOption={selectOption}
-      onGoToQuestion={goToQuestion}
-      onNextQuestion={nextQuestion}
-      onSeeResults={() => onShowResultsChange(true)}
-    />
-  );
-}

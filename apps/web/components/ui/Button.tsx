@@ -18,7 +18,7 @@ const iconSizeClasses: Record<Size, string> = {
 
 const variantClasses: Record<Variant, string> = {
   primary: "bg-linear-to-r from-blue-500 to-blue-700 text-white shadow-xs",
-  secondary: "bg-neutral-100 text-neutral-700 hover:bg-neutral-200",
+  secondary: "bg-blue-50 text-blue-700 hover:bg-blue-100",
   outline:
     "border border-border text-neutral-900 bg-transparent hover:bg-blue-50",
   ghost: "text-blue-500 bg-transparent",
@@ -54,7 +54,7 @@ export default function Button({
   disabled = false,
 }: ButtonProps) {
   const classes = [
-    "inline-flex cursor-pointer items-center justify-center rounded-full font-semibold transition-opacity hover:opacity-90",
+    "inline-flex cursor-pointer items-center justify-center rounded-full font-semibold transition-opacity",
     "disabled:cursor-not-allowed disabled:opacity-60",
     variantClasses[variant],
     sizeClasses[size],

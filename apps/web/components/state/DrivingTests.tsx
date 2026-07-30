@@ -83,7 +83,8 @@ export default function DrivingTests({
           ) : (
             !loading && (
               <p className="mb-12 text-sm text-gray-500">
-                {essentials.category.title} practice for {stateName} is coming soon.
+                {essentials.category.title} practice for {stateName} is coming
+                soon.
               </p>
             )
           )}
@@ -106,7 +107,8 @@ export default function DrivingTests({
           ) : (
             !loading && (
               <p className="mb-12 text-sm text-gray-500">
-                {moreComplicated.category.title} practice for {stateName} is coming soon.
+                {moreComplicated.category.title} practice for {stateName} is
+                coming soon.
               </p>
             )
           )}
@@ -128,7 +130,8 @@ export default function DrivingTests({
           ) : (
             !loading && (
               <p className="mb-12 text-sm text-gray-500">
-                {thingsInTrouble.category.title} practice for {stateName} is coming soon.
+                {thingsInTrouble.category.title} practice for {stateName} is
+                coming soon.
               </p>
             )
           )}
@@ -178,12 +181,22 @@ export default function DrivingTests({
       )}
 
       <div>
-        <StepsHeader headerInfo={{ headerSequence: "6", headerTitle: "The Challenge Bank™" }} />
+        <StepsHeader
+          headerInfo={{
+            headerSequence: "6",
+            headerTitle: "The Challenge Bank™",
+          }}
+        />
         <ChallangeBankBanner />
       </div>
 
       <div>
-        <StepsHeader headerInfo={{ headerSequence: "7", headerTitle: `Explore ${stateCode} Driver's Handbook` }} />
+        <StepsHeader
+          headerInfo={{
+            headerSequence: "7",
+            headerTitle: `Explore ${stateCode} Driver's Handbook`,
+          }}
+        />
         <CheatSheetsBanner stateCode={stateCode} vehicleType={vehicleType} />
       </div>
 
@@ -197,8 +210,18 @@ export default function DrivingTests({
         />
         <StepsFlow
           steps={[
-            { title: "Video Lessons", questions: 0, type: "free", image: "/driving-tests.jpg" },
-            { title: "Tips & Tricks", questions: 0, type: "free", image: "/driving-tests.jpg" },
+            {
+              title: "Video Lessons",
+              questions: 0,
+              type: "free",
+              image: "/driving-tests.jpg",
+            },
+            {
+              title: "Tips & Tricks",
+              questions: 0,
+              type: "free",
+              image: "/driving-tests.jpg",
+            },
           ]}
         />
       </div>
@@ -207,9 +230,12 @@ export default function DrivingTests({
         <button className="rounded-lg bg-[#9747ff]/30 px-4 py-2 text-center text-xl font-semibold text-white">
           End of theory exam preparation
         </button>
-        <h3 className="mt-4 text-2xl font-bold">Pass official DMV written exam</h3>
+        <h3 className="mt-4 text-2xl font-bold">
+          Pass official DMV written exam
+        </h3>
         <p className="mx-auto mt-4 max-w-2xl text-grey">
-          Once you reach this place with 80% <b className="text-blue-primary">Passing Probability</b>, you will be
+          Once you reach this place with 80%{" "}
+          <b className="text-blue-primary">Passing Probability</b>, you will be
           ready to pass the official DMV written exam with ease and confidence.
         </p>
       </div>
@@ -224,11 +250,16 @@ export default function DrivingTests({
           </div>
 
           <div>
-            <h4 className="text-base font-bold">Reviewed for legal and handbook accuracy</h4>
+            <h4 className="text-base font-bold">
+              Reviewed for legal and handbook accuracy
+            </h4>
             <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
               Steven Litvintchouk
             </h5>
-            <p className="text-sm text-grey">M.S., Chief Educational Researcher (ACES member) Last verified for accuracy on Mar 23, 2026</p>
+            <p className="text-sm text-grey">
+              M.S., Chief Educational Researcher (ACES member) Last verified for
+              accuracy on Mar 23, 2026
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-4 rounded-[20px] bg-[#f2f7ff] p-4">
@@ -241,20 +272,33 @@ export default function DrivingTests({
           </div>
 
           <div>
-            <h4 className="text-base font-bold lg:whitespace-nowrap">Test design and learning experience oversight</h4>
+            <h4 className="text-base font-bold lg:whitespace-nowrap">
+              Test design and learning experience oversight
+            </h4>
             <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
               Andrei Zakhareuski
             </h5>
-            <p className="text-sm text-grey">Co-founder &amp; CEO, Driving-Tests.org</p>
+            <p className="text-sm text-grey">
+              Co-founder &amp; CEO, Driving-Tests.org
+            </p>
           </div>
         </div>
       </div>
       <p className="text-sm">
-        Questions are created and maintained by the Driving-Tests.org content team following our{" "}
-        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">multi-layer editorial process</span> and
-        updated whenever the {stateName} DMV changes its handbook or website information. Official sources we check:{" "}
-        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">{stateName} Driver Handbook (2026 edition)</span>,{" "}
-        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">{stateName} DMV website.</span>
+        Questions are created and maintained by the Driving-Tests.org content
+        team following our{" "}
+        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">
+          multi-layer editorial process
+        </span>{" "}
+        and updated whenever the {stateName} DMV changes its handbook or website
+        information. Official sources we check:{" "}
+        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">
+          {stateName} Driver Handbook (2026 edition)
+        </span>
+        ,{" "}
+        <span className="text-blue-primary decoration-1 underline-offset-4 hover:underline">
+          {stateName} DMV website.
+        </span>
       </p>
     </section>
   );

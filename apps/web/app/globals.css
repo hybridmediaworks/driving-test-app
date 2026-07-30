@@ -9,8 +9,11 @@
   --font-sora: var(--font-sora);
 
   --color-background: var(--background);
+  --color-background2: var(--background2);
+  --color-background3: var(--background3);
   --color-foreground: var(--foreground);
   --color-blue-primary: var(--blue-primary);
+  --color-blue-1000: var(--blue-1000);
   --color-grey: var(--grey);
 
   --color-border: var(--border);
@@ -60,10 +63,13 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-card: 0 1px 2px 0px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 24px 50px -26px rgba(11, 11, 13, 0.35);
 }
 
 :root {
   --blue-primary: #007aff;
+  --blue-1000: #0d142c;
   --grey: #8c8c9a;
 
   --border: oklch(0.922 0 0);
@@ -80,6 +86,8 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --background: #fafaf7;
+  --background2: #f2f1ec;
+  --background3: #e7e6e1;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -182,6 +190,39 @@ button {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 50%;
     pointer-events: none;
+  }
+
+  /* Progress-fill primitives for StatePhase/TestSteps connectors + step cards.
+     No 0%/from step on purpose: each connector already renders with border-white,
+     so the animation picks that up as its implicit starting value and only needs
+     to declare the target. --fill-index drives per-segment stagger (see callers). */
+  @keyframes connector-fill {
+    to {
+      border-color: var(--color-blue-500);
+    }
+  }
+
+  .connector-fill {
+    animation: connector-fill 0.4s ease-out forwards;
+    animation-delay: calc(var(--fill-index, 0) * 150ms);
+  }
+
+  /* Fades in the next phase's circle (background overlay) once the previous
+     phase's trailing connector has finished, continuing the same --fill-index
+     stagger sequence across the phase boundary. */
+  @keyframes circle-fill-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .circle-fill-in {
+    opacity: 0;
+    animation: circle-fill-in 0.4s ease-out forwards;
+    animation-delay: calc(var(--fill-index, 0) * 150ms);
   }
 }
 
