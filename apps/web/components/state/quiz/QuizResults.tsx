@@ -313,7 +313,7 @@ export default function QuizResults({
                   />
                 </div>
               </div>
-              <div className="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-background2 to-background3 text-neutral-400">
+              <div className="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-background2 to-background3 text-neutral-400">
                 <Award className="size-6.5" />
               </div>
             </div>

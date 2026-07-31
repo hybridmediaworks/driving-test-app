@@ -2,8 +2,8 @@
 
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import Subheading from "../ui/Subheading";
-import StudentChart from "./StudentChart";
+import Subheading from "../../ui/Subheading";
+import StudentChart from "../StudentChart";
 import { Calendar, Clock, Star, TrendingUp } from "lucide-react";
 import { useWebLayout } from "@/lib/web-layout-context";
 

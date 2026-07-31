@@ -17,6 +17,7 @@ type WebLayoutContextValue = {
   setSelectedVehicle: (vehicle: string) => void;
   selectedTestType: string;
   setSelectedTestType: (testType: string) => void;
+  hasResolvedTestType: boolean;
 };
 
 const WebLayoutContext = createContext<WebLayoutContextValue | null>(null);
@@ -32,6 +33,7 @@ export function WebLayoutProvider({
   const [hasStoredState, setHasStoredState] = useState(false);
   const [selectedVehicle, setSelectedVehicleRaw] = useState("Car");
   const [selectedTestType, setSelectedTestTypeRaw] = useState("permit_test");
+  const [hasResolvedTestType, setHasResolvedTestType] = useState(false);
 
   // Reads from localStorage/route slug only after mount to avoid SSR/client hydration mismatches.
   useEffect(() => {
@@ -58,6 +60,7 @@ export function WebLayoutProvider({
     setHasStoredState(!!storedState || !!validPropState);
     setSelectedVehicleRaw(storedVehicle || "Car");
     setSelectedTestTypeRaw(storedTestType || "permit_test");
+    setHasResolvedTestType(true);
 
     if (validPropState) {
       localStorage.setItem(STORAGE_KEY, initialState);
@@ -96,6 +99,7 @@ export function WebLayoutProvider({
         setSelectedVehicle,
         selectedTestType,
         setSelectedTestType,
+        hasResolvedTestType,
       }}
     >
       {children}
