@@ -4,21 +4,24 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
-import { usePhaseCompletion } from "@/lib/usePhaseCompletion";
+import { usePhaseCompletion, type PhaseCompletionState } from "@/lib/usePhaseCompletion";
 import { Gem } from "lucide-react";
 
 export default function PremiumCTA({
   previousConnector = false,
   nextConnector = false,
   afterPhase,
+  usePhaseData = usePhaseCompletion,
 }: {
   previousConnector?: boolean;
   nextConnector?: boolean;
   /** The phase whose completion state drives this CTA's own connectors — it sits right after that phase in the page. */
   afterPhase?: number;
+  /** Which phase-completion source drives this CTA — defaults to the car/state track. Motorcycle passes useMotorcyclePhaseCompletion to reuse this same component with its own data. */
+  usePhaseData?: (phase: number) => PhaseCompletionState;
 }) {
   const { selectedState } = useWebLayout();
-  const { isJustFinished, isFullyCompleted } = usePhaseCompletion(
+  const { isJustFinished, isFullyCompleted } = usePhaseData(
     afterPhase ?? -1,
   );
 

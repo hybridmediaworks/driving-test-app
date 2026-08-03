@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import {
-  fetchDrivingTestSections,
+  fetchMotorcycleDrivingTestSections,
   type DrivingTestSection as DrivingTestSectionData,
-} from "@/data/drivingTestMockData";
+} from "@/data/motorcycleDrivingTestMockData";
 import CardsSection from "./driving-test/CardsSection";
 import HeroSection from "./driving-test/HeroSection";
 import GoFurtherSection from "./permit-test/GoFurtherSection";
@@ -15,7 +15,7 @@ export default function DrivingTestContent() {
   useEffect(() => {
     let cancelled = false;
 
-    fetchDrivingTestSections().then((data) => {
+    fetchMotorcycleDrivingTestSections().then((data) => {
       if (!cancelled) setSections(data);
     });
 

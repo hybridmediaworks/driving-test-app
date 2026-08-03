@@ -2,7 +2,7 @@
 
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import type { DrivingTestSection as DrivingTestSectionData } from "@/data/drivingTestMockData";
+import type { DrivingTestSection as DrivingTestSectionData } from "@/data/motorcycleDrivingTestMockData";
 import StepCard from "@/components/state/StepCard";
 
 export default function CardsSection({
@@ -28,7 +28,7 @@ export default function CardsSection({
               {group.title}
             </Paragraph>
           )}
-          <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-1 gap-6">
+          <div className="grid lg:grid-cols-4 grid-cols-1 gap-6">
             {group.cards.map((card, cardIndex) => (
               <StepCard
                 key={cardIndex}
