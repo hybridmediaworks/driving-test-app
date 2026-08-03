@@ -9,7 +9,6 @@ export type StepsMockStep = {
   image?: string;
   status?: "next";
   style?: "large";
-  "quiz-valut"?: boolean;
   completed?: boolean;
   /** True only on the step the user finished in this session — tells the UI to
    * animate the fill (this step + its trailing connector) instead of rendering

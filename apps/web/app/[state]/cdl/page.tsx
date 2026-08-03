@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import { ChevronRight, ChevronRightIcon, Play, ShieldCheck } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronRightIcon,
+  Play,
+  ShieldCheck,
+} from "lucide-react";
 import Button from "@/components/ui/Button";
-import ChallangeBankBanner from "@/components/cdl/ChallangeBankBanner";
-import CheatSheetsBanner from "@/components/cdl/CheatSheetsBanner";
+import ChallangeBankBanner from "@/components/state/cdl/ChallangeBankBanner";
+import CheatSheetsBanner from "@/components/state/cdl/CheatSheetsBanner";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import PremiumBanner from "@/components/cdl/PremiumBanner";
-import TestSteps from "@/components/cdl/TestSteps";
+import PremiumBanner from "@/components/state/cdl/PremiumBanner";
+import TestSteps from "@/components/state/TestSteps";
 import { slugToStateName, stateAbbreviations, usStates } from "@/lib/usStates";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
@@ -43,11 +48,23 @@ type TopicSection = {
 };
 
 function freeStep(title: string, questions: number, status?: "next"): Step {
-  return { title, questions, type: "free", image: "/driving-tests.jpg", status };
+  return {
+    title,
+    questions,
+    type: "free",
+    image: "/driving-tests.jpg",
+    status,
+  };
 }
 
 function premiumStep(title: string, questions: number): Step {
-  return { title, questions, type: "premium", locked: true, image: "/driving-tests.jpg" };
+  return {
+    title,
+    questions,
+    type: "premium",
+    locked: true,
+    image: "/driving-tests.jpg",
+  };
 }
 
 function buildTopicSections(code: string): TopicSection[] {
@@ -57,7 +74,8 @@ function buildTopicSections(code: string): TopicSection[] {
       header: {
         headerSequence: "1",
         headerTitle: "General Knowledge",
-        headerDesc: "Core rules every CDL applicant must pass, no matter which class or endorsement you need.",
+        headerDesc:
+          "Core rules every CDL applicant must pass, no matter which class or endorsement you need.",
         totalQuestions: "350",
       },
       steps: [
@@ -97,7 +115,8 @@ function buildTopicSections(code: string): TopicSection[] {
       header: {
         headerSequence: "2",
         headerTitle: "Hazardous Materials (HazMat)",
-        headerDesc: "Required for drivers who transport placarded hazardous materials.",
+        headerDesc:
+          "Required for drivers who transport placarded hazardous materials.",
         totalQuestions: "112",
       },
       steps: [
@@ -160,7 +179,8 @@ function buildTopicSections(code: string): TopicSection[] {
       header: {
         headerSequence: "4",
         headerTitle: "Passenger Vehicles",
-        headerDesc: "For drivers who carry 16 or more passengers, including the driver.",
+        headerDesc:
+          "For drivers who carry 16 or more passengers, including the driver.",
         totalQuestions: "100",
       },
       steps: [
@@ -187,7 +207,8 @@ function buildTopicSections(code: string): TopicSection[] {
       header: {
         headerSequence: "5",
         headerTitle: "Air Brakes",
-        headerDesc: "Required unless you take the air brake restriction on your CDL.",
+        headerDesc:
+          "Required unless you take the air brake restriction on your CDL.",
         totalQuestions: "120",
       },
       steps: [
@@ -249,7 +270,8 @@ function buildTopicSections(code: string): TopicSection[] {
       header: {
         headerSequence: "9",
         headerTitle: "Pre-Trip Inspection",
-        headerDesc: "The walk-around inspection you must perform correctly on your skills test.",
+        headerDesc:
+          "The walk-around inspection you must perform correctly on your skills test.",
         totalQuestions: "115",
       },
       steps: [
@@ -275,7 +297,8 @@ const cdlGoals = [
 
 const premiumInfo = {
   title: "Unlock all CDL exam-like questions",
-  subtitle: "1000+ questions covering all 50 states and endorsements. Instant PDF handbook access.",
+  subtitle:
+    "1000+ questions covering all 50 states and endorsements. Instant PDF handbook access.",
   features: ["CDL bundle", "PDF handbook", "Exam simulator"],
   rating: { star: "4.9", students: "12,400" },
 };
@@ -294,15 +317,31 @@ const videoTopicGroups = [
   },
   {
     title: "Safe Operating Practices",
-    items: ["Visual search", "Communication", "Distraction", "Speed management", "Space management", "Night operation", "Extreme conditions"],
+    items: [
+      "Visual search",
+      "Communication",
+      "Distraction",
+      "Speed management",
+      "Space management",
+      "Night operation",
+      "Extreme conditions",
+    ],
   },
   {
     title: "Advanced Operating Procedures",
-    items: ["Hazard Perception", "Skid Control", "Railroad-Highway Grade Crossing"],
+    items: [
+      "Hazard Perception",
+      "Skid Control",
+      "Railroad-Highway Grade Crossing",
+    ],
   },
   {
     title: "Vehicle Systems",
-    items: ["Identification and diagnosis of malfunctions", "Roadside inspections", "Maintenance"],
+    items: [
+      "Identification and diagnosis of malfunctions",
+      "Roadside inspections",
+      "Maintenance",
+    ],
   },
   {
     title: "Non-Driving Operations",
@@ -316,11 +355,21 @@ const videoTopicGroups = [
   },
   {
     title: "",
-    items: ["External communication", "Whistleblower and coercion", "Trip planning", "Drugs and alcohol", "Medical requirements"],
+    items: [
+      "External communication",
+      "Whistleblower and coercion",
+      "Trip planning",
+      "Drugs and alcohol",
+      "Medical requirements",
+    ],
   },
 ];
 
-export async function generateMetadata({ params }: { params: Promise<{ state: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ state: string }>;
+}): Promise<Metadata> {
   const { state } = await params;
   const stateName = resolveStateName(state);
 
@@ -336,7 +385,11 @@ export async function generateMetadata({ params }: { params: Promise<{ state: st
   };
 }
 
-export default async function CdlPage({ params }: { params: Promise<{ state: string }> }) {
+export default async function CdlPage({
+  params,
+}: {
+  params: Promise<{ state: string }>;
+}) {
   const { state } = await params;
   const stateName = resolveStateName(state);
   const stateCode = stateAbbreviations[stateName] ?? "";
@@ -351,12 +404,15 @@ export default async function CdlPage({ params }: { params: Promise<{ state: str
             <section className="py-6">
               <div className="flex gap-4 pb-10">
                 <div className="w-3/5 space-y-3">
-                  <Heading size="lg">{stateName} CDL Practice Tests - All Endorsements</Heading>
+                  <Heading size="lg">
+                    {stateName} CDL Practice Tests - All Endorsements
+                  </Heading>
                   <h1 className="text-[44px] leading-tight font-bold" />
                   <Paragraph>
-                    Practice the exact question formats your DMV uses. When you sit down for the real test,
-                    you&apos;ll know the answer before you finish reading the question. Pass, get your CDL, and start
-                    earning $60K+ within weeks - not months.
+                    Practice the exact question formats your DMV uses. When you
+                    sit down for the real test, you&apos;ll know the answer
+                    before you finish reading the question. Pass, get your CDL,
+                    and start earning $60K+ within weeks - not months.
                   </Paragraph>
                   <div className="flex items-center justify-start gap-2">
                     <span className="max-w-34 text-sm font-bold text-neutral-900">
@@ -374,7 +430,11 @@ export default async function CdlPage({ params }: { params: Promise<{ state: str
                 <div className="w-2/5">
                   <div className="relative rounded-3xl border-[0.5px] border-[#e5e7eb80] p-3 shadow-xl">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/oregon-drivers-license.avif" alt="" className="rounded-2xl" />
+                    <img
+                      src="/oregon-drivers-license.avif"
+                      alt=""
+                      className="rounded-2xl"
+                    />
                     <div className="absolute -bottom-3.5 left-1/2 flex max-w-fit -translate-x-1/2 items-center gap-2 rounded-full border bg-white px-3 py-2 shadow-xl">
                       <div className="relative flex h-2 w-2">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
@@ -391,12 +451,16 @@ export default async function CdlPage({ params }: { params: Promise<{ state: str
                 </div>
               </div>
               <Paragraph>
-                Whether it&apos;s crab legs or crude oil you want to haul through America&apos;s 49th state, you must
-                obtain an Alaska commercial driver&apos;s license (CDL). If you want to drive a tank vehicle across
-                ice roads or apply to drive a school bus in Fairbanks, we&apos;ve got you covered. With practice
-                tests that simulate the actual exams, as well as all varieties of endorsements, including passenger
-                and school busses, doubles/triples, tank vehicles, hazardous materials, or air brake restriction
-                removal, you&apos;ll be sure to pass the first time.
+                Whether it&apos;s crab legs or crude oil you want to haul
+                through America&apos;s 49th state, you must obtain an Alaska
+                commercial driver&apos;s license (CDL). If you want to drive a
+                tank vehicle across ice roads or apply to drive a school bus in
+                Fairbanks, we&apos;ve got you covered. With practice tests that
+                simulate the actual exams, as well as all varieties of
+                endorsements, including passenger and school busses,
+                doubles/triples, tank vehicles, hazardous materials, or air
+                brake restriction removal, you&apos;ll be sure to pass the first
+                time.
               </Paragraph>
             </section>
 
@@ -452,13 +516,20 @@ export default async function CdlPage({ params }: { params: Promise<{ state: str
                 {section.video && (
                   <section className="mb-12 grid grid-cols-[1fr_320px] gap-6 rounded-3xl bg-blue-50 p-6 max-lg:grid-cols-1">
                     <div className="space-y-2">
-                      <Paragraph color="dark" className="font-sora font-semibold">
+                      <Paragraph
+                        color="dark"
+                        className="font-sora font-semibold"
+                      >
                         {section.video.title}
                       </Paragraph>
                       <div className="grid grid-cols-3 gap-x-5.5 gap-y-6 text-sm text-neutral-600">
                         {videoTopicGroups.map((group, index) => (
                           <div className="space-y-3" key={index}>
-                            <Paragraph size="sm" color="dark" className="font-sora font-semibold">
+                            <Paragraph
+                              size="sm"
+                              color="dark"
+                              className="font-sora font-semibold"
+                            >
                               {group.title || " "}
                             </Paragraph>
                             <ul className="list-disc pl-5">
@@ -541,37 +612,52 @@ export default async function CdlPage({ params }: { params: Promise<{ state: str
                   10 Things You Should Do Before Your CDL Knowledge Exam
                 </Heading>
                 <Paragraph size="sm" color="muted" className="mb-2">
-                  Many people arrive at the DMV overconfident and underprepared because they fail to do some of the
-                  simple things that would allow them to pass easily. What follows are the 10 steps that every
-                  aspiring commercial driver should take to prepare for his or her official CDL or CLP knowledge
-                  exam.
+                  Many people arrive at the DMV overconfident and underprepared
+                  because they fail to do some of the simple things that would
+                  allow them to pass easily. What follows are the 10 steps that
+                  every aspiring commercial driver should take to prepare for
+                  his or her official CDL or CLP knowledge exam.
                 </Paragraph>
                 <Button variant="ghost" className="p-0!" size="sm">
                   Open E-Book <ChevronRight className="w-4" />
                 </Button>
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/Oregon.avif" className="max-w-35.5 shrink-0 object-cover pt-5" alt="" />
+              <img
+                src="/Oregon.avif"
+                className="max-w-35.5 shrink-0 object-cover pt-5"
+                alt=""
+              />
             </section>
 
-            <div id="experts" className="mb-12 grid grid-cols-2 gap-4 max-md:grid-cols-1" data-nosnippet="">
+            <div
+              id="experts"
+              className="mb-12 grid grid-cols-2 gap-4 max-md:grid-cols-1"
+              data-nosnippet=""
+            >
               <div className="expert flex flex-1 bg-transparent p-0">
                 <div className="flex w-full gap-5 rounded-[20px] bg-white px-5 pt-5 pb-3.5">
                   <div className="image relative shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/reviewedby_steven.webp" alt="" className="h-auto w-16" />
+                    <img
+                      src="/reviewedby_steven.webp"
+                      alt=""
+                      className="h-auto w-16"
+                    />
                     <div className="absolute top-2/3 right-0 flex size-8 items-center justify-center rounded-full bg-green-400 text-white">
                       <ShieldCheck className="h-4" />
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-base font-bold">Reviewed for legal and handbook accuracy</h4>
+                    <h4 className="text-base font-bold">
+                      Reviewed for legal and handbook accuracy
+                    </h4>
                     <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
                       Steven Litvintchouk
                     </h5>
                     <p className="text-sm text-grey">
-                      M.S., Chief Educational Researcher (ACES member). Last verified for accuracy on {stateName} CDL
-                      requirements.
+                      M.S., Chief Educational Researcher (ACES member). Last
+                      verified for accuracy on {stateName} CDL requirements.
                     </p>
                   </div>
                 </div>
@@ -580,17 +666,25 @@ export default async function CdlPage({ params }: { params: Promise<{ state: str
                 <div className="flex w-full gap-5 rounded-[20px] bg-white px-5 pt-5 pb-3.5">
                   <div className="image relative shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/reviewedby_steven.webp" alt="" className="h-auto w-16" />
+                    <img
+                      src="/reviewedby_steven.webp"
+                      alt=""
+                      className="h-auto w-16"
+                    />
                     <div className="absolute top-2/3 right-0 flex size-8 items-center justify-center rounded-full bg-green-400 text-white">
                       <ShieldCheck className="h-4" />
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-base font-bold">Test design and learning experience oversight</h4>
+                    <h4 className="text-base font-bold">
+                      Test design and learning experience oversight
+                    </h4>
                     <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
                       Andrei Zakhareuski
                     </h5>
-                    <p className="text-sm text-grey">Co-founder &amp; CEO, Driving-Tests.org</p>
+                    <p className="text-sm text-grey">
+                      Co-founder &amp; CEO, Driving-Tests.org
+                    </p>
                   </div>
                 </div>
               </div>

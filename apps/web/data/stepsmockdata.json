@@ -266,8 +266,7 @@
       {
         "step": 1,
         "image": "/driving-tests.jpg",
-        "style": "large",
-        "quiz-valut": true
+        "style": "large"
       }
     ]
   },

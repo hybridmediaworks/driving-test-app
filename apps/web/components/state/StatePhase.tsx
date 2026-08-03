@@ -2,24 +2,30 @@
 
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import TestSteps from "@/components/cdl/TestSteps";
+import TestSteps from "@/components/state/TestSteps";
 import HandBookSection from "@/components/state/HandBookSection";
-import { usePhaseCompletion } from "@/lib/usePhaseCompletion";
+import {
+  usePhaseCompletion,
+  type PhaseCompletionState,
+} from "@/lib/usePhaseCompletion";
 
 export default function StatePhase({
   phase,
   nextConnector = false,
   previousConnector = false,
+  usePhaseData = usePhaseCompletion,
 }: {
   phase: number;
   nextConnector?: boolean;
   previousConnector?: boolean;
+  /** Which phase-completion source drives this phase — defaults to the car/state track. Motorcycle passes useMotorcyclePhaseCompletion to reuse this same component with its own data. */
+  usePhaseData?: (phase: number) => PhaseCompletionState;
 }) {
-  const { phase: phaseData } = usePhaseCompletion(phase);
+  const { phase: phaseData } = usePhaseData(phase);
   const {
     isJustFinished: previousPhaseJustFinished,
     isFullyCompleted: previousPhaseFullyCompleted,
-  } = usePhaseCompletion(phase - 1);
+  } = usePhaseData(phase - 1);
 
   if (!phaseData) return null;
 
@@ -112,7 +118,6 @@ export default function StatePhase({
             image: step.image,
             status: step.status,
             style: step.style,
-            "quiz-valut": step["quiz-valut"],
             completed: step.completed,
             justCompleted: step.justCompleted,
           }))}

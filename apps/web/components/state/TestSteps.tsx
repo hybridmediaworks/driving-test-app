@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Diamond, Gem, LockKeyhole } from "lucide-react";
-import Button from "@/components/ui/Button";
-import Paragraph from "@/components/ui/Paragraph";
+import StepCard from "@/components/state/StepCard";
 
 type Step = {
   title?: string;
@@ -14,7 +12,6 @@ type Step = {
   image?: string;
   status?: "next";
   style?: "large";
-  "quiz-valut"?: boolean;
   completed?: boolean;
   justCompleted?: boolean;
 };
@@ -125,7 +122,9 @@ export default function TestSteps({
         // whatever feeds into it: the previous row's trailing connector, or —
         // for the first row — the phase circle itself.
         const isFirstRow = rowIndex === 0;
-        const prevRowState = !isFirstRow ? rowFillState(rows[rowIndex - 1]) : null;
+        const prevRowState = !isFirstRow
+          ? rowFillState(rows[rowIndex - 1])
+          : null;
         const beforeRowFilled = isFirstRow
           ? phaseActive && !phaseJustActivated
           : !!prevRowState?.filled;
@@ -153,7 +152,9 @@ export default function TestSteps({
               }`}
               style={
                 beforeRowTriggers
-                  ? ({ "--fill-index": isFirstRow ? 5 : 1 } as React.CSSProperties)
+                  ? ({
+                      "--fill-index": isFirstRow ? 5 : 1,
+                    } as React.CSSProperties)
                   : undefined
               }
             />
@@ -179,115 +180,9 @@ export default function TestSteps({
               />
             )}
 
-            {row.map((step, index) => {
-              const isFilled = !!step.completed && !step.justCompleted;
-              const isTrigger = !!step.justCompleted;
-
-              return (
-              <div
-                key={index}
-                className={`group flex md:flex-col items-center md:items-start cursor-pointer rounded transition-all duration-300 hover:-translate-y-0.75 ${
-                  step.style === "large" ? "lg:col-span-2" : ""
-                }`}
-              >
-                <div
-                  className={`md:hidden md:w-15 w-8.5 absolute left-6.5 ms-auto md:border-l-14 border-l-8 top-4 h-full z-0 ${
-                    isFilled
-                      ? "border-blue-500"
-                      : isTrigger
-                        ? "connector-fill border-white"
-                        : "border-white"
-                  }`}
-                  style={isTrigger ? ({ "--fill-index": 0 } as React.CSSProperties) : undefined}
-                />
-                {(step.image ||
-                  step.type === "premium" ||
-                  step.status === "next" ||
-                  step.type === "free") && (
-                  <div
-                    className={`relative overflow-hidden md:rounded-xl rounded-md md:max-w-full ${
-                      step["quiz-valut"] ? "w-full" : "max-w-35"
-                    }`}
-                  >
-                    {step.image && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={step.image}
-                        alt=""
-                        className="md:h-32 h-18 w-full md:rounded-xl rounded-md object-cover transition-all duration-300"
-                      />
-                    )}
-                    {(step.type === "premium" || step.status === "next") && (
-                      <div
-                        className={`absolute inset-0 flex items-center justify-center md:rounded-xl rounded-md ${
-                          step.type === "premium" && step.status !== "next"
-                            ? "bg-white/60 backdrop-blur-[2px] group-hover:bg-linear-to-r group-hover:from-blue-500 group-hover:to-blue-700"
-                            : ""
-                        }`}
-                      >
-                        {step.type === "premium" && step.status !== "next" && (
-                          <>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
-                              <Gem className="text-blue-600 w-8 h-8 " />
-                            </div>
-                            <div className="hidden group-hover:flex px-2">
-                              <Button
-                                variant="outline"
-                                className="w-full md:w-fit bg-yellow-500! border-yellow-500!"
-                                size="sm"
-                                href="/pricing"
-                              >
-                                <Gem /> Upgrade to Premium
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                        {step.status === "next" && (
-                          <Paragraph
-                            size="sm"
-                            color="primary"
-                            className="rounded-full bg-white px-3 py-0.5 font-semibold"
-                          >
-                            Next
-                          </Paragraph>
-                        )}
-                      </div>
-                    )}
-                    {step.type === "free" && (
-                      <Paragraph
-                        color="white"
-                        size="xs"
-                        className="absolute md:top-2 top-0.5 rounded-sm px-1.75 md:py-0.5 font-semibold md:tracking-wide uppercase md:right-2 right-0.5 bg-green-500"
-                      >
-                        Free
-                      </Paragraph>
-                    )}
-                  </div>
-                )}
-                {(step.title || step.totalQuestions || step.totalTime) && (
-                  <div className="md:p-4 px-3 md:space-y-2">
-                    {step.title && (
-                      <Paragraph color="dark" className="font-semibold">
-                        {step.title}
-                      </Paragraph>
-                    )}
-                    {(step.totalQuestions || step.totalTime) && (
-                      <Paragraph
-                        color="primary"
-                        size="sm"
-                        className="font-semibold"
-                      >
-                        {step.totalQuestions &&
-                          `${step.totalQuestions} questions`}
-                        {step.totalQuestions && step.totalTime && " · ~"}
-                        {step.totalTime && `${step.totalTime} min`}
-                      </Paragraph>
-                    )}
-                  </div>
-                )}
-              </div>
-              );
-            })}
+            {row.map((step, index) => (
+              <StepCard key={index} step={step} connector />
+            ))}
           </div>
         );
       })}
