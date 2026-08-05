@@ -14,6 +14,16 @@ export type Plan = {
   sort_order: number;
 };
 
+// Admin CRUD sees inactive plans and Stripe linkage too — stripe_price_id/stripe_product_id are
+// read-only here (derived by `php artisan billing:sync-plans`), never sent in a create/update body.
+export type AdminPlan = Plan & {
+  stripe_price_id: string | null;
+  stripe_product_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type MySubscription = Entitlement & {
   subscription: {
     stripe_status: string;

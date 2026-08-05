@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { PublicCheatSheet, QuizCategory, State, VehicleType } from "@driving-test-app/shared";
 import Footer from "@/components/Footer";
@@ -10,7 +9,7 @@ import Header from "@/components/Header";
 import Paginator from "@/components/ui/Paginator";
 import { api } from "@/lib/api";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
-import { usePaginatedList } from "@/hooks/use-paginated-list";
+import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 
 function CheatSheetCard({ sheet }: { sheet: PublicCheatSheet }) {
   return (
@@ -37,9 +36,7 @@ function CheatSheetCard({ sheet }: { sheet: PublicCheatSheet }) {
 }
 
 function CheatSheetsBrowseInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
+  const { searchParams, filterQuery, page, updateFilter, setPage } = useUrlQuery();
 
   const [states, setStates] = useState<State[]>([]);
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
@@ -51,17 +48,7 @@ function CheatSheetsBrowseInner() {
     api.get<{ data: QuizCategory[] }>("/quiz-categories").then((res) => setCategories(res.data));
   }, []);
 
-  const { data: cheatSheets } = usePaginatedList<PublicCheatSheet>(`/cheat-sheets${query ? `?${query}` : ""}`);
-
-  function updateFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.replace(`/cheat-sheets?${params.toString()}`);
-  }
+  const { data: cheatSheets } = usePaginatedList<PublicCheatSheet>(`/cheat-sheets${filterQuery ? `?${filterQuery}` : ""}`, page);
 
   const rows = cheatSheets?.data ?? [];
 
@@ -119,7 +106,7 @@ function CheatSheetsBrowseInner() {
               </div>
             )}
 
-            {cheatSheets && cheatSheets.meta.total > 0 && <Paginator meta={cheatSheets.meta} />}
+            {cheatSheets && cheatSheets.meta.total > 0 && <Paginator meta={cheatSheets.meta} onPageChange={setPage} />}
           </div>
         </main>
         <Footer />

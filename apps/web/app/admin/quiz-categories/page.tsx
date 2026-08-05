@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import type { QuizCategory } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
@@ -9,12 +10,13 @@ import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import { useDeleteConfirm, usePaginatedList } from "@/hooks/use-paginated-list";
+import { useDeleteConfirm, usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 
 type Row = QuizCategory;
 
-export default function QuizCategoriesIndexPage() {
-  const { data: categories, reload } = usePaginatedList<Row>("/admin/quiz-categories");
+function QuizCategoriesIndexInner() {
+  const { page, setPage } = useUrlQuery();
+  const { data: categories, reload } = usePaginatedList<Row>("/admin/quiz-categories", page);
   const del = useDeleteConfirm<Row>(
     (row) => api.delete(`/admin/quiz-categories/${row.id}`),
     reload,
@@ -75,7 +77,7 @@ export default function QuizCategoriesIndexPage() {
                   ))}
                 </ul>
               )}
-              {categories && categories.meta.total > 0 && <Paginator meta={categories.meta} />}
+              {categories && categories.meta.total > 0 && <Paginator meta={categories.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
 
@@ -94,5 +96,13 @@ export default function QuizCategoriesIndexPage() {
         </div>
       </AppLayout>
     </AdminGuard>
+  );
+}
+
+export default function QuizCategoriesIndexPage() {
+  return (
+    <Suspense>
+      <QuizCategoriesIndexInner />
+    </Suspense>
   );
 }

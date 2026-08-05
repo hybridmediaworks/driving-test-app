@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, ChevronRight, RotateCcw, Sparkles, Star } from "lucide-react";
+import { BookOpen, ChevronRight, RotateCcw, ShieldCheck, Sparkles, Star } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
@@ -63,7 +63,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
             <nav id="breadcrumbs" className="text-sm text-[#888]" data-nosnippet="">
               <div id="bcrumbs" className="mx-auto box-border py-2.5 max-md:py-0 max-md:pb-2">
                 <Paragraph className="flex items-center gap-0.5" color="muted" size="sm">
-                  <a href="https://driving-tests.org/">Home</a>
+                  <Link href="/">Home</Link>
                   <ChevronRight className="w-4" />
                   <Link href={`/${stateSlug}`}>{stateName}</Link>
                   <ChevronRight className="w-4" />
@@ -83,7 +83,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                 </span>
                 <span className="text-sm leading-none whitespace-nowrap text-[#cbd5e1] max-md:hidden">•</span>
                 <span className="text-sm leading-none whitespace-nowrap text-[#475569] max-md:text-[13px]">
-                  Expert-reviewed by S. Litvintchouk, M.S. (MIT), Chief Educational Researcher
+                  Expert-reviewed by our editorial team
                 </span>
               </div>
 
@@ -120,15 +120,9 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                             <Paragraph size="sm" className="mb-4!">
                               The {stateName} DMV written test has <strong>30 questions</strong> covering {stateName}{" "}
                               traffic laws, road signs, and rules of safe driving. To pass, you need at least{" "}
-                              <strong>24 correct (80%)</strong>. All questions are based on the official driver&apos;s
-                              manual (
-                              <a
-                                href={`https://driving-tests.org/${stateSlug}/${stateCode.toLowerCase()}-dmv-drivers-handbook-manual/`}
-                                title={`${stateName} DMV Handbook (${stateCode} Driver's Manual) 2026`}
-                              >
-                                {stateName} DMV Handbook ({stateCode} Driver&apos;s Manual) 2026
-                              </a>
-                              ). In 2020-2023, about <strong>49.1% of applicants failed</strong> the test on their
+                              <strong>24 correct (80%)</strong>. All questions are based on the official{" "}
+                              {stateName} DMV Handbook ({stateCode} Driver&apos;s Manual) 2026. In 2020-2023,
+                              about <strong>49.1% of applicants failed</strong> the test on their
                               first attempt – reading the manual alone often isn&apos;t enough.
                             </Paragraph>
                             <Paragraph size="sm" className="mb-4!">
@@ -171,8 +165,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                   <div id="testThumbnail" className="relative h-36 w-[340px] overflow-hidden rounded-xl bg-cover max-md:m-0 max-md:ml-[-20px] max-md:h-[130px] max-md:w-screen max-md:rounded-none">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=340/img/cover/test/202003151744407638.jpg"
-                      srcSet="https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=680/img/cover/test/202003151744407638.jpg 2x, https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=1020/img/cover/test/202003151744407638.jpg 3x"
+                      src="/Oregon.avif"
                       alt={`Free Online DMV Written Test Practice for ${stateName} (2026)`}
                       className="h-full w-full object-cover"
                       style={{ objectPosition: "center center" }}
@@ -182,8 +175,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                     <span id="imgLicense" className="inline-block w-[220px] max-md:mt-[5px] max-md:w-[130px] max-md:shadow-[0_4px_15px_0_rgba(133,133,149,0.15)] md:max-lg:w-full">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src="https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=220/img/license/alabama-drivers-license.jpg"
-                        srcSet="https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=440/img/license/alabama-drivers-license.jpg 2x, https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=660/img/license/alabama-drivers-license.jpg 3x"
+                        src="/pass-license-img.png"
                         alt={`${stateCode} DMV driver's license`}
                         itemProp="thumbnailUrl"
                         className="mt-[-45px] ml-[-30px] h-auto w-full rounded-lg border border-[#ddd] shadow-[0_4px_25px_0_rgba(133,133,149,0.3)] max-md:m-0 max-md:border-2 max-md:border-white max-md:shadow-none"
@@ -308,18 +300,6 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                   </div>
                 </div>
               </div>
-              <Paragraph size="sm" color="muted" className="flex items-center justify-center gap-1.5">
-                <span className="inline-block h-[9px] w-[9px] animate-pulse rounded-full bg-[#14b32f]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 9 9" fill="none">
-                    <circle cx="4.5" cy="4.5" r="4.5" fill="#14B32F" />
-                  </svg>
-                </span>
-                <span>
-                  <strong className="font-semibold text-neutral-950">6</strong> {stateCode} students practicing right
-                  now
-                </span>
-                •<strong className="font-semibold text-neutral-950">170</strong> tests completed today statewide
-              </Paragraph>
             </div>
             </div>
 
@@ -329,12 +309,9 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                 Practice Test 1: permit test basics
               </Link>
               , and{" "}
-              <a
-                href={`https://driving-tests.org/${stateSlug}/${stateSlug}-permit-practice-test-3/`}
-                className="font-semibold text-blue-500 no-underline"
-              >
-                Practice Test 3: fresh permit questions
-              </a>
+              <Link href={`/quizzes?state=${stateCode}`} className="font-semibold text-blue-500 no-underline">
+                more {stateName} practice tests
+              </Link>
             </Paragraph>
 
             <section id="qotdPreinitSignup" className="mx-auto mt-3 mb-8.5 max-md:mx-0 max-md:my-2 max-md:w-auto max-md:rounded-[14px] max-md:p-0 md:max-lg:mt-2.5 md:max-lg:max-w-none">
@@ -490,42 +467,37 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
             <div id="experts" className="mb-10 grid grid-cols-2 gap-4 max-md:grid-cols-1" data-nosnippet="">
               {[
                 {
-                  id: "steven-litvintchouk",
-                  href: "https://driving-tests.org/experts/steven-litvintchouk/",
-                  img: "/reviewedby_steven.webp",
+                  id: "editorial-team",
                   title: "Reviewed for legal and handbook accuracy",
-                  name: "Steven Litvintchouk",
-                  sub: "M.S. (MIT, Columbia), Chief Educational Researcher. ACES member (Society for Editing). Verifies all 50 state tests against official handbooks weekly.",
+                  name: "Our editorial team",
+                  sub: `Last verified for accuracy on ${stateName} requirements.`,
                 },
                 {
-                  id: "andrei-zakhareuski",
-                  href: "https://driving-tests.org/experts/andrei-zakhareuski/",
-                  img: "/andrei4.webp",
+                  id: "curriculum-team",
                   title: "Test design and learning experience oversight",
-                  name: "Andrei Zakhareuski",
-                  sub: "Co-founder & CEO, Driving-Tests.org",
+                  name: "Our curriculum team",
+                  sub: null,
                 },
               ].map((expert) => (
-                <div key={expert.name} id={expert.id} className="flex flex-1 bg-transparent p-0">
+                <div key={expert.id} id={expert.id} className="flex flex-1 bg-transparent p-0">
                   <div className="flex w-full gap-5 rounded-[20px] bg-white px-5 pt-5 pb-3.5">
                     <div className="shrink-0">
-                      <a href={expert.href} target="_blank" rel="noopener noreferrer">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={expert.img} alt={expert.name} className="h-auto w-16 rounded-full" />
-                      </a>
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                        <ShieldCheck className="h-7 w-7 text-blue-500" />
+                      </div>
                     </div>
                     <div>
                       <Heading as="h3" size="2xs" className="m-0!">
                         {expert.title}
                       </Heading>
-                      <Paragraph size="sm" className="mt-1 mb-0! [&_a]:text-[#007aff] [&_a]:no-underline">
-                        <a href={expert.href} target="_blank" rel="noopener noreferrer">
-                          <strong>{expert.name}</strong>
-                        </a>
-                      </Paragraph>
                       <Paragraph size="sm" className="mt-1 mb-0!">
-                        {expert.sub}
+                        <strong>{expert.name}</strong>
                       </Paragraph>
+                      {expert.sub && (
+                        <Paragraph size="sm" className="mt-1 mb-0!">
+                          {expert.sub}
+                        </Paragraph>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -533,44 +505,15 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
             </div>
 
             <div id="process" className="mb-10 text-sm leading-[1.5] text-[#7c7c91] [&_a]:text-[#007aff] [&_a]:no-underline" data-nosnippet="">
-              Questions are created and maintained by the Driving-Tests.org content team following our multi-layer
-              editorial process and updated whenever the {stateName} DMV changes its handbook or website
-              information.{" "}
+              Questions are created and maintained by our content team following a multi-layer editorial process and
+              updated whenever the {stateName} DMV changes its handbook or website information.{" "}
               <span id="helpful-links">
-                <span className="font-semibold">Official sources we check:&nbsp;</span>
-                <a
-                  href={`https://driving-tests.org/${stateSlug}/${stateCode.toLowerCase()}-dmv-drivers-handbook-manual/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {stateName} Driver Handbook (2026 edition)
-                </a>
-                ,&nbsp;
+                <span className="font-semibold">Official source we check:&nbsp;</span>
                 <a href="https://www.revenue.alabama.gov/division/motor-vehicle/" target="_blank" rel="noopener noreferrer">
                   {stateName} DMV website
                 </a>
                 .
               </span>
-            </div>
-
-            <div id="reviews" className="mb-10">
-              <Heading as="h3" size="2xs" className="m-0 mb-1">
-                Real users who passed the exam first try
-              </Heading>
-              <Paragraph size="sm" color="muted" className="m-0 mb-4!">
-                Verified student reviews • Shared with permission
-              </Paragraph>
-              <div className="grid grid-cols-4 gap-3 max-md:grid-cols-2">
-                {[
-                  "https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=310/wp-content/uploads/2025/10/Shamel_NY_CDL.jpg",
-                  "https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=310/img/wall-of-fame/Louvenia.jpg",
-                  "https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=310/img/wall-of-fame/Tony.jpg",
-                  "https://driving-tests.org/cdn-cgi/image/format=auto,quality=85,width=310/img/wall-of-fame/Paul.jpg",
-                ].map((src) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={src} src={src} loading="lazy" alt="" className="aspect-square w-full rounded-xl object-cover" />
-                ))}
-              </div>
             </div>
 
             <div id="another_state" className="mb-10" data-nosnippet="">
@@ -638,8 +581,8 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
               <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
                 {[
                   {
-                    title: "Challenge Bank™",
-                    text: "Our trademarked system automatically saves questions you miss, creating personalized tests that target your weak spots until you've mastered the material.",
+                    title: "Weak Spots",
+                    text: "Automatically saves questions you miss, creating personalized tests that target your weak spots until you've mastered the material.",
                     Icon: RotateCcw,
                   },
                   {

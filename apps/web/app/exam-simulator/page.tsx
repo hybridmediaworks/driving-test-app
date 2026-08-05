@@ -8,7 +8,8 @@ import { usePaginatedList } from "@/hooks/use-paginated-list";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
 export default function ExamSimulatorPage() {
-  const { data: exams } = usePaginatedList<PublicQuiz>("/quizzes?quiz_type=final");
+  // No pagination UI on this page (small, capped list) — always page 1.
+  const { data: exams } = usePaginatedList<PublicQuiz>("/quizzes?quiz_type=final", 1);
   const rows = exams?.data ?? [];
 
   return (

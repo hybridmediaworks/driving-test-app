@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import type { QuizAttempt } from "@driving-test-app/shared";
 import AppLayout from "@/components/app/AppLayout";
 import AttemptRow from "@/components/quiz/AttemptRow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Paginator from "@/components/ui/Paginator";
-import { usePaginatedList } from "@/hooks/use-paginated-list";
+import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 
-export default function AttemptHistoryPage() {
-  const { data: attempts } = usePaginatedList<QuizAttempt>("/attempts");
+function AttemptHistoryInner() {
+  const { page, setPage } = useUrlQuery();
+  const { data: attempts } = usePaginatedList<QuizAttempt>("/attempts", page);
   const rows = attempts?.data ?? [];
 
   return (
@@ -38,10 +40,18 @@ export default function AttemptHistoryPage() {
                 ))}
               </ul>
             )}
-            {attempts && attempts.meta.total > 0 && <Paginator meta={attempts.meta} />}
+            {attempts && attempts.meta.total > 0 && <Paginator meta={attempts.meta} onPageChange={setPage} />}
           </CardContent>
         </Card>
       </div>
     </AppLayout>
+  );
+}
+
+export default function AttemptHistoryPage() {
+  return (
+    <Suspense>
+      <AttemptHistoryInner />
+    </Suspense>
   );
 }

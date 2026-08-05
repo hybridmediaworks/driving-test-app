@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { PaginatedResponse } from "@driving-test-app/shared";
 import { Button } from "@/components/ui/ShadcnButton";
 
@@ -6,7 +5,25 @@ function linkLabel(label: string): string {
   return label.replace(/&laquo;/g, "«").replace(/&raquo;/g, "»").replace(/&hellip;/g, "…").replace(/&nbsp;/g, " ");
 }
 
-export default function Paginator({ meta }: { meta: PaginatedResponse<unknown>["meta"] }) {
+// Laravel's pagination links are absolute API-origin URLs (built from APP_URL) — only the `page`
+// query param is meaningful to us; everything else about the URL is the wrong origin to navigate
+// to directly (see the note in hooks/use-paginated-list.ts).
+function pageFromUrl(url: string): number | null {
+  try {
+    const page = new URL(url).searchParams.get("page");
+    return page ? Number(page) : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function Paginator({
+  meta,
+  onPageChange,
+}: {
+  meta: PaginatedResponse<unknown>["meta"];
+  onPageChange: (page: number) => void;
+}) {
   const { from, to, total, last_page: lastPage, links } = meta;
   const summary = total === 0 ? "No results" : from == null || to == null ? `${total} total` : `Showing ${from}–${to} of ${total}`;
 
@@ -15,17 +32,25 @@ export default function Paginator({ meta }: { meta: PaginatedResponse<unknown>["
       <p className="text-sm text-muted-foreground">{summary}</p>
       {lastPage > 1 && (
         <nav className="flex flex-wrap items-center justify-end gap-1" aria-label="Pagination">
-          {links.map((link, i) =>
-            link.url ? (
-              <Button key={i} variant={link.active ? "default" : "outline"} size="sm" className="min-w-9 px-2" render={<Link href={link.url} className={link.active ? "pointer-events-none cursor-default" : ""} />}>
+          {links.map((link, i) => {
+            const page = link.url ? pageFromUrl(link.url) : null;
+            return page ? (
+              <Button
+                key={i}
+                variant={link.active ? "default" : "outline"}
+                size="sm"
+                className="min-w-9 px-2"
+                disabled={link.active}
+                onClick={() => onPageChange(page)}
+              >
                 {linkLabel(link.label)}
               </Button>
             ) : (
               <Button key={i} variant="outline" size="sm" className="min-w-9 px-2" disabled>
                 {linkLabel(link.label)}
               </Button>
-            ),
-          )}
+            );
+          })}
         </nav>
       )}
     </div>

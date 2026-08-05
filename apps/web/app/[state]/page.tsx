@@ -45,7 +45,7 @@ export default async function StateDynamicPage({
           <StateTestTypeContent />
 
           <EmailCaptureSection />
-          <CTASection href={`/${state}/dmv-written-test`} />
+          <CTASection />
           <Footer />
         </main>
       </div>

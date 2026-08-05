@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import type { User } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -13,26 +12,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { useDeleteConfirm, usePaginatedList } from "@/hooks/use-paginated-list";
+import { useDeleteConfirm, usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 
 function UserManagementInner() {
   const { user: me } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
+  const { searchParams, filterQuery, page, updateFilter, setPage } = useUrlQuery();
 
-  const { data: users, reload } = usePaginatedList<User>(`/admin/users${query ? `?${query}` : ""}`);
+  const { data: users, reload } = usePaginatedList<User>(`/admin/users${filterQuery ? `?${filterQuery}` : ""}`, page);
   const del = useDeleteConfirm<User>((u) => api.delete(`/admin/users/${u.id}`), reload, "Failed to delete user.");
-
-  function updateFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.replace(`/admin/user-management?${params.toString()}`);
-  }
 
   const rows = users?.data ?? [];
 
@@ -130,7 +117,7 @@ function UserManagementInner() {
                   ))}
                 </ul>
               )}
-              {users && users.meta.total > 0 && <Paginator meta={users.meta} />}
+              {users && users.meta.total > 0 && <Paginator meta={users.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
 

@@ -14,12 +14,16 @@ export type QuizType = {
   id: number;
   name: string;
   title: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type State = {
   id: number;
   code: string;
   name: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type VehicleType = {
@@ -27,6 +31,8 @@ export type VehicleType = {
   name: string;
   title: string;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type QuizDifficulty = "easy" | "medium" | "hard";

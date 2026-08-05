@@ -4,11 +4,15 @@ use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptControlle
 use App\Http\Controllers\Api\V1\Admin\CheatSheetController as AdminCheatSheetController;
 use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
 use App\Http\Controllers\Api\V1\Admin\PassGuaranteeClaimController as AdminPassGuaranteeClaimController;
+use App\Http\Controllers\Api\V1\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
 use App\Http\Controllers\Api\V1\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Api\V1\Admin\QuizQuestionController;
+use App\Http\Controllers\Api\V1\Admin\QuizTypeController as AdminQuizTypeController;
+use App\Http\Controllers\Api\V1\Admin\StateController as AdminStateController;
 use App\Http\Controllers\Api\V1\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
+use App\Http\Controllers\Api\V1\Admin\VehicleTypeController as AdminVehicleTypeController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
@@ -123,6 +127,22 @@ Route::prefix('v1')->group(function (): void {
             Route::get('cheat-sheets/{cheatSheet}', [AdminCheatSheetController::class, 'show']);
 
             Route::apiResource('users', UserController::class);
+
+            Route::apiResource('states', AdminStateController::class)->except(['show']);
+            Route::get('states/{state}', [AdminStateController::class, 'show']);
+
+            Route::apiResource('vehicle-types', AdminVehicleTypeController::class)->except(['show'])->parameters([
+                'vehicle-types' => 'vehicleType',
+            ]);
+            Route::get('vehicle-types/{vehicleType}', [AdminVehicleTypeController::class, 'show']);
+
+            Route::apiResource('quiz-types', AdminQuizTypeController::class)->except(['show'])->parameters([
+                'quiz-types' => 'quizType',
+            ]);
+            Route::get('quiz-types/{quizType}', [AdminQuizTypeController::class, 'show']);
+
+            Route::apiResource('plans', AdminPlanController::class)->except(['show']);
+            Route::get('plans/{plan}', [AdminPlanController::class, 'show']);
 
             Route::get('attempts', [AdminAttemptController::class, 'index']);
 

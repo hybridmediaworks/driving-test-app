@@ -1,15 +1,18 @@
 "use client";
 
 import {
+  Bike,
   ClipboardCheck,
   ClipboardList,
   Copy,
+  CreditCard,
   LayoutGrid,
   Layers,
   Layers2,
   Library,
   ListChecks,
   type LucideIcon,
+  MapPin,
   NotebookText,
   Receipt,
   ShieldCheck,
@@ -52,6 +55,10 @@ const adminNavItems = [
   { title: "User Management", href: "/admin/user-management", icon: UserRound },
   { title: "All Results", href: "/admin/attempts", icon: ClipboardCheck },
   { title: "Pass Guarantee Claims", href: "/admin/pass-guarantee-claims", icon: Receipt },
+  { title: "States", href: "/admin/states", icon: MapPin },
+  { title: "Vehicle Types", href: "/admin/vehicle-types", icon: Bike },
+  { title: "Quiz Types", href: "/admin/quiz-types", icon: ListChecks },
+  { title: "Plans", href: "/admin/plans", icon: CreditCard },
 ];
 
 export default function AppSidebar() {
