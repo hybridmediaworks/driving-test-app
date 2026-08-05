@@ -134,7 +134,8 @@ export default function MapSection() {
               color: "#000",
               fontSize: 10,
               fontWeight: "bold",
-              formatter: (params: { value?: number }) => (params.value ? `${params.value}` : ""),
+              formatter: (params: { value?: number }) =>
+                params.value ? `${params.value}` : "",
             },
             emphasis: {
               label: { show: true, fontSize: 12 },
@@ -189,8 +190,10 @@ export default function MapSection() {
           <div ref={chartRef} className="h-85 w-full max-w-[974px] lg:h-156.5" />
 
           <div className="w-full space-y-6 lg:w-auto lg:min-w-fit">
-            <Paragraph className="text-center font-bold lg:text-left">Activity Level:</Paragraph>
-            <div className="flex flex-wrap justify-center gap-4 lg:flex-col">
+            <Paragraph className="text-center font-bold lg:text-left">
+              Activity Level:
+            </Paragraph>
+            <div className="flex flex-wrap justify-center gap-4 xl:flex-col">
               <div className="flex items-center gap-3">
                 <div className="h-5 w-5 rounded bg-blue-500" />
                 <Paragraph className="font-semibold">Very High</Paragraph>

@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function JourneySection() {
   return (
-    <section className="bg-[#F2F1EC] px-5 py-15 lg:py-30">
+    <section className="bg-background2 px-5 py-15 lg:py-30">
       <div className="mx-auto max-w-container space-y-12">
         <div className="flex flex-col items-center justify-center gap-4">
           <Paragraph
@@ -26,11 +26,11 @@ export default function JourneySection() {
           </Button>
         </div>
         <div className="relative">
-          <div className="absolute top-7 left-[16%] z-0 hidden h-px w-[68%] bg-linear-to-r from-[#2B59FF] to-[#B49CFF] lg:block" />
+          <div className="absolute top-7 left-[16%] z-0 hidden h-px w-[68%] bg-linear-to-r from-blue-900 to-blue-600 lg:block" />
           <div className="relative z-10 grid grid-cols-1 gap-10 lg:grid-cols-3">
             <div className="text-center">
               <Paragraph
-                className="mx-auto flex h-13.5 w-13.5 items-center justify-center rounded-full bg-[#16171C] font-bold"
+                className="mx-auto flex h-13.5 w-13.5 items-center justify-center rounded-full bg-blue-1000 font-bold"
                 size="lg"
                 color="white"
               >
@@ -48,7 +48,7 @@ export default function JourneySection() {
             </div>
             <div className="text-center">
               <Paragraph
-                className="mx-auto flex h-13.5 w-13.5 items-center justify-center rounded-full bg-[#2B59FF] font-bold shadow-[0_0_0_6px_rgba(43,89,255,0.18)]"
+                className="mx-auto flex h-13.5 w-13.5 items-center justify-center rounded-full bg-blue-900 font-bold shadow-[0_0_0_6px_rgba(43,89,255,0.18)]"
                 size="lg"
                 color="white"
               >

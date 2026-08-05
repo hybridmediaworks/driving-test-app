@@ -54,7 +54,7 @@ export default function Button({
   disabled = false,
 }: ButtonProps) {
   const classes = [
-    "inline-flex cursor-pointer items-center justify-center rounded-full font-semibold transition-opacity hover:opacity-90",
+    "inline-flex cursor-pointer items-center justify-center rounded-full font-semibold transition-opacity",
     "disabled:cursor-not-allowed disabled:opacity-60",
     variantClasses[variant],
     sizeClasses[size],

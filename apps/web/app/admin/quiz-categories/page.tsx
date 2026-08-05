@@ -1,47 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { PaginatedResponse, QuizCategory } from "@driving-test-app/shared";
+import type { QuizCategory } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
-import Paginator from "@/components/admin/Paginator";
+import Paginator from "@/components/ui/Paginator";
 import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api";
+import { useDeleteConfirm, usePaginatedList } from "@/hooks/use-paginated-list";
 
 type Row = QuizCategory;
 
 export default function QuizCategoriesIndexPage() {
-  const [categories, setCategories] = useState<PaginatedResponse<Row> | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  function load() {
-    api.get<PaginatedResponse<Row>>("/admin/quiz-categories").then(setCategories);
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  function requestDelete(c: Row) {
-    setDeleteTarget(c);
-    setDeleteError(null);
-    setDeleteOpen(true);
-  }
-
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    try {
-      await api.delete(`/admin/quiz-categories/${deleteTarget.id}`);
-      load();
-    } catch (err) {
-      setDeleteError(err instanceof ApiError ? err.message : "Failed to delete category.");
-    }
-  }
+  const { data: categories, reload } = usePaginatedList<Row>("/admin/quiz-categories");
+  const del = useDeleteConfirm<Row>(
+    (row) => api.delete(`/admin/quiz-categories/${row.id}`),
+    reload,
+    "Failed to delete category.",
+  );
 
   const rows = categories?.data ?? [];
 
@@ -62,7 +40,7 @@ export default function QuizCategoriesIndexPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Categories <span className="font-normal text-muted-foreground">({categories?.total ?? 0})</span>
+                Categories <span className="font-normal text-muted-foreground">({categories?.meta.total ?? 0})</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -89,7 +67,7 @@ export default function QuizCategoriesIndexPage() {
                         <Button variant="outline" size="sm" render={<Link href={`/admin/quiz-categories/${c.id}/edit`} />}>
                           Edit
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => requestDelete(c)}>
+                        <Button variant="destructive" size="sm" onClick={() => del.request(c)}>
                           Delete
                         </Button>
                       </div>
@@ -97,23 +75,21 @@ export default function QuizCategoriesIndexPage() {
                   ))}
                 </ul>
               )}
-              {categories && categories.total > 0 && (
-                <Paginator links={categories.links} from={categories.from} to={categories.to} total={categories.total} lastPage={categories.last_page} />
-              )}
+              {categories && categories.meta.total > 0 && <Paginator meta={categories.meta} />}
             </CardContent>
           </Card>
 
           <ConfirmDeleteDialog
-            open={deleteOpen}
-            onOpenChange={setDeleteOpen}
+            open={del.open}
+            onOpenChange={del.setOpen}
             title="Delete category?"
             description={
-              deleteError ??
-              (deleteTarget
-                ? `Are you sure you want to delete "${deleteTarget.title}"? This cannot be undone. Categories that still have quizzes cannot be deleted.`
+              del.error ??
+              (del.target
+                ? `Are you sure you want to delete "${del.target.title}"? This cannot be undone. Categories that still have quizzes cannot be deleted.`
                 : "")
             }
-            onConfirm={confirmDelete}
+            onConfirm={del.confirm}
           />
         </div>
       </AppLayout>

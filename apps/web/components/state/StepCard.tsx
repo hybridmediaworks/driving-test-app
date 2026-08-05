@@ -1,62 +1,164 @@
-import { LockKeyhole } from "lucide-react";
+import Link from "next/link";
+import { Gem } from "lucide-react";
+import Button from "@/components/ui/Button";
+import Paragraph from "@/components/ui/Paragraph";
 
 type Step = {
-  title: string;
-  questions: number;
-  type: "free" | "premium";
+  title?: string;
+  slug?: string;
+  questions?: number;
+  total?: string;
+  duration?: string;
+  totalQuestions?: string;
+  totalTime?: string;
+  type?: "free" | "premium";
   locked?: boolean;
   image?: string;
-  status?: "next";
+  status?: string;
+  style?: "large";
+  completed?: boolean;
+  justCompleted?: boolean;
 };
 
-export default function StepCard({ step }: { step: Step }) {
-  return (
-    <div className="relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1">
-      {step.type === "free" && (
-        <span className="absolute top-2 left-2 z-10 rounded bg-green-500 px-2 py-0.5 text-[9px] font-semibold text-white">
-          FREE
-        </span>
+export default function StepCard({
+  step,
+  state,
+  cardType,
+  connector = false,
+}: {
+  step: Step;
+  state?: string;
+  /** Unit label appended after `step.total`, e.g. cardType="hazards" -> "9 hazards" — only used by the driving-test card shape. */
+  cardType?: string;
+  /** Shows the mobile-only progress connector line driven by step.completed/justCompleted — only meaningful in the phase-progress step list (TestSteps). */
+  connector?: boolean;
+}) {
+  const isFilled = !!step.completed && !step.justCompleted;
+  const isTrigger = !!step.justCompleted;
+
+  const content = (
+    <div
+      className={`group flex md:flex-col items-center md:items-start cursor-pointer rounded transition-all duration-300 hover:-translate-y-0.75 ${
+        step.style === "large" ? "lg:col-span-2" : ""
+      }`}
+    >
+      {connector && (
+        <div
+          className={`md:hidden md:w-15 w-8.5 absolute left-6.5 ms-auto md:border-l-14 border-l-8 top-4 h-full z-0 ${
+            isFilled
+              ? "border-blue-500"
+              : isTrigger
+                ? "connector-fill border-white"
+                : "border-white"
+          }`}
+          style={
+            isTrigger
+              ? ({ "--fill-index": 0 } as React.CSSProperties)
+              : undefined
+          }
+        />
+      )}
+      {(step.image ||
+        step.type === "premium" ||
+        step.status === "next" ||
+        step.type === "free") && (
+        <div
+          className={`relative overflow-hidden md:rounded-xl rounded-md md:max-w-full w-full max-w-35`}
+        >
+          {step.image && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={step.image}
+              alt=""
+              className="md:h-32 h-18 w-full md:rounded-xl rounded-md object-cover transition-all duration-300"
+            />
+          )}
+          {(step.type === "premium" || step.status === "next") && (
+            <div
+              className={`absolute inset-0 flex items-center justify-center md:rounded-xl rounded-md ${
+                step.type === "premium" && step.status !== "next"
+                  ? "bg-white/60 backdrop-blur-[2px] group-hover:bg-linear-to-r group-hover:from-blue-500 group-hover:to-blue-700"
+                  : ""
+              }`}
+            >
+              {step.type === "premium" && step.status !== "next" && (
+                <>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
+                    <Gem className="text-blue-600 w-8 h-8 " />
+                  </div>
+                  <div className="hidden group-hover:flex px-2">
+                    <Button
+                      variant="outline"
+                      className="w-full md:w-fit bg-yellow-500! border-yellow-500!"
+                      size="sm"
+                      href="/pricing"
+                    >
+                      <Gem /> Upgrade to Premium
+                    </Button>
+                  </div>
+                </>
+              )}
+              {step.status === "next" && (
+                <Paragraph
+                  size="sm"
+                  color="primary"
+                  className="rounded-full bg-white px-3 py-0.5 font-semibold"
+                >
+                  Next
+                </Paragraph>
+              )}
+            </div>
+          )}
+          {step.type === "free" && (
+            <Paragraph
+              color="white"
+              size="xs"
+              className="absolute md:top-2 top-0.5 rounded-sm px-1.75 md:py-0.5 font-semibold md:tracking-wide uppercase md:right-2 right-0.5 bg-green-500"
+            >
+              Free
+            </Paragraph>
+          )}
+        </div>
       )}
 
-      {step.type === "premium" && (
-        <span className="absolute top-2 right-2 z-10 rounded bg-gradient-to-br from-[#f0c27f] to-[#fc5c7d] px-2 py-0.5 text-[9px] font-semibold text-white">
-          PREMIUM
-        </span>
+      {(step.title ||
+        step.questions !== undefined ||
+        step.total ||
+        step.duration ||
+        step.totalQuestions ||
+        step.totalTime) && (
+        <div className="md:p-4 px-3 md:space-y-2">
+          {step.title && (
+            <Paragraph color="dark" className="font-semibold">
+              {step.title}
+            </Paragraph>
+          )}
+          {(step.questions !== undefined ||
+            step.total ||
+            step.duration ||
+            step.totalQuestions ||
+            step.totalTime) && (
+            <Paragraph color="primary" size="sm" className="font-semibold">
+              {step.questions !== undefined && `${step.questions} questions`}
+              {step.total && `${step.total}${cardType ? ` ${cardType}` : ""}`}
+              {step.duration && step.duration}
+              {step.totalQuestions && `${step.totalQuestions} questions`}
+              {step.totalQuestions && step.totalTime && " · ~"}
+              {step.totalTime && `${step.totalTime} min`}
+            </Paragraph>
+          )}
+        </div>
       )}
-
-      <div className="relative h-[100px] overflow-hidden rounded-lg bg-gray-200">
-        {step.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={step.image}
-            alt=""
-            className={`h-full w-full rounded-lg object-cover transition-all duration-300 ${
-              step.locked ? "scale-105 blur-sm" : ""
-            }`}
-          />
-        )}
-
-        {step.locked && <div className="absolute inset-0 rounded-lg bg-white/50 backdrop-blur-[2px]" />}
-
-        {step.status === "next" && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-blue-primary shadow">
-              Next
-            </span>
-          </div>
-        )}
-
-        {step.locked && (
-          <div className="absolute top-1/2 left-1/2 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#6c5ce7] text-white">
-            <LockKeyhole className="h-4" />
-          </div>
-        )}
-      </div>
-
-      <div className="mt-2">
-        <h4 className="text-sm font-medium">{step.title}</h4>
-        <p className="text-xs text-gray-500">{step.questions} questions</p>
-      </div>
     </div>
   );
+
+  if (state && step.slug) {
+    return (
+      <Link href={`/${state}/${step.slug}`} className="block">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }

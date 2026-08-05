@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState, Fragment } from "react";
+import type { CheckoutResponse, Plan } from "@driving-test-app/shared";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import CTASection from "@/components/home/CTASection";
@@ -9,9 +11,7 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { Separator } from "@/components/ui/separator";
-import { WebLayoutProvider } from "@/lib/web-layout-context";
 import { ArrowRight, Check, ChevronDown, Minus } from "lucide-react";
-import { Fragment, useState } from "react";
 
 type CompareValue = string | boolean;
 
@@ -98,6 +98,76 @@ export default function Pricing() {
   const visibleRows = showAllRows
     ? compareRows
     : compareRows.filter((row) => !row.extra);
+import { useAuth } from "@/lib/auth-context";
+import { api, ApiError } from "@/lib/api";
+import { WebLayoutProvider } from "@/lib/web-layout-context";
+
+const FEATURES_BY_KEY: Record<string, string[]> = {
+  free: ["Browse every quiz, cheat sheet, and flashcard deck", "Attempt all free (non-premium) practice tests", "Basic progress tracking"],
+  weekly: [
+    "Everything in Free, plus:",
+    "Full premium question bank",
+    "Exam Simulator — timed, DMV-style mock tests",
+    "All cheat sheets & flashcard decks",
+    "Ad-free",
+    "Priority support",
+    "Pass Guarantee eligible",
+  ],
+  monthly: [
+    "Everything in Free, plus:",
+    "Full premium question bank",
+    "Exam Simulator — timed, DMV-style mock tests",
+    "All cheat sheets & flashcard decks",
+    "Ad-free",
+    "Priority support",
+    "Pass Guarantee eligible",
+  ],
+  lifetime_family: [
+    "Everything in Monthly, for every seat",
+    "One-time payment, no renewals",
+    "Share access with your household",
+    "Owner manages seats anytime",
+  ],
+};
+
+function formatPrice(priceCents: number): string {
+  return (priceCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: priceCents % 100 === 0 ? 0 : 2 });
+}
+
+function priceSuffix(plan: Plan): string {
+  if (plan.type === "one_time") return "one-time";
+  return plan.billing_interval === "week" ? "/ week" : "/ month";
+}
+
+export default function Pricing() {
+  const { user } = useAuth();
+  const [plans, setPlans] = useState<Plan[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [checkingOutKey, setCheckingOutKey] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<{ data: Plan[] }>("/plans")
+      .then((res) => setPlans(res.data))
+      .catch(() => setLoadError("Couldn't load plans right now. Please try again shortly."));
+  }, []);
+
+  async function handleCheckout(plan: Plan) {
+    if (!user) {
+      window.location.assign("/login");
+      return;
+    }
+    setCheckoutError(null);
+    setCheckingOutKey(plan.key);
+    try {
+      const res = await api.post<CheckoutResponse>("/billing/checkout", { plan_key: plan.key });
+      window.location.assign(res.checkout_url);
+    } catch (err) {
+      setCheckoutError(err instanceof ApiError ? err.message : "Couldn't start checkout. Please try again.");
+      setCheckingOutKey(null);
+    }
+  }
 
   return (
     <WebLayoutProvider>

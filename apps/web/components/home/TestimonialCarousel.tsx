@@ -130,13 +130,13 @@ export default function TestimonialCarousel() {
       <button
         onClick={() => goTo(-1)}
         aria-label="Previous testimonial"
-        className="absolute top-65.5 left-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white bg-[#F2F1EC]"
+        className="absolute top-65.5 left-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white bg-background2"
       >
         <ArrowLeft className="h-8 w-8 text-neutral-500" />
       </button>
 
       <div ref={containerRef} className="relative h-118.25 overflow-hidden">
-        <div className="absolute top-0 left-0 z-10 h-full w-20 bg-linear-to-r from-[#fafaf7] to-transparent md:w-40 lg:w-111" />
+        <div className="absolute top-0 left-0 z-10 h-full w-20 bg-linear-to-r from-background to-transparent md:w-40 lg:w-111" />
 
         {testimonials.map((item, index) => (
           <div key={item.id} style={getSlideStyle(index)}>
@@ -145,7 +145,7 @@ export default function TestimonialCarousel() {
           </div>
         ))}
 
-        <div className="absolute top-0 right-0 z-10 h-full w-20 bg-linear-to-r from-transparent to-[#fafaf7] md:w-40 lg:w-111" />
+        <div className="absolute top-0 right-0 z-10 h-full w-20 bg-linear-to-r from-transparent to-background md:w-40 lg:w-111" />
       </div>
 
       <div className="relative z-10 mx-auto -mt-10 max-w-142.25">
@@ -178,7 +178,7 @@ export default function TestimonialCarousel() {
       <button
         onClick={() => goTo(1)}
         aria-label="Next testimonial"
-        className="absolute top-65.5 right-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white bg-[#F2F1EC]"
+        className="absolute top-65.5 right-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white bg-background2"
       >
         <ArrowRight className="h-8 w-8 text-neutral-500" />
       </button>

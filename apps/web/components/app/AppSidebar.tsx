@@ -1,4 +1,20 @@
-import { BookOpen, FolderGit2, LayoutGrid, Layers, Library, UserRound } from "lucide-react";
+"use client";
+
+import {
+  ClipboardCheck,
+  ClipboardList,
+  Copy,
+  LayoutGrid,
+  Layers,
+  Layers2,
+  Library,
+  ListChecks,
+  type LucideIcon,
+  NotebookText,
+  Receipt,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import {
   Sidebar,
@@ -9,24 +25,45 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth-context";
 import AppLogo from "./AppLogo";
-import NavFooter from "./NavFooter";
-import NavMain from "./NavMain";
+import NavMain, { type NavGroup } from "./NavMain";
 import UserMenu from "./UserMenu";
 
-const mainNavItems = [
+type PlatformNavItem = { title: string; href: string; icon: LucideIcon; learnerOnly?: boolean };
+
+// `learnerOnly` items are dropped from an admin's Platform section — for things that only make
+// sense for someone using the product as a student (e.g. filing a refund claim against their own
+// subscription). Tag new items here rather than special-casing them in the filter below.
+const platformNavItems: PlatformNavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutGrid },
-  { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers },
-  { title: "Quizzes", href: "/admin/quizzes", icon: Library },
-  { title: "User Management", href: "/admin/user-management", icon: UserRound },
+  { title: "Browse Quizzes", href: "/quizzes", icon: ListChecks },
+  { title: "Browse Flashcards", href: "/flashcards", icon: Copy },
+  { title: "Browse Cheat Sheets", href: "/cheat-sheets", icon: NotebookText },
+  { title: "My Results", href: "/dashboard/attempts", icon: ClipboardList },
+  { title: "Pass Guarantee", href: "/pass-guarantee", icon: ShieldCheck, learnerOnly: true },
 ];
 
-const footerNavItems = [
-  { title: "Repository", href: "https://github.com/laravel/vue-starter-kit", icon: FolderGit2 },
-  { title: "Documentation", href: "https://laravel.com/docs/starter-kits#vue", icon: BookOpen },
+const adminNavItems = [
+  { title: "Quiz categories", href: "/admin/quiz-categories", icon: Layers },
+  { title: "Quizzes", href: "/admin/quizzes", icon: Library },
+  { title: "Flashcards", href: "/admin/flashcards", icon: Layers2 },
+  { title: "Cheat Sheets", href: "/admin/cheat-sheets", icon: NotebookText },
+  { title: "User Management", href: "/admin/user-management", icon: UserRound },
+  { title: "All Results", href: "/admin/attempts", icon: ClipboardCheck },
+  { title: "Pass Guarantee Claims", href: "/admin/pass-guarantee-claims", icon: Receipt },
 ];
 
 export default function AppSidebar() {
+  const { user } = useAuth();
+
+  const platformItems = platformNavItems.filter((item) => !item.learnerOnly || !user?.is_admin);
+
+  const groups: NavGroup[] = [
+    { label: "Platform", items: platformItems },
+    ...(user?.is_admin ? [{ label: "Admin", items: adminNavItems }] : []),
+  ];
+
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
@@ -40,11 +77,10 @@ export default function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={mainNavItems} />
+        <NavMain groups={groups} />
       </SidebarContent>
 
       <SidebarFooter>
-        <NavFooter items={footerNavItems} />
         <UserMenu />
       </SidebarFooter>
     </Sidebar>

@@ -6,11 +6,12 @@ import { use, useEffect, useState } from "react";
 import type { PaginatedResponse, Quiz, QuizQuestion } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
-import Paginator from "@/components/admin/Paginator";
+import Paginator from "@/components/ui/Paginator";
 import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api";
+import { useDeleteConfirm } from "@/hooks/use-paginated-list";
 
 type QuestionsResponse = {
   quiz: Quiz;
@@ -23,9 +24,9 @@ function questionPreview(text: string, max = 180): string {
 }
 
 function quizContextLine(quiz: Quiz): string {
-  const parts = [quiz.category?.title, quiz.quizType?.title].filter(Boolean) as string[];
+  const parts = [quiz.category?.title, quiz.quiz_type?.title].filter(Boolean) as string[];
   if (quiz.state) parts.push(`${quiz.state.name} (${quiz.state.code})`);
-  if (quiz.vehicleType) parts.push(quiz.vehicleType.title);
+  if (quiz.vehicle_type) parts.push(quiz.vehicle_type.title);
   parts.push(quiz.test_track === "permit_test" ? "Permit test" : "Driving test");
   return parts.join(" · ");
 }
@@ -33,9 +34,6 @@ function quizContextLine(quiz: Quiz): string {
 export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [res, setRes] = useState<QuestionsResponse | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<QuizQuestion | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   function load() {
     api.get<QuestionsResponse>(`/admin/quizzes/${id}/questions`).then(setRes);
@@ -48,7 +46,7 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
 
   function globalPosition(pageIndex: number): number {
     if (!res) return pageIndex + 1;
-    return (res.questions.current_page - 1) * res.questions.per_page + pageIndex + 1;
+    return (res.questions.meta.current_page - 1) * res.questions.meta.per_page + pageIndex + 1;
   }
 
   function canMoveUp(pageIndex: number): boolean {
@@ -56,7 +54,7 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
   }
 
   function canMoveDown(pageIndex: number): boolean {
-    return res ? globalPosition(pageIndex) < res.questions.total : false;
+    return res ? globalPosition(pageIndex) < res.questions.meta.total : false;
   }
 
   async function moveQuestion(q: QuizQuestion, direction: "up" | "down") {
@@ -64,21 +62,11 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
     load();
   }
 
-  function requestDelete(q: QuizQuestion) {
-    setDeleteTarget(q);
-    setDeleteError(null);
-    setDeleteOpen(true);
-  }
-
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    try {
-      await api.delete(`/admin/quizzes/${id}/questions/${deleteTarget.id}`);
-      load();
-    } catch (err) {
-      setDeleteError(err instanceof ApiError ? err.message : "Failed to delete question.");
-    }
-  }
+  const del = useDeleteConfirm<QuizQuestion>(
+    (q) => api.delete(`/admin/quizzes/${id}/questions/${q.id}`),
+    load,
+    "Failed to delete question.",
+  );
 
   function hasAnswerFeedback(q: QuizQuestion): boolean {
     return (q.answers ?? []).some((a) => typeof a.explanation === "string" && a.explanation.trim() !== "");
@@ -117,7 +105,7 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
               <CardTitle className="text-base">
                 Assigned questions{" "}
                 <span className="font-normal text-muted-foreground">
-                  ({res?.questions.total ?? 0} · stored total {res?.quiz.total_questions ?? 0})
+                  ({res?.questions.meta.total ?? 0} · stored total {res?.quiz.total_questions ?? 0})
                 </span>
               </CardTitle>
             </CardHeader>
@@ -172,7 +160,7 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
                           <Button variant="outline" size="sm" render={<Link href={`/admin/quizzes/${id}/questions/${q.id}/edit`} />}>
                             Edit
                           </Button>
-                          <Button variant="destructive" size="sm" onClick={() => requestDelete(q)}>
+                          <Button variant="destructive" size="sm" onClick={() => del.request(q)}>
                             Delete
                           </Button>
                         </div>
@@ -181,27 +169,19 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
                   ))}
                 </ul>
               )}
-              {res && res.questions.total > 0 && (
-                <Paginator
-                  links={res.questions.links}
-                  from={res.questions.from}
-                  to={res.questions.to}
-                  total={res.questions.total}
-                  lastPage={res.questions.last_page}
-                />
-              )}
+              {res && res.questions.meta.total > 0 && <Paginator meta={res.questions.meta} />}
             </CardContent>
           </Card>
 
           <ConfirmDeleteDialog
-            open={deleteOpen}
-            onOpenChange={setDeleteOpen}
+            open={del.open}
+            onOpenChange={del.setOpen}
             title="Delete question?"
             description={
-              deleteError ??
-              (deleteTarget ? `Are you sure you want to delete this question?\n\n"${questionPreview(deleteTarget.question_text)}"\n\nThis cannot be undone.` : "")
+              del.error ??
+              (del.target ? `Are you sure you want to delete this question?\n\n"${questionPreview(del.target.question_text)}"\n\nThis cannot be undone.` : "")
             }
-            onConfirm={confirmDelete}
+            onConfirm={del.confirm}
           />
         </div>
       </AppLayout>

@@ -176,10 +176,10 @@ export default function CarAnimation() {
                         width="1671"
                         height="327"
                         filterUnits="userSpaceOnUse"
-                        color-interpolation-filters="sRGB"
+                        colorInterpolationFilters="sRGB"
                     >
                         <feFlood
-                            flood-opacity="0"
+                            floodOpacity="0"
                             result="BackgroundImageFix"
                         />
                         <feBlend
@@ -200,10 +200,10 @@ export default function CarAnimation() {
                         width="1453"
                         height="109"
                         filterUnits="userSpaceOnUse"
-                        color-interpolation-filters="sRGB"
+                        colorInterpolationFilters="sRGB"
                     >
                         <feFlood
-                            flood-opacity="0"
+                            floodOpacity="0"
                             result="BackgroundImageFix"
                         />
                         <feBlend
@@ -224,10 +224,10 @@ export default function CarAnimation() {
                         width="1097"
                         height="31"
                         filterUnits="userSpaceOnUse"
-                        color-interpolation-filters="sRGB"
+                        colorInterpolationFilters="sRGB"
                     >
                         <feFlood
-                            flood-opacity="0"
+                            floodOpacity="0"
                             result="BackgroundImageFix"
                         />
                         <feBlend
@@ -327,7 +327,7 @@ export default function CarAnimation() {
                         gradientTransform="translate(835.5 416.5) scale(719.5 47.5)"
                     >
                         <stop />
-                        <stop offset="1" stop-opacity="0" />
+                        <stop offset="1" stopOpacity="0" />
                     </radialGradient>
                     <radialGradient
                         id="paint1_radial_811_651"
@@ -338,7 +338,7 @@ export default function CarAnimation() {
                         gradientTransform="translate(835.5 416.5) scale(719.5 47.5)"
                     >
                         <stop />
-                        <stop offset="1" stop-opacity="0" />
+                        <stop offset="1" stopOpacity="0" />
                     </radialGradient>
                     <radialGradient
                         id="paint2_radial_811_651"
@@ -349,7 +349,7 @@ export default function CarAnimation() {
                         gradientTransform="translate(835.5 416.5) scale(541.5 8.5)"
                     >
                         <stop />
-                        <stop offset="1" stop-opacity="0" />
+                        <stop offset="1" stopOpacity="0" />
                     </radialGradient>
                     <image
                         id="image0_811_651"

@@ -5,7 +5,9 @@ import { isValidState, slugToStateName } from "./usStates";
 
 const STORAGE_KEY = "selectedState";
 const VEHICLE_STORAGE_KEY = "selectedVehicle";
+const TEST_TYPE_STORAGE_KEY = "selectedTestType";
 const validVehicles = ["Car", "CDL", "Motorcycle"];
+const validTestTracks = ["permit_test", "driving_test"];
 
 type WebLayoutContextValue = {
   selectedState: string;
@@ -13,6 +15,9 @@ type WebLayoutContextValue = {
   hasStoredState: boolean;
   selectedVehicle: string;
   setSelectedVehicle: (vehicle: string) => void;
+  selectedTestType: string;
+  setSelectedTestType: (testType: string) => void;
+  hasResolvedTestType: boolean;
 };
 
 const WebLayoutContext = createContext<WebLayoutContextValue | null>(null);
@@ -27,6 +32,8 @@ export function WebLayoutProvider({
   const [selectedState, setSelectedStateRaw] = useState("");
   const [hasStoredState, setHasStoredState] = useState(false);
   const [selectedVehicle, setSelectedVehicleRaw] = useState("Car");
+  const [selectedTestType, setSelectedTestTypeRaw] = useState("permit_test");
+  const [hasResolvedTestType, setHasResolvedTestType] = useState(false);
 
   // Reads from localStorage/route slug only after mount to avoid SSR/client hydration mismatches.
   useEffect(() => {
@@ -43,15 +50,22 @@ export function WebLayoutProvider({
     const storedVehicle =
       storedVehicleRaw && validVehicles.includes(storedVehicleRaw) ? storedVehicleRaw : "";
 
+    const storedTestTypeRaw = localStorage.getItem(TEST_TYPE_STORAGE_KEY);
+    const storedTestType =
+      storedTestTypeRaw && validTestTracks.includes(storedTestTypeRaw) ? storedTestTypeRaw : "";
+
     const initialState = validPropState || storedState || "";
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe: server/first client render both start empty, then sync to the real stored value
     setSelectedStateRaw(initialState);
     setHasStoredState(!!storedState || !!validPropState);
     setSelectedVehicleRaw(storedVehicle || "Car");
+    setSelectedTestTypeRaw(storedTestType || "permit_test");
+    setHasResolvedTestType(true);
 
     if (validPropState) {
       localStorage.setItem(STORAGE_KEY, initialState);
       localStorage.setItem(VEHICLE_STORAGE_KEY, storedVehicle || "Car");
+      localStorage.setItem(TEST_TYPE_STORAGE_KEY, storedTestType || "permit_test");
     }
   }, [stateSlug]);
 
@@ -69,9 +83,24 @@ export function WebLayoutProvider({
     localStorage.setItem(VEHICLE_STORAGE_KEY, value);
   }
 
+  function setSelectedTestType(value: string) {
+    setSelectedTestTypeRaw(value);
+    if (!validTestTracks.includes(value)) return;
+    localStorage.setItem(TEST_TYPE_STORAGE_KEY, value);
+  }
+
   return (
     <WebLayoutContext.Provider
-      value={{ selectedState, setSelectedState, hasStoredState, selectedVehicle, setSelectedVehicle }}
+      value={{
+        selectedState,
+        setSelectedState,
+        hasStoredState,
+        selectedVehicle,
+        setSelectedVehicle,
+        selectedTestType,
+        setSelectedTestType,
+        hasResolvedTestType,
+      }}
     >
       {children}
     </WebLayoutContext.Provider>

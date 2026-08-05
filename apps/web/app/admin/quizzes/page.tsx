@@ -6,18 +6,19 @@ import { Suspense, useEffect, useState } from "react";
 import type { PaginatedResponse, Quiz, QuizCategory, QuizType, State, VehicleType } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
-import Paginator from "@/components/admin/Paginator";
+import Paginator from "@/components/ui/Paginator";
 import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api";
+import { useDeleteConfirm } from "@/hooks/use-paginated-list";
 
 type QuizzesResponse = {
   quizzes: PaginatedResponse<Quiz>;
   categories: Pick<QuizCategory, "id" | "name" | "title">[];
-  quizTypes: QuizType[];
+  quiz_types: QuizType[];
   states: State[];
-  vehicleTypes: Pick<VehicleType, "id" | "name" | "title">[];
+  vehicle_types: Pick<VehicleType, "id" | "name" | "title">[];
   filters: Record<string, string | boolean | null>;
 };
 
@@ -25,9 +26,6 @@ function QuizzesIndexInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [res, setRes] = useState<QuizzesResponse | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Quiz | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const query = searchParams.toString();
 
@@ -50,21 +48,7 @@ function QuizzesIndexInner() {
     router.replace(`/admin/quizzes?${params.toString()}`);
   }
 
-  function requestDelete(q: Quiz) {
-    setDeleteTarget(q);
-    setDeleteError(null);
-    setDeleteOpen(true);
-  }
-
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    try {
-      await api.delete(`/admin/quizzes/${deleteTarget.id}`);
-      load();
-    } catch (err) {
-      setDeleteError(err instanceof ApiError ? err.message : "Failed to delete quiz.");
-    }
-  }
+  const del = useDeleteConfirm<Quiz>((q) => api.delete(`/admin/quizzes/${q.id}`), load, "Failed to delete quiz.");
 
   const rows = res?.quizzes.data ?? [];
 
@@ -120,7 +104,7 @@ function QuizzesIndexInner() {
                 onChange={(e) => updateFilter("vehicle_type_id", e.target.value)}
               >
                 <option value="">All</option>
-                {res?.vehicleTypes.map((v) => (
+                {res?.vehicle_types.map((v) => (
                   <option key={v.id} value={String(v.id)}>{v.title}</option>
                 ))}
               </select>
@@ -134,7 +118,7 @@ function QuizzesIndexInner() {
                 onChange={(e) => updateFilter("quiz_type_id", e.target.value)}
               >
                 <option value="">All</option>
-                {res?.quizTypes.map((t) => (
+                {res?.quiz_types.map((t) => (
                   <option key={t.id} value={String(t.id)}>{t.title}</option>
                 ))}
               </select>
@@ -152,7 +136,7 @@ function QuizzesIndexInner() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                All quizzes <span className="font-normal text-muted-foreground">({res?.quizzes.total ?? 0})</span>
+                All quizzes <span className="font-normal text-muted-foreground">({res?.quizzes.meta.total ?? 0})</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -184,9 +168,9 @@ function QuizzesIndexInner() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Order {q.order_no ?? 0} · {q.category?.title} · {q.quizType?.title}
+                            Order {q.order_no ?? 0} · {q.category?.title} · {q.quiz_type?.title}
                             {q.state && ` · ${q.state.name}`}
-                            {q.vehicleType && ` · ${q.vehicleType.title}`}
+                            {q.vehicle_type && ` · ${q.vehicle_type.title}`}
                             {` · ${q.test_track === "permit_test" ? "Permit Test" : "Driving Test"}`}
                             {` · ${q.total_questions} questions`}
                             {q.duration_seconds && ` · ${Math.round(q.duration_seconds / 60)} min`}
@@ -201,7 +185,7 @@ function QuizzesIndexInner() {
                         <Button variant="outline" size="sm" render={<Link href={`/admin/quizzes/${q.id}/edit`} />}>
                           Edit
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => requestDelete(q)}>
+                        <Button variant="destructive" size="sm" onClick={() => del.request(q)}>
                           Delete
                         </Button>
                       </div>
@@ -209,27 +193,19 @@ function QuizzesIndexInner() {
                   ))}
                 </ul>
               )}
-              {res && res.quizzes.total > 0 && (
-                <Paginator
-                  links={res.quizzes.links}
-                  from={res.quizzes.from}
-                  to={res.quizzes.to}
-                  total={res.quizzes.total}
-                  lastPage={res.quizzes.last_page}
-                />
-              )}
+              {res && res.quizzes.meta.total > 0 && <Paginator meta={res.quizzes.meta} />}
             </CardContent>
           </Card>
 
           <ConfirmDeleteDialog
-            open={deleteOpen}
-            onOpenChange={setDeleteOpen}
+            open={del.open}
+            onOpenChange={del.setOpen}
             title="Delete quiz?"
             description={
-              deleteError ??
-              (deleteTarget ? `Are you sure you want to delete "${deleteTarget.title}"? All questions in this quiz will be removed. This cannot be undone.` : "")
+              del.error ??
+              (del.target ? `Are you sure you want to delete "${del.target.title}"? All questions in this quiz will be removed. This cannot be undone.` : "")
             }
-            onConfirm={confirmDelete}
+            onConfirm={del.confirm}
           />
         </div>
       </AppLayout>

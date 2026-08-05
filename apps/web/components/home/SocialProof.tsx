@@ -34,7 +34,7 @@ export default function SocialProof() {
   return (
     <section className="px-5">
       <div className="relative mx-auto max-w-container space-y-7.5 overflow-hidden pt-11">
-        <div className="absolute top-0 left-0 z-10 h-full w-20 bg-linear-to-r from-[#fafaf7] to-transparent md:w-40 lg:w-111" />
+        <div className="absolute top-0 left-0 z-10 h-full w-20 bg-linear-to-r from-background to-transparent md:w-40 lg:w-111" />
         <ImageCarousel images={carouselImages} gap={20} />
 
         <div className="flex flex-col items-center gap-4">
@@ -55,7 +55,7 @@ export default function SocialProof() {
             <strong className="text-neutral-900">4.8M+ drivers</strong> prepared ·{" "}
             <strong className="text-neutral-900">97%</strong> pass first try
           </Paragraph>
-          <div className="absolute top-0 right-0 z-10 h-full w-20 bg-linear-to-r from-transparent to-[#fafaf7] md:w-40 lg:w-111" />
+          <div className="absolute top-0 right-0 z-10 h-full w-20 bg-linear-to-r from-transparent to-background md:w-40 lg:w-111" />
         </div>
       </div>
     </section>

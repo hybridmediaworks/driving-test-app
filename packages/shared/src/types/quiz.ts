@@ -62,17 +62,17 @@ export type Quiz = {
   title: string;
   slug: string;
   order_no: number;
-  cover_image_path: string | null;
   cover_image_url: string | null;
   test_track: "permit_test" | "driving_test";
   total_questions: number;
   duration_seconds: number | null;
+  passing_score_percent: number | null;
   is_premium: boolean;
   is_active: boolean;
   category?: QuizCategory;
-  quizType?: QuizType;
+  quiz_type?: QuizType;
   state?: State;
-  vehicleType?: VehicleType;
+  vehicle_type?: VehicleType;
   quiz_questions_count?: number;
 };
 
@@ -84,11 +84,88 @@ export type LaravelPageLink = {
 
 export type PaginatedResponse<T> = {
   data: T[];
-  current_page: number;
-  last_page: number;
-  per_page: number;
-  total: number;
-  from: number | null;
-  to: number | null;
-  links: LaravelPageLink[];
+  links: {
+    first: string | null;
+    last: string | null;
+    prev: string | null;
+    next: string | null;
+  };
+  meta: {
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    path: string;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: LaravelPageLink[];
+  };
+};
+
+export type PublicQuiz = {
+  id: number;
+  title: string;
+  slug: string;
+  test_track: "permit_test" | "driving_test";
+  total_questions: number;
+  duration_seconds: number | null;
+  passing_score_percent: number | null;
+  is_premium: boolean;
+  cover_image_url: string | null;
+  category?: { id: number; name: string; title: string };
+  quiz_type?: { id: number; name: string; title: string };
+  state?: { id: number; code: string; name: string } | null;
+  vehicle_type?: { id: number; name: string; title: string } | null;
+};
+
+export type PublicAnswerOption = {
+  id: number;
+  answer_text: string;
+};
+
+export type PublicQuizQuestion = {
+  id: number;
+  question_text: string;
+  topic: string | null;
+  difficulty: QuizDifficulty;
+  image_urls: string[];
+  answers: PublicAnswerOption[];
+};
+
+export type QuizShowResponse = {
+  quiz: PublicQuiz;
+  locked: boolean;
+  questions: PublicQuizQuestion[] | null;
+};
+
+export type QuizAttemptStatus = "in_progress" | "completed";
+
+export type QuizAttemptAnswer = {
+  question_id: number;
+  question_text: string;
+  explanation: string | null;
+  selected_answer_id: number | null;
+  correct_answer_id: number | null;
+  is_correct: boolean;
+};
+
+export type QuizAttempt = {
+  id: number;
+  quiz_id: number;
+  status: QuizAttemptStatus;
+  score: number;
+  passed: boolean | null;
+  correct_count: number;
+  total_questions: number;
+  started_at: string;
+  completed_at: string | null;
+  duration_seconds: number | null;
+  quiz?: {
+    id: number;
+    title: string;
+    slug: string;
+    category: string | null;
+  };
+  user?: { id: number; name: string; email: string } | null;
+  answers?: QuizAttemptAnswer[];
 };

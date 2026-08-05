@@ -14,9 +14,9 @@ import { api, ApiError } from "@/lib/api";
 
 type FormOptions = {
   categories: Pick<QuizCategory, "id" | "name" | "title">[];
-  quizTypes: QuizType[];
+  quiz_types: QuizType[];
   states: State[];
-  vehicleTypes: Pick<VehicleType, "id" | "name" | "title">[];
+  vehicle_types: Pick<VehicleType, "id" | "name" | "title">[];
 };
 
 export default function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
@@ -34,6 +34,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
   const [orderNo, setOrderNo] = useState(0);
   const [testTrack, setTestTrack] = useState<"permit_test" | "driving_test">("permit_test");
   const [durationSeconds, setDurationSeconds] = useState("");
+  const [passingScorePercent, setPassingScorePercent] = useState("");
   const [isPremium, setIsPremium] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -55,6 +56,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
       setOrderNo(q.order_no ?? 0);
       setTestTrack(q.test_track);
       setDurationSeconds(q.duration_seconds != null ? String(q.duration_seconds) : "");
+      setPassingScorePercent(q.passing_score_percent != null ? String(q.passing_score_percent) : "");
       setIsPremium(q.is_premium);
       setIsActive(q.is_active);
     });
@@ -76,6 +78,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
     formData.append("order_no", String(orderNo));
     formData.append("test_track", testTrack);
     if (durationSeconds) formData.append("duration_seconds", durationSeconds);
+    if (passingScorePercent) formData.append("passing_score_percent", passingScorePercent);
     formData.append("is_premium", isPremium ? "1" : "0");
     formData.append("is_active", isActive ? "1" : "0");
     if (coverImage) formData.append("cover_image", coverImage);
@@ -148,7 +151,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
                 value={quizTypeId}
                 onChange={(e) => setQuizTypeId(e.target.value)}
               >
-                {options.quizTypes.map((t) => (
+                {options.quiz_types.map((t) => (
                   <option key={t.id} value={String(t.id)}>{t.title}</option>
                 ))}
               </select>
@@ -182,7 +185,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
                   value={vehicleTypeId}
                   onChange={(e) => setVehicleTypeId(e.target.value)}
                 >
-                  {options.vehicleTypes.map((v) => (
+                  {options.vehicle_types.map((v) => (
                     <option key={v.id} value={String(v.id)}>{v.title}</option>
                   ))}
                 </select>
@@ -289,6 +292,23 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
                 onChange={(e) => setDurationSeconds(e.target.value)}
               />
               <InputError message={errors.duration_seconds?.[0]} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="passing_score_percent">Passing score % (optional)</Label>
+              <Input
+                id="passing_score_percent"
+                type="number"
+                min={1}
+                max={100}
+                placeholder="e.g. 80 for exam-simulator quizzes"
+                value={passingScorePercent}
+                onChange={(e) => setPassingScorePercent(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Only meaningful for &quot;Final Exam Simulation&quot; quizzes — leave blank for practice quizzes with no pass/fail result.
+              </p>
+              <InputError message={errors.passing_score_percent?.[0]} />
             </div>
 
             <div className="grid gap-2">
