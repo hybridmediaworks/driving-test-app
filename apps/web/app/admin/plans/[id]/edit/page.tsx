@@ -22,6 +22,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
   const [type, setType] = useState<PlanType>("recurring");
   const [billingInterval, setBillingInterval] = useState<BillingInterval>("month");
   const [price, setPrice] = useState("0");
+  const [trialDays, setTrialDays] = useState("");
   const [maxSeats, setMaxSeats] = useState(1);
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
@@ -36,6 +37,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
       setType(res.plan.type);
       setBillingInterval(res.plan.billing_interval ?? "month");
       setPrice((res.plan.price_cents / 100).toString());
+      setTrialDays(res.plan.trial_days === null ? "" : String(res.plan.trial_days));
       setMaxSeats(res.plan.max_seats);
       setIsActive(res.plan.is_active);
       setSortOrder(res.plan.sort_order);
@@ -54,6 +56,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
         type,
         billing_interval: type === "one_time" ? null : billingInterval,
         price_cents: Math.round(Number(price) * 100),
+        trial_days: trialDays === "" ? null : Number(trialDays),
         max_seats: maxSeats,
         is_active: isActive,
         sort_order: sortOrder,
@@ -75,6 +78,11 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
       </AdminGuard>
     );
   }
+
+  // Stripe Prices are immutable — once real money can flow through this plan, the fields that
+  // determine what Stripe actually charges can't be edited here (the backend rejects it too;
+  // this just avoids a round-trip to find that out). Create a new plan instead.
+  const isSynced = plan.stripe_price_id !== null;
 
   return (
     <AdminGuard>
@@ -100,9 +108,9 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
               Product ID: <code className="text-xs">{plan.stripe_product_id ?? "not synced yet"}</code>
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Changing the price below does not change what Stripe charges. Re-run{" "}
-              <code className="text-xs">php artisan billing:sync-plans</code> after saving — it creates a new Stripe Price rather than
-              mutating the existing one, since Stripe Prices are immutable.
+              {isSynced
+                ? "Billing type, interval, and price are locked below — Stripe Prices are immutable, so editing them here couldn't change what's actually charged. To change the price, create a new plan and deactivate this one."
+                : "Not yet synced — billing type, interval, and price are still editable. Run php artisan billing:sync-plans once you're ready to create the real Stripe Price; those fields lock automatically after that."}
             </p>
           </div>
 
@@ -127,8 +135,9 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
               <Label htmlFor="type">Billing type</Label>
               <select
                 id="type"
-                className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                 value={type}
+                disabled={isSynced}
                 onChange={(e) => setType(e.target.value as PlanType)}
               >
                 <option value="recurring">Recurring subscription</option>
@@ -142,8 +151,9 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
                 <Label htmlFor="billing_interval">Billing interval</Label>
                 <select
                   id="billing_interval"
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                   value={billingInterval}
+                  disabled={isSynced}
                   onChange={(e) => setBillingInterval(e.target.value as BillingInterval)}
                 >
                   <option value="week">Weekly</option>
@@ -157,8 +167,33 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
               <Label htmlFor="price" className="gap-1">
                 Price (USD) <span className="text-destructive">*</span>
               </Label>
-              <Input id="price" type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+              <Input
+                id="price"
+                type="number"
+                min={0}
+                step="0.01"
+                value={price}
+                disabled={isSynced}
+                onChange={(e) => setPrice(e.target.value)}
+              />
               <InputError message={errors.price_cents?.[0]} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="trial_days">Free trial (days)</Label>
+              <Input
+                id="trial_days"
+                type="number"
+                min={1}
+                max={90}
+                placeholder="No trial"
+                value={trialDays}
+                onChange={(e) => setTrialDays(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank for no trial. Card is required at checkout either way — this delays the first charge.
+              </p>
+              <InputError message={errors.trial_days?.[0]} />
             </div>
 
             <div className="grid gap-2">

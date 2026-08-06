@@ -56,11 +56,11 @@ class PlanController extends Controller
     /**
      * Update a plan (admin)
      *
-     * Note: changing `price_cents` here does not change what Stripe charges — the live price is
-     * whatever `stripe_price_id` points to. Re-run `php artisan billing:sync-plans` (which
-     * creates a new Stripe Price rather than mutating an existing one, since Stripe Prices are
-     * immutable) after changing price_cents, or the displayed price will drift from what's
-     * actually charged at checkout.
+     * `price_cents`/`billing_interval`/`type` are rejected (422, see UpdatePlanRequest) once the
+     * plan has a real `stripe_price_id` — Stripe Prices are immutable, so "editing" one of those
+     * fields here could only ever change what we display, never what's actually charged at
+     * checkout. Create a new plan instead; `billing:sync-plans` provisions its real Stripe Price
+     * automatically since it starts with a null stripe_price_id.
      */
     public function update(UpdatePlanRequest $request, Plan $plan): JsonResponse
     {

@@ -103,6 +103,99 @@ class PlanManagementTest extends TestCase
         $this->assertSame(6000, $plan->price_cents);
     }
 
+    public function test_admin_cannot_change_price_on_a_plan_synced_to_stripe(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $plan = Plan::factory()->create(['price_cents' => 2900, 'stripe_price_id' => 'price_123']);
+
+        $response = $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/plans/{$plan->id}", [
+            'key' => $plan->key,
+            'name' => $plan->name,
+            'type' => $plan->type->value,
+            'billing_interval' => $plan->billing_interval?->value,
+            'price_cents' => 3900,
+            'max_seats' => $plan->max_seats,
+            'is_active' => $plan->is_active,
+            'sort_order' => $plan->sort_order,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['price_cents']);
+        $this->assertSame(2900, $plan->fresh()->price_cents);
+    }
+
+    public function test_admin_cannot_change_billing_interval_on_a_plan_synced_to_stripe(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $plan = Plan::factory()->create(['billing_interval' => 'month', 'stripe_price_id' => 'price_123']);
+
+        $response = $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/plans/{$plan->id}", [
+            'key' => $plan->key,
+            'name' => $plan->name,
+            'type' => $plan->type->value,
+            'billing_interval' => 'week',
+            'price_cents' => $plan->price_cents,
+            'max_seats' => $plan->max_seats,
+            'is_active' => $plan->is_active,
+            'sort_order' => $plan->sort_order,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['billing_interval']);
+    }
+
+    public function test_admin_cannot_change_type_on_a_plan_synced_to_stripe(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $plan = Plan::factory()->create(['type' => 'recurring', 'stripe_price_id' => 'price_123']);
+
+        $response = $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/plans/{$plan->id}", [
+            'key' => $plan->key,
+            'name' => $plan->name,
+            'type' => 'one_time',
+            'billing_interval' => null,
+            'price_cents' => $plan->price_cents,
+            'max_seats' => $plan->max_seats,
+            'is_active' => $plan->is_active,
+            'sort_order' => $plan->sort_order,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['type']);
+    }
+
+    public function test_admin_can_still_edit_non_money_fields_on_a_plan_synced_to_stripe(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $plan = Plan::factory()->create([
+            'key' => 'edit_test_plan',
+            'name' => 'Old Name',
+            'price_cents' => 2900,
+            'type' => 'recurring',
+            'billing_interval' => 'week',
+            'trial_days' => null,
+            'stripe_price_id' => 'price_123',
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/plans/{$plan->id}", [
+            'key' => $plan->key,
+            'name' => 'New Name',
+            'type' => $plan->type->value,
+            'billing_interval' => $plan->billing_interval->value,
+            'price_cents' => $plan->price_cents,
+            'trial_days' => 7,
+            'max_seats' => $plan->max_seats,
+            'is_active' => false,
+            'sort_order' => $plan->sort_order,
+        ]);
+
+        $response->assertOk();
+        $plan->refresh();
+        $this->assertSame('New Name', $plan->name);
+        $this->assertSame(7, $plan->trial_days);
+        $this->assertFalse($plan->is_active);
+    }
+
     public function test_admin_can_delete_a_plan_never_synced_to_stripe(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

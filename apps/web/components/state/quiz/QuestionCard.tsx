@@ -1,16 +1,23 @@
-import { Check, Circle, Volume2, XIcon } from "lucide-react";
+import { Volume2 } from "lucide-react";
 import Paragraph from "@/components/ui/Paragraph";
-import type { QuizQuestionStatic } from "./types";
+import type { PublicQuizQuestion } from "@driving-test-app/shared";
 
+/**
+ * Renders a question while it's still being played (pre-submission). The real backend
+ * deliberately never sends `is_correct`/`explanation` for an answer before the whole attempt is
+ * submitted (see `Public\QuizController::show` on the API side) — so, unlike the mocked version
+ * this replaced, there is no per-option correct/incorrect reveal here. That feedback only exists
+ * after grading, in the results screen (matches how `components/quiz/QuestionCard.tsx` — the
+ * already-real `/quizzes/[id]` player — has always behaved).
+ */
 export default function QuestionCard({
   question,
   selectedOptionId,
-  isAnswered,
   voiceOver = false,
   fontScale = 1,
   onSelectOption,
 }: {
-  question: QuizQuestionStatic;
+  question: PublicQuizQuestion;
   selectedOptionId: number | undefined;
   isAnswered: boolean;
   isLastQuestion: boolean;
@@ -34,88 +41,40 @@ export default function QuestionCard({
             className="font-semibold font-sora"
             color="dark"
           >
-            {question.question}
+            {question.question_text}
           </Paragraph>
         </div>
-        {question.img && (
+        {question.image_urls[0] && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={question.img}
-            alt={question.question}
+            src={question.image_urls[0]}
+            alt={question.question_text}
             className="max-h-64 w-full rounded-xl object-cover"
           />
         )}
         <div style={{ zoom: fontScale }}>
           <div className="space-y-3">
-            {question.options.map((option, index) => {
-              const isWrongSelected =
-                isAnswered &&
-                option.id === selectedOptionId &&
-                !option.isCorrect;
-              const isCorrectAnswer = isAnswered && option.isCorrect;
+            {question.answers.map((option, index) => {
+              const isSelected = option.id === selectedOptionId;
               const optionLetter = String.fromCharCode(65 + index);
 
               return (
-                <div key={option.id}>
-                  <div
-                    onClick={() => onSelectOption(option.id)}
-                    className={`group rounded-lg p-3 border space-y-4 ${
-                      !isAnswered ? "cursor-pointer hover:bg-neutral-50" : ""
-                    } ${isWrongSelected ? "bg-red-50 border-red-500" : isCorrectAnswer ? "bg-green-50 border-green-500" : ""}`}
-                  >
-                    <div className="flex items-start justify-start gap-3">
-                      <div
-                        className={`font-bold text-sm min-w-7.5 min-h-7.5 rounded-full flex items-center justify-center ${
-                          isWrongSelected
-                            ? "bg-red-500 text-white"
-                            : isCorrectAnswer
-                              ? "bg-green-600 text-white"
-                              : "bg-neutral-100 text-neutral-500"
-                        }`}
-                      >
-                        {optionLetter}
-                      </div>
-                      <Paragraph
-                        className={`font-medium min-h-7.5 flex items-center ${
-                          option.id === selectedOptionId && !option.isCorrect
-                            ? "line-through"
-                            : ""
-                        }`}
-                      >
-                        {option.text}
-                      </Paragraph>
-                      {(isWrongSelected || isCorrectAnswer) && (
-                        <Paragraph
-                          className="ml-auto flex shrink-0 items-center font-semibold leading-6!"
-                          size="xs"
-                        >
-                          {isWrongSelected ? (
-                            <span className="flex items-center gap-1.5">
-                              <span className="hidden sm:block rounded-full border border-red-500 bg-white px-2.5 py-1 text-red-600">
-                                Your answer
-                              </span>
-                              <XIcon className="min-h-4 min-w-4 rounded-full bg-red-500 stroke-white p-0.5" />
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1.5">
-                              <span className="hidden sm:block rounded-full border border-green-500 bg-white px-2.5 py-1 text-green-600">
-                                Correct answer
-                              </span>
-                              <Check className="min-h-4 min-w-4 rounded-full bg-green-600 stroke-white p-0.5" />
-                            </span>
-                          )}
-                        </Paragraph>
-                      )}
+                <div
+                  key={option.id}
+                  onClick={() => onSelectOption(option.id)}
+                  className={`group cursor-pointer rounded-lg border p-3 hover:bg-neutral-50 ${
+                    isSelected ? "border-blue-500 bg-blue-50" : ""
+                  }`}
+                >
+                  <div className="flex items-start justify-start gap-3">
+                    <div
+                      className={`font-bold text-sm min-w-7.5 min-h-7.5 rounded-full flex items-center justify-center ${
+                        isSelected ? "bg-blue-600 text-white" : "bg-neutral-100 text-neutral-500"
+                      }`}
+                    >
+                      {optionLetter}
                     </div>
-
-                    {isAnswered && option.id === selectedOptionId && (
-                      <div className="relative">
-                        {voiceOver && (
-                          <Volume2 className="absolute top-0 -left-8.5 mt-2 h-6 w-6 rounded-full bg-blue-600 p-1 text-white" />
-                        )}
-                        <Paragraph>{option.explanation}</Paragraph>
-                      </div>
-                    )}
+                    <Paragraph className="font-medium min-h-7.5 flex items-center">{option.answer_text}</Paragraph>
                   </div>
                 </div>
               );

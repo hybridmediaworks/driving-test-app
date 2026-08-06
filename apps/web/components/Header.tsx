@@ -41,13 +41,6 @@ const testTypeOptions = [
   { label: "Driving Test", value: "driving_test", icon: Route },
 ];
 
-const primaryNavLinks = [
-  { label: "Flashcards", href: "/flashcards" },
-  { label: "Cheat Sheets", href: "/cheat-sheets" },
-  { label: "Exam Simulator", href: "/exam-simulator" },
-  { label: "Pricing", href: "/pricing" },
-];
-
 export default function Header({
   variant = "home",
   hideNav = false,
@@ -222,17 +215,6 @@ export default function Header({
         )}
 
         <div className="hidden items-center gap-6 lg:flex">
-          <nav className="flex items-center gap-6">
-            {primaryNavLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-neutral-600 hover:text-blue-600"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
           <Button className="p-0!" variant="ghost">
             <HelpCircle className="h-6 w-6 text-neutral-500" />
           </Button>
@@ -362,19 +344,6 @@ export default function Header({
               )}
             </div>
           )}
-
-          <div className="mt-4 grid grid-cols-2 gap-1 border-t border-gray-100 pt-4">
-            {primaryNavLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
 
           <div className="mt-4 flex justify-center gap-3 border-t border-gray-100 pt-4">
             {user ? (

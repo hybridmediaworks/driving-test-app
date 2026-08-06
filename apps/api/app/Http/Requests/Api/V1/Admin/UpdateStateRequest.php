@@ -22,6 +22,8 @@ class UpdateStateRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'size:2', 'uppercase', Rule::unique('states', 'code')->ignore($state->id)],
             'name' => ['required', 'string', 'max:100', Rule::unique('states', 'name')->ignore($state->id)],
+            'agency_name' => ['nullable', 'string', 'max:100'],
+            'dmv_website_url' => ['nullable', 'string', 'url', 'max:255'],
         ];
     }
 }

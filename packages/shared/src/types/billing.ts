@@ -10,6 +10,8 @@ export type Plan = {
   type: PlanType;
   billing_interval: BillingInterval | null;
   price_cents: number;
+  /** Free trial length in days before the first charge — null means no trial for this plan. */
+  trial_days: number | null;
   max_seats: number;
   sort_order: number;
 };
@@ -29,6 +31,8 @@ export type MySubscription = Entitlement & {
     stripe_status: string;
     canceled: boolean;
     ends_at: string | null;
+    on_trial: boolean;
+    trial_ends_at: string | null;
   } | null;
 };
 

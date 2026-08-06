@@ -29,6 +29,7 @@ class StorePlanRequest extends FormRequest
             'type' => ['required', Rule::enum(PlanType::class)],
             'billing_interval' => ['nullable', Rule::enum(BillingInterval::class)],
             'price_cents' => ['required', 'integer', 'min:0'],
+            'trial_days' => ['nullable', 'integer', 'min:1', 'max:90'],
             'max_seats' => ['required', 'integer', 'min:1', 'max:100'],
             'is_active' => ['required', 'boolean'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:65535'],

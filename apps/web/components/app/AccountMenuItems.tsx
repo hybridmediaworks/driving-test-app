@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/lib/auth-context";
+import { useLogout } from "@/lib/auth-context";
 import UserInfo from "./UserInfo";
 
 /**
@@ -16,7 +16,7 @@ import UserInfo from "./UserInfo";
  * only needs to be built once.
  */
 export default function AccountMenuItems({ user }: { user: User }) {
-  const { logout } = useAuth();
+  const { logout, pending } = useLogout();
 
   return (
     <>
@@ -35,9 +35,9 @@ export default function AccountMenuItems({ user }: { user: User }) {
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => logout()}>
+      <DropdownMenuItem disabled={pending} onClick={() => logout()}>
         <LogOut className="mr-2 h-4 w-4" />
-        Log out
+        {pending ? "Logging out…" : "Log out"}
       </DropdownMenuItem>
     </>
   );

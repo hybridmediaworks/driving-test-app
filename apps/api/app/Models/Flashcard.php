@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToStateAndVehicleType;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Flashcard extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use BelongsToStateAndVehicleType, HasFactory, InteractsWithMedia;
 
     public const MEDIA_COLLECTION_IMAGE = 'image';
 
@@ -53,22 +54,6 @@ class Flashcard extends Model implements HasMedia
     public function category(): BelongsTo
     {
         return $this->belongsTo(QuizCategory::class, 'quiz_category_id');
-    }
-
-    /**
-     * @return BelongsTo<State, $this>
-     */
-    public function state(): BelongsTo
-    {
-        return $this->belongsTo(State::class);
-    }
-
-    /**
-     * @return BelongsTo<VehicleType, $this>
-     */
-    public function vehicleType(): BelongsTo
-    {
-        return $this->belongsTo(VehicleType::class);
     }
 
     /**

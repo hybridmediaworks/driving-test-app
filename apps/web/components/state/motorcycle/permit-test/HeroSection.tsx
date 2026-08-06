@@ -5,10 +5,12 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { stateAbbreviations } from "@/lib/usStates";
+import { useStateStats } from "@/lib/useStateStats";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 
 export default function HeroSection() {
   const { selectedState } = useWebLayout();
+  const stats = useStateStats();
   const quizzesHref = selectedState
     ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=motorcycle`
     : "/quizzes?vehicle_type=motorcycle";
@@ -28,7 +30,7 @@ export default function HeroSection() {
               </span>
               <span className=" text-green-500">Live</span>
               <span>
-                Active riders today: <strong>1,214</strong>
+                Active riders today: <strong>{stats ? stats.active_today.toLocaleString() : "—"}</strong>
               </span>
             </Paragraph>
             <Heading as="h1">

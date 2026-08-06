@@ -19,6 +19,8 @@ class StoreStateRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'size:2', 'uppercase', 'unique:states,code'],
             'name' => ['required', 'string', 'max:100', 'unique:states,name'],
+            'agency_name' => ['nullable', 'string', 'max:100'],
+            'dmv_website_url' => ['nullable', 'string', 'url', 'max:255'],
         ];
     }
 }

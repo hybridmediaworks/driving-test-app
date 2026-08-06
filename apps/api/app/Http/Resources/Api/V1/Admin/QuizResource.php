@@ -22,6 +22,7 @@ class QuizResource extends JsonResource
             'vehicle_type_id' => $this->vehicle_type_id,
             'title' => $this->title,
             'slug' => $this->slug,
+            'source_url' => $this->source_url,
             'test_track' => $this->test_track,
             'order_no' => $this->order_no,
             'total_questions' => $this->total_questions,

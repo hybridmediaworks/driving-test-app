@@ -23,7 +23,12 @@ function CheatSheetCard({ sheet }: { sheet: PublicCheatSheet }) {
       )}
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold text-neutral-900">{sheet.title}</h3>
-        {sheet.is_premium && <Lock className="h-4 w-4 shrink-0 text-amber-600" />}
+        {sheet.is_premium && (
+          <span className="flex shrink-0 items-center gap-1 text-xs text-amber-800">
+            Premium
+            {sheet.locked && <Lock className="h-4 w-4 text-amber-600" />}
+          </span>
+        )}
       </div>
       <p className="text-sm text-neutral-500">{sheet.summary}</p>
       <p className="text-xs text-neutral-400">

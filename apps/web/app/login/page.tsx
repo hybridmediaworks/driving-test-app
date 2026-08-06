@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Button from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -13,9 +13,13 @@ import PasswordInput from "@/components/ui/PasswordInput";
 import Spinner from "@/components/ui/Spinner";
 import { ApiError, useAuth } from "@/lib/auth-context";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
   const { login } = useAuth();
+  const searchParams = useSearchParams();
+  // Where to land after a successful login — e.g. back at /pricing to resume a checkout the
+  // user started before we sent them here to authenticate. Falls back to the dashboard.
+  const redirect = searchParams.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +34,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push("/dashboard");
+      router.push(redirect || "/dashboard");
     } catch (err) {
       if (err instanceof ApiError && err.errors) {
         setErrors(err.errors);
@@ -101,11 +105,24 @@ export default function LoginPage() {
 
         <Paragraph className="text-center">
           Don&apos;t have an account?{" "}
-          <Button variant="ghost" size="md" className="p-0!" href="/register">
+          <Button
+            variant="ghost"
+            size="md"
+            className="p-0!"
+            href={redirect ? `/register?redirect=${encodeURIComponent(redirect)}` : "/register"}
+          >
             Sign Up
           </Button>
         </Paragraph>
       </form>
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageInner />
+    </Suspense>
   );
 }

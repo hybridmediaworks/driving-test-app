@@ -51,7 +51,7 @@ function StatesIndexInner() {
                   {rows.map((s) => (
                     <li key={s.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0 space-y-1">
-                        <Link href={`/admin/states/${s.id}/edit`} className="font-medium hover:underline">
+                        <Link href={`/admin/states/${s.id}`} className="font-medium hover:underline">
                           {s.name}
                         </Link>
                         <p className="text-sm text-muted-foreground">
@@ -59,6 +59,9 @@ function StatesIndexInner() {
                         </p>
                       </div>
                       <div className="flex shrink-0 gap-2">
+                        <Button variant="outline" size="sm" render={<Link href={`/admin/states/${s.id}`} />}>
+                          View
+                        </Button>
                         <Button variant="outline" size="sm" render={<Link href={`/admin/states/${s.id}/edit`} />}>
                           Edit
                         </Button>

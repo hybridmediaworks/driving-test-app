@@ -15,6 +15,7 @@ enum Feature: string
     case ExamSimulator = 'exam_simulator';
     case CheatSheets = 'cheat_sheets';
     case Flashcards = 'flashcards';
+    case Videos = 'videos';
     case AiTutor = 'ai_tutor';
     case AdFree = 'ad_free';
     case PrioritySupport = 'priority_support';

@@ -19,6 +19,7 @@ export default function CreatePlanPage() {
   const [type, setType] = useState<PlanType>("recurring");
   const [billingInterval, setBillingInterval] = useState<BillingInterval>("month");
   const [price, setPrice] = useState("0");
+  const [trialDays, setTrialDays] = useState("");
   const [maxSeats, setMaxSeats] = useState(1);
   const [isActive, setIsActive] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
@@ -37,6 +38,7 @@ export default function CreatePlanPage() {
         type,
         billing_interval: type === "one_time" ? null : billingInterval,
         price_cents: Math.round(Number(price) * 100),
+        trial_days: trialDays === "" ? null : Number(trialDays),
         max_seats: maxSeats,
         is_active: isActive,
         sort_order: sortOrder,
@@ -129,6 +131,23 @@ export default function CreatePlanPage() {
               </Label>
               <Input id="price" type="number" min={0} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
               <InputError message={errors.price_cents?.[0]} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="trial_days">Free trial (days)</Label>
+              <Input
+                id="trial_days"
+                type="number"
+                min={1}
+                max={90}
+                placeholder="No trial"
+                value={trialDays}
+                onChange={(e) => setTrialDays(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank for no trial. Card is required at checkout either way — this delays the first charge.
+              </p>
+              <InputError message={errors.trial_days?.[0]} />
             </div>
 
             <div className="grid gap-2">

@@ -19,6 +19,8 @@ export default function EditStatePage({ params }: { params: Promise<{ id: string
   const [state, setState] = useState<State | null>(null);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
+  const [agencyName, setAgencyName] = useState("");
+  const [dmvWebsiteUrl, setDmvWebsiteUrl] = useState("");
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
@@ -27,6 +29,8 @@ export default function EditStatePage({ params }: { params: Promise<{ id: string
       setState(res.state);
       setCode(res.state.code);
       setName(res.state.name);
+      setAgencyName(res.state.agency_name ?? "");
+      setDmvWebsiteUrl(res.state.dmv_website_url ?? "");
     });
   }, [id]);
 
@@ -36,7 +40,12 @@ export default function EditStatePage({ params }: { params: Promise<{ id: string
     setErrors({});
 
     try {
-      await api.put(`/admin/states/${id}`, { code: code.toUpperCase(), name });
+      await api.put(`/admin/states/${id}`, {
+        code: code.toUpperCase(),
+        name,
+        agency_name: agencyName || null,
+        dmv_website_url: dmvWebsiteUrl || null,
+      });
       router.push("/admin/states");
     } catch (err) {
       if (err instanceof ApiError && err.errors) setErrors(err.errors);
@@ -92,6 +101,28 @@ export default function EditStatePage({ params }: { params: Promise<{ id: string
               </Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
               <InputError message={errors.name?.[0]} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="agency_name">Agency name</Label>
+              <Input
+                id="agency_name"
+                placeholder="DMV (leave blank to default to “DMV”)"
+                value={agencyName}
+                onChange={(e) => setAgencyName(e.target.value)}
+              />
+              <InputError message={errors.agency_name?.[0]} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="dmv_website_url">DMV website URL</Label>
+              <Input
+                id="dmv_website_url"
+                placeholder="https://..."
+                value={dmvWebsiteUrl}
+                onChange={(e) => setDmvWebsiteUrl(e.target.value)}
+              />
+              <InputError message={errors.dmv_website_url?.[0]} />
             </div>
 
             <div className="flex gap-3">

@@ -3,7 +3,6 @@
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestSteps from "@/components/state/TestSteps";
-import HandBookSection from "@/components/state/HandBookSection";
 import {
   usePhaseCompletion,
   type PhaseCompletionState,
@@ -14,12 +13,15 @@ export default function StatePhase({
   nextConnector = false,
   previousConnector = false,
   usePhaseData = usePhaseCompletion,
+  state,
 }: {
   phase: number;
   nextConnector?: boolean;
   previousConnector?: boolean;
-  /** Which phase-completion source drives this phase — defaults to the car/state track. Motorcycle passes useMotorcyclePhaseCompletion to reuse this same component with its own data. */
+  /** Override for testing/composition — usePhaseCompletion itself already reads the current vehicle/test-track from WebLayoutProvider, so callers don't normally need to pass this. */
   usePhaseData?: (phase: number) => PhaseCompletionState;
+  /** State slug (e.g. "alabama") — forwarded to each step so its card links to the real per-test page. */
+  state?: string;
 }) {
   const { phase: phaseData } = usePhaseData(phase);
   const {
@@ -97,36 +99,37 @@ export default function StatePhase({
 
         <div className="space-y-2">
           <Paragraph color="primary" className="font-semibold">
-            {phaseData.header.totalQuestions} questions · ~
-            {phaseData.header.totalTime} min
+            {phaseData.header.totalQuestions} questions
+            {phaseData.header.totalTime ? ` · ~${phaseData.header.totalTime} min` : ""}
           </Paragraph>
           <Heading as="h2">{phaseData.header.headerTitle}</Heading>
-          <Paragraph color="muted" className="pt-1">
-            {phaseData.header.headerDesc}
-          </Paragraph>
+          {phaseData.header.headerDesc && (
+            <Paragraph color="muted" className="pt-1">
+              {phaseData.header.headerDesc}
+            </Paragraph>
+          )}
         </div>
       </div>
-      {phaseData.header.handbook ? (
-        <HandBookSection />
-      ) : (
-        <TestSteps
-          steps={phaseData.steps.map((step) => ({
-            title: step.title,
-            totalQuestions: step.totalQuestions,
-            totalTime: step.totalTime,
-            type: step.type,
-            image: step.image,
-            status: step.status,
-            style: step.style,
-            completed: step.completed,
-            justCompleted: step.justCompleted,
-          }))}
-          columns={4}
-          nextConnector={nextConnector}
-          phaseActive={isActive}
-          phaseJustActivated={animateCircleIn}
-        />
-      )}
+      <TestSteps
+        steps={phaseData.steps.map((step) => ({
+          title: step.title,
+          slug: step.slug,
+          totalQuestions: step.totalQuestions,
+          totalTime: step.totalTime,
+          type: step.type,
+          locked: step.locked,
+          image: step.image,
+          status: step.status,
+          style: step.style,
+          completed: step.completed,
+          justCompleted: step.justCompleted,
+        }))}
+        state={state}
+        columns={4}
+        nextConnector={nextConnector}
+        phaseActive={isActive}
+        phaseJustActivated={animateCircleIn}
+      />
     </div>
   );
 }

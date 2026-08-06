@@ -21,6 +21,7 @@ class PlanResource extends JsonResource
             'type' => $this->type,
             'billing_interval' => $this->billing_interval,
             'price_cents' => $this->price_cents,
+            'trial_days' => $this->trial_days,
             // Derived from Stripe via `php artisan billing:sync-plans` — never admin-editable,
             // see Store/UpdatePlanRequest.
             'stripe_price_id' => $this->stripe_price_id,

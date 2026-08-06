@@ -21,6 +21,7 @@ class PlanResource extends JsonResource
             'type' => $this->type,
             'billing_interval' => $this->billing_interval,
             'price_cents' => $this->price_cents,
+            'trial_days' => $this->trial_days,
             'max_seats' => $this->max_seats,
             'sort_order' => $this->sort_order,
         ];

@@ -12,6 +12,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Entitlement\EntitlementResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class EntitlementResolverTest extends TestCase
@@ -82,6 +83,22 @@ class EntitlementResolverTest extends TestCase
         $entitlement = $this->resolver->resolve($user);
 
         $this->assertSame(EntitlementTier::MonthlySubscriber, $entitlement->tier);
+        $this->assertTrue($entitlement->isPremium());
+    }
+
+    public function test_trialing_weekly_subscriber_is_premium(): void
+    {
+        // Cashier's Subscription::active() doesn't exclude stripe_status='trialing' — a trialing
+        // subscription is already "active" under Cashier's own definition, so this should require
+        // no EntitlementResolver branching. Locks that behavior in as a regression guard.
+        Plan::factory()->create(['key' => 'weekly', 'stripe_price_id' => 'price_weekly_trial_test', 'trial_days' => 7]);
+        $user = User::factory()->create(['is_admin' => false]);
+        $this->makeSubscription($user, 'price_weekly_trial_test', 'trialing', trialEndsAt: now()->addDays(7));
+
+        $entitlement = $this->resolver->resolve($user);
+
+        $this->assertSame(EntitlementTier::WeeklySubscriber, $entitlement->tier);
+        $this->assertSame(EntitlementStatus::Active, $entitlement->status);
         $this->assertTrue($entitlement->isPremium());
     }
 
@@ -235,8 +252,9 @@ class EntitlementResolverTest extends TestCase
         User $user,
         string $stripePriceId,
         string $stripeStatus,
-        ?\Illuminate\Support\Carbon $endsAt = null,
-        ?\Illuminate\Support\Carbon $pastDueSince = null,
+        ?Carbon $endsAt = null,
+        ?Carbon $pastDueSince = null,
+        ?Carbon $trialEndsAt = null,
     ): Subscription {
         return Subscription::query()->create([
             'user_id' => $user->id,
@@ -247,6 +265,7 @@ class EntitlementResolverTest extends TestCase
             'quantity' => 1,
             'ends_at' => $endsAt,
             'past_due_since' => $pastDueSince,
+            'trial_ends_at' => $trialEndsAt,
         ]);
     }
 

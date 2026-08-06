@@ -17,7 +17,7 @@ export default function PremiumCTA({
   nextConnector?: boolean;
   /** The phase whose completion state drives this CTA's own connectors — it sits right after that phase in the page. */
   afterPhase?: number;
-  /** Which phase-completion source drives this CTA — defaults to the car/state track. Motorcycle passes useMotorcyclePhaseCompletion to reuse this same component with its own data. */
+  /** Override for testing/composition — usePhaseCompletion itself already reads the current vehicle/test-track from WebLayoutProvider, so callers don't normally need to pass this. */
   usePhaseData?: (phase: number) => PhaseCompletionState;
 }) {
   const { selectedState } = useWebLayout();

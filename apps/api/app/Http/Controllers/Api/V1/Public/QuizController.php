@@ -27,7 +27,9 @@ class QuizController extends Controller
      * Public — no authentication required. Returns only active quizzes, paginated. Optionally
      * filter by `state` (state code, e.g. `CA`), `vehicle_type` (name, e.g. `car`), `category`
      * (name, e.g. `road-signs`), `quiz_type` (name, e.g. `final` for exam-simulator quizzes), and
-     * `test_track` (`permit_test` or `driving_test`). All filters are exact-match and combinable.
+     * `test_track` (`permit_test` or `driving_test`), and `slug` (exact match — lets a client
+     * resolve `state` + `vehicle_type` + `slug` to a quiz id without a separate lookup route).
+     * All filters are exact-match and combinable.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -36,6 +38,10 @@ class QuizController extends Controller
             ->with(['category', 'quizType', 'state', 'vehicleType'])
             ->orderBy('order_no')
             ->orderBy('title');
+
+        if ($request->filled('slug')) {
+            $query->where('slug', $request->string('slug'));
+        }
 
         if ($request->filled('state')) {
             $query->whereHas('state', fn ($q) => $q->where('code', $request->string('state')));
@@ -85,7 +91,7 @@ class QuizController extends Controller
         $unlocked = Gate::forUser($request->user('sanctum'))->allows('attempt', $quiz);
 
         if ($unlocked) {
-            $quiz->load(['quizQuestions.answers', 'quizQuestions.media']);
+            $quiz->load(['quizQuestions.answers', 'quizQuestions.media', 'quizQuestions.assets']);
         }
 
         return response()->json([

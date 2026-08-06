@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { CheckoutResponse, Plan } from "@driving-test-app/shared";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -14,12 +15,11 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Check } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
+import { consumePendingCheckoutPlan, setPendingCheckoutPlan } from "@/lib/pendingCheckout";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
 const FEATURES_BY_KEY: Record<string, string[]> = {
-  free: ["Browse every quiz, cheat sheet, and flashcard deck", "Attempt all free (non-premium) practice tests", "Basic progress tracking"],
   weekly: [
-    "Everything in Free, plus:",
     "Full premium question bank",
     "Exam Simulator — timed, DMV-style mock tests",
     "All cheat sheets & flashcard decks",
@@ -28,7 +28,6 @@ const FEATURES_BY_KEY: Record<string, string[]> = {
     "Pass Guarantee eligible",
   ],
   monthly: [
-    "Everything in Free, plus:",
     "Full premium question bank",
     "Exam Simulator — timed, DMV-style mock tests",
     "All cheat sheets & flashcard decks",
@@ -53,12 +52,19 @@ function priceSuffix(plan: Plan): string {
   return plan.billing_interval === "week" ? "/ week" : "/ month";
 }
 
-export default function Pricing() {
-  const { user } = useAuth();
+function PricingInner() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [checkingOutKey, setCheckingOutKey] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  // Set once we've auto-resumed the checkout named by ?checkout=, so we don't re-trigger it on
+  // every render/param change. A ref, not state — it's an internal guard, not something the UI
+  // renders from, so it doesn't need to (and per the set-state-in-effect lint rule, shouldn't)
+  // trigger a re-render.
+  const resumedCheckout = useRef(false);
 
   useEffect(() => {
     api
@@ -69,9 +75,15 @@ export default function Pricing() {
 
   async function handleCheckout(plan: Plan) {
     if (!user) {
-      window.location.assign("/login");
+      // Covers the login/register detour (URL param) and the email-verification-link detour
+      // (localStorage, since that link is server-generated and can't carry our own params).
+      setPendingCheckoutPlan(plan.key);
+      const resumeUrl = `/pricing?checkout=${plan.key}`;
+      window.location.assign(`/login?redirect=${encodeURIComponent(resumeUrl)}`);
       return;
     }
+    // Actually checking out now — clear any stale pending marker so it can't get replayed later.
+    consumePendingCheckoutPlan();
     setCheckoutError(null);
     setCheckingOutKey(plan.key);
     try {
@@ -83,9 +95,27 @@ export default function Pricing() {
     }
   }
 
-  function handleFreePlan() {
-    window.location.assign(user ? "/dashboard" : "/register");
-  }
+  // Resumes a checkout started before an auth detour (see handleCheckout above and
+  // app/login|register's `redirect` param): once the user is authenticated and plans are
+  // loaded, fire the checkout for the plan named by ?checkout= exactly once, then strip the
+  // param so a refresh or back-navigation doesn't re-trigger it.
+  useEffect(() => {
+    if (resumedCheckout.current || authLoading || !user || !plans) return;
+    const checkoutKey = searchParams.get("checkout");
+    if (!checkoutKey) return;
+
+    resumedCheckout.current = true;
+    router.replace("/pricing");
+
+    // Deferred to a microtask: handleCheckout sets state as its first step (checkingOutKey,
+    // checkoutError), and calling that synchronously within an effect body risks cascading
+    // renders — same reason resumedCheckout above is a ref, not state.
+    queueMicrotask(() => {
+      const plan = plans.find((p) => p.key === checkoutKey);
+      if (plan) void handleCheckout(plan);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, plans, searchParams]);
 
   return (
     <WebLayoutProvider>
@@ -103,7 +133,7 @@ export default function Pricing() {
                   ✦ Pricing
                 </Paragraph>
                 <Heading as="h1" className="text-center">
-                  Start Free. Upgrade When You&apos;re Ready to Pass.
+                  Simple Pricing. Cancel Anytime.
                 </Heading>
                 <Paragraph className="max-w-156 text-center" size="xl">
                   No contracts. Cancel anytime in a couple clicks.
@@ -116,7 +146,6 @@ export default function Pricing() {
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-4">
                 {(plans ?? []).map((plan) => {
                   const isPopular = plan.key === "monthly";
-                  const isFree = plan.key === "free";
                   const isCheckingOut = checkingOutKey === plan.key;
 
                   return (
@@ -146,6 +175,11 @@ export default function Pricing() {
                           <Heading as="h2">{formatPrice(plan.price_cents)}</Heading>
                           <Paragraph className="pb-2"> {priceSuffix(plan)} </Paragraph>
                         </div>
+                        {plan.trial_days && (
+                          <Paragraph size="sm" color="primary" className="font-semibold">
+                            {plan.trial_days}-day free trial, then {formatPrice(plan.price_cents)} {priceSuffix(plan)}
+                          </Paragraph>
+                        )}
                         <Separator />
                         <div className="space-y-2">
                           {(FEATURES_BY_KEY[plan.key] ?? []).map((feature) => (
@@ -160,12 +194,14 @@ export default function Pricing() {
                         variant={isPopular ? "primary" : "outline"}
                         className="w-full"
                         disabled={isCheckingOut}
-                        onClick={isFree ? handleFreePlan : () => handleCheckout(plan)}
+                        onClick={() => handleCheckout(plan)}
                       >
                         {isCheckingOut ? (
                           "Redirecting…"
-                        ) : isFree ? (
-                          "Start Free"
+                        ) : plan.trial_days ? (
+                          <>
+                            Start {plan.trial_days}-Day Free Trial <ArrowRight />
+                          </>
                         ) : (
                           <>
                             Get {plan.name} <ArrowRight />
@@ -190,5 +226,13 @@ export default function Pricing() {
         <Footer />
       </div>
     </WebLayoutProvider>
+  );
+}
+
+export default function Pricing() {
+  return (
+    <Suspense>
+      <PricingInner />
+    </Suspense>
   );
 }
