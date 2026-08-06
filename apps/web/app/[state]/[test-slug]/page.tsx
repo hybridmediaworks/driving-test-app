@@ -47,13 +47,10 @@ export default async function WrittenTestPage({
         <HeroSection />
         <PreparingSection />
         <QuickFacts />
-        <WrittenTestContent state={state} testSlug={testSlug} />
 
-        <main className="flex-1">
-          <EmailCaptureSection />
-          <CTASection href={`/${state}/dmv-written-test`} />
-          <Footer />
-        </main>
+        <EmailCaptureSection />
+        <CTASection href={`/${state}/dmv-written-test`} />
+        <Footer />
       </div>
     </WebLayoutProvider>
   );
