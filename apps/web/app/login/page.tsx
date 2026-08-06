@@ -12,6 +12,7 @@ import Paragraph from "@/components/ui/Paragraph";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Spinner from "@/components/ui/Spinner";
 import { ApiError, useAuth } from "@/lib/auth-context";
+import { isValidState, stateToSlug } from "@/lib/usStates";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,7 +31,8 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push("/dashboard");
+      const storedState = localStorage.getItem("selectedState");
+      router.push(storedState && isValidState(storedState) ? `/${stateToSlug(storedState)}` : "/dashboard");
     } catch (err) {
       if (err instanceof ApiError && err.errors) {
         setErrors(err.errors);

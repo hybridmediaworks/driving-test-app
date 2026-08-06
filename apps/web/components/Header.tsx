@@ -107,8 +107,11 @@ export default function Header({
     setActiveDropdown((current) => (current === menu ? null : menu));
   }
 
-  const VehicleIcon = vehicleOptions.find((v) => v.label === selectedVehicle)?.icon ?? Car;
-  const selectedTestTypeOption = testTypeOptions.find((t) => t.value === selectedTestType) ?? testTypeOptions[0];
+  const VehicleIcon =
+    vehicleOptions.find((v) => v.label === selectedVehicle)?.icon ?? Car;
+  const selectedTestTypeOption =
+    testTypeOptions.find((t) => t.value === selectedTestType) ??
+    testTypeOptions[0];
   const TestTypeIcon = selectedTestTypeOption.icon;
   const showNav = !hideNav && (variant === "states" || hasStoredState);
 
@@ -116,7 +119,13 @@ export default function Header({
     <header className="relative w-full px-5 py-4 lg:py-6">
       <div className="mx-auto flex max-w-container items-center justify-between">
         <Link href="/">
-          <Image src="/company-logo.svg" alt="" width={146} height={48} className="w-full max-w-36.5" />
+          <Image
+            src="/company-logo.svg"
+            alt=""
+            width={146}
+            height={48}
+            className="w-full max-w-36.5"
+          />
         </Link>
 
         {showNav && (
@@ -133,7 +142,7 @@ export default function Header({
 
               {activeDropdown === "states" && (
                 <div className="absolute top-full left-0 z-50 mt-2 w-145 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl">
-                  <p className="mb-3 text-xs font-semibold tracking-wide text-gray-400 uppercase">
+                  <p className="mb-3 text-xs font-semibold tracking-wide text-neutral-400 uppercase">
                     Select State
                   </p>
                   <div className="grid grid-cols-3 gap-0.5 text-sm">
@@ -142,8 +151,10 @@ export default function Header({
                         key={state}
                         href={stateHref(state)}
                         onClick={closeStateDropdown}
-                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                          selectedState === state ? "bg-blue-50 font-medium text-blue-600" : ""
+                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-neutral-700 hover:bg-blue-50 hover:text-blue-600 ${
+                          selectedState === state
+                            ? "bg-blue-50 font-medium text-blue-600"
+                            : ""
                         }`}
                       >
                         {state}
@@ -171,7 +182,9 @@ export default function Header({
                       key={item.label}
                       onClick={() => selectVehicle(item.label)}
                       className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                        selectedVehicle === item.label ? "bg-blue-50 font-medium text-blue-600" : ""
+                        selectedVehicle === item.label
+                          ? "bg-blue-50 font-medium text-blue-600"
+                          : ""
                       }`}
                     >
                       <item.icon className="h-4 w-4 text-blue-500" />
@@ -200,7 +213,9 @@ export default function Header({
                         key={item.value}
                         onClick={() => selectTestType(item.value)}
                         className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                          selectedTestType === item.value ? "bg-blue-50 font-medium text-blue-600" : ""
+                          selectedTestType === item.value
+                            ? "bg-blue-50 font-medium text-blue-600"
+                            : ""
                         }`}
                       >
                         <item.icon className="h-4 w-4 text-blue-500" />
@@ -222,7 +237,11 @@ export default function Header({
             <PublicAccountMenu user={user} />
           ) : (
             <>
-              <Button className="p-3! font-medium" variant="ghost" href="/login">
+              <Button
+                className="p-3! font-medium"
+                variant="ghost"
+                href="/login"
+              >
                 Login
               </Button>
               <Button className="py-3! font-semibold" href="/register">
@@ -236,7 +255,11 @@ export default function Header({
           className="flex items-center justify-center rounded-lg p-2 text-neutral-700 hover:bg-neutral-100 lg:hidden"
           onClick={() => setMobileMenuOpen((v) => !v)}
         >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {mobileMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
         </button>
       </div>
 
@@ -269,7 +292,9 @@ export default function Header({
                         href={stateHref(state)}
                         onClick={closeStateDropdown}
                         className={`cursor-pointer rounded-lg px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
-                          selectedState === state ? "bg-blue-50 font-medium text-blue-600" : ""
+                          selectedState === state
+                            ? "bg-blue-50 font-medium text-blue-600"
+                            : ""
                         }`}
                       >
                         {state}
@@ -299,7 +324,9 @@ export default function Header({
                         key={item.label}
                         onClick={() => selectVehicle(item.label)}
                         className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 ${
-                          selectedVehicle === item.label ? "bg-blue-50 font-medium text-blue-600" : ""
+                          selectedVehicle === item.label
+                            ? "bg-blue-50 font-medium text-blue-600"
+                            : ""
                         }`}
                       >
                         <item.icon className="h-4 w-4 text-blue-500" />
@@ -333,7 +360,9 @@ export default function Header({
                       key={item.value}
                       onClick={() => selectTestType(item.value)}
                       className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 ${
-                        selectedTestType === item.value ? "bg-blue-50 font-medium text-blue-600" : ""
+                        selectedTestType === item.value
+                          ? "bg-blue-50 font-medium text-blue-600"
+                          : ""
                       }`}
                     >
                       <item.icon className="h-4 w-4 text-blue-500" />
@@ -350,10 +379,17 @@ export default function Header({
               <PublicAccountMenu user={user} />
             ) : (
               <>
-                <Button className="flex-1 justify-center py-3! font-medium" variant="ghost" href="/login">
+                <Button
+                  className="flex-1 justify-center py-3! font-medium"
+                  variant="ghost"
+                  href="/login"
+                >
                   Login
                 </Button>
-                <Button className="flex-1 justify-center py-3! font-semibold" href="/register">
+                <Button
+                  className="flex-1 justify-center py-3! font-semibold"
+                  href="/register"
+                >
                   Signup
                 </Button>
               </>
