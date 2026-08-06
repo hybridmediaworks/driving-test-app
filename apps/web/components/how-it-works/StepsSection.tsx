@@ -73,9 +73,7 @@ export default function StepsSection() {
           >
             ✦ How it works
           </Paragraph>
-          <Heading as="h2">
-            What actually happens, day one to test day.
-          </Heading>
+          <Heading as="h2">What actually happens, day one to test day.</Heading>
           <Paragraph>
             Same three steps for every learner, in all 47 states we cover.
             Here's what each one looks like from the inside.

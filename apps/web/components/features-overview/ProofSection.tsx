@@ -1,7 +1,6 @@
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { Star } from "lucide-react";
-import { Breadcrumb, BreadcrumbItem } from "../ui/breadcrumb";
 
 const avatars = [
   { initials: "AR", color: "bg-blue-400" },
