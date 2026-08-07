@@ -1,6 +1,7 @@
 import { Check, Circle, XIcon } from "lucide-react";
 import type { PublicQuizQuestion, QuizAttemptAnswer } from "@driving-test-app/shared";
 import Paragraph from "@/components/ui/Paragraph";
+import QuestionAnimation from "@/components/quiz/QuestionAnimation";
 
 export default function QuestionCard({
   question,
@@ -18,12 +19,17 @@ export default function QuestionCard({
   feedback?: QuizAttemptAnswer;
 }) {
   const reviewing = feedback !== undefined;
+  const lottieAsset = question.assets.find((asset) => asset.type === "lottie");
 
   return (
     <div className="rounded-3xl border border-gray-100 bg-white shadow-sm">
-      {question.image_urls.length > 0 && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={question.image_urls[0]} alt="" className="max-h-64 w-full rounded-t-3xl object-cover" />
+      {lottieAsset ? (
+        <QuestionAnimation asset={lottieAsset} className="max-h-64 w-full rounded-t-3xl bg-neutral-50 object-cover" />
+      ) : (
+        question.image_urls.length > 0 && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={question.image_urls[0]} alt="" className="max-h-64 w-full rounded-t-3xl object-cover" />
+        )
       )}
       <div className="p-6">
         <Paragraph color="primary" size="sm" className="mb-2 font-semibold">

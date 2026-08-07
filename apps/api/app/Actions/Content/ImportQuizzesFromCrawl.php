@@ -3,10 +3,12 @@
 namespace App\Actions\Content;
 
 use App\Actions\Quiz\GenerateUniqueSlug;
+use App\Enums\QuizQuestionAssetType;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizCategory;
 use App\Models\QuizQuestion;
+use App\Models\QuizQuestionAsset;
 use App\Models\QuizType;
 use App\Models\State;
 use App\Models\VehicleType;
@@ -273,8 +275,27 @@ class ImportQuizzesFromCrawl
             ]);
         }
 
-        foreach (array_filter((array) ($row['question_images'] ?? [])) as $url) {
-            $this->attachImage($question, (string) $url, $summary);
+        foreach (array_filter((array) ($row['question_images'] ?? [])) as $index => $url) {
+            $url = (string) $url;
+            $extension = Str::lower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+
+            if ($extension === 'json') {
+                // "Road situation" questions link a Lottie vector animation (Bodymovin JSON —
+                // v/fr/ip/op/layers/assets schema), not a raster image: it can't go through
+                // Spatie's `images` media collection (mime-restricted to real image types), so it
+                // gets its own asset row instead, mirroring how video/audio assets already work.
+                QuizQuestionAsset::query()->create([
+                    'quiz_question_id' => $question->id,
+                    'type' => QuizQuestionAssetType::Lottie,
+                    'external_url' => $url,
+                    'sort_order' => $index,
+                ]);
+                $summary->increment('question_assets.lottie_created');
+
+                continue;
+            }
+
+            $this->attachImage($question, $url, $summary);
         }
     }
 

@@ -142,12 +142,22 @@ export type PublicAnswerOption = {
   answer_text: string;
 };
 
+export type QuizQuestionAssetType = "video" | "audio" | "lottie";
+
+export type PublicQuizQuestionAsset = {
+  id: number;
+  type: QuizQuestionAssetType;
+  url: string | null;
+  duration_seconds: number | null;
+};
+
 export type PublicQuizQuestion = {
   id: number;
   question_text: string;
   topic: string | null;
   difficulty: QuizDifficulty;
   image_urls: string[];
+  assets: PublicQuizQuestionAsset[];
   answers: PublicAnswerOption[];
 };
 

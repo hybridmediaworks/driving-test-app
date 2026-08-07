@@ -1,5 +1,6 @@
 import { Volume2 } from "lucide-react";
 import Paragraph from "@/components/ui/Paragraph";
+import QuestionAnimation from "@/components/quiz/QuestionAnimation";
 import type { PublicQuizQuestion } from "@driving-test-app/shared";
 
 /**
@@ -29,6 +30,8 @@ export default function QuestionCard({
   onNextQuestion: () => void;
   onSeeResults: () => void;
 }) {
+  const lottieAsset = question.assets.find((asset) => asset.type === "lottie");
+
   return (
     <>
       <div className="space-y-4">
@@ -44,13 +47,17 @@ export default function QuestionCard({
             {question.question_text}
           </Paragraph>
         </div>
-        {question.image_urls[0] && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={question.image_urls[0]}
-            alt={question.question_text}
-            className="max-h-64 w-full rounded-xl object-cover"
-          />
+        {lottieAsset ? (
+          <QuestionAnimation asset={lottieAsset} />
+        ) : (
+          question.image_urls[0] && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={question.image_urls[0]}
+              alt={question.question_text}
+              className="max-h-64 w-full rounded-xl object-cover"
+            />
+          )
         )}
         <div style={{ zoom: fontScale }}>
           <div className="space-y-3">
