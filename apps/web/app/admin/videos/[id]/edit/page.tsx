@@ -32,6 +32,7 @@ export default function EditVideoPage({ params }: { params: Promise<{ id: string
   const [vehicleTypeId, setVehicleTypeId] = useState("");
   const [testTrack, setTestTrack] = useState<"" | "permit_test" | "driving_test">("");
   const [section, setSection] = useState("");
+  const [subsection, setSubsection] = useState("");
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
@@ -59,6 +60,7 @@ export default function EditVideoPage({ params }: { params: Promise<{ id: string
       setVehicleTypeId(v.vehicle_type_id != null ? String(v.vehicle_type_id) : "");
       setTestTrack(v.test_track ?? "");
       setSection(v.section ?? "");
+      setSubsection(v.subsection ?? "");
       setTitle(v.title);
       setSlug(v.slug);
       setDescription(v.description ?? "");
@@ -86,6 +88,7 @@ export default function EditVideoPage({ params }: { params: Promise<{ id: string
     if (vehicleTypeId) formData.append("vehicle_type_id", vehicleTypeId);
     if (testTrack) formData.append("test_track", testTrack);
     if (section) formData.append("section", section);
+    if (subsection) formData.append("subsection", subsection);
     formData.append("title", title);
     if (slug) formData.append("slug", slug);
     if (description) formData.append("description", description);
@@ -207,6 +210,16 @@ export default function EditVideoPage({ params }: { params: Promise<{ id: string
                 <Label htmlFor="section">Section (optional)</Label>
                 <Input id="section" placeholder="e.g. Parking" value={section} onChange={(e) => setSection(e.target.value)} />
                 <InputError message={errors.section?.[0]} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="subsection">Subsection (optional)</Label>
+                <Input
+                  id="subsection"
+                  placeholder="e.g. Common Mistakes to Avoid"
+                  value={subsection}
+                  onChange={(e) => setSubsection(e.target.value)}
+                />
+                <InputError message={errors.subsection?.[0]} />
               </div>
             </div>
 

@@ -87,6 +87,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
   const duration = formatMinutes(quiz?.duration_seconds);
   const categoryTitle = quiz?.category?.title;
   const agencyName = stateInfo?.agency_name ?? "DMV";
+  const isDrivingTest = quiz?.test_track === "driving_test";
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -129,22 +130,46 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                   </Heading>
                   <div className="mb-2.75 flex flex-wrap items-center gap-1 text-black max-md:order-0 max-md:mb-2.5">
                     <strong className="text-[15px] font-semibold max-md:text-sm">Perfect for:</strong>
-                    <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
-                      Learner&apos;s permit applicants
-                    </div>
-                    <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
-                      First-time adult applicants
-                    </div>
+                    {isDrivingTest ? (
+                      <>
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                          Permit holders ready for the road
+                        </div>
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                          Behind-the-wheel practice
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                          Learner&apos;s permit applicants
+                        </div>
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                          First-time adult applicants
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div className="relative min-h-0! overflow-hidden">
                     <div className="overflow-visible text-[18px] leading-[1.5] font-normal text-[#4e4e59] max-md:relative max-md:m-0 max-md:text-sm max-md:leading-[1.35] max-md:text-black">
                       <div className="block text-[15px] leading-[1.35] text-black! [&_a]:border-b [&_a]:border-transparent [&_a]:text-[#007aff] [&_a]:no-underline [&_a]:transition-colors [&_a:hover]:border-[#007aff] [&_p]:mb-4! max-md:[&_p]:mb-3! [&_strong]:font-semibold">
                         <Paragraph size="sm" className="mb-4!">
-                          To get your {stateName} driver&apos;s license, you must pass three official tests: a
-                          vision exam, a written knowledge test, and a road skills test. If you&apos;re under 18
-                          (and not married or head of household), you must first earn an instruction permit. The
-                          vision and knowledge tests are also required for the permit. If you&apos;re 18 or
-                          older, an instruction permit is optional – useful for supervised driving practice.
+                          {isDrivingTest ? (
+                            <>
+                              To get your {stateName} driver&apos;s license, you must pass three official tests: a
+                              vision exam, a written knowledge test, and a road skills test. Once you&apos;re
+                              driving on your instruction permit, this stage is about building the actual
+                              behind-the-wheel skills and hazard awareness the road test checks for.
+                            </>
+                          ) : (
+                            <>
+                              To get your {stateName} driver&apos;s license, you must pass three official tests: a
+                              vision exam, a written knowledge test, and a road skills test. If you&apos;re under 18
+                              (and not married or head of household), you must first earn an instruction permit. The
+                              vision and knowledge tests are also required for the permit. If you&apos;re 18 or
+                              older, an instruction permit is optional – useful for supervised driving practice.
+                            </>
+                          )}
                         </Paragraph>
                         {quiz && (
                           <Paragraph size="sm" className="mb-4!">
@@ -170,9 +195,19 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                           </Paragraph>
                         )}
                         <Paragraph size="sm" className="mb-4!">
-                          Our AI Assistant can give hints and explanations to speed up your learning. We also
-                          offer an {stateName} DMV Permit Test Study Guide with document checklists, fees, and
-                          frequently missed questions.
+                          {isDrivingTest ? (
+                            <>
+                              Our AI Assistant can give hints and explanations to speed up your learning. We also
+                              offer an {stateName} Driving Test Study Guide covering what examiners check for and
+                              the maneuvers most applicants miss.
+                            </>
+                          ) : (
+                            <>
+                              Our AI Assistant can give hints and explanations to speed up your learning. We also
+                              offer an {stateName} DMV Permit Test Study Guide with document checklists, fees, and
+                              frequently missed questions.
+                            </>
+                          )}
                         </Paragraph>
                       </div>
                     </div>
@@ -188,7 +223,13 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                       className="h-15.5 w-full max-w-139 min-w-100"
                       disabled={!quiz}
                     >
-                      <span id="spnTestStart">Start free {stateCode} permit practice test</span>
+                      <span id="spnTestStart">
+                        {quiz?.locked
+                          ? `Unlock ${stateCode} ${isDrivingTest ? "driving test" : "permit"} practice`
+                          : isDrivingTest
+                            ? `Start free ${stateCode} driving test practice`
+                            : `Start free ${stateCode} permit practice test`}
+                      </span>
                     </Button>
                     <Button id="atBtnPremium" variant="outline" size="lg" className="h-15.5 max-w-139" href="/pricing">
                       Get Full {stateName} Exam Prep
@@ -246,11 +287,14 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                     Daily email practice
                   </Paragraph>
                   <Paragraph color="dark" className="leading-tight font-semibold">
-                    Get a free permit question by email each morning
+                    {isDrivingTest
+                      ? `Get a free driving tip by email each morning`
+                      : `Get a free permit question by email each morning`}
                   </Paragraph>
                   <Paragraph size="xs">
-                    Not ready for a full test right now? Use a 2-minute daily habit to keep permit rules fresh and
-                    spot exam-like patterns before test day.
+                    {isDrivingTest
+                      ? "Not ready for a full test right now? Use a 2-minute daily habit to keep road skills and hazard awareness fresh before test day."
+                      : "Not ready for a full test right now? Use a 2-minute daily habit to keep permit rules fresh and spot exam-like patterns before test day."}
                   </Paragraph>
                 </div>
                 <form
@@ -282,7 +326,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
             <div id="carSiblingEnrich" className="mb-14 w-full text-[#0b0f16] max-md:mx-auto max-md:mb-[38px] max-md:w-full max-md:px-4">
               <section className="mb-11 scroll-mt-24" id="carSiblingFacts">
                 <Heading as="h2" size="2xs" className="mb-2">
-                  {stateName} written test practice: quick facts
+                  {stateName} {isDrivingTest ? "driving test practice" : "written test practice"}: quick facts
                 </Heading>
                 <Paragraph size="md" color="muted" className="mb-5">
                   What&apos;s actually in this test pool.
@@ -310,12 +354,24 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
               <section className="mb-11 scroll-mt-24" id="carSiblingIntent">
                 <div className="rounded-[20px] border border-[#e3e5eb] bg-white px-[30px] py-7 max-md:px-[18px] max-md:py-[22px]">
                   <Heading as="h2" size="2xs" className="mb-2.5">
-                    Can you take the {stateName} written driving test online?
+                    {isDrivingTest
+                      ? `Can you practice for the ${stateName} driving test online?`
+                      : `Can you take the ${stateName} written driving test online?`}
                   </Heading>
                   <Paragraph size="md" className="m-0!">
-                    This page is online practice, not the official DMV exam. Use it to build confidence with the
-                    real question format, then confirm the current {stateCode} testing option with your local{" "}
-                    {agencyName} office before relying on an at-home exam.
+                    {isDrivingTest ? (
+                      <>
+                        This page is online practice, not the official DMV road test. Use it to build familiarity
+                        with real road-skills and hazard scenarios, then confirm the current {stateCode} road test
+                        requirements with your local {agencyName} office before test day.
+                      </>
+                    ) : (
+                      <>
+                        This page is online practice, not the official DMV exam. Use it to build confidence with the
+                        real question format, then confirm the current {stateCode} testing option with your local{" "}
+                        {agencyName} office before relying on an at-home exam.
+                      </>
+                    )}
                   </Paragraph>
                 </div>
               </section>
@@ -363,7 +419,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
 
             <div id="smarterWay" className="mb-10" data-nosnippet="">
               <Heading as="h4" size="2xs" className="m-0 mb-5">
-                A smarter way to study for the permit test
+                {isDrivingTest ? "A smarter way to prep for the driving test" : "A smarter way to study for the permit test"}
               </Heading>
               <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
                 {[
@@ -404,11 +460,12 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
               <div className="grid grid-cols-[minmax(0,1fr)_minmax(300px,360px)] items-center gap-8 rounded-3xl bg-[#0b1220] px-10 py-10 max-md:grid-cols-1 max-md:gap-6 max-md:rounded-2xl max-md:px-6 max-md:py-8">
                 <div className="grid min-w-0 gap-3">
                   <Heading as="h2" size="2xs" color="white" className="m-0!">
-                    Get a free DMV question every morning
+                    {isDrivingTest ? "Get a free driving test tip every morning" : "Get a free DMV question every morning"}
                   </Heading>
                   <Paragraph size="sm" className="m-0! text-gray-400!">
-                    One DMV-style permit question, answer, and plain-English rationale in your inbox. Use it as a
-                    quick daily warm-up before the test.
+                    {isDrivingTest
+                      ? "One road-skills tip and plain-English explanation in your inbox. Use it as a quick daily warm-up before test day."
+                      : "One DMV-style permit question, answer, and plain-English rationale in your inbox. Use it as a quick daily warm-up before the test."}
                   </Paragraph>
                 </div>
                 <form

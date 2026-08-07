@@ -20,10 +20,11 @@ export default function PremiumCTA({
   /** Override for testing/composition — usePhaseCompletion itself already reads the current vehicle/test-track from WebLayoutProvider, so callers don't normally need to pass this. */
   usePhaseData?: (phase: number) => PhaseCompletionState;
 }) {
-  const { selectedState } = useWebLayout();
+  const { selectedState, selectedTestType } = useWebLayout();
   const { isJustFinished, isFullyCompleted } = usePhaseData(
     afterPhase ?? -1,
   );
+  const isDrivingTest = selectedTestType === "driving_test";
 
   return (
     <section className="pt-0 md:pt-12 relative mb-0">
@@ -53,8 +54,17 @@ export default function PremiumCTA({
             <span className="text-blue-500"> 97% of the time</span>
           </Heading>
           <Paragraph className="mb-6 text-neutral-300!">
-            Right-of-way, signals, speed limits, lane rules — the core of the{" "}
-            {selectedState} written exam. Master these first.
+            {isDrivingTest ? (
+              <>
+                Behind-the-wheel maneuvers, hazard awareness, road skills — the core of the {selectedState} driving
+                test. Master these first.
+              </>
+            ) : (
+              <>
+                Right-of-way, signals, speed limits, lane rules — the core of the {selectedState} written exam.
+                Master these first.
+              </>
+            )}
           </Paragraph>
           <Button
             className="w-full md:w-fit bg-yellow-500! border-yellow-500!"

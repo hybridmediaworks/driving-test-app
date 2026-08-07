@@ -141,6 +141,7 @@ function VideosIndexInner() {
                             {v.vehicle_type ? ` · ${v.vehicle_type.title}` : " · All vehicles"}
                             {v.test_track && ` · ${v.test_track === "permit_test" ? "Permit Test" : "Driving Test"}`}
                             {v.section && ` · ${v.section}`}
+                            {v.subsection && ` · ${v.subsection}`}
                             {v.duration_seconds && ` · ${Math.round(v.duration_seconds / 60)} min`}
                           </p>
                           {v.url && (

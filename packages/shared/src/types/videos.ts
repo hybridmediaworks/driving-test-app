@@ -7,6 +7,7 @@ export type Video = {
   vehicle_type_id: number | null;
   test_track: "permit_test" | "driving_test" | null;
   section: string | null;
+  subsection: string | null;
   title: string;
   slug: string;
   description: string | null;
@@ -34,9 +35,11 @@ export type PublicVideo = {
   description: string | null;
   duration_seconds: number | null;
   is_premium: boolean;
+  locked: boolean;
   thumbnail_url: string | null;
   test_track: "permit_test" | "driving_test" | null;
   section: string | null;
+  subsection: string | null;
   category?: { id: number; name: string; title: string } | null;
   state?: { id: number; code: string; name: string } | null;
   vehicle_type?: { id: number; name: string; title: string } | null;

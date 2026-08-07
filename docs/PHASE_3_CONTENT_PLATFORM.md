@@ -121,6 +121,31 @@ after inspecting actual Alabama/Alaska files (noted inline):
    already-captured path (the hazards/timeline data will already exist in the source once the
    richer player is built later; nothing needs re-crawling).
 
+   **Extended after driving-test parity work on the AL/AK sample** (two follow-ups — a schema gap
+   and a rendering gap, both found by actually browsing the imported pages, not guessed):
+   - **`subsection` column** — additive, nullable, same free-text convention as `section`. Some
+     real sections are two levels deep (`Motorcycle Skills Videos` → `Master Your Brakes`,
+     `Mistakes That Can Kill You`, etc. — 5 subsections, 3 videos each). Both crawl-importers
+     (`ImportVideosFromCrawl`, `ImportSimulatorsFromCrawl`) read an optional `subsection` key per
+     row; `DrivingVideosSection.tsx` (new — see Frontend consumption) only groups by it when at
+     least one video in that section actually has one, so the still-common flat case renders
+     exactly as before, no extra heading level for nothing.
+   - **Real thumbnails, sourced not fabricated.** `thumbnail_url` existed on the Resource/model
+     from the start but was never populated — no thumbnail field exists anywhere in the crawl
+     JSON. Rather than a placeholder image, both real sources actually expose a genuine thumbnail:
+     YouTube serves one at a deterministic per-video URL (`img.youtube.com/vi/{id}/hqdefault.jpg`
+     — no API call, always real). Vimeo has no such static pattern, so its real thumbnail is
+     fetched via Vimeo's own public oEmbed endpoint (`vimeo.com/api/oembed.json`) at import time —
+     a genuine network call, not invented. Both importers attach the result to the video's
+     existing (until now unused) `MEDIA_COLLECTION_THUMBNAIL` Spatie collection, only if one isn't
+     already attached — idempotent, so a repeat `content:import` backfills existing rows too, not
+     only newly-created ones. A handful of videos end up with no thumbnail (Vimeo's own oEmbed
+     genuinely omits `thumbnail_url` for them, e.g. every state's "Simulator 9") — logged via
+     `ImportSummary::warn()` and left null, not faked.
+   - **`DurationParser`** extended to parse both real duration formats the site actually uses —
+     `"8:23 min"` (M:SS) and `"19m 21s"` (Xm Ys) — rather than normalizing one format's source text
+     to fit the other's pattern.
+
 6. **`handbooks` / `handbook_chapters` / `handbook_sections`** — new, replacing the originally
    planned single `states.handbook_url` field once the real per-vehicle-type shape was confirmed.
    `handbooks`: `state_id`, `vehicle_type_id` (both FK, restrictOnDelete), `language` (default
@@ -133,6 +158,16 @@ after inspecting actual Alabama/Alaska files (noted inline):
    (not just a PDF link) is deliberate: `CONTENT_LIBRARY_ROADMAP.md`'s AI Tutor mode (b) already
    plans a `FULLTEXT` search over `cheat_sheet_sections`; `handbook_sections` is the same shape and
    a natural second target for that same search once real handbook content exists.
+
+   **Correction (found during the AL/AK zero-fake-data audit)**: `content` never actually holds
+   real handbook prose — the crawl only ever captured the source site's landing-page copy about
+   its own PDF download page ("Enter the password to open this PDF file," "our AI assistant,"
+   etc.), plus a "More from {State}" nav-junk section (now filtered out at import,
+   `ImportHandbookFromCrawl.php`). The real handbook text only exists inside the PDF itself.
+   `apps/web/app/handbook/[id]/page.tsx` was rebuilt to embed that PDF directly (native browser
+   viewer) instead of rendering `handbook_sections.content` as if it were the handbook — the
+   FULLTEXT-search plan above doesn't apply to handbooks until real chapter text is actually
+   sourced (e.g. PDF text extraction), which hasn't been built.
 
 7. **Road-sign study content — no new table**, unchanged from the original plan: imported into the
    already-built `flashcards` table (`topic='road-sign-*'`, `state_id = null` — signs are federally
@@ -201,8 +236,13 @@ identical across both states):
   Motorcycle/
     Permit Test/   (same shape as Car)
     Driving Test/
-      simulators.json         # no videos.json for motorcycle in the sample — fine, the importer
-                               # just processes whichever files exist per folder
+      simulators.json         # real hazard simulators — present for every state
+      videos.json             # instructional videos — ABSENT from the original 40GB crawl for
+                               # every state's Motorcycle/Driving Test folder. For Alabama/Alaska
+                               # specifically this file was sourced separately (see "Supplementary
+                               # video sourcing" below) and dropped into this same folder — the
+                               # importer doesn't care which method produced a videos.json, only
+                               # that its shape matches
 ```
 
 `questions.json` top level: `state`, `category` (vehicle type name), `test_type`, `source_url`,
@@ -268,6 +308,41 @@ data.
      `students_practiced_30d` (distinct `user_id`/`guest_token`), `questions_answered_total`,
      `avg_session_seconds`, `peak_hour`. No nationwide-rank field (see Scope above).
 
+### Supplementary video sourcing (the Alabama/Alaska motorcycle gap)
+
+The original 40GB crawl's `Motorcycle/Driving Test/` folder never included a `videos.json` for any
+state — only `simulators.json`. The live site itself, though, does have real instructional content
+there (`https://driving-tests.org/{state}/motorcycle/`, Driving Test tab: "Learn to Ride" + "Motorcycle
+Skills Videos" sections) — it just wasn't captured by whatever produced the original 40GB handoff.
+Rather than leave motorcycle driving-test pages showing nothing but hazard simulators, Alabama and
+Alaska's gap was closed directly:
+
+1. `curl -A "Mozilla/5.0 ..." <page-url>` — the video data (title, real duration, real
+   `data-yt="<id>"` YouTube id) is in the page's own static HTML, no JS execution needed.
+2. **A real pitfall worth flagging**: this HTML arrives as a handful of gigantic single lines. A
+   `grep -o 'pattern.\{0,9000\}'` with a bounded quantifier over one of those lines hung for
+   several minutes (looks like near-catastrophic backtracking) — use `grep -b -o "pattern"` to get
+   a byte offset instead, then `tail -c +OFFSET file | head -c LENGTH` to slice out a chunk.
+   Instant and reliable.
+3. **Genuineness check, not assumed**: the same overview page also lists the hazard simulators with
+   `data-pid="<id>"` attributes — cross-checked against the `page_id` values already in the
+   existing (already-imported) `simulators.json` for that state, confirming the fetched page is
+   really the same dataset before trusting anything newly parsed from it.
+4. Hand-built a `videos.json` matching the existing file's exact shape (see `questions.json`
+   parallel above) — real titles/ids/durations copied verbatim, `subsection` set from the page's
+   own subsection headings, `url` pointed at the overview page itself (there's no per-video article
+   page for these, unlike Car's `videos.json` entries). Verified valid JSON, dry-run imported,
+   then imported for real, then spot-checked in the DB (parsed `duration_seconds`, `external_url`,
+   `is_premium=false`) before trusting it.
+5. Alaska's set turned out byte-for-byte identical to Alabama's (same MCrider-sourced curated
+   videos, reused across states) — confirmed by actually fetching and diffing Alaska's own page,
+   not assumed from Alabama's.
+
+**Not done**: the other 50 states' `Motorcycle/Driving Test/` folders still lack a `videos.json` —
+either the same manual per-state extraction, or an updated bulk crawl that captures this section,
+would need to happen before this phase's full 52-state rerun (see Implementation sequence below)
+covers it.
+
 ## Frontend consumption (`apps/web`) — car + motorcycle × permit + driving, all 52 states
 
 **Collapse the duplicated component trees.** Today car-permit/car-driving/motorcycle-permit/
@@ -320,6 +395,32 @@ simulated now.
 
 **"Quiz Vault"** stays out of the phase ladder until `CONTENT_LIBRARY_ROADMAP.md`'s already-planned
 "Weak Spots" feature (§2 of that doc) ships — never rendered with placeholder data.
+
+**Driving Test / Permit Test parity, car + motorcycle (AL/AK).** `PermitTestContent.tsx` and
+`DrivingTestContent.tsx` (both vehicle types) were built at different times and drifted: only the
+permit variant included `<LiveDataSection/>`, and several Driving Test surfaces still read as if
+every quiz were a permit written test regardless of the resolved quiz's real `test_track`:
+- `driving-test/HeroSection.tsx` (both vehicle types) had its CTA button literally reading "Start
+  Permit Practice Test" — copy bug, not a data bug. Fixed, and its link now filters
+  `test_track=driving_test`.
+- `permit-test/PremiumCTA.tsx` (shared by both tracks via `PhaseLadderSection`) said "the core of
+  the {state} written exam" under Driving Test too. Now branches on `selectedTestType`.
+- `WrittenTestContent.tsx` — the individual quiz landing page used by both tracks — hardcoded
+  "permit"/"written knowledge test" copy throughout regardless of the resolved quiz's `test_track`.
+  Now branches on it (`isDrivingTest = quiz?.test_track === "driving_test"`). Its primary CTA also
+  used to unconditionally claim "Start free..." even for a quiz that's actually `is_premium` —
+  fixed to check the resolved quiz's real `locked` field and say "Unlock..." instead when true.
+- Added `<LiveDataSection/>` to both Driving Test variants for parity (the component was already
+  fully track-agnostic — zero code changes needed in it).
+- New `DrivingVideosSection.tsx` — real videos/simulators for the current state/vehicle,
+  `test_track=driving_test`, grouped by `section`/`subsection` (see the `videos` table extension
+  above) matching how driving-tests.org itself organizes this content. Each card reuses `StepCard`
+  — the exact same component the quiz/simulator phase-ladder cards already use — so a video card
+  and a quiz card look identical (thumbnail, Free/Premium badge, title, duration); clicking opens
+  a watch dialog (unlocked) or the existing `PremiumDialog` (locked) instead of navigating to a
+  quiz page. This is the only real practice content on Motorcycle Driving Test pages where no
+  question bank exists (see Scope/gaps above) — without it those pages would show an empty phase
+  ladder and nothing else.
 
 ## Implementation sequence
 

@@ -21,6 +21,7 @@ class VideoResource extends JsonResource
             'vehicle_type_id' => $this->vehicle_type_id,
             'test_track' => $this->test_track,
             'section' => $this->section,
+            'subsection' => $this->subsection,
             'title' => $this->title,
             'slug' => $this->slug,
             'description' => $this->description,

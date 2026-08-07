@@ -38,6 +38,7 @@ class UpdateVideoRequest extends FormRequest
             'vehicle_type_id' => ['nullable', 'integer', 'exists:vehicle_types,id'],
             'test_track' => ['nullable', Rule::in(['permit_test', 'driving_test'])],
             'section' => ['nullable', 'string', 'max:255'],
+            'subsection' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable',

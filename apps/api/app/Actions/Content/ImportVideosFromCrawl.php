@@ -50,8 +50,13 @@ class ImportVideosFromCrawl
                 [
                     'slug' => $slug,
                     'section' => $row['section'] ?? null,
+                    // Optional — only present once a crawl captures a two-level section (e.g.
+                    // "Road Test Video Tips" -> "Common Mistakes to Avoid"). Absent today.
+                    'subsection' => $row['subsection'] ?? null,
                     'description' => $this->renderDescription($row['content_sections'] ?? []),
-                    'duration_seconds' => DurationParser::fromMinSecString($title),
+                    // Prefer an explicit `duration` field when the row has one (e.g. "19m 21s") —
+                    // older rows only embed it as a title suffix ("... 1:19 min"), still supported.
+                    'duration_seconds' => DurationParser::fromMinSecString($row['duration'] ?? $title),
                     'source_url' => $row['url'] ?? null,
                     'external_url' => $embedUrl,
                     'is_premium' => false,
@@ -60,6 +65,27 @@ class ImportVideosFromCrawl
                 ],
             );
             $summary->increment($video->wasRecentlyCreated ? 'videos.created' : 'videos.updated');
+
+            $this->attachThumbnail($video, $row['youtube_id'] ?? null, $title, $summary);
+        }
+    }
+
+    /**
+     * YouTube serves a real static thumbnail for any video id at a well-known, deterministic URL
+     * — no API call needed, unlike Vimeo (see ImportSimulatorsFromCrawl). Backfills existing rows
+     * too (idempotent re-import), not just newly created ones.
+     */
+    private function attachThumbnail(Video $video, ?string $youtubeId, string $title, ImportSummary $summary): void
+    {
+        if ($youtubeId === null || $video->getFirstMedia(Video::MEDIA_COLLECTION_THUMBNAIL) !== null) {
+            return;
+        }
+
+        try {
+            $video->addMediaFromUrl("https://img.youtube.com/vi/{$youtubeId}/hqdefault.jpg")
+                ->toMediaCollection(Video::MEDIA_COLLECTION_THUMBNAIL);
+        } catch (\Throwable $e) {
+            $summary->warn("Could not fetch YouTube thumbnail for \"{$title}\": {$e->getMessage()}");
         }
     }
 

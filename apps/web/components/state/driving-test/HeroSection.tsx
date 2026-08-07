@@ -9,7 +9,9 @@ import { ArrowRight, BadgeCheck, Play } from "lucide-react";
 
 export default function HeroSection() {
   const { selectedState } = useWebLayout();
-  const quizzesHref = selectedState ? `/quizzes?state=${stateAbbreviations[selectedState]}` : "/quizzes";
+  const quizzesHref = selectedState
+    ? `/quizzes?state=${stateAbbreviations[selectedState]}&test_track=driving_test`
+    : "/quizzes?test_track=driving_test";
 
   return (
     <section className="py-15 lg:py-30 px-5">
@@ -24,7 +26,7 @@ export default function HeroSection() {
             className="w-full md:w-fit"
             href={quizzesHref}
           >
-            Start Permit Practice Test <ArrowRight />
+            Start Driving Test Practice <ArrowRight />
           </Button>
         </div>
         <div className="max-w-152 w-full relative rounded-xl space-y-5 bg-blue-100 bg-cover bg-center ps-10 pb-10">

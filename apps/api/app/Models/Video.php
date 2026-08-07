@@ -23,6 +23,7 @@ class Video extends Model implements HasMedia
         'vehicle_type_id',
         'test_track',
         'section',
+        'subsection',
         'title',
         'slug',
         'description',
