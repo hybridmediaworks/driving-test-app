@@ -43,7 +43,7 @@ export default function FeaturesSection() {
                   <Heading as="h3" size="xs" className="pt-2" color="white">
                     AI Driving Tutor
                   </Heading>
-                  <Paragraph className="text-white/62">
+                  <Paragraph className="text-neutral-300!">
                     Ask anything. Get explained answers, weak-spot drills, and a
                     study plan that adapts after every question.
                   </Paragraph>
@@ -53,7 +53,7 @@ export default function FeaturesSection() {
                     <Paragraph className="ms-auto mr-0 w-[85%] rounded-xl rounded-br-lg bg-blue-700 px-3 py-2 text-[13px] text-neutral-50!">
                       Why is it 3 seconds, not 2?
                     </Paragraph>
-                    <Paragraph className="ms-0 mr-auto w-[85%] rounded-xl rounded-bl-lg bg-blue-900 px-3 py-2 text-[13px] text-[#E8E8EC]!">
+                    <Paragraph className="ms-0 mr-auto w-[85%] rounded-xl rounded-bl-lg bg-blue-900 px-3 py-2 text-[13px] text-neutral-200!">
                       The 3-second rule gives safe stopping distance at speed.
                       At 60 mph you cover ~88 ft/sec — 2 seconds leaves too
                       little margin in the rain.
@@ -78,7 +78,7 @@ export default function FeaturesSection() {
               <Paragraph>
                 Real DMV format, real timing, instant scoring.
               </Paragraph>
-              <div className="flex h-auto justify-end overflow-hidden rounded-xl border border-[#E7E6E1] bg-blue-200 pt-2.25 lg:h-96">
+              <div className="flex h-auto justify-end overflow-hidden rounded-xl border border-background3 bg-blue-200 pt-2.25 lg:h-96">
                 <Image
                   src="/mock-exam.png"
                   alt=""

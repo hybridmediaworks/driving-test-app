@@ -12,6 +12,7 @@ import Paragraph from "@/components/ui/Paragraph";
 import PasswordInput from "@/components/ui/PasswordInput";
 import Spinner from "@/components/ui/Spinner";
 import { ApiError, useAuth } from "@/lib/auth-context";
+import { isValidState, stateToSlug } from "@/lib/usStates";
 
 function LoginPageInner() {
   const router = useRouter();
@@ -34,7 +35,12 @@ function LoginPageInner() {
 
     try {
       await login(email, password);
-      router.push(redirect || "/dashboard");
+      const storedState = localStorage.getItem("selectedState");
+      router.push(
+        storedState && isValidState(storedState)
+          ? `/${stateToSlug(storedState)}`
+          : "/dashboard",
+      );
     } catch (err) {
       if (err instanceof ApiError && err.errors) {
         setErrors(err.errors);
@@ -45,7 +51,10 @@ function LoginPageInner() {
   }
 
   return (
-    <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+    <AuthLayout
+      title="Log in to your account"
+      description="Enter your email and password below to log in"
+    >
       <form className="flex flex-col gap-6" onSubmit={submit}>
         <div className="grid gap-6">
           <div className="grid gap-2">
@@ -68,7 +77,12 @@ function LoginPageInner() {
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <Button variant="ghost" size="sm" className="p-0!" href="/forgot-password">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-0!"
+                href="/forgot-password"
+              >
                 Forgot password?
               </Button>
             </div>
@@ -97,7 +111,11 @@ function LoginPageInner() {
             </Label>
           </div>
 
-          <Button type="submit" className="mt-4 w-full justify-center" disabled={processing}>
+          <Button
+            type="submit"
+            className="mt-4 w-full justify-center"
+            disabled={processing}
+          >
             {processing && <Spinner />}
             Log in
           </Button>
@@ -109,7 +127,11 @@ function LoginPageInner() {
             variant="ghost"
             size="md"
             className="p-0!"
-            href={redirect ? `/register?redirect=${encodeURIComponent(redirect)}` : "/register"}
+            href={
+              redirect
+                ? `/register?redirect=${encodeURIComponent(redirect)}`
+                : "/register"
+            }
           >
             Sign Up
           </Button>

@@ -63,7 +63,7 @@ const stepCards: StepCard[] = [
 
 export default function StepsSection() {
   return (
-    <section className="py-15 md:space-y-15 lg:py-30 bg-[#F2F1EC]">
+    <section className="py-15 md:space-y-15 lg:py-30 bg-background2">
       <div className="mx-auto max-w-container space-y-12 px-5">
         <div className="space-y-4 max-w-167">
           <Paragraph
@@ -73,9 +73,7 @@ export default function StepsSection() {
           >
             ✦ How it works
           </Paragraph>
-          <Heading as="h2">
-            What actually happens, day one to test day.
-          </Heading>
+          <Heading as="h2">What actually happens, day one to test day.</Heading>
           <Paragraph>
             Same three steps for every learner, in all 47 states we cover.
             Here's what each one looks like from the inside.
@@ -86,7 +84,7 @@ export default function StepsSection() {
           {stepCards.map((step) => (
             <div
               key={step.number}
-              className="relative rounded-2xl border bg-white p-5 lg:p-8 flex flex-col justify-between gap-14 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]"
+              className="relative rounded-2xl border bg-white p-5 lg:p-8 flex flex-col justify-between gap-14 shadow-card"
             >
               <div className="hidden lg:flex items-center justify-center absolute left-0 -top-10.75 w-full">
                 <svg
@@ -102,13 +100,13 @@ export default function StepsSection() {
                   />
                   <path
                     d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
-                    stroke="#E7E6E1"
+                    stroke="var(--background3)"
                     stroke-width="1.2"
                   />
                 </svg>
               </div>
               <div className="space-y-5">
-                <div className="flex h-15 w-15 items-center justify-center rounded-full border shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+                <div className="flex h-15 w-15 items-center justify-center rounded-full border shadow-card">
                   <Heading size="xs" color="primary">
                     {step.number}
                   </Heading>

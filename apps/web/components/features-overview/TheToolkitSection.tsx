@@ -15,7 +15,7 @@ import Button from "@/components/ui/Button";
 export default function TheToolkitSection() {
   return (
     <section
-      className="bg-auto bg-top-right bg-no-repeat px-5 py-10  lg:py-30 bg-[#F2F1EC]"
+      className="bg-auto bg-top-right bg-no-repeat px-5 py-10  lg:py-30 bg-background2"
       style={{ backgroundImage: "url('/thetoolkit-img.png')" }}
     >
       <div className="mx-auto max-w-container space-y-12">
@@ -35,7 +35,7 @@ export default function TheToolkitSection() {
         </div>
         <div className="space-y-5">
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 md:grid-cols-2">
-            <div className="md:col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-[#0D142C] p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="md:col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-blue-1000 p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <BrainCircuit className="bg-white/8 p-3.5 rounded-[11px] w-14 h-14 text-blue-300" />
                 <Heading as="h3" size="lg" className="mb-2" color="white">
@@ -75,7 +75,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <NotepadText className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -113,12 +113,12 @@ export default function TheToolkitSection() {
                     </Paragraph>
                   </div>
                 </div>
-                <Button variant="ghost" className="p-0!">
+                <Button variant="ghost" className="p-0!" href="/exam-simulator">
                   Explore Mock Exams <ArrowRight className="w-5" />
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <CarFront className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -146,7 +146,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <Mic className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -174,7 +174,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <ChartColumn className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -205,7 +205,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <Copy className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -231,12 +231,12 @@ export default function TheToolkitSection() {
                   </div>
                   <img src="flashcards.svg" alt="" />
                 </div>
-                <Button variant="ghost" className="p-0!">
+                <Button variant="ghost" className="p-0!" href="/flashcards">
                   Explore Flashcards <ArrowRight className="w-5" />
                 </Button>
               </div>
             </div>
-            <div className="md:col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-[#0D142C] p-5 lg:p-7 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <div className="md:col-span-2 flex flex-col justify-between gap-6 relative rounded-2xl border bg-blue-1000 p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <TvMinimalPlay className="bg-white/8 p-3.5 rounded-[11px] w-14 h-14 text-blue-300" />
                 <Heading as="h3" size="lg" className="mb-2" color="white">

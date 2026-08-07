@@ -1,7 +1,6 @@
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { Star } from "lucide-react";
-import { Breadcrumb, BreadcrumbItem } from "../ui/breadcrumb";
 
 const avatars = [
   { initials: "AR", color: "bg-blue-400" },
@@ -28,7 +27,7 @@ const stats = [
 
 export default function ProofSection() {
   return (
-    <section className="px-5 py-10  lg:py-30 bg-[#F2F1EC]">
+    <section className="px-5 py-10  lg:py-30 bg-background2">
       <div className="mx-auto max-w-container space-y-8 flex flex-col lg:flex-row justify-between items-center">
         <div className="lg:max-w-147.5 space-y-4">
           <Paragraph

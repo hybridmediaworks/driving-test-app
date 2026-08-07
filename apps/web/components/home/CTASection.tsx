@@ -9,11 +9,12 @@ import StateSelectModal from "@/components/home/StateSelectModal";
 import { stateToSlug } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
-export default function CTASection() {
+export default function CTASection({ href }: { href?: string } = {}) {
   const { selectedState, hasStoredState } = useWebLayout();
   const [showStateModal, setShowStateModal] = useState(false);
 
-  const stateHref = hasStoredState ? `/${stateToSlug(selectedState)}` : undefined;
+  const stateHref =
+    href ?? (hasStoredState ? `/${stateToSlug(selectedState)}` : undefined);
 
   function onStartClick() {
     if (!hasStoredState) {
@@ -22,7 +23,10 @@ export default function CTASection() {
   }
 
   return (
-    <section className="px-5 py-10 lg:py-20" style={{ backgroundImage: "url('/bottom-sec.webp')" }}>
+    <section
+      className="px-5 py-10 lg:py-20"
+      style={{ backgroundImage: "url('/bottom-sec.webp')" }}
+    >
       <div className="mx-auto max-w-4xl space-y-3 text-center">
         <div className="mx-auto mb-6 flex max-w-fit items-center gap-2 rounded-full bg-blue-100 py-1.5 ps-2 pe-4">
           <span className="rounded-full bg-blue-500 px-4 py-1.5 text-[11px] font-bold tracking-[1.2px] text-white uppercase">
@@ -34,8 +38,8 @@ export default function CTASection() {
         </div>
         <Heading as="h2">Your license is 15 minutes away</Heading>
         <Paragraph>
-          Join 4.8 million drivers who prepared smarter, not harder. Your first practice test is
-          completely free.
+          Join 4.8 million drivers who prepared smarter, not harder. Your first
+          practice test is completely free.
         </Paragraph>
         <div className="mx-auto lg:-mb-5!">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -53,10 +57,15 @@ export default function CTASection() {
           href={stateHref}
           onClick={onStartClick}
         >
-          {hasStoredState ? `Start Free ${selectedState} Practice Test` : "Try it for free"}
+          {hasStoredState
+            ? `Start Free ${selectedState} Practice Test`
+            : "Try it for free"}
         </Button>
 
-        <StateSelectModal open={showStateModal} onClose={() => setShowStateModal(false)} />
+        <StateSelectModal
+          open={showStateModal}
+          onClose={() => setShowStateModal(false)}
+        />
       </div>
     </section>
   );

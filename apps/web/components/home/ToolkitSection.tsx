@@ -79,7 +79,9 @@ export default function ToolkitSection() {
               href={stateHref}
               onClick={onStartClick}
             >
-              {hasStoredState ? `Start Free ${selectedState} Practice Test` : "Try it for free"}{" "}
+              {hasStoredState
+                ? `Start Free ${selectedState} Practice Test`
+                : "Try it for free"}{" "}
               <ArrowRight />
             </Button>
           </div>
@@ -189,7 +191,10 @@ export default function ToolkitSection() {
           </div>
         </div>
 
-        <StateSelectModal open={showStateModal} onClose={() => setShowStateModal(false)} />
+        <StateSelectModal
+          open={showStateModal}
+          onClose={() => setShowStateModal(false)}
+        />
       </div>
     </section>
   );

@@ -25,7 +25,7 @@ export default function WhyItWorksSection() {
           </Paragraph>
         </div>
         <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
-          <div className="relative rounded-2xl border bg-white p-5 lg:p-8 space-y-6 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+          <div className="relative rounded-2xl border bg-white p-5 lg:p-8 space-y-6 shadow-card">
             <BrainCircuit className="bg-blue-50 p-3.5 rounded-[11px] w-13.5 h-13.5 text-blue-600" />
             <Heading size="sm" className="mb-3">
               Adaptive AI, not a fixed deck
@@ -41,7 +41,7 @@ export default function WhyItWorksSection() {
               set. [Dummy data — CLIENT TO CONFIRM]
             </Paragraph>
           </div>
-          <div className="relative rounded-2xl border bg-white p-5 lg:p-8 space-y-6 shadow-[0_1px_2px_0px_rgba(0,0,0,0.05)]">
+          <div className="relative rounded-2xl border bg-white p-5 lg:p-8 space-y-6 shadow-card">
             <Database className="bg-blue-50 p-3.5 rounded-[11px] w-13.5 h-13.5 text-blue-600" />
             <Heading size="sm" className="mb-3">
               Adaptive AI, not a fixed deck

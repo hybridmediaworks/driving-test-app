@@ -186,8 +186,8 @@ export default function MapSection() {
           </Paragraph>
         </div>
 
-        <div className="flex flex-col items-center gap-8 lg:flex-row lg:justify-between lg:gap-5">
-          <div ref={chartRef} className="h-85 w-full max-w-[974px] lg:h-156.5" />
+        <div className="flex flex-col items-center gap-8 xl:flex-row lg:justify-between lg:gap-5">
+          <div ref={chartRef} className="h-85 w-full max-w-243.5 lg:h-156.5" />
 
           <div className="w-full space-y-6 lg:w-auto lg:min-w-fit">
             <Paragraph className="text-center font-bold lg:text-left">
