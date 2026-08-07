@@ -21,23 +21,21 @@ import {
 } from "@/lib/pendingCheckout";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
+// Weekly and Monthly currently unlock identical features (the backend's Feature enum has no
+// per-plan differentiation yet — see docs/SUBSCRIPTION_ROADMAP.md §1), hence one shared list
+// instead of two copies that could silently drift apart if edited separately.
+const STANDARD_PLAN_FEATURES = [
+  "Full premium question bank",
+  "Exam Simulator — timed, DMV-style mock tests",
+  "All cheat sheets & flashcard decks",
+  "Ad-free",
+  "Priority support",
+  "Pass Guarantee eligible",
+];
+
 const FEATURES_BY_KEY: Record<string, string[]> = {
-  weekly: [
-    "Full premium question bank",
-    "Exam Simulator — timed, DMV-style mock tests",
-    "All cheat sheets & flashcard decks",
-    "Ad-free",
-    "Priority support",
-    "Pass Guarantee eligible",
-  ],
-  monthly: [
-    "Full premium question bank",
-    "Exam Simulator — timed, DMV-style mock tests",
-    "All cheat sheets & flashcard decks",
-    "Ad-free",
-    "Priority support",
-    "Pass Guarantee eligible",
-  ],
+  weekly: STANDARD_PLAN_FEATURES,
+  monthly: STANDARD_PLAN_FEATURES,
   lifetime_family: [
     "Everything in Monthly, for every seat",
     "One-time payment, no renewals",
