@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import type { PublicQuiz } from "@driving-test-app/shared";
 
 export default function QuizCard({ quiz }: { quiz: PublicQuiz }) {
@@ -13,7 +14,10 @@ export default function QuizCard({ quiz }: { quiz: PublicQuiz }) {
         <h3 className="font-semibold text-neutral-900">{quiz.title}</h3>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {quiz.is_premium && (
-            <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">Premium</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">
+              Premium
+              {quiz.locked && <Lock className="h-3 w-3" />}
+            </span>
           )}
           {isExam && (
             <span className="inline-flex rounded-full bg-blue-500/15 px-2 py-0.5 text-xs text-blue-800">Exam simulation</span>

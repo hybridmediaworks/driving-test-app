@@ -59,7 +59,7 @@ export default function StepCard({
         />
       )}
       {(step.image ||
-        step.type === "premium" ||
+        step.locked ||
         step.status === "next" ||
         step.type === "free") && (
         <div
@@ -73,15 +73,15 @@ export default function StepCard({
               className="md:h-32 h-18 w-full md:rounded-xl rounded-md object-cover transition-all duration-300"
             />
           )}
-          {(step.type === "premium" || step.status === "next") && (
+          {(step.locked || step.status === "next") && (
             <div
               className={`absolute inset-0 flex items-center justify-center md:rounded-xl rounded-md ${
-                step.type === "premium" && step.status !== "next"
+                step.locked && step.status !== "next"
                   ? "bg-white/60 backdrop-blur-[2px] group-hover:bg-linear-to-r group-hover:from-blue-500 group-hover:to-blue-700"
                   : ""
               }`}
             >
-              {step.type === "premium" && step.status !== "next" && (
+              {step.locked && step.status !== "next" && (
                 <>
                   <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
                     <Gem className="text-blue-600 w-8 h-8 " />

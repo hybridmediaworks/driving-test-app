@@ -119,8 +119,16 @@ export default function BillingSettingsPage() {
               </p>
               <p className="text-sm">
                 <span className="font-semibold">Status: </span>
-                {subscription.status}
+                {subscription.subscription?.on_trial ? "Free trial" : subscription.status}
               </p>
+              {subscription.subscription?.on_trial && subscription.subscription.trial_ends_at && (
+                <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
+                  You&apos;re on a free trial until{" "}
+                  <strong>{new Date(subscription.subscription.trial_ends_at).toLocaleDateString()}</strong>. After
+                  that, your card will be charged automatically for the {TIER_LABELS[subscription.tier] ?? subscription.tier}{" "}
+                  plan unless you cancel first.
+                </p>
+              )}
               {subscription.subscription?.canceled && subscription.access_until && (
                 <p className="text-sm text-muted-foreground">
                   Access continues until {new Date(subscription.access_until).toLocaleDateString()}.

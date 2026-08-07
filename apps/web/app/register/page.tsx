@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -12,9 +12,15 @@ import PasswordInput from "@/components/ui/PasswordInput";
 import Spinner from "@/components/ui/Spinner";
 import { ApiError, useAuth } from "@/lib/auth-context";
 
-export default function RegisterPage() {
+function RegisterPageInner() {
   const router = useRouter();
   const { register } = useAuth();
+  const searchParams = useSearchParams();
+  // Same purpose as the login page's redirect param — e.g. resuming a checkout the user
+  // started before we sent them here to create an account. Registration doesn't require a
+  // verified email to check out (no verification middleware on the billing routes), so it's
+  // safe to go straight there instead of the default /verify-email reminder.
+  const redirect = searchParams.get("redirect");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,7 +36,7 @@ export default function RegisterPage() {
 
     try {
       await register(name, email, password, passwordConfirmation);
-      router.push("/verify-email");
+      router.push(redirect || "/verify-email");
     } catch (err) {
       if (err instanceof ApiError && err.errors) {
         setErrors(err.errors);
@@ -115,11 +121,24 @@ export default function RegisterPage() {
 
         <Paragraph className="text-center">
           Already have an account?{" "}
-          <Button variant="ghost" size="md" className="p-0!" href="/login">
+          <Button
+            variant="ghost"
+            size="md"
+            className="p-0!"
+            href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : "/login"}
+          >
             Log in
           </Button>
         </Paragraph>
       </form>
     </AuthLayout>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterPageInner />
+    </Suspense>
   );
 }

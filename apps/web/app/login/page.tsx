@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Button from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -14,9 +14,13 @@ import Spinner from "@/components/ui/Spinner";
 import { ApiError, useAuth } from "@/lib/auth-context";
 import { isValidState, stateToSlug } from "@/lib/usStates";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
   const { login } = useAuth();
+  const searchParams = useSearchParams();
+  // Where to land after a successful login — e.g. back at /pricing to resume a checkout the
+  // user started before we sent them here to authenticate. Falls back to the dashboard.
+  const redirect = searchParams.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +36,11 @@ export default function LoginPage() {
     try {
       await login(email, password);
       const storedState = localStorage.getItem("selectedState");
-      router.push(storedState && isValidState(storedState) ? `/${stateToSlug(storedState)}` : "/dashboard");
+      router.push(
+        storedState && isValidState(storedState)
+          ? `/${stateToSlug(storedState)}`
+          : "/dashboard",
+      );
     } catch (err) {
       if (err instanceof ApiError && err.errors) {
         setErrors(err.errors);
@@ -43,7 +51,10 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+    <AuthLayout
+      title="Log in to your account"
+      description="Enter your email and password below to log in"
+    >
       <form className="flex flex-col gap-6" onSubmit={submit}>
         <div className="grid gap-6">
           <div className="grid gap-2">
@@ -66,7 +77,12 @@ export default function LoginPage() {
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <Button variant="ghost" size="sm" className="p-0!" href="/forgot-password">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-0!"
+                href="/forgot-password"
+              >
                 Forgot password?
               </Button>
             </div>
@@ -95,7 +111,11 @@ export default function LoginPage() {
             </Label>
           </div>
 
-          <Button type="submit" className="mt-4 w-full justify-center" disabled={processing}>
+          <Button
+            type="submit"
+            className="mt-4 w-full justify-center"
+            disabled={processing}
+          >
             {processing && <Spinner />}
             Log in
           </Button>
@@ -103,11 +123,28 @@ export default function LoginPage() {
 
         <Paragraph className="text-center">
           Don&apos;t have an account?{" "}
-          <Button variant="ghost" size="md" className="p-0!" href="/register">
+          <Button
+            variant="ghost"
+            size="md"
+            className="p-0!"
+            href={
+              redirect
+                ? `/register?redirect=${encodeURIComponent(redirect)}`
+                : "/register"
+            }
+          >
             Sign Up
           </Button>
         </Paragraph>
       </form>
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageInner />
+    </Suspense>
   );
 }

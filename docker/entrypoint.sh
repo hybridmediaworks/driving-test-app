@@ -6,12 +6,14 @@ envsubst '${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 cd /var/www/apps/api
 
-mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
-touch database/database.sqlite
+# DB_DATABASE points at the mounted persistent disk in production (render.yaml); falls back to
+# the ephemeral in-container path for local/docker-compose use where no disk is mounted.
+DB_PATH="${DB_DATABASE:-database/database.sqlite}"
+mkdir -p "$(dirname "$DB_PATH")" storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+[ -f "$DB_PATH" ] || touch "$DB_PATH"
 
 php artisan config:clear
-php artisan migrate:fresh --force
-php artisan db:seed --force
+php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
 

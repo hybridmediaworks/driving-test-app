@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class QuizQuestion extends Model implements HasMedia
 {
@@ -43,6 +44,14 @@ class QuizQuestion extends Model implements HasMedia
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
     }
 
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(480)
+            ->format('webp')
+            ->performOnCollections(self::MEDIA_COLLECTION_IMAGES);
+    }
+
     /**
      * @return Attribute<list<string>, never>
      */
@@ -68,5 +77,13 @@ class QuizQuestion extends Model implements HasMedia
     public function answers(): HasMany
     {
         return $this->hasMany(QuizAnswer::class)->orderBy('sort_order');
+    }
+
+    /**
+     * @return HasMany<QuizQuestionAsset, $this>
+     */
+    public function assets(): HasMany
+    {
+        return $this->hasMany(QuizQuestionAsset::class)->orderBy('sort_order');
     }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@driving-test-app/shared";
 import { api, setToken, ApiError } from "./api";
@@ -65,6 +66,32 @@ export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
+}
+
+/**
+ * The single place every "Log out" trigger in the app should call through, instead of calling
+ * `useAuth().logout()` directly — wraps the raw API call + token/user clearing with a consistent
+ * redirect and a `pending` flag, so every button behaves the same (and can't double-fire) no
+ * matter which page it lives on, rather than each call site improvising its own navigation (or
+ * relying on a route guard to notice `user` went null).
+ */
+export function useLogout() {
+  const { logout } = useAuth();
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+
+  async function performLogout(redirectTo = "/login") {
+    if (pending) return;
+    setPending(true);
+    try {
+      await logout();
+      router.replace(redirectTo);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return { logout: performLogout, pending };
 }
 
 /**

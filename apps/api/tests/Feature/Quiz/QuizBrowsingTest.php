@@ -5,6 +5,7 @@ namespace Tests\Feature\Quiz;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizQuestion;
+use App\Models\QuizQuestionAsset;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -35,6 +36,18 @@ class QuizBrowsingTest extends TestCase
         Quiz::factory()->create(['is_active' => true]);
 
         $response = $this->getJson('/api/v1/quizzes?state=CA&vehicle_type=motorcycle&category=road-signs');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertEquals([$match->id], $ids->all());
+    }
+
+    public function test_index_filters_by_slug(): void
+    {
+        $match = Quiz::factory()->create(['is_active' => true, 'slug' => 'ca-permit-practice-test-1']);
+        Quiz::factory()->create(['is_active' => true, 'slug' => 'ca-permit-practice-test-2']);
+
+        $response = $this->getJson('/api/v1/quizzes?slug=ca-permit-practice-test-1');
 
         $response->assertOk();
         $ids = collect($response->json('data'))->pluck('id');
@@ -72,6 +85,24 @@ class QuizBrowsingTest extends TestCase
                 $this->assertArrayHasKey('answer_text', $answer);
             }
         }
+    }
+
+    public function test_show_includes_a_question_s_hazard_perception_assets(): void
+    {
+        $quiz = Quiz::factory()->create(['is_active' => true]);
+        $question = QuizQuestion::factory()->for($quiz, 'quiz')->create();
+        QuizQuestionAsset::factory()->for($question, 'quizQuestion')->create([
+            'type' => 'video',
+            'external_url' => 'https://example.com/hazard-1.mp4',
+            'duration_seconds' => 12,
+        ]);
+
+        $response = $this->getJson("/api/v1/quizzes/{$quiz->id}");
+
+        $response->assertOk();
+        $response->assertJsonPath('questions.0.assets.0.type', 'video');
+        $response->assertJsonPath('questions.0.assets.0.url', 'https://example.com/hazard-1.mp4');
+        $response->assertJsonPath('questions.0.assets.0.duration_seconds', 12);
     }
 
     public function test_show_blocks_inactive_quiz(): void

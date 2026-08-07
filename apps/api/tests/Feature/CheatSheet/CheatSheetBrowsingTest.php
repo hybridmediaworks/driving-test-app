@@ -15,8 +15,8 @@ use Tests\TestCase;
 
 class CheatSheetBrowsingTest extends TestCase
 {
-    use RefreshDatabase;
     use AuthenticatesWithBearerToken;
+    use RefreshDatabase;
 
     private function makeActiveSubscriber(): User
     {
@@ -142,5 +142,37 @@ class CheatSheetBrowsingTest extends TestCase
         $response->assertOk();
         $ids = collect($response->json('data'))->pluck('id');
         $this->assertEqualsCanonicalizing([$signSheet->id], $ids->all());
+    }
+
+    /**
+     * Same gap as QuizResource's list endpoint: previously the browse/list endpoint only ever
+     * returned the sheet's own `is_premium` flag, never a per-user `locked` field, so an active
+     * subscriber's browse view looked identical to a guest's for every premium sheet.
+     */
+    public function test_guest_sees_locked_true_for_a_premium_sheet_in_the_index(): void
+    {
+        $sheet = CheatSheet::factory()->create(['is_premium' => true, 'is_active' => true]);
+
+        $response = $this->getJson('/api/v1/cheat-sheets');
+
+        $response->assertOk();
+        $row = collect($response->json('data'))->firstWhere('id', $sheet->id);
+        $this->assertNotNull($row);
+        $this->assertTrue($row['is_premium']);
+        $this->assertTrue($row['locked']);
+    }
+
+    public function test_active_subscriber_sees_locked_false_for_a_premium_sheet_in_the_index(): void
+    {
+        $sheet = CheatSheet::factory()->create(['is_premium' => true, 'is_active' => true]);
+        $subscriber = $this->makeActiveSubscriber();
+
+        $response = $this->withUserToken($subscriber)->getJson('/api/v1/cheat-sheets');
+
+        $response->assertOk();
+        $row = collect($response->json('data'))->firstWhere('id', $sheet->id);
+        $this->assertNotNull($row);
+        $this->assertTrue($row['is_premium']);
+        $this->assertFalse($row['locked']);
     }
 }

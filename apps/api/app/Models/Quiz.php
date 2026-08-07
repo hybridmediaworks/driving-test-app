@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TestTrack;
+use App\Models\Concerns\BelongsToStateAndVehicleType;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Quiz extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use BelongsToStateAndVehicleType, HasFactory, InteractsWithMedia;
 
     public const MEDIA_COLLECTION_COVER = 'cover';
 
@@ -25,6 +26,7 @@ class Quiz extends Model implements HasMedia
         'vehicle_type_id',
         'title',
         'slug',
+        'source_url',
         'order_no',
         'test_track',
         'total_questions',
@@ -54,6 +56,14 @@ class Quiz extends Model implements HasMedia
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
     }
 
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(800)
+            ->format('webp')
+            ->performOnCollections(self::MEDIA_COLLECTION_COVER);
+    }
+
     /**
      * @return BelongsTo<QuizCategory, $this>
      */
@@ -68,22 +78,6 @@ class Quiz extends Model implements HasMedia
     public function quizType(): BelongsTo
     {
         return $this->belongsTo(QuizType::class);
-    }
-
-    /**
-     * @return BelongsTo<State, $this>
-     */
-    public function state(): BelongsTo
-    {
-        return $this->belongsTo(State::class);
-    }
-
-    /**
-     * @return BelongsTo<VehicleType, $this>
-     */
-    public function vehicleType(): BelongsTo
-    {
-        return $this->belongsTo(VehicleType::class);
     }
 
     /**

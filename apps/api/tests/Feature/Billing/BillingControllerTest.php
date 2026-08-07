@@ -93,6 +93,30 @@ class BillingControllerTest extends TestCase
         $response->assertJsonPath('subscription.stripe_status', 'active');
     }
 
+    public function test_subscription_reflects_a_trialing_subscription(): void
+    {
+        Plan::factory()->create(['key' => 'weekly', 'stripe_price_id' => 'price_trial_sub_test', 'trial_days' => 7]);
+        $user = User::factory()->create();
+        $trialEndsAt = now()->addDays(7);
+        Subscription::query()->create([
+            'user_id' => $user->id,
+            'type' => 'default',
+            'stripe_id' => 'sub_trialing_1',
+            'stripe_status' => 'trialing',
+            'stripe_price' => 'price_trial_sub_test',
+            'quantity' => 1,
+            'trial_ends_at' => $trialEndsAt,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/billing/subscription');
+
+        $response->assertOk();
+        $response->assertJson(['tier' => 'weekly_subscriber', 'is_premium' => true]);
+        $response->assertJsonPath('subscription.stripe_status', 'trialing');
+        $response->assertJsonPath('subscription.on_trial', true);
+        $this->assertNotNull($response->json('subscription.trial_ends_at'));
+    }
+
     public function test_cancel_subscription_returns_422_when_none_exists(): void
     {
         $user = User::factory()->create();

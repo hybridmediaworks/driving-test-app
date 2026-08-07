@@ -1,19 +1,24 @@
 "use client";
 
 import {
+  Bike,
+  BookOpen,
   ClipboardCheck,
   ClipboardList,
   Copy,
+  CreditCard,
   LayoutGrid,
   Layers,
   Layers2,
   Library,
   ListChecks,
   type LucideIcon,
+  MapPin,
   NotebookText,
   Receipt,
   ShieldCheck,
   UserRound,
+  Video,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -49,9 +54,15 @@ const adminNavItems = [
   { title: "Quizzes", href: "/admin/quizzes", icon: Library },
   { title: "Flashcards", href: "/admin/flashcards", icon: Layers2 },
   { title: "Cheat Sheets", href: "/admin/cheat-sheets", icon: NotebookText },
+  { title: "Handbooks", href: "/admin/handbooks", icon: BookOpen },
+  { title: "Videos", href: "/admin/videos", icon: Video },
   { title: "User Management", href: "/admin/user-management", icon: UserRound },
   { title: "All Results", href: "/admin/attempts", icon: ClipboardCheck },
   { title: "Pass Guarantee Claims", href: "/admin/pass-guarantee-claims", icon: Receipt },
+  { title: "States", href: "/admin/states", icon: MapPin },
+  { title: "Vehicle Types", href: "/admin/vehicle-types", icon: Bike },
+  { title: "Quiz Types", href: "/admin/quiz-types", icon: ListChecks },
+  { title: "Plans", href: "/admin/plans", icon: CreditCard },
 ];
 
 export default function AppSidebar() {

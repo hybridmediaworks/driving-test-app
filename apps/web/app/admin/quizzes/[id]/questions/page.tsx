@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp } from "lucide-react";
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { Suspense, use, useEffect, useState } from "react";
 import type { PaginatedResponse, Quiz, QuizQuestion } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
 import ConfirmDeleteDialog from "@/components/admin/ConfirmDeleteDialog";
@@ -11,7 +11,7 @@ import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import { useDeleteConfirm } from "@/hooks/use-paginated-list";
+import { useDeleteConfirm, useUrlQuery } from "@/hooks/use-paginated-list";
 
 type QuestionsResponse = {
   quiz: Quiz;
@@ -31,18 +31,18 @@ function quizContextLine(quiz: Quiz): string {
   return parts.join(" · ");
 }
 
-export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+function QuizQuestionsIndexInner({ id }: { id: string }) {
+  const { page, setPage } = useUrlQuery();
   const [res, setRes] = useState<QuestionsResponse | null>(null);
 
   function load() {
-    api.get<QuestionsResponse>(`/admin/quizzes/${id}/questions`).then(setRes);
+    api.get<QuestionsResponse>(`/admin/quizzes/${id}/questions?page=${page}`).then(setRes);
   }
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, page]);
 
   function globalPosition(pageIndex: number): number {
     if (!res) return pageIndex + 1;
@@ -169,7 +169,7 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
                   ))}
                 </ul>
               )}
-              {res && res.questions.meta.total > 0 && <Paginator meta={res.questions.meta} />}
+              {res && res.questions.meta.total > 0 && <Paginator meta={res.questions.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
 
@@ -186,5 +186,14 @@ export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ i
         </div>
       </AppLayout>
     </AdminGuard>
+  );
+}
+
+export default function QuizQuestionsIndexPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  return (
+    <Suspense>
+      <QuizQuestionsIndexInner id={id} />
+    </Suspense>
   );
 }

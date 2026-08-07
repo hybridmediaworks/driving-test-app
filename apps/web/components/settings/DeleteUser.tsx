@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import {
   Dialog,
@@ -17,12 +16,11 @@ import InputError from "@/components/ui/InputError";
 import { Label } from "@/components/ui/Label";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { api, ApiError } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import { useLogout } from "@/lib/auth-context";
 import HeadingSmall from "./HeadingSmall";
 
 export default function DeleteUser() {
-  const router = useRouter();
-  const { logout } = useAuth();
+  const { logout } = useLogout();
   const [password, setPassword] = useState("");
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -37,8 +35,7 @@ export default function DeleteUser() {
     try {
       await api.delete("/profile", { password });
       setOpen(false);
-      await logout();
-      router.push("/");
+      await logout("/");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.errors?.password?.[0] ?? err.message);

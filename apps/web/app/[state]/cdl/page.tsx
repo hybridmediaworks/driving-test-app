@@ -300,7 +300,6 @@ const premiumInfo = {
   subtitle:
     "1000+ questions covering all 50 states and endorsements. Instant PDF handbook access.",
   features: ["CDL bundle", "PDF handbook", "Exam simulator"],
-  rating: { star: "4.9", students: "12,400" },
 };
 
 const videoTopicGroups = [
@@ -435,18 +434,6 @@ export default async function CdlPage({
                       alt=""
                       className="rounded-2xl"
                     />
-                    <div className="absolute -bottom-3.5 left-1/2 flex max-w-fit -translate-x-1/2 items-center gap-2 rounded-full border bg-white px-3 py-2 shadow-xl">
-                      <div className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-                      </div>
-                      <span className="text-sm lg:whitespace-nowrap">
-                        Active learners today: <b>33</b>
-                      </span>
-                      <span className="rounded-full bg-green-400/30 px-2 py-1 text-xs font-semibold text-green-500">
-                        LIVE
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -638,26 +625,19 @@ export default async function CdlPage({
               <div className="expert flex flex-1 bg-transparent p-0">
                 <div className="flex w-full gap-5 rounded-[20px] bg-white px-5 pt-5 pb-3.5">
                   <div className="image relative shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/reviewedby_steven.webp"
-                      alt=""
-                      className="h-auto w-16"
-                    />
-                    <div className="absolute top-2/3 right-0 flex size-8 items-center justify-center rounded-full bg-green-400 text-white">
-                      <ShieldCheck className="h-4" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                      <ShieldCheck className="h-7 w-7 text-blue-500" />
                     </div>
                   </div>
                   <div>
                     <h4 className="text-base font-bold">
                       Reviewed for legal and handbook accuracy
                     </h4>
-                    <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
-                      Steven Litvintchouk
+                    <h5 className="text-sm font-bold text-blue-primary">
+                      Our editorial team
                     </h5>
                     <p className="text-sm text-grey">
-                      M.S., Chief Educational Researcher (ACES member). Last
-                      verified for accuracy on {stateName} CDL requirements.
+                      Last verified for accuracy on {stateName} CDL requirements.
                     </p>
                   </div>
                 </div>
@@ -665,26 +645,17 @@ export default async function CdlPage({
               <div className="expert flex flex-1 bg-transparent p-0">
                 <div className="flex w-full gap-5 rounded-[20px] bg-white px-5 pt-5 pb-3.5">
                   <div className="image relative shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/reviewedby_steven.webp"
-                      alt=""
-                      className="h-auto w-16"
-                    />
-                    <div className="absolute top-2/3 right-0 flex size-8 items-center justify-center rounded-full bg-green-400 text-white">
-                      <ShieldCheck className="h-4" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                      <ShieldCheck className="h-7 w-7 text-blue-500" />
                     </div>
                   </div>
                   <div>
                     <h4 className="text-base font-bold">
                       Test design and learning experience oversight
                     </h4>
-                    <h5 className="text-sm font-bold text-blue-primary decoration-1 underline-offset-4 hover:underline">
-                      Andrei Zakhareuski
+                    <h5 className="text-sm font-bold text-blue-primary">
+                      Our curriculum team
                     </h5>
-                    <p className="text-sm text-grey">
-                      Co-founder &amp; CEO, Driving-Tests.org
-                    </p>
                   </div>
                 </div>
               </div>

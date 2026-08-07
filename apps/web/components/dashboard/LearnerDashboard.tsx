@@ -24,7 +24,8 @@ const QUICK_ACTIONS = [
 export default function LearnerDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
-  const { data: recentAttempts } = usePaginatedList<QuizAttempt>("/attempts?per_page=5");
+  // No pagination UI here (fixed-size recent-activity list) — always page 1.
+  const { data: recentAttempts } = usePaginatedList<QuizAttempt>("/attempts?per_page=5", 1);
 
   useEffect(() => {
     api.get<UserStats>("/me/stats").then(setStats);

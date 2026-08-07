@@ -229,7 +229,7 @@ export default function Header({
           </nav>
         )}
 
-        <div className="hidden items-center gap-4 lg:flex">
+        <div className="hidden items-center gap-6 lg:flex">
           <Button className="p-0!" variant="ghost">
             <HelpCircle className="h-6 w-6 text-neutral-500" />
           </Button>

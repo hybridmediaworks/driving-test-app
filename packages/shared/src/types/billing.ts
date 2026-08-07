@@ -10,8 +10,20 @@ export type Plan = {
   type: PlanType;
   billing_interval: BillingInterval | null;
   price_cents: number;
+  /** Free trial length in days before the first charge — null means no trial for this plan. */
+  trial_days: number | null;
   max_seats: number;
   sort_order: number;
+};
+
+// Admin CRUD sees inactive plans and Stripe linkage too — stripe_price_id/stripe_product_id are
+// read-only here (derived by `php artisan billing:sync-plans`), never sent in a create/update body.
+export type AdminPlan = Plan & {
+  stripe_price_id: string | null;
+  stripe_product_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 };
 
 export type MySubscription = Entitlement & {
@@ -19,6 +31,8 @@ export type MySubscription = Entitlement & {
     stripe_status: string;
     canceled: boolean;
     ends_at: string | null;
+    on_trial: boolean;
+    trial_ends_at: string | null;
   } | null;
 };
 

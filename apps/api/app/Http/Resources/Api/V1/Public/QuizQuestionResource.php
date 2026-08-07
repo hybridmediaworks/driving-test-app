@@ -25,6 +25,7 @@ class QuizQuestionResource extends JsonResource
             'difficulty' => $this->difficulty,
             'image_urls' => $this->image_urls,
             'answers' => QuizAnswerOptionResource::collection($this->whenLoaded('answers')),
+            'assets' => QuizQuestionAssetResource::collection($this->whenLoaded('assets')),
         ];
     }
 }

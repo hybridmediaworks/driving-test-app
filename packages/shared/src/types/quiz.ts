@@ -14,12 +14,18 @@ export type QuizType = {
   id: number;
   name: string;
   title: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type State = {
   id: number;
   code: string;
   name: string;
+  agency_name: string | null;
+  dmv_website_url: string | null;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type VehicleType = {
@@ -27,6 +33,8 @@ export type VehicleType = {
   name: string;
   title: string;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type QuizDifficulty = "easy" | "medium" | "hard";
@@ -61,6 +69,7 @@ export type Quiz = {
   vehicle_type_id: number;
   title: string;
   slug: string;
+  source_url: string | null;
   order_no: number;
   cover_image_url: string | null;
   test_track: "permit_test" | "driving_test";
@@ -69,6 +78,10 @@ export type Quiz = {
   passing_score_percent: number | null;
   is_premium: boolean;
   is_active: boolean;
+  // Only present when this shape is populated from the public /quizzes endpoint (see
+  // lib/phaseLadder.ts, WrittenTestContent.tsx) — the admin endpoint doesn't compute it, since
+  // admins bypass all entitlement gates.
+  locked?: boolean;
   category?: QuizCategory;
   quiz_type?: QuizType;
   state?: State;
@@ -111,6 +124,7 @@ export type PublicQuiz = {
   duration_seconds: number | null;
   passing_score_percent: number | null;
   is_premium: boolean;
+  locked: boolean;
   cover_image_url: string | null;
   category?: { id: number; name: string; title: string };
   quiz_type?: { id: number; name: string; title: string };
