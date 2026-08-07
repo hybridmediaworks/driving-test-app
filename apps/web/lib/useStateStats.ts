@@ -11,6 +11,7 @@ export type StateStats = {
   questions_answered_total: number;
   avg_session_seconds: number | null;
   peak_hour: number | null;
+  pass_rate: number | null;
 };
 
 const vehicleSlugs: Record<string, string> = {

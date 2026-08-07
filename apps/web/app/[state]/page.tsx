@@ -38,7 +38,7 @@ export default async function StateDynamicPage({
   const { state } = await params;
 
   return (
-    <WebLayoutProvider stateSlug={state}>
+    <WebLayoutProvider stateSlug={state} vehicleSlug="car">
       <div className="flex min-h-screen flex-col bg-background">
         <Header variant="states" />
         <main className="flex-1">

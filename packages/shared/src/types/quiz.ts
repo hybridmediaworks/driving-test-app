@@ -82,6 +82,10 @@ export type Quiz = {
   // lib/phaseLadder.ts, WrittenTestContent.tsx) — the admin endpoint doesn't compute it, since
   // admins bypass all entitlement gates.
   locked?: boolean;
+  // Real pass rate (0-100) from graded quiz_attempts, null when there's no real attempt data yet
+  // — show nothing rather than a misleading 0%. Same "only present from the public endpoint" note
+  // as `locked` above.
+  pass_rate?: number | null;
   category?: QuizCategory;
   quiz_type?: QuizType;
   state?: State;
@@ -125,6 +129,7 @@ export type PublicQuiz = {
   passing_score_percent: number | null;
   is_premium: boolean;
   locked: boolean;
+  pass_rate: number | null;
   cover_image_url: string | null;
   category?: { id: number; name: string; title: string };
   quiz_type?: { id: number; name: string; title: string };

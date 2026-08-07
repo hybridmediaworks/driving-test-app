@@ -395,7 +395,7 @@ export default async function CdlPage({
   const topicSections = buildTopicSections(stateCode);
 
   return (
-    <WebLayoutProvider stateSlug={state}>
+    <WebLayoutProvider stateSlug={state} vehicleSlug="cdl">
       <div className="flex min-h-screen flex-col bg-background">
         <Header variant="states" />
         <main className="flex-1">

@@ -65,8 +65,29 @@ class StateController extends Controller
                 'questions_answered_total' => (int) (clone $completed30d)->sum('total_questions'),
                 'avg_session_seconds' => $this->nullableRound((clone $completed30d)->avg('duration_seconds')),
                 'peak_hour' => $this->peakHour(clone $completed30d),
+                'pass_rate' => $this->passRate(clone $base),
             ],
         ]);
+    }
+
+    /**
+     * Real pass rate across every graded attempt for this scope (all-time, not the 30-day window
+     * above — a "how do learners here do" claim reads as a durable stat, not a rolling one). Null
+     * when there's no real attempt data yet, so the frontend can omit the stat rather than show a
+     * misleading 0%.
+     *
+     * @param  Builder<QuizAttempt>  $query
+     */
+    private function passRate($query): ?int
+    {
+        $graded = $query->where('status', AttemptStatus::Completed)->whereNotNull('passed');
+        $total = (clone $graded)->count();
+
+        if ($total === 0) {
+            return null;
+        }
+
+        return (int) round((clone $graded)->where('passed', true)->count() / $total * 100);
     }
 
     /**

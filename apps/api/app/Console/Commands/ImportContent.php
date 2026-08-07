@@ -46,6 +46,14 @@ class ImportContent extends Command
         'driving_test' => 'Driving Test',
     ];
 
+    /**
+     * Folder names that don't reduce to their state name by just swapping hyphens for spaces
+     * (the crawler dropped "of" from "district-columbia").
+     */
+    private const STATE_FOLDER_ALIASES = [
+        'district-columbia' => 'DC',
+    ];
+
     public function handle(
         ImportQuizzesFromCrawl $importQuizzes,
         ImportHandbookFromCrawl $importHandbook,
@@ -119,7 +127,11 @@ class ImportContent extends Command
         ImportSimulatorsFromCrawl $importSimulators,
     ): void {
         $stateFolderName = basename($stateFolder);
-        $state = State::query()->whereRaw('LOWER(name) = ?', [Str::lower($stateFolderName)])->first();
+        $stateFolderKey = Str::lower($stateFolderName);
+
+        $state = array_key_exists($stateFolderKey, self::STATE_FOLDER_ALIASES)
+            ? State::query()->where('code', self::STATE_FOLDER_ALIASES[$stateFolderKey])->first()
+            : State::query()->whereRaw('LOWER(name) = ?', [str_replace('-', ' ', $stateFolderKey)])->first();
 
         if ($state === null) {
             $summary->warn("No matching state row for folder \"{$stateFolderName}\" — skipped.");
