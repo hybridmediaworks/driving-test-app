@@ -5,6 +5,7 @@ import StepCard from "@/components/state/StepCard";
 
 type Step = {
   title?: string;
+  slug?: string;
   totalQuestions?: string;
   totalTime?: string;
   type?: "free" | "premium";
@@ -77,12 +78,15 @@ function useResponsiveTier(): ResponsiveTier {
 
 export default function TestSteps({
   steps,
+  state,
   columns = 5,
   nextConnector = false,
   phaseActive = false,
   phaseJustActivated = false,
 }: {
   steps: Step[];
+  /** State slug (e.g. "alabama") — forwarded to each StepCard so it links to the real per-test page. */
+  state?: string;
   columns?: number;
   nextConnector?: boolean;
   /** Phase is already active (steps in progress) — first row's entry connector renders filled, no animation. */
@@ -181,7 +185,7 @@ export default function TestSteps({
             )}
 
             {row.map((step, index) => (
-              <StepCard key={index} step={step} connector />
+              <StepCard key={index} step={step} state={state} connector />
             ))}
           </div>
         );

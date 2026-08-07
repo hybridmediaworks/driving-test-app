@@ -61,6 +61,8 @@ class BillingController extends Controller
                 'stripe_status' => $subscription->stripe_status,
                 'canceled' => $subscription->canceled(),
                 'ends_at' => $subscription->ends_at,
+                'on_trial' => $subscription->onTrial(),
+                'trial_ends_at' => $subscription->trial_ends_at,
             ],
         ]);
     }

@@ -4,12 +4,16 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
-import { stateToSlug } from "@/lib/usStates";
+import { stateAbbreviations } from "@/lib/usStates";
+import { useStateStats } from "@/lib/useStateStats";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 
 export default function HeroSection() {
   const { selectedState } = useWebLayout();
-  const stateSlug = stateToSlug(selectedState);
+  const stats = useStateStats();
+  const quizzesHref = selectedState
+    ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=motorcycle`
+    : "/quizzes?vehicle_type=motorcycle";
 
   return (
     <>
@@ -26,7 +30,7 @@ export default function HeroSection() {
               </span>
               <span className=" text-green-500">Live</span>
               <span>
-                Active riders today: <strong>1,214</strong>
+                Active riders today: <strong>{stats ? stats.active_today.toLocaleString() : "—"}</strong>
               </span>
             </Paragraph>
             <Heading as="h1">
@@ -45,7 +49,7 @@ export default function HeroSection() {
             </Paragraph>
             <Button
               className="w-full md:w-fit"
-              href={`/${stateSlug}/dmv-written-test`}
+              href={quizzesHref}
             >
               Start Free Practice Test <ArrowRight />
             </Button>
@@ -81,7 +85,7 @@ export default function HeroSection() {
               >
                 97%
               </Heading>
-              <Heading size="xs" className="" color="secoundry">
+              <Heading size="xs" className="" color="muted">
                 pass rate with Premium
               </Heading>
             </div>

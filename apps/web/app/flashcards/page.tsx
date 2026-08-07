@@ -2,7 +2,6 @@
 
 import { Lock } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { PublicFlashcard, QuizCategory, State, VehicleType } from "@driving-test-app/shared";
 import Footer from "@/components/Footer";
@@ -11,7 +10,7 @@ import Button from "@/components/ui/Button";
 import Paginator from "@/components/ui/Paginator";
 import { api } from "@/lib/api";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
-import { usePaginatedList } from "@/hooks/use-paginated-list";
+import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 
 function FlashcardPreviewCard({ card, studyHref }: { card: PublicFlashcard; studyHref: string }) {
   return (
@@ -41,9 +40,7 @@ function FlashcardPreviewCard({ card, studyHref }: { card: PublicFlashcard; stud
 }
 
 function FlashcardsBrowseInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
+  const { searchParams, filterQuery, page, updateFilter, setPage } = useUrlQuery();
 
   const [states, setStates] = useState<State[]>([]);
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
@@ -55,20 +52,10 @@ function FlashcardsBrowseInner() {
     api.get<{ data: QuizCategory[] }>("/quiz-categories").then((res) => setCategories(res.data));
   }, []);
 
-  const { data: flashcards } = usePaginatedList<PublicFlashcard>(`/flashcards${query ? `?${query}` : ""}`);
-
-  function updateFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.replace(`/flashcards?${params.toString()}`);
-  }
+  const { data: flashcards } = usePaginatedList<PublicFlashcard>(`/flashcards${filterQuery ? `?${filterQuery}` : ""}`, page);
 
   const rows = flashcards?.data ?? [];
-  const studyHref = `/flashcards/study${query ? `?${query}` : ""}`;
+  const studyHref = `/flashcards/study${filterQuery ? `?${filterQuery}` : ""}`;
 
   return (
     <WebLayoutProvider>
@@ -127,7 +114,7 @@ function FlashcardsBrowseInner() {
               </div>
             )}
 
-            {flashcards && flashcards.meta.total > 0 && <Paginator meta={flashcards.meta} />}
+            {flashcards && flashcards.meta.total > 0 && <Paginator meta={flashcards.meta} onPageChange={setPage} />}
           </div>
         </main>
         <Footer />

@@ -5,10 +5,10 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import { useLogout } from "@/lib/auth-context";
 
 export default function VerifyEmailPage() {
-  const { logout } = useAuth();
+  const { logout, pending: loggingOut } = useLogout();
   const [processing, setProcessing] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -42,11 +42,12 @@ export default function VerifyEmailPage() {
         <Button
           type="button"
           onClick={() => logout()}
+          disabled={loggingOut}
           variant="ghost"
           size="sm"
           className="mx-auto p-0!"
         >
-          Log out
+          {loggingOut ? "Logging out…" : "Log out"}
         </Button>
       </form>
     </AuthLayout>

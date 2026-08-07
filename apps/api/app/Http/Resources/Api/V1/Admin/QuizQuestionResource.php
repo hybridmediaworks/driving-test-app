@@ -26,6 +26,12 @@ class QuizQuestionResource extends JsonResource
             'updated_at' => $this->updated_at,
             'image_urls' => $this->image_urls,
             'answers' => QuizAnswerResource::collection($this->whenLoaded('answers')),
+            'assets' => $this->whenLoaded('assets', fn () => $this->assets->map(fn ($asset) => [
+                'id' => $asset->id,
+                'type' => $asset->type,
+                'url' => $asset->url,
+                'duration_seconds' => $asset->duration_seconds,
+            ])),
         ];
     }
 }

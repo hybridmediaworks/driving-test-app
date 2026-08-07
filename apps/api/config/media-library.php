@@ -49,8 +49,14 @@ return [
     /*
      * The maximum file size of an item in bytes.
      * Adding a larger file will result in an exception.
+     *
+     * Raised from the package default (10MB) — real driver-handbook and cheat-sheet PDFs
+     * imported via content:import run up to ~20MB (confirmed against the real crawled dataset,
+     * see docs/PHASE_3_CONTENT_PLATFORM.md); the admin upload forms' own per-field validation
+     * (StoreHandbookRequest/StoreCheatSheetRequest 'pdf' => max:51200 KB) is the real per-upload
+     * ceiling, this is just the package's hard floor beneath it.
      */
-    'max_file_size' => 1024 * 1024 * 10, // 10MB
+    'max_file_size' => 1024 * 1024 * 50, // 50MB
 
     /*
      * Uploads whose file name contains any of these extensions will be rejected.

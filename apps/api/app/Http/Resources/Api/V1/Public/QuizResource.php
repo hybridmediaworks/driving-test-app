@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1\Public;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 
 /** @mixin Quiz */
 class QuizResource extends JsonResource
@@ -14,6 +15,11 @@ class QuizResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // This resource is served from routes with no auth:sanctum middleware (guests may
+        // browse) — $request->user() with no guard resolves via the ambient default guard, which
+        // never sees the Sanctum token. Resolve explicitly, same as FlashcardResource.
+        $unlocked = Gate::forUser($request->user('sanctum'))->allows('attempt', $this->resource);
+
         return [
             'id' => $this->id,
             'title' => $this->title,
@@ -23,6 +29,7 @@ class QuizResource extends JsonResource
             'duration_seconds' => $this->duration_seconds,
             'passing_score_percent' => $this->passing_score_percent,
             'is_premium' => $this->is_premium,
+            'locked' => ! $unlocked,
             'cover_image_url' => $this->cover_image_url,
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,

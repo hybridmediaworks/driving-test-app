@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { PaginatedResponse, Quiz, QuizCategory, QuizType, State, VehicleType } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -11,7 +10,7 @@ import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import { useDeleteConfirm } from "@/hooks/use-paginated-list";
+import { useDeleteConfirm, useUrlQuery } from "@/hooks/use-paginated-list";
 
 type QuizzesResponse = {
   quizzes: PaginatedResponse<Quiz>;
@@ -23,8 +22,7 @@ type QuizzesResponse = {
 };
 
 function QuizzesIndexInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, updateFilter, setPage } = useUrlQuery();
   const [res, setRes] = useState<QuizzesResponse | null>(null);
 
   const query = searchParams.toString();
@@ -37,16 +35,6 @@ function QuizzesIndexInner() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
-
-  function updateFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.replace(`/admin/quizzes?${params.toString()}`);
-  }
 
   const del = useDeleteConfirm<Quiz>((q) => api.delete(`/admin/quizzes/${q.id}`), load, "Failed to delete quiz.");
 
@@ -193,7 +181,7 @@ function QuizzesIndexInner() {
                   ))}
                 </ul>
               )}
-              {res && res.quizzes.meta.total > 0 && <Paginator meta={res.quizzes.meta} />}
+              {res && res.quizzes.meta.total > 0 && <Paginator meta={res.quizzes.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
 

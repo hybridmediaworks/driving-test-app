@@ -4,12 +4,14 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
-import { stateToSlug } from "@/lib/usStates";
+import { stateAbbreviations } from "@/lib/usStates";
 import { ArrowRight, Play } from "lucide-react";
 
 export default function HeroSection() {
   const { selectedState } = useWebLayout();
-  const stateSlug = stateToSlug(selectedState);
+  const quizzesHref = selectedState
+    ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=motorcycle`
+    : "/quizzes?vehicle_type=motorcycle";
 
   return (
     <section className="py-15 lg:py-30 px-5">
@@ -22,7 +24,7 @@ export default function HeroSection() {
           </Paragraph>
           <Button
             className="w-full md:w-fit"
-            href={`/${stateSlug}/dmv-written-test`}
+            href={quizzesHref}
           >
             Start Motorcycle Permit Practice Test <ArrowRight />
           </Button>

@@ -18,6 +18,8 @@ class StateResource extends JsonResource
             'id' => $this->id,
             'code' => $this->code,
             'name' => $this->name,
+            'agency_name' => $this->agency_name,
+            'dmv_website_url' => $this->dmv_website_url,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -19,7 +19,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // Wildcard only in local dev. Elsewhere, an explicit comma-separated allow-list
+    // (CORS_ALLOWED_ORIGINS), falling back to FRONTEND_URL so a fresh deploy never silently
+    // ends up with an empty list before that var is set.
+    'allowed_origins' => env('APP_ENV') === 'local'
+        ? ['*']
+        : array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('CORS_ALLOWED_ORIGINS', env('FRONTEND_URL', '')))
+        ))),
 
     'allowed_origins_patterns' => [],
 

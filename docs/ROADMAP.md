@@ -10,37 +10,48 @@ Nothing below is implemented yet. Each phase gets its own focused implementation
 
 - Monorepo (pnpm + Turborepo), Laravel 13 API with Sanctum auth, Next.js 16 web app.
 - API is versioned (`/api/v1`), layered (thin controllers → Actions → API Resources), and documented in [`apps/api/docs/ARCHITECTURE.md`](../apps/api/docs/ARCHITECTURE.md). Images go through Spatie Media Library rather than hand-rolled path columns.
-- Admin CRUD exists for `QuizCategory` / `Quiz` / `QuizQuestion` / `QuizAnswer`, plus `State` / `VehicleType` / `QuizType` models. The public quiz-taking engine (Phase 2) is **backend-complete** — browse, take, and get a guest or authenticated attempt graded server-side all work end-to-end — but there's no frontend for it yet.
-- Dev seed data exists: 50 states + DC, 3 vehicle types, 2 quiz types, 4 categories, and two real sample quizzes (CA traffic laws + road signs, 8 and 6 questions) so the API is exercisable without the real dataset.
-- ~5GB of the user's own driving-test question data (JSON + images, per state) sits on another machine, not yet imported.
+- Admin CRUD exists for `QuizCategory` / `Quiz` / `QuizQuestion` / `QuizAnswer`, plus `State` / `VehicleType` / `QuizType` models. The public quiz-taking engine (Phase 2) is **backend- and frontend-complete** — browse, take, and get a guest or authenticated attempt graded server-side, at both `/quizzes/[id]` and the polished `/[state]/[test-slug]/quiz` player, all work end-to-end.
+- Real seed data: 52 states, 3 vehicle types, 2 quiz types, categories driven by real imported content. Alabama + Alaska (car + motorcycle, both test tracks) are fully populated from the real crawled dataset — 310 quizzes, 4,400+ questions, 74 videos/hazard-simulators, 4 handbooks (with PDFs), 11 cheat sheets — see [`PHASE_3_CONTENT_PLATFORM.md`](./PHASE_3_CONTENT_PLATFORM.md).
+- ~40GB of the user's own driving-test content (structured JSON per state/vehicle-type/test-type, mostly external media links plus some downloaded images/video) sits on another machine. The import pipeline is built and verified against 2 real states; the remaining ~50 states are a rerun of the same command, not new code.
 - No CI/CD or deployment configuration yet.
 
 ## Phase 1 — Content cleanup
 
+See [`PHASE_3_CONTENT_PLATFORM.md`](./PHASE_3_CONTENT_PLATFORM.md) — the car/motorcycle live-stats
+item below is resolved: real `states/{code}/stats` endpoint, no fabricated numbers, live on the
+`/[state]` hero and live-data sections for car and motorcycle. CDL is explicitly deferred to a
+later pass and still has both items below outstanding.
+
 - [ ] `apps/web/app/[state]/cdl/page.tsx` carries over content that appears copied from driving-tests.org (a company credit and a named reviewer bio from the old Vue app) — replace with original copy/reviewers before this page is public.
-- [ ] Same page hardcodes a "Active learners today: 33" live-activity counter — decide deliberately whether to wire this to a real count (even if modest early on) or remove it; shipping a fabricated engagement number by default is a dark-pattern risk worth a conscious call, not an accident.
+- [ ] Same page hardcodes a "Active learners today: 33" live-activity counter — the real endpoint (`GET /states/{code}/stats`) now exists and is already used by the car/motorcycle pages; wiring the CDL page to it is the same one-line change, just not done yet since CDL is out of scope for this pass.
 
 ## Phase 2 — Public quiz-taking engine
 
 The core product mechanic: browse a quiz, take it, get scored, review answers. Everything else depends on this existing.
 
-**Backend done; frontend is the only thing left.** See [`apps/api/docs/PHASE_2_QUIZ_ENGINE.md`](../apps/api/docs/PHASE_2_QUIZ_ENGINE.md) for the API reference (endpoints, request/response shapes, verification), or [`MIGRATION_PLAN.md`](./MIGRATION_PLAN.md#phase-5--backend-quiz-taking-engine--architecture-restructure) for the narrative log of how it was built.
+**Done, backend and frontend.** See [`apps/api/docs/PHASE_2_QUIZ_ENGINE.md`](../apps/api/docs/PHASE_2_QUIZ_ENGINE.md) for the API reference (endpoints, request/response shapes, verification), or [`MIGRATION_PLAN.md`](./MIGRATION_PLAN.md#phase-5--backend-quiz-taking-engine--architecture-restructure) for the narrative log of how it was built.
 
 - [x] `quiz_attempts` + `quiz_attempt_answers` tables (`user_id` nullable so guests can take tests too, matching a "no registration required" free tier; `guest_token` added so a guest's history can be claimed on registration later)
 - [x] Public `Api\V1\Public\QuizController` (`index` / `show` / `storeAttempt`) — `show` hides correct answers pre-submission, `storeAttempt` grades server-side
 - [x] `Api\V1\QuizAttemptController` for logged-in users' attempt history
-- [ ] Web quiz-taking flow (`/quizzes`, `/quizzes/[slug]`): stepper → submit → results + review
-- [x] Dev seed data (no quiz rows exist in the DB yet)
+- [x] Web quiz-taking flow: `/quizzes/[id]` (browse-all) and `/[state]/[test-slug]/quiz` (per-state, resolves by slug) — both real: fetch real questions (never leak `is_correct` pre-submission), submit to `POST /quizzes/{id}/attempts`, render the real graded result
+- [x] Dev seed data — real content for Alabama/Alaska (see Phase 3), generic stopgap content elsewhere pending the full import
 
-## Phase 3 — Question bank ingestion (the 5GB dataset) & content library
+## Phase 3 — Question bank ingestion (the 40GB dataset) & content library
+
+Detailed implementation plan: [`PHASE_3_CONTENT_PLATFORM.md`](./PHASE_3_CONTENT_PLATFORM.md) —
+schema (`quiz_question_assets`, `videos`, `states` marketing fields), the crawled-data import
+pipeline, storage/dedup strategy, and the car/motorcycle `/[state]` frontend wiring that consumes
+it. CDL is deferred to a later pass.
 
 Three distinct content types, not just "images" — each has different storage/delivery needs:
 
-- [ ] **Question data**: idempotent Artisan import command for the JSON question/answer data, upserted into the existing relational schema
-- [ ] **Images**: S3-compatible object storage (Cloudflare R2 suggested) behind a CDN — never into git or the DB. Check for duplication across states before finalizing storage sizing (road-sign images are often federally standardized and may repeat)
-- [ ] **Video/audio** (hazard-perception clips, simulated-driving footage, narration): treat as its own asset type, not another file in the image bucket — a streaming-oriented store (e.g. Cloudflare Stream, or R2 + HLS packaging) rather than a plain CDN file, since these need adaptive bitrate/seeking rather than a single static download
-- [ ] **Road-sign / rules study mode**: a browse-to-learn flashcard-style feature (sign image + meaning), separate from being tested on signs inside a scored quiz — its own small data model (sign name, image, category, explanation) rather than shoehorned into `quiz_questions`
-- [ ] Replace the CDL page's hardcoded `TestSteps` mock data with real quizzes once loaded; build the car/motorcycle equivalent
+- [x] **Question data**: idempotent `content:import` Artisan command (5 focused Actions), verified against the real crawled dataset for Alabama + Alaska, car + motorcycle, both test tracks — upserts into the existing relational schema, handles both the nested (Permit Test) and flat (Driving Test) JSON shapes the source actually uses, hash-caches fetched question images per URL, and produces a full summary/warning log. Remaining ~50 states are a rerun, not new code.
+- [ ] **Images**: question images currently stay as real external URLs re-fetched and attached via Spatie Media Library on `local` disk in dev; S3-compatible object storage (Cloudflare R2) for production, plus the planned dedup-by-hash pass at full 40GB scale, is still an ops/scale task, not done
+- [ ] **Video/audio**: real video/hazard-simulator metadata + external (YouTube/Vimeo) URLs are imported into a new `videos` table now — self-hosting/streaming infrastructure for the subset of real downloaded media is still not built
+- [ ] **Road-sign / rules study mode**: still not built — the real Alabama/Alaska sample's `extra_support` data didn't include a discrete sign-by-sign dataset, so this is unblocked but unstarted
+- [x] Real car + motorcycle `/[state]` pages: real phase ladder (`quiz_categories` → `quizzes`), real live stats, real per-test landing pages, real quiz player, real handbook cards — all sourced from the imported Alabama/Alaska data, verified end-to-end. See [`PHASE_3_CONTENT_PLATFORM.md`](./PHASE_3_CONTENT_PLATFORM.md).
+- [ ] CDL equivalent — explicitly deferred; `apps/web/app/[state]/cdl/page.tsx` still uses its own hardcoded mock data
 
 ## Phase 4 — Progress tracking & "missed questions" review
 

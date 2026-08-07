@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { CheatSheet, PaginatedResponse, QuizCategory, State, VehicleType } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -11,7 +10,7 @@ import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Paginator from "@/components/ui/Paginator";
 import { api } from "@/lib/api";
-import { useDeleteConfirm } from "@/hooks/use-paginated-list";
+import { useDeleteConfirm, useUrlQuery } from "@/hooks/use-paginated-list";
 
 type CheatSheetsResponse = {
   cheat_sheets: PaginatedResponse<CheatSheet>;
@@ -21,8 +20,7 @@ type CheatSheetsResponse = {
 };
 
 function CheatSheetsIndexInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, updateFilter, setPage } = useUrlQuery();
   const [res, setRes] = useState<CheatSheetsResponse | null>(null);
 
   const query = searchParams.toString();
@@ -35,16 +33,6 @@ function CheatSheetsIndexInner() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
-
-  function updateFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.replace(`/admin/cheat-sheets?${params.toString()}`);
-  }
 
   const del = useDeleteConfirm<CheatSheet>(
     (c) => api.delete(`/admin/cheat-sheets/${c.id}`),
@@ -164,7 +152,7 @@ function CheatSheetsIndexInner() {
                   ))}
                 </ul>
               )}
-              {res && res.cheat_sheets.meta.total > 0 && <Paginator meta={res.cheat_sheets.meta} />}
+              {res && res.cheat_sheets.meta.total > 0 && <Paginator meta={res.cheat_sheets.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
 

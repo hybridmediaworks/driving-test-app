@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 type PremiumInfo = {
@@ -34,16 +35,18 @@ export default function PremiumBanner({ premiumInfo }: { premiumInfo: PremiumInf
           </p>
         )}
 
-        <p className="text-sm">
-          ★ <b>{premiumInfo.rating?.star}/5</b> from {premiumInfo.rating?.students}+ students
-          {premiumInfo.rating?.passingRate && <span> - {premiumInfo.rating.passingRate}% pass rate</span>}
-        </p>
+        {premiumInfo.rating && (
+          <p className="text-sm">
+            ★ <b>{premiumInfo.rating.star}/5</b> from {premiumInfo.rating.students}+ students
+            {premiumInfo.rating.passingRate && <span> - {premiumInfo.rating.passingRate}% pass rate</span>}
+          </p>
+        )}
       </div>
 
-      <button className="flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 font-semibold text-[#6c5ce7]">
+      <Link href="/pricing" className="flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 font-semibold text-[#6c5ce7]">
         Get Premium
         <ArrowRight />
-      </button>
+      </Link>
     </div>
   );
 }

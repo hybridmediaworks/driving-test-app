@@ -3,12 +3,18 @@
 use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptController;
 use App\Http\Controllers\Api\V1\Admin\CheatSheetController as AdminCheatSheetController;
 use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
+use App\Http\Controllers\Api\V1\Admin\HandbookController as AdminHandbookController;
 use App\Http\Controllers\Api\V1\Admin\PassGuaranteeClaimController as AdminPassGuaranteeClaimController;
+use App\Http\Controllers\Api\V1\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
 use App\Http\Controllers\Api\V1\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Api\V1\Admin\QuizQuestionController;
+use App\Http\Controllers\Api\V1\Admin\QuizTypeController as AdminQuizTypeController;
+use App\Http\Controllers\Api\V1\Admin\StateController as AdminStateController;
 use App\Http\Controllers\Api\V1\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
+use App\Http\Controllers\Api\V1\Admin\VehicleTypeController as AdminVehicleTypeController;
+use App\Http\Controllers\Api\V1\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
@@ -18,11 +24,13 @@ use App\Http\Controllers\Api\V1\FlashcardReviewController;
 use App\Http\Controllers\Api\V1\PassGuaranteeClaimController;
 use App\Http\Controllers\Api\V1\Public\CheatSheetController as PublicCheatSheetController;
 use App\Http\Controllers\Api\V1\Public\FlashcardController as PublicFlashcardController;
+use App\Http\Controllers\Api\V1\Public\HandbookController as PublicHandbookController;
 use App\Http\Controllers\Api\V1\Public\PlanController;
 use App\Http\Controllers\Api\V1\Public\QuizCategoryController as PublicQuizCategoryController;
 use App\Http\Controllers\Api\V1\Public\QuizController as PublicQuizController;
 use App\Http\Controllers\Api\V1\Public\StateController;
 use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
+use App\Http\Controllers\Api\V1\Public\VideoController as PublicVideoController;
 use App\Http\Controllers\Api\V1\QuizAttemptController;
 use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
@@ -55,8 +63,18 @@ Route::prefix('v1')->group(function (): void {
     Route::get('cheat-sheets/{cheatSheet}', [PublicCheatSheetController::class, 'show']);
     Route::get('cheat-sheets/{cheatSheet}/download', [PublicCheatSheetController::class, 'download']);
 
+    // Public video browsing — same locked-teaser shape as cheat sheets, gated by VideoPolicy.
+    Route::get('videos', [PublicVideoController::class, 'index']);
+    Route::get('videos/{video}', [PublicVideoController::class, 'show']);
+
+    // Public handbook browsing — not premium-gated (see HandbookResource), full chapters/sections
+    // always included.
+    Route::get('handbooks', [PublicHandbookController::class, 'index']);
+    Route::get('handbooks/{handbook}', [PublicHandbookController::class, 'show']);
+
     // Public read-only reference data — the valid values for the filters above.
     Route::get('states', [StateController::class, 'index']);
+    Route::get('states/{code}/stats', [StateController::class, 'stats']);
     Route::get('vehicle-types', [VehicleTypeController::class, 'index']);
     Route::get('quiz-categories', [PublicQuizCategoryController::class, 'index']);
 
@@ -122,7 +140,29 @@ Route::prefix('v1')->group(function (): void {
             ]);
             Route::get('cheat-sheets/{cheatSheet}', [AdminCheatSheetController::class, 'show']);
 
+            Route::apiResource('videos', AdminVideoController::class)->except(['show']);
+            Route::get('videos/{video}', [AdminVideoController::class, 'show']);
+
+            Route::apiResource('handbooks', AdminHandbookController::class)->except(['show']);
+            Route::get('handbooks/{handbook}', [AdminHandbookController::class, 'show']);
+
             Route::apiResource('users', UserController::class);
+
+            Route::apiResource('states', AdminStateController::class)->except(['show']);
+            Route::get('states/{state}', [AdminStateController::class, 'show']);
+
+            Route::apiResource('vehicle-types', AdminVehicleTypeController::class)->except(['show'])->parameters([
+                'vehicle-types' => 'vehicleType',
+            ]);
+            Route::get('vehicle-types/{vehicleType}', [AdminVehicleTypeController::class, 'show']);
+
+            Route::apiResource('quiz-types', AdminQuizTypeController::class)->except(['show'])->parameters([
+                'quiz-types' => 'quizType',
+            ]);
+            Route::get('quiz-types/{quizType}', [AdminQuizTypeController::class, 'show']);
+
+            Route::apiResource('plans', AdminPlanController::class)->except(['show']);
+            Route::get('plans/{plan}', [AdminPlanController::class, 'show']);
 
             Route::get('attempts', [AdminAttemptController::class, 'index']);
 

@@ -14,8 +14,8 @@ use Tests\TestCase;
 
 class QuizEntitlementGatingTest extends TestCase
 {
-    use RefreshDatabase;
     use AuthenticatesWithBearerToken;
+    use RefreshDatabase;
 
     private function makePremiumQuizWithQuestion(): array
     {
@@ -163,5 +163,38 @@ class QuizEntitlementGatingTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('locked', false);
         $this->assertCount(1, $response->json('questions'));
+    }
+
+    /**
+     * The browse/list endpoint (unlike show()) previously never exposed a per-user `locked`
+     * field at all — only the quiz's own `is_premium` flag. That meant every list-driven UI
+     * (phase ladder, /quizzes browse) showed the same "locked" appearance to every viewer
+     * regardless of entitlement, even an active subscriber. Covers the fix directly.
+     */
+    public function test_guest_sees_locked_true_for_a_premium_quiz_in_the_list_endpoint(): void
+    {
+        ['quiz' => $quiz] = $this->makePremiumQuizWithQuestion();
+
+        $response = $this->getJson('/api/v1/quizzes');
+
+        $response->assertOk();
+        $row = collect($response->json('data'))->firstWhere('id', $quiz->id);
+        $this->assertNotNull($row);
+        $this->assertTrue($row['is_premium']);
+        $this->assertTrue($row['locked']);
+    }
+
+    public function test_active_subscriber_sees_locked_false_for_a_premium_quiz_in_the_list_endpoint(): void
+    {
+        ['quiz' => $quiz] = $this->makePremiumQuizWithQuestion();
+        $subscriber = $this->makeActiveSubscriber();
+
+        $response = $this->withUserToken($subscriber)->getJson('/api/v1/quizzes');
+
+        $response->assertOk();
+        $row = collect($response->json('data'))->firstWhere('id', $quiz->id);
+        $this->assertNotNull($row);
+        $this->assertTrue($row['is_premium']);
+        $this->assertFalse($row['locked']);
     }
 }

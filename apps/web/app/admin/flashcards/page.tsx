@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { Flashcard, PaginatedResponse, QuizCategory, State, VehicleType } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -11,7 +10,7 @@ import { Button } from "@/components/ui/ShadcnButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Paginator from "@/components/ui/Paginator";
 import { api } from "@/lib/api";
-import { useDeleteConfirm } from "@/hooks/use-paginated-list";
+import { useDeleteConfirm, useUrlQuery } from "@/hooks/use-paginated-list";
 
 type FlashcardsResponse = {
   flashcards: PaginatedResponse<Flashcard>;
@@ -21,8 +20,7 @@ type FlashcardsResponse = {
 };
 
 function FlashcardsIndexInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, updateFilter, setPage } = useUrlQuery();
   const [res, setRes] = useState<FlashcardsResponse | null>(null);
 
   const query = searchParams.toString();
@@ -35,16 +33,6 @@ function FlashcardsIndexInner() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
-
-  function updateFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.replace(`/admin/flashcards?${params.toString()}`);
-  }
 
   const del = useDeleteConfirm<Flashcard>((c) => api.delete(`/admin/flashcards/${c.id}`), load, "Failed to delete flashcard.");
 
@@ -159,7 +147,7 @@ function FlashcardsIndexInner() {
                   ))}
                 </ul>
               )}
-              {res && res.flashcards.meta.total > 0 && <Paginator meta={res.flashcards.meta} />}
+              {res && res.flashcards.meta.total > 0 && <Paginator meta={res.flashcards.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
 

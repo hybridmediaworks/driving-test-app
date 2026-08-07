@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { PassGuaranteeClaim } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -8,7 +7,7 @@ import AppLayout from "@/components/app/AppLayout";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Paginator from "@/components/ui/Paginator";
-import { usePaginatedList } from "@/hooks/use-paginated-list";
+import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 import { api, ApiError } from "@/lib/api";
 
 function ClaimRow({ claim, onChanged }: { claim: PassGuaranteeClaim; onChanged: () => void }) {
@@ -64,22 +63,13 @@ function ClaimRow({ claim, onChanged }: { claim: PassGuaranteeClaim; onChanged: 
 }
 
 function AdminPassGuaranteeClaimsInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
+  const { searchParams, filterQuery, page, updateFilter, setPage } = useUrlQuery();
 
-  const { data: claims, reload } = usePaginatedList<PassGuaranteeClaim>(`/admin/pass-guarantee-claims${query ? `?${query}` : ""}`);
+  const { data: claims, reload } = usePaginatedList<PassGuaranteeClaim>(
+    `/admin/pass-guarantee-claims${filterQuery ? `?${filterQuery}` : ""}`,
+    page,
+  );
   const rows = claims?.data ?? [];
-
-  function updateFilter(status: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (status) {
-      params.set("status", status);
-    } else {
-      params.delete("status");
-    }
-    router.replace(`/admin/pass-guarantee-claims?${params.toString()}`);
-  }
 
   return (
     <AdminGuard>
@@ -96,7 +86,7 @@ function AdminPassGuaranteeClaimsInner() {
               id="f-status"
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
               value={searchParams.get("status") ?? ""}
-              onChange={(e) => updateFilter(e.target.value)}
+              onChange={(e) => updateFilter("status", e.target.value)}
             >
               <option value="">All</option>
               <option value="submitted">Submitted</option>
@@ -123,7 +113,7 @@ function AdminPassGuaranteeClaimsInner() {
                   ))}
                 </ul>
               )}
-              {claims && claims.meta.total > 0 && <Paginator meta={claims.meta} />}
+              {claims && claims.meta.total > 0 && <Paginator meta={claims.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
         </div>

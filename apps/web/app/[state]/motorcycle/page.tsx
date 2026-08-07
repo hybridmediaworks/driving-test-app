@@ -44,7 +44,7 @@ export default async function MotorcyclePage({
         <main className="flex-1">
           <MotorcycleTestTypeContent />
           <EmailCaptureSection />
-          <CTASection href={`/${state}/dmv-written-test`} />
+          <CTASection />
           <Footer />
         </main>
       </div>

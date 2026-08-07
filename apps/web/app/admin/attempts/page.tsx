@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import type { PaginatedResponse, Quiz, QuizAttempt, User } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -9,14 +8,12 @@ import AttemptRow from "@/components/quiz/AttemptRow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Paginator from "@/components/ui/Paginator";
 import { api } from "@/lib/api";
-import { usePaginatedList } from "@/hooks/use-paginated-list";
+import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 
 function AdminAttemptsInner() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
+  const { searchParams, filterQuery, page, updateFilter, setPage } = useUrlQuery();
 
-  const { data: attempts } = usePaginatedList<QuizAttempt>(`/admin/attempts${query ? `?${query}` : ""}`);
+  const { data: attempts } = usePaginatedList<QuizAttempt>(`/admin/attempts${filterQuery ? `?${filterQuery}` : ""}`, page);
   const rows = attempts?.data ?? [];
 
   const [users, setUsers] = useState<User[] | null>(null);
@@ -26,16 +23,6 @@ function AdminAttemptsInner() {
     api.get<PaginatedResponse<User>>("/admin/users?per_page=100").then((res) => setUsers(res.data));
     api.get<{ quizzes: PaginatedResponse<Quiz> }>("/admin/quizzes?per_page=100").then((res) => setQuizzes(res.quizzes.data));
   }, []);
-
-  function updateFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.replace(`/admin/attempts?${params.toString()}`);
-  }
 
   return (
     <AdminGuard>
@@ -111,7 +98,7 @@ function AdminAttemptsInner() {
                   ))}
                 </ul>
               )}
-              {attempts && attempts.meta.total > 0 && <Paginator meta={attempts.meta} />}
+              {attempts && attempts.meta.total > 0 && <Paginator meta={attempts.meta} onPageChange={setPage} />}
             </CardContent>
           </Card>
         </div>

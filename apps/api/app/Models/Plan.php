@@ -18,6 +18,7 @@ class Plan extends Model
         'type',
         'billing_interval',
         'price_cents',
+        'trial_days',
         'stripe_price_id',
         'stripe_product_id',
         'max_seats',

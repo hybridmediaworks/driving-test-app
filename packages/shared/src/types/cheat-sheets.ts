@@ -34,6 +34,7 @@ export type PublicCheatSheet = {
   slug: string;
   summary: string;
   is_premium: boolean;
+  locked: boolean;
   cover_image_url: string | null;
   category?: { id: number; name: string; title: string } | null;
   state?: { id: number; code: string; name: string } | null;

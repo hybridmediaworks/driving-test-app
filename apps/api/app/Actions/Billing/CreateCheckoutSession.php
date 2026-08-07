@@ -23,7 +23,11 @@ class CreateCheckoutSession
         ];
 
         if ($plan->type === PlanType::Recurring) {
-            $checkout = $user->newSubscription('default', $plan->stripe_price_id)->checkout($sessionOptions);
+            $subscription = $user->newSubscription('default', $plan->stripe_price_id);
+            if ($plan->trial_days !== null) {
+                $subscription = $subscription->trialDays($plan->trial_days);
+            }
+            $checkout = $subscription->checkout($sessionOptions);
         } else {
             $checkout = $user->checkout([$plan->stripe_price_id => 1], [
                 ...$sessionOptions,
