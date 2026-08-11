@@ -2,7 +2,14 @@ const path = require("path");
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativeWind } = require("nativewind/metro");
 
+const workspaceRoot = path.resolve(__dirname, "../..");
 const config = getDefaultConfig(__dirname);
+
+// pnpm workspace packages (e.g. @driving-test-app/shared) are symlinked into
+// node_modules, and live outside this project's own directory tree — Metro
+// needs to watch the monorepo root and follow those symlinks to resolve them.
+config.watchFolders = [workspaceRoot];
+config.resolver.unstable_enableSymlinks = true;
 
 // Zustand's ESM build (middleware.mjs) uses `import.meta.env` which Metro's
 // web bundler does not support. Disabling package exports resolution forces

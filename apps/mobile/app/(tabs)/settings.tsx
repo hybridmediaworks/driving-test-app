@@ -1,9 +1,11 @@
 import Header from "@/components/header";
+import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Primary, Secondary } from "@/constants/theme";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { US_STATES } from "@/constants/us-states";
+import { useAuthStore } from "@/store/authStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useChallengeBankStore } from "@/store/challengeBankStore";
 import { useThemeStore } from "@/store/themeStore";
@@ -11,13 +13,7 @@ import { useUserStore } from "@/store/userStore";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
-import {
-  Animated,
-  Share,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Animated, Share, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type SettingsRowProps = {
@@ -52,7 +48,11 @@ function SettingsRow({
             <Text className="text-base text-secondary-400 dark:text-secondary-500">
               {value}
             </Text>
-            <MaterialIcons name="chevron-right" size={18} color={Secondary[400]} />
+            <MaterialIcons
+              name="chevron-right"
+              size={18}
+              color={Secondary[400]}
+            />
           </View>
         ) : null)}
     </TouchableOpacity>
@@ -150,11 +150,23 @@ export default function SettingsScreen() {
   const { vehicleType, state, examDateRange } = useUserStore();
   const { resetProgress } = useProgressStore();
   const { clearAll: clearChallengeBank } = useChallengeBankStore();
+  const { user, logout } = useAuthStore();
 
   const isDark = preference === "dark";
   const [pushEnabled, setPushEnabled] = useState(false);
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [language, setLanguage] = useState<"en" | "es">("en");
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   const stateEntry = US_STATES.find((s) => s.id === state);
   const stateLabel = stateEntry ? stateEntry.id : "Not Set";
@@ -192,6 +204,49 @@ export default function SettingsScreen() {
           { useNativeDriver: false },
         )}
       >
+        {user ? (
+          <View className="rounded-2xl bg-white dark:bg-secondary-800 mb-6 p-4 flex-row items-center justify-between">
+            <View className="flex-1 pr-3">
+              <Text
+                numberOfLines={1}
+                className="text-base font-semibold text-secondary-900 dark:text-secondary-100"
+              >
+                {user.name}
+              </Text>
+              <Text
+                numberOfLines={1}
+                className="text-sm text-secondary-400 dark:text-secondary-500"
+              >
+                {user.email}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={handleLogout} disabled={loggingOut}>
+              <Text className="text-base font-semibold text-primary dark:text-primary-400">
+                {loggingOut ? "Logging out…" : "Log out"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View className="rounded-2xl bg-white dark:bg-secondary-800 mb-6 p-4 flex-row gap-3">
+            <Button
+              variant="secondary-outline"
+              size="md"
+              className="flex-1"
+              onPress={() => router.push("/auth/login")}
+            >
+              Log in
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              className="flex-1"
+              onPress={() => router.push("/auth/register")}
+            >
+              Sign up
+            </Button>
+          </View>
+        )}
+
         <View className="rounded-2xl overflow-hidden bg-white dark:bg-secondary-800 mb-6">
           <SettingsRow
             label="Premium Subscription"
