@@ -2,7 +2,11 @@ import Header from "@/components/header";
 import { ProgressBar } from "@/components/progress/progress-bar";
 import { ProgressItem } from "@/components/progress/progress-item";
 import { PROGRESS_ITEMS } from "@/data/progressItems";
-import { getExamConfig, getQuestionsByTestId, getTests } from "@/services/testService";
+import {
+  getExamConfig,
+  getQuestionsByTestId,
+  getTests,
+} from "@/services/testService";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { router } from "expo-router";
@@ -25,9 +29,10 @@ export default function ProgressScreen() {
   const handlePracticePress = () => {
     const submitted = allPracticeTests
       .filter((t) => testResults[t.id])
-      .sort((a, b) =>
-        new Date(testResults[b.id].completedAt).getTime() -
-        new Date(testResults[a.id].completedAt).getTime()
+      .sort(
+        (a, b) =>
+          new Date(testResults[b.id].completedAt).getTime() -
+          new Date(testResults[a.id].completedAt).getTime(),
       );
 
     if (submitted.length > 0) {
@@ -37,7 +42,12 @@ export default function ProgressScreen() {
       const correct = Math.round((r.score / 100) * total);
       router.push({
         pathname: "/test/results/[id]",
-        params: { id: latest.id, correct: String(correct), total: String(total), missedIds: r.missedIds ?? "" },
+        params: {
+          id: latest.id,
+          correct: String(correct),
+          total: String(total),
+          missedIds: r.missedIds ?? "",
+        },
       } as any);
     } else {
       const first = allPracticeTests[0];
@@ -55,11 +65,7 @@ export default function ProgressScreen() {
       className="flex-1 bg-white-off dark:bg-secondary-900"
       edges={["top"]}
     >
-      <Header
-        title="Your Progress"
-        scrollY={scrollY}
-        backgroundImage="https://images.pexels.com/photos/1687093/pexels-photo-1687093.jpeg?auto=compress&cs=tinysrgb&w=800&fit=crop"
-      />
+      <Header title="Your Progress" scrollY={scrollY} />
 
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
@@ -69,7 +75,7 @@ export default function ProgressScreen() {
           { useNativeDriver: false },
         )}
         contentContainerStyle={{
-          paddingTop: 305,
+          paddingTop: 111,
           paddingBottom: 40,
           paddingInline: 16,
         }}

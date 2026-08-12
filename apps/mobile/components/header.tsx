@@ -28,7 +28,7 @@ export default function Header({
 
   const fontSize = scrollY.interpolate({
     inputRange: [0, 60],
-    outputRange: [40, 28],
+    outputRange: [30, 28],
     extrapolate: "clamp",
   });
 
@@ -44,9 +44,9 @@ export default function Header({
     extrapolate: "clamp",
   });
 
-  const subtitleHeight = scrollY.interpolate({
+  const subtitleMarginBottom = scrollY.interpolate({
     inputRange: [0, 60],
-    outputRange: [24, 0],
+    outputRange: [0, -22],
     extrapolate: "clamp",
   });
 
@@ -57,7 +57,6 @@ export default function Header({
   });
 
   const totalTranslate = 180 + insets.top;
-  const totalMargin = insets.top;
   const headerTranslateY = backgroundImage
     ? scrollY.interpolate({
         inputRange: [0, totalTranslate],
@@ -80,7 +79,7 @@ export default function Header({
             ? White.DEFAULT
             : White.off,
         width: "100%",
-        overflow: "hidden",
+        overflow: backgroundImage ? "hidden" : "visible",
         transform: headerTranslateY
           ? [{ translateY: headerTranslateY }]
           : undefined,
@@ -89,7 +88,7 @@ export default function Header({
       {backgroundImage && (
         <Image
           source={{ uri: backgroundImage }}
-          style={{ width: "100%", height: 180, marginBottom: totalMargin }}
+          style={{ width: "100%", height: 180 }}
           contentFit="cover"
         />
       )}
@@ -108,13 +107,12 @@ export default function Header({
               style={{
                 transform: [{ translateY: subtitleTranslateY }],
                 opacity: subtitleOpacity,
-                height: subtitleHeight,
-                overflow: "visible",
+                marginBottom: subtitleMarginBottom,
               }}
             >
               <Text
                 numberOfLines={1}
-                className="text-base text-secondary-600 dark:text-secondary-50"
+                className="font-sans-semibold text-base text-secondary-600 dark:text-secondary-50"
               >
                 {subtitle}
               </Text>
@@ -123,7 +121,7 @@ export default function Header({
           <Animated.Text
             style={{
               fontSize,
-              fontWeight: "bold",
+              fontFamily: "Sora_700Bold",
               color: isDark ? Secondary[50] : Secondary[900],
             }}
           >
