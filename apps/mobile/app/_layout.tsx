@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import 'react-native-reanimated';
 
+import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 
 export const unstable_settings = {
@@ -17,10 +18,15 @@ export default function RootLayout() {
   const preference = useThemeStore((s) => s.preference);
   const isDark = preference === 'dark';
   const { setColorScheme } = useColorScheme();
+  const hydrate = useAuthStore((s) => s.hydrate);
 
   useEffect(() => {
     setColorScheme(preference);
   }, [preference]);
+
+  useEffect(() => {
+    hydrate();
+  }, []);
 
   return (
     <View className="flex-1">
@@ -28,6 +34,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="test/see-all" options={{ headerShown: false }} />
           <Stack.Screen name="theory/see-all" options={{ headerShown: false }} />
