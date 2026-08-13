@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx supervisor gettext-base sqlite3 unzip git ca-certificates curl gnupg \
         libsqlite3-dev libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev libicu-dev libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" pdo_sqlite gd zip bcmath intl exif pcntl mbstring \
+    && docker-php-ext-install -j"$(nproc)" pdo_sqlite pdo_mysql gd zip bcmath intl exif pcntl mbstring \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
