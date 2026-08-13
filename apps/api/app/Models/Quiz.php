@@ -85,7 +85,8 @@ class Quiz extends Model implements HasMedia
      */
     public function quizQuestions(): HasMany
     {
-        return $this->hasMany(QuizQuestion::class)->orderBy('sort_order');
+        // `id` tiebreaker keeps the order deterministic even if two rows share a sort_order.
+        return $this->hasMany(QuizQuestion::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /**

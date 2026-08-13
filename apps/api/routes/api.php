@@ -51,6 +51,16 @@ Route::prefix('v1')->group(function (): void {
     Route::get('quizzes/{quiz}', [PublicQuizController::class, 'show']);
     Route::post('quizzes/{quiz}/attempts', [PublicQuizController::class, 'storeAttempt'])
         ->middleware('throttle:20,1');
+    // Instant per-question feedback (practice mode) — reveals correctness + explanation for the
+    // one answer just submitted.
+    Route::post('quizzes/{quiz}/questions/{question}/check', [PublicQuizController::class, 'checkAnswer'])
+        ->middleware('throttle:60,1');
+    // AI tutor hint / follow-up question — tighter limit since each call hits an LLM.
+    Route::post('quizzes/{quiz}/questions/{question}/assist', [PublicQuizController::class, 'assist'])
+        ->middleware('throttle:10,1');
+    // Report a mistake/typo in a question.
+    Route::post('quizzes/{quiz}/questions/{question}/report', [PublicQuizController::class, 'report'])
+        ->middleware('throttle:10,1');
 
     // Public flashcard browsing/study — front text is always visible; back_text/image_url are
     // withheld per-card by FlashcardResource for premium cards the caller isn't entitled to.

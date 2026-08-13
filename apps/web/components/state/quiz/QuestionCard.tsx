@@ -1,94 +1,215 @@
-import { Volume2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { CheckCircle2, Volume2, XCircle } from "lucide-react";
+import type { PublicQuizQuestion, QuizAnswerCheckResponse } from "@driving-test-app/shared";
 import Paragraph from "@/components/ui/Paragraph";
 import QuestionAnimation from "@/components/quiz/QuestionAnimation";
-import type { PublicQuizQuestion } from "@driving-test-app/shared";
 
 /**
- * Renders a question while it's still being played (pre-submission). The real backend
- * deliberately never sends `is_correct`/`explanation` for an answer before the whole attempt is
- * submitted (see `Public\QuizController::show` on the API side) — so, unlike the mocked version
- * this replaced, there is no per-option correct/incorrect reveal here. That feedback only exists
- * after grading, in the results screen (matches how `components/quiz/QuestionCard.tsx` — the
- * already-real `/quizzes/[id]` player — has always behaved).
+ * A small canvas confetti burst that fires once from the center of the correct answer's letter
+ * circle. Same physics as the results-screen `ConfettiBurst` (radial spray, gravity, spin, fade),
+ * just scaled down and localized. Mounts only while the correct option is revealed.
+ */
+function CorrectConfetti() {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const W = 220;
+    const H = 190;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    const palette = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#eab308", "#8b5cf6", "#06b6d4", "#ec4899"];
+    const cx = W / 2;
+    const cy = H * 0.58;
+    let parts = Array.from({ length: 60 }, (_, i) => {
+      const a = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 5;
+      return {
+        x: cx,
+        y: cy,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed - 4,
+        g: 0.14 + Math.random() * 0.08,
+        s: 4 + Math.random() * 4,
+        c: palette[i % palette.length],
+        rot: Math.random() * 6,
+        vr: -0.35 + Math.random() * 0.7,
+        life: 1,
+      };
+    });
+
+    let raf: number;
+    const tick = () => {
+      ctx.clearRect(0, 0, W, H);
+      parts.forEach((p) => {
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.life -= 0.02;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.5);
+        ctx.restore();
+      });
+      parts = parts.filter((p) => p.life > 0 && p.y < H + 20);
+      if (parts.length) raf = requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, W, H);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <canvas
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
+      style={{ width: 220, height: 190 }}
+    />
+  );
+}
+
+/**
+ * Renders a question during play. In practice mode the parent grades each answer the moment it's
+ * picked (via the `check` endpoint) and passes the result back as `checkResult`, which drives the
+ * green/red reveal, the correct/your-answer pills, and the inline explanation. Until `checkResult`
+ * exists the options behave as a plain single-select; once it does, selection is locked.
  */
 export default function QuestionCard({
   question,
   selectedOptionId,
+  checkResult,
   voiceOver = false,
   fontScale = 1,
   onSelectOption,
 }: {
   question: PublicQuizQuestion;
   selectedOptionId: number | undefined;
-  isAnswered: boolean;
-  isLastQuestion: boolean;
-  isViewingFurthest: boolean;
+  checkResult: QuizAnswerCheckResponse | undefined;
   voiceOver?: boolean;
   fontScale?: number;
-  footerPosition?: "inside" | "outside";
   onSelectOption: (optionId: number) => void;
-  onNextQuestion: () => void;
-  onSeeResults: () => void;
 }) {
   const lottieAsset = question.assets.find((asset) => asset.type === "lottie");
+  const isChecked = checkResult !== undefined;
 
   return (
-    <>
-      <div className="space-y-4">
-        <div className="relative" style={{ zoom: fontScale }}>
-          {voiceOver && (
-            <Volume2 className="absolute top-1 -left-9 h-7 w-7 rounded-full bg-blue-600 p-1.5 text-white" />
-          )}
-          <Paragraph
-            size="2xl"
-            className="font-semibold font-sora"
-            color="dark"
-          >
-            {question.question_text}
-          </Paragraph>
-        </div>
-        {lottieAsset ? (
-          <QuestionAnimation asset={lottieAsset} />
-        ) : (
-          question.image_urls[0] && (
-            // eslint-disable-next-line @next/next/no-img-element
+    <div className="space-y-4">
+      <div className="relative" style={{ zoom: fontScale }}>
+        {voiceOver && (
+          <Volume2 className="absolute top-1 -left-9 h-7 w-7 rounded-full bg-blue-600 p-1.5 text-white" />
+        )}
+        <Paragraph size="2xl" className="font-semibold font-sora" color="dark">
+          {question.question_text}
+        </Paragraph>
+      </div>
+
+      {lottieAsset ? (
+        <QuestionAnimation asset={lottieAsset} />
+      ) : (
+        question.image_urls[0] && (
+          <div className="flex items-center justify-center rounded-2xl border border-border bg-background2/40 p-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={question.image_urls[0]}
               alt={question.question_text}
-              className="max-h-64 w-full rounded-xl object-cover"
+              className="max-h-64 w-auto object-contain"
             />
-          )
-        )}
-        <div style={{ zoom: fontScale }}>
-          <div className="space-y-3">
-            {question.answers.map((option, index) => {
-              const isSelected = option.id === selectedOptionId;
-              const optionLetter = String.fromCharCode(65 + index);
+          </div>
+        )
+      )}
 
-              return (
-                <div
-                  key={option.id}
-                  onClick={() => onSelectOption(option.id)}
-                  className={`group cursor-pointer rounded-lg border p-3 hover:bg-neutral-50 ${
-                    isSelected ? "border-blue-500 bg-blue-50" : ""
-                  }`}
-                >
-                  <div className="flex items-start justify-start gap-3">
+      <div style={{ zoom: fontScale }}>
+        <div className="space-y-3">
+          {question.answers.map((option, index) => {
+            const optionLetter = String.fromCharCode(65 + index);
+            const isSelected = option.id === selectedOptionId;
+
+            const isCorrectOption = isChecked && option.id === checkResult.correct_answer_id;
+            const isChosenWrong =
+              isChecked && option.id === checkResult.selected_answer_id && !checkResult.is_correct;
+            const celebrateCorrect = isCorrectOption && checkResult?.is_correct === true;
+            const showExplanation =
+              !!checkResult?.explanation && (isChosenWrong || celebrateCorrect);
+
+            const boxClass = isCorrectOption
+              ? "border-green-300 bg-green-50"
+              : isChosenWrong
+                ? "border-red-300 bg-red-50"
+                : isSelected && !isChecked
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-border hover:bg-neutral-50";
+
+            const badgeClass = isCorrectOption
+              ? "bg-green-500 text-white"
+              : isChosenWrong
+                ? "bg-red-500 text-white"
+                : isSelected && !isChecked
+                  ? "bg-blue-600 text-white"
+                  : "bg-neutral-100 text-neutral-500";
+
+            return (
+              <div
+                key={option.id}
+                onClick={() => !isChecked && onSelectOption(option.id)}
+                className={`group rounded-lg border p-3 transition-colors ${boxClass} ${
+                  isChecked ? "cursor-default" : "cursor-pointer"
+                } ${celebrateCorrect ? "correct-glow" : ""}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
                     <div
-                      className={`font-bold text-sm min-w-7.5 min-h-7.5 rounded-full flex items-center justify-center ${
-                        isSelected ? "bg-blue-600 text-white" : "bg-neutral-100 text-neutral-500"
-                      }`}
+                      className={`relative flex min-h-7.5 min-w-7.5 items-center justify-center rounded-full text-sm font-bold ${badgeClass}`}
                     >
                       {optionLetter}
+                      {isCorrectOption && checkResult.is_correct && <CorrectConfetti />}
                     </div>
-                    <Paragraph className="font-medium min-h-7.5 flex items-center">{option.answer_text}</Paragraph>
+                    <Paragraph className="flex min-h-7.5 items-center font-medium">
+                      {option.answer_text}
+                    </Paragraph>
                   </div>
+
+                  {isCorrectOption && (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="hidden rounded-full border border-green-300 px-3 py-1 text-xs font-semibold text-green-600 sm:inline">
+                        Correct answer
+                      </span>
+                      <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    </div>
+                  )}
+                  {isChosenWrong && (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="hidden rounded-full border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 sm:inline">
+                        Your answer
+                      </span>
+                      <XCircle className="h-6 w-6 text-red-500" />
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
+
+                {showExplanation && (
+                  <Paragraph size="sm" className="mt-2 pl-10.5" color="muted">
+                    {checkResult.explanation}
+                  </Paragraph>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
-    </>
+    </div>
   );
 }

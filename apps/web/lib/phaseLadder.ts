@@ -16,6 +16,9 @@ export type PhaseLadderStep = {
   style?: "large";
   completed?: boolean;
   justCompleted?: boolean;
+  /** A non-quiz placeholder rung (e.g. "extra support" for states with no quiz there yet) — renders
+   * a "coming soon" card in the step grid so it flows through the same ladder connectors as a real step. */
+  placeholder?: boolean;
 };
 
 export type PhaseLadderPhase = {
@@ -93,10 +96,16 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
     else quizzesByCategory.set(categoryId, [quiz]);
   }
 
+  const EXTRA_SUPPORT_TITLE = "The extra support";
   const phases: PhaseLadderPhase[] = [];
   let phaseNumber = 0;
 
   for (const category of categories) {
+    // "The extra support" is always rendered last (just above the handbook), so skip it here and
+    // append it after the loop — otherwise its category order could drop it mid-ladder for states
+    // that have quizzes in categories ordered after it.
+    if (category.title === EXTRA_SUPPORT_TITLE) continue;
+
     const quizzes = quizzesByCategory.get(category.id);
     if (!quizzes || quizzes.length === 0) continue;
 
@@ -123,6 +132,39 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
         image: quiz.cover_image_url ?? "/driving-tests.jpg",
         status: phaseNumber === 1 && index === 0 ? "next" : undefined,
       })),
+    });
+  }
+
+  // "The extra support" is always the final rung, directly above the handbook — regardless of how
+  // many other categories this state/vehicle/track happens to have quizzes in. States that have the
+  // quiz render its real steps; the two that don't yet (AL/AK) get a "coming soon" placeholder so
+  // the ladder still matches the reference instead of ending abruptly at the exam simulator.
+  const extraCategory = categories.find((c) => c.title === EXTRA_SUPPORT_TITLE);
+  if (extraCategory) {
+    const extraQuizzes = quizzesByCategory.get(extraCategory.id) ?? [];
+    phaseNumber++;
+    phases.push({
+      phase: phaseNumber,
+      phaseStatus: "",
+      header: {
+        headerTitle: extraCategory.title,
+        headerDesc: extraCategory.description ?? "",
+        totalQuestions: String(extraQuizzes.reduce((sum, q) => sum + q.total_questions, 0)),
+        totalTime: "",
+      },
+      steps:
+        extraQuizzes.length > 0
+          ? extraQuizzes.map((quiz, index) => ({
+              step: index + 1,
+              title: quiz.title,
+              slug: quiz.slug,
+              totalQuestions: String(quiz.total_questions),
+              totalTime: formatMinutes(quiz.duration_seconds),
+              type: quiz.is_premium ? ("premium" as const) : ("free" as const),
+              locked: quiz.locked ?? quiz.is_premium,
+              image: quiz.cover_image_url ?? "/driving-tests.jpg",
+            }))
+          : [{ step: 1, placeholder: true, style: "large" as const }],
     });
   }
 

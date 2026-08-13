@@ -2,6 +2,7 @@
 
 import { Fragment } from "react";
 import StatePhase from "@/components/state/StatePhase";
+import HandbookPhase from "@/components/state/HandbookPhase";
 import PremiumCTA from "@/components/state/permit-test/PremiumCTA";
 import { usePhaseNumbers } from "@/lib/usePhaseCompletion";
 import { useWebLayout } from "@/lib/web-layout-context";
@@ -25,7 +26,6 @@ export default function PhaseLadderSection() {
     <section className="md:px-15 px-5 pt-15 pb-15 lg:pt-30 lg:pb-15 bg-background2">
       <div className="mx-auto max-w-container space-y-12">
         {phaseNumbers.map((phase, index) => {
-          const isLast = index === phaseNumbers.length - 1;
           // The one CTA always sits between phase index 0 and 1, so index 1 is the only phase
           // ever preceded by it.
           const showCtaAfter = index === 0 && phaseNumbers.length > 1;
@@ -37,12 +37,15 @@ export default function PhaseLadderSection() {
                 phase={phase}
                 state={stateSlug}
                 previousConnector={index > 0 && !precededByCta}
-                nextConnector={!isLast}
+                /* The handbook rung always follows the last phase, so every phase connects downward. */
+                nextConnector
               />
               {showCtaAfter && <PremiumCTA previousConnector nextConnector afterPhase={phase} />}
             </Fragment>
           );
         })}
+        {/* Handbook is the final numbered rung, then the "end of theory prep" milestone. */}
+        <HandbookPhase phaseNumber={phaseNumbers.length + 1} />
       </div>
     </section>
   );

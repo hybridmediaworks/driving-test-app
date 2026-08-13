@@ -5,6 +5,7 @@ import { ArrowRight, Award, RotateCcw } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import Button from "@/components/ui/Button";
+import ReadinessUpsell from "@/components/state/quiz/ReadinessUpsell";
 
 // 270° gauge, gap at the bottom. Angles in degrees, 0 = straight up.
 const CX = 115;
@@ -98,12 +99,18 @@ type Filter = "all" | "correct" | "incorrect";
 export default function QuizResults({
   quizName,
   results,
+  showUpsell = false,
+  stateName = "",
+  stateCode = "",
   onRetry,
   onContinue,
   onSelectQuestion,
 }: {
   quizName: string;
   results: boolean[];
+  showUpsell?: boolean;
+  stateName?: string;
+  stateCode?: string;
   onRetry: () => void;
   onContinue: () => void;
   onSelectQuestion: (index: number) => void;
@@ -318,6 +325,10 @@ export default function QuizResults({
               </div>
             </div>
           ))}
+
+          {showUpsell && (
+            <ReadinessUpsell stateName={stateName} stateCode={stateCode} seenCount={total} />
+          )}
 
           <div className="mt-6 space-y-2.5">
             {incorrect > 0 && (
