@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'grok' => [
+        'key' => env('GROK_API_KEY'),
+        'base_url' => env('GROK_API_BASE_URL', 'https://api.x.ai/v1'),
+    ],
+
 ];
