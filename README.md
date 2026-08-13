@@ -85,22 +85,28 @@ Interactive Swagger/OpenAPI docs (via [Scramble](https://scramble.dedoc.co)) are
 
 Open with no login required while `APP_ENV=local` (the default for local dev). To call an authenticated endpoint from the "Try it" panel, run `POST /v1/login` first, then paste the returned token into the docs UI's auth field. Once deployed anywhere other than local, access is restricted to admins and requires a REST client that can attach a Bearer header (plain browser navigation can't) — see [`apps/api/docs/ARCHITECTURE.md`](./apps/api/docs/ARCHITECTURE.md#api-docs-openapi--swagger) for the full explanation.
 
-## Deploying (Render)
+## Deploying (AWS)
 
-`render.yaml` + `Dockerfile` build both apps into one container (Laravel + Next.js behind nginx — see `docker/`). `docker/entrypoint.sh` only ever runs `php artisan migrate --force` on boot — it deliberately does **not** seed or reset the database on every restart, so real data survives redeploys.
+Previously deployed on Render's free/starter tier; now runs on AWS:
 
-**First deploy to a brand-new environment only**: after the first successful deploy, run the seed once manually (Render dashboard → Shell, or a one-off job) to populate reference data (states, vehicle types, quiz types, an admin user, sample content):
+- **Compute**: single EC2 instance (Amazon Linux 2023, Elastic IP), running the same `Dockerfile` as before — Laravel + Next.js behind nginx via supervisor (see `docker/`).
+- **Database**: RDS MySQL, private (only reachable from the EC2 instance's security group).
+- **File storage**: S3 (`FILESYSTEM_DISK=s3`), requires the `league/flysystem-aws-s3-v3` composer package. The EC2 instance reaches S3 via an attached IAM instance role — no static AWS keys in `.env`.
+- **CI/CD**: `.github/workflows/deploy.yml` — every push to `staging` copies the repo to the instance, rebuilds the Docker image, and restarts the container. Requires the `EC2_HOST` and `EC2_SSH_KEY` repo secrets.
+- **Secrets**: `production.env` lives only on the instance (`/home/ec2-user/driving-test-app/production.env`), never committed — holds `APP_KEY`, RDS credentials, etc. The deploy workflow doesn't touch it.
 
-```bash
-php artisan db:seed --force
+`docker/entrypoint.sh` only ever runs `php artisan migrate --force` on boot — it does **not** seed or reset the database on every restart, so real data survives redeploys.
+
+Gotcha for a fresh database import: Spatie Media Library records store their own `disk`/`conversions_disk` columns per row. An import from an environment that used local/`public` storage will have those set to `public`, which breaks all media URLs in production — they need to be `s3`:
+
+```sql
+UPDATE media SET disk = 's3', conversions_disk = 's3' WHERE disk = 'public';
 ```
 
-Do not run this again on an environment with real user data — the seeders aren't idempotent and will duplicate rows.
-
-Also requires, before first deploy: real values for the `sync: false` secrets in `render.yaml` (mail SMTP credentials, S3/R2 object-storage credentials, `CORS_ALLOWED_ORIGINS`, `APP_KEY`, `APP_URL`, `FRONTEND_URL`) set in the Render dashboard — none of these are committed to the repo. The `plan: starter` tier (not free) is required for the persistent disk that keeps the SQLite database across deploys.
+`render.yaml`/`docker-compose.yml` remain in the repo for local Docker smoke-testing but are no longer the deployment path.
 
 ## Notes
 
-- No CI/CD yet (no automated tests/lint on PRs) — see `render.yaml`/`Dockerfile`/`docker-compose.yml` for the deployment config that does exist.
+- CI/CD deploys `staging` to AWS on push (see above) — no automated tests/lint on PRs yet.
 - Two-factor authentication from the original app was intentionally not ported (see `MIGRATION_PLAN.md`).
-- The API uses MySQL for local dev (`apps/api/.env`); automated tests run against an in-memory SQLite database instead (`phpunit.xml`), not the dev database. Production also uses SQLite (on a persistent disk) — see "Deploying" above.
+- The API uses MySQL for local dev and production alike (`apps/api/.env`); automated tests run against an in-memory SQLite database instead (`phpunit.xml`), not the dev/production database.

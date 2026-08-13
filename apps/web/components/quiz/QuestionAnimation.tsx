@@ -3,11 +3,12 @@
 import dynamic from "next/dynamic";
 import type { PublicQuizQuestionAsset } from "@driving-test-app/shared";
 
-// `lottie-web` touches `document` at module-eval time, which crashes during
-// server prerendering. Load the player on the client only.
-const Player = dynamic(() => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player), {
-  ssr: false,
-});
+// lottie-web (used by react-lottie-player) touches `document` at module import time, which
+// crashes Next.js's server-side prerendering — load it client-only.
+const Player = dynamic(
+  () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
+  { ssr: false },
+);
 
 /**
  * "Road situation" questions (e.g. the Virtual 360° Road Situations quizzes) attach a Lottie
