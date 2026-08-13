@@ -15,6 +15,7 @@ type Step = {
   style?: "large";
   completed?: boolean;
   justCompleted?: boolean;
+  placeholder?: boolean;
 };
 
 function chunk<T>(items: T[], size: number): T[][] {

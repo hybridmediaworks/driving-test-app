@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 
 class GradeQuizAttempt
 {
+    public function __construct(
+        private readonly GradeSingleAnswer $gradeSingleAnswer,
+    ) {}
+
     /**
      * @param  list<array{question_id: int, answer_id: int|null}>  $submittedAnswers
      */
@@ -41,18 +45,16 @@ class GradeQuizAttempt
                     continue;
                 }
 
-                $answerId = $row['answer_id'] ?? null;
-                $answer = $answerId !== null ? $question->answers->firstWhere('id', $answerId) : null;
-                $isCorrect = $answer !== null && $answer->is_correct;
+                $graded = ($this->gradeSingleAnswer)($question, $row['answer_id'] ?? null);
 
-                if ($isCorrect) {
+                if ($graded['is_correct']) {
                     $correctCount++;
                 }
 
                 $attempt->answers()->create([
                     'quiz_question_id' => $question->id,
-                    'quiz_answer_id' => $answer?->id,
-                    'is_correct' => $isCorrect,
+                    'quiz_answer_id' => $graded['selected_answer_id'],
+                    'is_correct' => $graded['is_correct'],
                     'answered_at' => now(),
                 ]);
             }

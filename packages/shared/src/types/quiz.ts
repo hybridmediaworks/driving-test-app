@@ -167,6 +167,21 @@ export type QuizShowResponse = {
   questions: PublicQuizQuestion[] | null;
 };
 
+// Instant per-question feedback (practice mode). Returned by
+// POST /quizzes/{quiz}/questions/{question}/check once the learner commits to an answer.
+export type QuizAnswerCheckResponse = {
+  question_id: number;
+  selected_answer_id: number | null;
+  correct_answer_id: number | null;
+  is_correct: boolean;
+  explanation: string | null;
+};
+
+// AI tutor reply from POST /quizzes/{quiz}/questions/{question}/assist.
+export type QuizAssistResponse = {
+  reply: string;
+};
+
 export type QuizAttemptStatus = "in_progress" | "completed";
 
 export type QuizAttemptAnswer = {

@@ -31,6 +31,9 @@ export default function StatePhase({
 
   if (!phaseData) return null;
 
+  const hasSteps = phaseData.steps.length > 0;
+  const isPlaceholder = hasSteps && phaseData.steps.every((s) => s.placeholder);
+
   // A phase is "active" either because the backend says so, or because the
   // phase before it is already fully done (no live trigger — just render the
   // filled state). animateCircleIn is the one live, one-time case: the
@@ -99,8 +102,9 @@ export default function StatePhase({
 
         <div className="space-y-2">
           <Paragraph color="primary" className="font-semibold">
-            {phaseData.header.totalQuestions} questions
-            {phaseData.header.totalTime ? ` · ~${phaseData.header.totalTime} min` : ""}
+            {isPlaceholder
+              ? "Coming soon"
+              : `${phaseData.header.totalQuestions} questions${phaseData.header.totalTime ? ` · ~${phaseData.header.totalTime} min` : ""}`}
           </Paragraph>
           <Heading as="h2">{phaseData.header.headerTitle}</Heading>
           {phaseData.header.headerDesc && (
@@ -110,26 +114,29 @@ export default function StatePhase({
           )}
         </div>
       </div>
-      <TestSteps
-        steps={phaseData.steps.map((step) => ({
-          title: step.title,
-          slug: step.slug,
-          totalQuestions: step.totalQuestions,
-          totalTime: step.totalTime,
-          type: step.type,
-          locked: step.locked,
-          image: step.image,
-          status: step.status,
-          style: step.style,
-          completed: step.completed,
-          justCompleted: step.justCompleted,
-        }))}
-        state={state}
-        columns={4}
-        nextConnector={nextConnector}
-        phaseActive={isActive}
-        phaseJustActivated={animateCircleIn}
-      />
+      {hasSteps && (
+        <TestSteps
+          steps={phaseData.steps.map((step) => ({
+            title: step.title,
+            slug: step.slug,
+            totalQuestions: step.totalQuestions,
+            totalTime: step.totalTime,
+            type: step.type,
+            locked: step.locked,
+            image: step.image,
+            status: step.status,
+            style: step.style,
+            completed: step.completed,
+            justCompleted: step.justCompleted,
+            placeholder: step.placeholder,
+          }))}
+          state={state}
+          columns={4}
+          nextConnector={nextConnector}
+          phaseActive={isActive}
+          phaseJustActivated={animateCircleIn}
+        />
+      )}
     </div>
   );
 }

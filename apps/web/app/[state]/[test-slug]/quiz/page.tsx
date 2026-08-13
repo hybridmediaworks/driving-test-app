@@ -2,28 +2,30 @@
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ArrowRight,
-  Bookmark,
-  ChevronDown,
-  Flag,
-  Gem,
-  LogOut,
-  RotateCcw,
-  SendHorizontal,
-  Settings,
-} from "lucide-react";
-import type { PaginatedResponse, PublicQuiz, QuizAttempt, QuizShowResponse } from "@driving-test-app/shared";
+import { ArrowLeft, ArrowRight, Bookmark, Flag, Gem, LogOut, RotateCcw, Settings } from "lucide-react";
+import type {
+  PaginatedResponse,
+  PublicQuiz,
+  PublicQuizQuestion,
+  QuizAnswerCheckResponse,
+  QuizAttempt,
+  QuizShowResponse,
+} from "@driving-test-app/shared";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import Slider from "@/components/ui/Slider";
 import Switch from "@/components/ui/Switch";
-import PremiumDialog from "@/components/billing/PremiumDialog";
 import QuestionCard from "@/components/state/quiz/QuestionCard";
+import HintPanel from "@/components/state/quiz/HintPanel";
+import RestartDialog from "@/components/state/quiz/RestartDialog";
+import StreakBadge from "@/components/state/quiz/StreakBadge";
+import ReportMistakeDialog from "@/components/state/quiz/ReportMistakeDialog";
+import Toast, { type ToastVariant } from "@/components/state/quiz/Toast";
 import QuizResults from "@/components/state/quiz/QuizResults";
 import { api, ApiError } from "@/lib/api";
 import { isValidState, slugToStateName, stateAbbreviations } from "@/lib/usStates";
 import { useWebLayout, WebLayoutProvider } from "@/lib/web-layout-context";
+import { useEntitlement } from "@/lib/auth-context";
 
 const allowedToFail = 4;
 
@@ -44,9 +46,28 @@ const ambientTracks = [
   { value: "in-the-drivers-seat", label: "In the Driver's Seat" },
 ];
 
+// Fisher-Yates shuffle (returns a new array; never mutates the input).
+function shuffle<T>(items: T[]): T[] {
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Randomize both the question order and each question's option order for a fresh attempt.
+// Grading is unaffected — the client always sends the real answer id, and the correct-answer
+// reveal is matched by id, not display position.
+// Shuffle the question order only; each question's options stay in their original (API) order.
+function shuffleQuiz(questions: PublicQuizQuestion[]): PublicQuizQuestion[] {
+  return shuffle(questions);
+}
+
 function QuizPageInner({ state, testSlug }: { state: string; testSlug: string }) {
   const router = useRouter();
   const { selectedVehicle } = useWebLayout();
+  const { isPremium } = useEntitlement();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
 
   const stateNameCandidate = slugToStateName(state);
@@ -67,6 +88,20 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [startedAt] = useState(() => Date.now());
 
+  // Questions + options are shuffled per attempt (re-shuffled on load/refresh and on Restart).
+  const [loadedQuestions, setLoadedQuestions] = useState<PublicQuizQuestion[]>([]);
+
+  // Practice mode: each answered question is graded immediately via the check endpoint.
+  const [checkedByQuestionId, setCheckedByQuestionId] = useState<Record<number, QuizAnswerCheckResponse>>({});
+  const [flaggedIds, setFlaggedIds] = useState<Set<number>>(new Set());
+  const [hasLoadedFlags, setHasLoadedFlags] = useState(false);
+  const [progressFilter, setProgressFilter] = useState<"all" | "correct" | "incorrect" | "flagged">("all");
+
+  // Consecutive-correct streak. The ref is read synchronously inside the async grade handler;
+  // `streak` state drives the live badge in the bottom bar.
+  const streakRef = useRef(0);
+  const [streak, setStreak] = useState(0);
+
   // Resolve the real quiz id from the state+vehicle+slug in the URL, then fetch it.
   useEffect(() => {
     let cancelled = false;
@@ -79,10 +114,23 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
         setQuiz(found ?? null);
         if (!found) return;
 
+        // Restore this quiz's flag marks (kept by question id, independent of shuffle order).
+        // Done here (inside the async resolve) rather than in an effect to avoid a synchronous
+        // setState-in-effect.
+        try {
+          const raw = localStorage.getItem(`quiz-flags-${found.id}`);
+          if (raw) setFlaggedIds(new Set(JSON.parse(raw) as number[]));
+        } catch {
+          // ignore malformed storage
+        }
+        setHasLoadedFlags(true);
+
         return api.get<QuizShowResponse>(`/quizzes/${found.id}`).then((showRes) => {
           if (cancelled) return;
           setData(showRes);
           setLocked(showRes.locked);
+          // Fresh shuffle on every load (so a refresh re-randomizes questions + options).
+          setLoadedQuestions(shuffleQuiz(showRes.questions ?? []));
         });
       })
       .catch((err) => {
@@ -97,8 +145,9 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
   }, [stateCode, vehicleType, testSlug]);
 
   const [hintOpen, setHintOpen] = useState(true);
-  const [isPremiumUser] = useState(false);
-  const [showPremiumDialog, setShowPremiumDialog] = useState(false);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [toast, setToast] = useState<{ message: string; variant: ToastVariant } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
 
@@ -116,8 +165,6 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const loadedQuestions = useMemo(() => data?.questions ?? [], [data]);
 
   const isViewingFurthest = currentIndex === furthestIndex;
   const currentQuestion = loadedQuestions[currentIndex];
@@ -140,12 +187,53 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
   }
 
   const questionStatuses = loadedQuestions.map((q) => questionStatus(q.id));
-  const correctCount = questionStatuses.filter((s) => s === "correct").length;
-  const incorrectCount = questionStatuses.filter((s) => s === "incorrect").length;
 
-  function selectOption(optionId: number) {
+  // Live sidebar counts come from instant-feedback grading, not the (post-submit) attempt.
+  const currentCheck = currentQuestion ? checkedByQuestionId[currentQuestion.id] : undefined;
+  const correctCount = loadedQuestions.filter((q) => checkedByQuestionId[q.id]?.is_correct === true).length;
+  const incorrectCount = loadedQuestions.filter((q) => checkedByQuestionId[q.id]?.is_correct === false).length;
+  const flaggedCount = loadedQuestions.filter((q) => flaggedIds.has(q.id)).length;
+
+  async function selectOption(optionId: number) {
+    if (!currentQuestion || !quiz) return;
+    // Once a question is graded it's locked — the reveal is final.
+    if (checkedByQuestionId[currentQuestion.id]) return;
+    const questionId = currentQuestion.id;
+    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+
+    try {
+      const res = await api.post<QuizAnswerCheckResponse>(
+        `/quizzes/${quiz.id}/questions/${questionId}/check`,
+        { answer_id: optionId },
+      );
+      setCheckedByQuestionId((prev) => ({ ...prev, [questionId]: res }));
+
+      // Update the consecutive-correct streak (drives the bottom-bar badge).
+      if (res.is_correct) {
+        streakRef.current += 1;
+        setStreak(streakRef.current);
+      } else {
+        streakRef.current = 0;
+        setStreak(0);
+      }
+    } catch {
+      // Grading failed (e.g. network) — keep the selection so the learner can retry by re-tapping.
+      setAnswers((prev) => {
+        const next = { ...prev };
+        delete next[questionId];
+        return next;
+      });
+    }
+  }
+
+  function toggleFlag() {
     if (!currentQuestion) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
+    setFlaggedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(currentQuestion.id)) next.delete(currentQuestion.id);
+      else next.add(currentQuestion.id);
+      return next;
+    });
   }
 
   function goToQuestion(index: number) {
@@ -161,12 +249,21 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
     }
   }
 
+  function previousQuestion() {
+    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+  }
+
   function restart() {
     setAnswers({});
     setCurrentIndex(0);
     setFurthestIndex(0);
     setShowResults(false);
     setAttempt(null);
+    setCheckedByQuestionId({});
+    streakRef.current = 0;
+    setStreak(0);
+    // Re-shuffle questions + options for the new attempt.
+    setLoadedQuestions(shuffleQuiz(data?.questions ?? []));
   }
 
   async function submitAttempt() {
@@ -194,15 +291,58 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
   function goToTestPage() {
     router.push(`/${state}/${testSlug}`);
   }
+
+  // Continue → the next quiz in the SAME category (e.g. "The Essentials" → Practice Test 1 → 2),
+  // ordered by the API's order_no. A free/unlocked next quiz opens directly; a premium next quiz
+  // the user isn't entitled to sends them to pricing; no next quiz falls back to the state page.
+  async function goToNextQuiz() {
+    if (!quiz) return goToTestPage();
+    try {
+      const categoryParam = quiz.category?.name
+        ? `&category=${encodeURIComponent(quiz.category.name)}`
+        : "";
+      const res = await api.get<PaginatedResponse<PublicQuiz>>(
+        `/quizzes?state=${stateCode}&vehicle_type=${vehicleType}${categoryParam}&per_page=100`,
+      );
+      const list = res.data;
+      const idx = list.findIndex((q) => q.id === quiz.id);
+      const next = idx >= 0 ? list[idx + 1] : undefined;
+
+      if (!next) {
+        router.push(`/${state}`); // last quiz in this category — back to the state overview
+      } else if (next.locked) {
+        router.push("/pricing");
+      } else {
+        router.push(`/${state}/${next.slug}`);
+      }
+    } catch {
+      goToTestPage();
+    }
+  }
   function viewQuestion(index: number) {
     setShowResults(false);
     setCurrentIndex(index);
   }
-  function handleBookmarkClick() {
-    if (!isPremiumUser) {
-      setShowPremiumDialog(true);
+
+  // Persist flag marks per-quiz so they survive reloads within this browser. (Loading happens in
+  // the resolve callback above, once the quiz id is known.) `hasFlags` gates the very first write
+  // so an empty initial state can't clobber stored flags before they load.
+  const quizId = quiz?.id;
+  useEffect(() => {
+    if (quizId == null || !hasLoadedFlags) return;
+    try {
+      localStorage.setItem(`quiz-flags-${quizId}`, JSON.stringify([...flaggedIds]));
+    } catch {
+      // ignore quota / private-mode errors
     }
-  }
+  }, [flaggedIds, quizId, hasLoadedFlags]);
+
+  // Auto-dismiss the success toast.
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -233,8 +373,11 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
           <QuizResults
             quizName={`${stateName} ${quiz.title}`}
             results={questionStatuses.map((s) => s === "correct")}
+            showUpsell={!isPremium}
+            stateName={stateName}
+            stateCode={stateCode}
             onRetry={restart}
-            onContinue={goToTestPage}
+            onContinue={goToNextQuiz}
             onSelectQuestion={viewQuestion}
           />
         ) : (
@@ -257,7 +400,7 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
                     {stateName} {quiz.title}
                   </Paragraph>
                 </div>
-                <Button href="/pricing" size="sm">
+                <Button href="/pricing" size="sm" variant="gold">
                   <Gem className="w-5" /> Upgrade
                 </Button>
               </div>
@@ -284,7 +427,14 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
                       </Paragraph>
                     </div>
                     <div className="flex sm:gap-3 gap-2 items-center justify-center">
-                      <Bookmark onClick={handleBookmarkClick} className="h-6 w-6 cursor-pointer text-neutral-500" />
+                      <Bookmark
+                        onClick={toggleFlag}
+                        className={`h-6 w-6 cursor-pointer ${
+                          currentQuestion && flaggedIds.has(currentQuestion.id)
+                            ? "fill-amber-400 text-amber-500"
+                            : "text-neutral-500"
+                        }`}
+                      />
                       <div className="relative" ref={settingsRef}>
                         <Settings onClick={() => setSettingsOpen((v) => !v)} className="h-6 w-6 cursor-pointer text-neutral-500" />
 
@@ -391,21 +541,17 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
                   <QuestionCard
                     question={currentQuestion}
                     selectedOptionId={selectedOptionId}
-                    isAnswered={isAnswered}
-                    isLastQuestion={currentIndex === loadedQuestions.length - 1}
-                    isViewingFurthest={isViewingFurthest}
+                    checkResult={currentCheck}
                     voiceOver={voiceOver}
                     fontScale={questionFontScale}
                     onSelectOption={selectOption}
-                    onNextQuestion={nextQuestion}
-                    onSeeResults={submitAttempt}
                   />
                   {submitError && <p className="text-sm text-destructive">{submitError}</p>}
                 </div>
 
                 <div className="space-y-4">
                   <div className=" rounded-2xl border border-border bg-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center justify-between border-b border-border pb-4">
                       <div>
                         <Paragraph size="2xl" color="dark" className="font-semibold">
                           Your Progress
@@ -413,97 +559,127 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
                         <Paragraph size="sm">{allowedToFail} allowed to pass</Paragraph>
                       </div>
 
-                      <Button variant="outline" size="sm" onClick={restart}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowRestartConfirm(true)}
+                        className="border border-blue-300 hover:bg-blue-50"
+                      >
                         <RotateCcw className="h-3.5 w-3.5" /> <span className="hidden md:inline-block">Restart</span>
                       </Button>
                     </div>
 
-                    <Paragraph className="mb-4 flex items-center gap-4" size="xs">
-                      <span className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-red-500" />
-                        <strong>{incorrectCount} </strong>
-                        Incorrect
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-green-500" />
-                        <strong>{correctCount} </strong>
-                        Correct
-                      </span>
-                    </Paragraph>
-
-                    <div className="flex justify-start flex-wrap gap-1.5">
-                      {loadedQuestions.map((question, index) => (
+                    <div className="mb-4 mt-4 flex w-full flex-wrap items-center justify-between gap-2 text-xs font-semibold">
+                      {(
+                        [
+                          { key: "all", label: "All", count: loadedQuestions.length },
+                          { key: "correct", label: "Correct", count: correctCount },
+                          { key: "incorrect", label: "Incorrect", count: incorrectCount },
+                          { key: "flagged", label: "Flagged", count: flaggedCount },
+                        ] as const
+                      ).map((tab) => (
                         <button
-                          key={question.id}
-                          disabled={index > furthestIndex}
-                          onClick={() => goToQuestion(index)}
-                          className={`w-10.5 flex aspect-square border items-center justify-center rounded-md text-sm font-semibold ${
-                            questionStatuses[index] === "correct" ? "bg-green-50 text-green-500 border-green-200" : ""
-                          } ${questionStatuses[index] === "incorrect" ? "bg-red-50 border-red-200 text-red-500" : ""} ${
-                            questionStatuses[index] === "unanswered" && answers[question.id] !== undefined
-                              ? "bg-blue-50 border-blue-200 text-blue-600"
-                              : questionStatuses[index] === "unanswered"
-                                ? "bg-background text-neutral-500"
-                                : ""
-                          } ${index === furthestIndex ? "bg-linear-to-r from-blue-500 to-blue-700 text-white" : ""} ${index === currentIndex && index !== furthestIndex ? "ring-2 ring-blue-500" : ""} ${
-                            index > furthestIndex ? "cursor-not-allowed!" : ""
+                          key={tab.key}
+                          onClick={() => setProgressFilter(tab.key)}
+                          className={`flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-1.5 transition-colors ${
+                            progressFilter === tab.key
+                              ? "border-transparent bg-blue-1000 text-white"
+                              : "border-border bg-white text-neutral-700 hover:bg-neutral-50"
                           }`}
                         >
-                          {index + 1}
+                          {tab.label}
+                          <span
+                            className={progressFilter === tab.key ? "text-white/70" : "text-neutral-400"}
+                          >
+                            {tab.count}
+                          </span>
                         </button>
                       ))}
                     </div>
+
+                    <div className="grid grid-cols-8 gap-1.5">
+                      {loadedQuestions
+                        .map((question, index) => ({ question, index }))
+                        .filter(({ question }) => {
+                          const check = checkedByQuestionId[question.id];
+                          if (progressFilter === "correct") return check?.is_correct === true;
+                          if (progressFilter === "incorrect") return check?.is_correct === false;
+                          if (progressFilter === "flagged") return flaggedIds.has(question.id);
+                          return true;
+                        })
+                        .map(({ question, index }) => {
+                          const check = checkedByQuestionId[question.id];
+                          const isCurrent = index === currentIndex;
+                          const locked = index > furthestIndex;
+                          const cellClass = isCurrent
+                            ? "border-transparent bg-linear-to-r from-blue-500 to-blue-700 text-white"
+                            : check?.is_correct === true
+                              ? "border-green-200 bg-green-50 text-green-500"
+                              : check?.is_correct === false
+                                ? "border-red-200 bg-red-50 text-red-500"
+                                : answers[question.id] !== undefined
+                                  ? "border-blue-200 bg-blue-50 text-blue-600"
+                                  : "border-border bg-background text-neutral-500";
+                          return (
+                            <button
+                              key={question.id}
+                              disabled={locked}
+                              onClick={() => goToQuestion(index)}
+                              className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-lg border text-sm font-semibold ${cellClass} ${
+                                locked ? "cursor-not-allowed opacity-60" : ""
+                              }`}
+                            >
+                              {flaggedIds.has(question.id) && (
+                                <span className="absolute right-0 top-0 h-0 w-0 border-l-[10px] border-t-[10px] border-l-transparent border-t-amber-400" />
+                              )}
+                              {index + 1}
+                            </button>
+                          );
+                        })}
+                    </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
-                    <button
-                      onClick={() => setHintOpen((v) => !v)}
-                      className="flex w-full items-start justify-between gap-2 text-left text-sm text-neutral-600"
-                    >
-                      Need a hint or a quick explanation? Tap the button or type a question for instant help.
-                      <ChevronDown className={`mt-0.5 h-4 w-4 shrink-0 text-neutral-400 transition-transform ${hintOpen ? "rotate-180" : ""}`} />
-                    </button>
-
-                    {hintOpen && (
-                      <div className="mt-3 space-y-3 space-x-2">
-                        <Button variant="secondary" size="sm" disabled>
-                          Give me a hint (coming soon)
-                        </Button>
-                        <Button variant="secondary" size="sm" disabled>
-                          Explain further (coming soon)
-                        </Button>
-
-                        <div className="flex items-center gap-2 rounded-full border border-neutral-200 px-4 py-2 opacity-60">
-                          <input
-                            type="text"
-                            disabled
-                            placeholder="AI tutor coming soon…"
-                            className="w-full text-sm outline-none placeholder:text-neutral-400"
-                          />
-                          <Button disabled className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-primary p-0! text-white">
-                            <SendHorizontal className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <HintPanel
+                    key={currentQuestion.id}
+                    quizId={quiz.id}
+                    questionId={currentQuestion.id}
+                    open={hintOpen}
+                    onToggle={() => setHintOpen((v) => !v)}
+                  />
                 </div>
               </div>
               <div className="bg-white border-t border py-4 px-5 h-20 fixed w-full bottom-0 left-0">
-                <div className="max-w-container mx-auto flex items-center justify-between gap-2">
-                  <Button variant="ghost" className=" text-neutral-700 p-0!" size="sm">
+                <div className="max-w-container mx-auto relative flex items-center justify-between gap-2">
+                  {streak >= 2 && <StreakBadge key={streak} streak={streak} />}
+                  <Button
+                    variant="ghost"
+                    className=" text-neutral-700 p-0!"
+                    size="sm"
+                    onClick={() => setShowReportDialog(true)}
+                  >
                     <Flag className="w-5 stroke-neutral-500" />
-                    Report a mistake
+                    Flag for Mistake
                   </Button>
-                  {currentIndex + 1 === loadedQuestions.length ? (
-                    <Button size="md" disabled={!isAnswered || !isViewingFurthest || submitting} onClick={submitAttempt}>
-                      {submitting ? "Grading…" : "See Results"}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="md"
+                      disabled={currentIndex === 0}
+                      onClick={previousQuestion}
+                      className="border border-blue-300 hover:bg-blue-50"
+                    >
+                      <ArrowLeft /> Previous
                     </Button>
-                  ) : (
-                    <Button size="md" disabled={!isAnswered || !isViewingFurthest} onClick={nextQuestion}>
-                      Next Question <ArrowRight />
-                    </Button>
-                  )}
+                    {currentIndex + 1 === loadedQuestions.length ? (
+                      <Button size="md" disabled={(isViewingFurthest && !isAnswered) || submitting} onClick={submitAttempt}>
+                        {submitting ? "Grading…" : "See Results"}
+                      </Button>
+                    ) : (
+                      <Button size="md" disabled={isViewingFurthest && !isAnswered} onClick={nextQuestion}>
+                        Next Question <ArrowRight />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
@@ -511,7 +687,18 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
         )}
       </main>
 
-      <PremiumDialog open={showPremiumDialog} onOpenChange={setShowPremiumDialog} />
+      <RestartDialog open={showRestartConfirm} onOpenChange={setShowRestartConfirm} onConfirm={restart} />
+      {quiz && currentQuestion && (
+        <ReportMistakeDialog
+          key={currentQuestion.id}
+          open={showReportDialog}
+          onOpenChange={setShowReportDialog}
+          quizId={quiz.id}
+          question={currentQuestion}
+          onToast={(message, variant) => setToast({ message, variant })}
+        />
+      )}
+      {toast && <Toast message={toast.message} variant={toast.variant} onDismiss={() => setToast(null)} />}
     </div>
   );
 }
@@ -525,7 +712,8 @@ export default function TestQuizPage({
 
   return (
     <WebLayoutProvider stateSlug={state}>
-      <QuizPageInner state={state} testSlug={testSlug} />
+      {/* key by slug so moving to another quiz (Continue → next) starts with a clean state. */}
+      <QuizPageInner key={testSlug} state={state} testSlug={testSlug} />
     </WebLayoutProvider>
   );
 }
