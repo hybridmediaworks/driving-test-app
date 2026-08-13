@@ -35,9 +35,13 @@ return [
         ],
     ],
 
+    // Powers the quiz AI tutor (hint / ask) via Groq's OpenAI-compatible API. The key you set as
+    // GROK_API_KEY (gsk_...) is a Groq key. To target xAI Grok instead, set GROK_BASE_URL to
+    // https://api.x.ai/v1, GROK_MODEL to a grok-* model, and use an xai-... key.
     'grok' => [
         'key' => env('GROK_API_KEY'),
-        'base_url' => env('GROK_API_BASE_URL', 'https://api.x.ai/v1'),
+        'model' => env('GROK_MODEL', 'llama-3.3-70b-versatile'),
+        'base_url' => env('GROK_BASE_URL', 'https://api.groq.com/openai/v1'),
     ],
 
 ];

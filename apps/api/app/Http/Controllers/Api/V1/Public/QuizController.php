@@ -2,23 +2,34 @@
 
 namespace App\Http\Controllers\Api\V1\Public;
 
+use App\Actions\Quiz\GenerateQuestionAssist;
 use App\Actions\Quiz\GradeQuizAttempt;
+use App\Actions\Quiz\GradeSingleAnswer;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Public\CheckQuizAnswerRequest;
+use App\Http\Requests\Api\V1\Public\QuizAssistRequest;
 use App\Http\Requests\Api\V1\Public\StoreQuizAttemptRequest;
+use App\Http\Requests\Api\V1\Public\StoreQuizQuestionReportRequest;
 use App\Http\Resources\Api\V1\Public\QuizQuestionResource;
 use App\Http\Resources\Api\V1\Public\QuizResource;
 use App\Http\Resources\Api\V1\QuizAttemptResource;
 use App\Models\Quiz;
+use App\Models\QuizQuestion;
+use App\Models\QuizQuestionReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class QuizController extends Controller
 {
     public function __construct(
         private readonly GradeQuizAttempt $gradeAttempt,
+        private readonly GradeSingleAnswer $gradeSingleAnswer,
+        private readonly GenerateQuestionAssist $generateAssist,
     ) {}
 
     /**
@@ -138,5 +149,90 @@ class QuizController extends Controller
         );
 
         return response()->json(['attempt' => new QuizAttemptResource($attempt)], 201);
+    }
+
+    /**
+     * Grade a single answer for instant feedback
+     *
+     * Powers the practice-mode reveal: as soon as a learner picks an option, the client posts it
+     * here and gets back whether it was right, the correct answer id, and the question's
+     * explanation. Same guest-or-sanctum entitlement gate as attempts. Unlike `show`, this
+     * deliberately exposes the answer — but only for the one question the learner just committed to.
+     */
+    public function checkAnswer(CheckQuizAnswerRequest $request, Quiz $quiz, QuizQuestion $question): JsonResponse
+    {
+        Gate::forUser($request->user('sanctum'))->authorize('attempt', $quiz);
+
+        if ($question->quiz_id !== $quiz->id) {
+            throw new NotFoundHttpException('This question does not belong to the quiz.');
+        }
+
+        $question->load('answers');
+        $graded = ($this->gradeSingleAnswer)($question, $request->integer('answer_id'));
+
+        return response()->json([
+            'question_id' => $question->id,
+            'selected_answer_id' => $graded['selected_answer_id'],
+            'correct_answer_id' => $graded['correct_answer_id'],
+            'is_correct' => $graded['is_correct'],
+            'explanation' => $question->explanation,
+        ]);
+    }
+
+    /**
+     * AI tutor — hint or free-form question about a quiz question
+     *
+     * `mode=hint` nudges without revealing the answer; `mode=ask` answers the learner's `message`.
+     * Same entitlement gate as attempts. Returns 503 when no LLM key is configured so the
+     * feature degrades gracefully rather than 500-ing.
+     */
+    public function assist(QuizAssistRequest $request, Quiz $quiz, QuizQuestion $question): JsonResponse
+    {
+        Gate::forUser($request->user('sanctum'))->authorize('attempt', $quiz);
+
+        if ($question->quiz_id !== $quiz->id) {
+            throw new NotFoundHttpException('This question does not belong to the quiz.');
+        }
+
+        $question->load('answers');
+
+        try {
+            $reply = ($this->generateAssist)(
+                $question,
+                $request->string('mode')->toString(),
+                $request->input('message'),
+            );
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 503);
+        }
+
+        return response()->json(['reply' => $reply]);
+    }
+
+    /**
+     * Report a mistake in a question
+     *
+     * Lets a learner flag a typo/error in the question, image, hint, or a specific answer, with a
+     * free-text comment and optional name/email. Same entitlement gate as attempts; the report is
+     * attached to the signed-in user when there is one.
+     */
+    public function report(StoreQuizQuestionReportRequest $request, Quiz $quiz, QuizQuestion $question): JsonResponse
+    {
+        Gate::forUser($request->user('sanctum'))->authorize('attempt', $quiz);
+
+        if ($question->quiz_id !== $quiz->id) {
+            throw new NotFoundHttpException('This question does not belong to the quiz.');
+        }
+
+        QuizQuestionReport::create([
+            'quiz_question_id' => $question->id,
+            'user_id' => $request->user('sanctum')?->id,
+            'flagged' => $request->input('flagged'),
+            'comment' => $request->string('comment')->toString(),
+            'reporter_name' => $request->input('reporter_name'),
+            'reporter_email' => $request->input('reporter_email'),
+        ]);
+
+        return response()->json(['message' => 'Thanks! Your report has been submitted.'], 201);
     }
 }

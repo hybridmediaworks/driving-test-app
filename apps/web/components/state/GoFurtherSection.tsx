@@ -53,7 +53,7 @@ export default function GoFurtherSection() {
   ];
 
   return (
-    <section className="pb-15 md:space-y-15 lg:pb-30 px-5">
+    <section className="px-5 pt-15 pb-15 lg:pt-30 lg:pb-15">
       <div className="mx-auto max-w-container space-y-12">
         <div className="space-y-4">
           <Subheading text="Go further" />
@@ -64,9 +64,11 @@ export default function GoFurtherSection() {
         </div>
         <div className="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4">
           {resourceCards.map(({ icon: Icon, title, description, buttonText, href }) => (
-            <div key={title} className="p-6 bg-neutral-50 border rounded-lg space-y-4.5 flex flex-col justify-between gap-4">
+            <div key={title} className="p-6 bg-neutral-50 border rounded-lg flex flex-col justify-between gap-6">
               <div className="space-y-4">
-                <Icon className="bg-blue-100 py-3 rounded-[11px] min-w-12.5 min-h-12.5 text-blue-700" />
+                <div className="flex items-center justify-center bg-blue-100 rounded-[11px] w-12.5 h-12.5 text-blue-700">
+                  <Icon className="w-6 h-6" />
+                </div>
                 <Paragraph size="lg" className="font-semibold" color="dark">
                   {title}
                 </Paragraph>
