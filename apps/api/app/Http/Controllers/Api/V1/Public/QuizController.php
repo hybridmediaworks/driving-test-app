@@ -47,6 +47,7 @@ class QuizController extends Controller
         $query = Quiz::query()
             ->where('is_active', true)
             ->with(['category', 'quizType', 'state', 'vehicleType'])
+            ->orderBy('is_premium')
             ->orderBy('order_no')
             ->orderBy('title');
 
