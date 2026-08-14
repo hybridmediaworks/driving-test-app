@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AmbientTrackController as AdminAmbientTrackController;
 use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptController;
 use App\Http\Controllers\Api\V1\Admin\CheatSheetController as AdminCheatSheetController;
 use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\FamilyController;
 use App\Http\Controllers\Api\V1\FlashcardReviewController;
 use App\Http\Controllers\Api\V1\PassGuaranteeClaimController;
+use App\Http\Controllers\Api\V1\Public\AmbientTrackController;
 use App\Http\Controllers\Api\V1\Public\CheatSheetController as PublicCheatSheetController;
 use App\Http\Controllers\Api\V1\Public\FlashcardController as PublicFlashcardController;
 use App\Http\Controllers\Api\V1\Public\HandbookController as PublicHandbookController;
@@ -86,6 +88,9 @@ Route::prefix('v1')->group(function (): void {
     Route::get('states', [StateController::class, 'index']);
     Route::get('states/{code}/stats', [StateController::class, 'stats']);
     Route::get('vehicle-types', [VehicleTypeController::class, 'index']);
+
+    // Fixed set of background-music loops for the quiz Settings panel, S3-hosted.
+    Route::get('ambient-tracks', [AmbientTrackController::class, 'index']);
     Route::get('quiz-categories', [PublicQuizCategoryController::class, 'index']);
 
     Route::get('plans', [PlanController::class, 'index']);
@@ -152,6 +157,9 @@ Route::prefix('v1')->group(function (): void {
 
             Route::apiResource('videos', AdminVideoController::class)->except(['show']);
             Route::get('videos/{video}', [AdminVideoController::class, 'show']);
+
+            Route::apiResource('ambient-tracks', AdminAmbientTrackController::class)->except(['show']);
+            Route::get('ambient-tracks/{ambientTrack}', [AdminAmbientTrackController::class, 'show']);
 
             Route::apiResource('handbooks', AdminHandbookController::class)->except(['show']);
             Route::get('handbooks/{handbook}', [AdminHandbookController::class, 'show']);

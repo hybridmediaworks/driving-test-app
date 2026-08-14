@@ -3,6 +3,7 @@ export * from "./types/quiz";
 export * from "./types/flashcards";
 export * from "./types/cheat-sheets";
 export * from "./types/videos";
+export * from "./types/ambient-tracks";
 export * from "./types/handbooks";
 export * from "./types/admin";
 export * from "./types/billing";

@@ -175,6 +175,8 @@ export type QuizAnswerCheckResponse = {
   correct_answer_id: number | null;
   is_correct: boolean;
   explanation: string | null;
+  // Null until at least one attempt has been submitted for this question.
+  answer_popularity: { answer_id: number; percentage: number }[] | null;
 };
 
 // AI tutor reply from POST /quizzes/{quiz}/questions/{question}/assist.

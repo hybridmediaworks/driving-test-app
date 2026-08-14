@@ -87,4 +87,12 @@ class QuizQuestion extends Model implements HasMedia
     {
         return $this->hasMany(QuizQuestionAsset::class)->orderBy('sort_order');
     }
+
+    /**
+     * @return HasMany<QuizAttemptAnswer, $this>
+     */
+    public function attemptAnswers(): HasMany
+    {
+        return $this->hasMany(QuizAttemptAnswer::class);
+    }
 }

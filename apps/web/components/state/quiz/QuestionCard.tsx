@@ -93,6 +93,7 @@ export default function QuestionCard({
   selectedOptionId,
   checkResult,
   voiceOver = false,
+  answerPopularity = false,
   fontScale = 1,
   onSelectOption,
 }: {
@@ -100,6 +101,7 @@ export default function QuestionCard({
   selectedOptionId: number | undefined;
   checkResult: QuizAnswerCheckResponse | undefined;
   voiceOver?: boolean;
+  answerPopularity?: boolean;
   fontScale?: number;
   onSelectOption: (optionId: number) => void;
 }) {
@@ -139,6 +141,9 @@ export default function QuestionCard({
   // (and clear anything mid-sentence) the moment it's switched off or the question changes again.
   useEffect(() => {
     if (!voiceOver) return;
+    // speakQuestion -> speak only sets isSpeaking asynchronously inside the utterance's
+    // onstart/onend callbacks, never synchronously here — a false positive for this rule.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     speakQuestion();
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -152,6 +157,8 @@ export default function QuestionCard({
     const resultText = checkResult.is_correct
       ? "Correct!"
       : `Incorrect. The correct answer is ${correctAnswer?.answer_text ?? ""}.`;
+    // Same false positive as above — isSpeaking only updates inside async utterance callbacks.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     speak(checkResult.explanation ? `${resultText} ${checkResult.explanation}` : resultText);
   }, [checkResult, voiceOver, question, speak]);
 
@@ -210,6 +217,8 @@ export default function QuestionCard({
             const showExplanation =
               !!checkResult?.explanation && (isChosenWrong || celebrateCorrect);
 
+            const popularity = checkResult?.answer_popularity?.find((p) => p.answer_id === option.id)?.percentage;
+
             const boxClass = isCorrectOption
               ? "border-green-300 bg-green-50"
               : isChosenWrong
@@ -247,20 +256,27 @@ export default function QuestionCard({
                     </Paragraph>
                   </div>
 
-                  {isCorrectOption && (
+                  {isChecked && (answerPopularity || isCorrectOption || isChosenWrong) && (
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="hidden rounded-full border border-green-300 px-3 py-1 text-xs font-semibold text-green-600 sm:inline">
-                        Correct answer
-                      </span>
-                      <CheckCircle2 className="h-6 w-6 text-green-500" />
-                    </div>
-                  )}
-                  {isChosenWrong && (
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="hidden rounded-full border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 sm:inline">
-                        Your answer
-                      </span>
-                      <XCircle className="h-6 w-6 text-red-500" />
+                      {answerPopularity && popularity !== undefined && (
+                        <span className="text-xs font-semibold text-neutral-500">{popularity}%</span>
+                      )}
+                      {isCorrectOption && (
+                        <>
+                          <span className="hidden rounded-full border border-green-300 px-3 py-1 text-xs font-semibold text-green-600 sm:inline">
+                            Correct answer
+                          </span>
+                          <CheckCircle2 className="h-6 w-6 text-green-500" />
+                        </>
+                      )}
+                      {isChosenWrong && (
+                        <>
+                          <span className="hidden rounded-full border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 sm:inline">
+                            Your answer
+                          </span>
+                          <XCircle className="h-6 w-6 text-red-500" />
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Public;
 
+use App\Actions\Quiz\ComputeAnswerPopularity;
 use App\Actions\Quiz\GenerateQuestionAssist;
 use App\Actions\Quiz\GradeQuizAttempt;
 use App\Actions\Quiz\GradeSingleAnswer;
@@ -30,6 +31,7 @@ class QuizController extends Controller
         private readonly GradeQuizAttempt $gradeAttempt,
         private readonly GradeSingleAnswer $gradeSingleAnswer,
         private readonly GenerateQuestionAssist $generateAssist,
+        private readonly ComputeAnswerPopularity $computePopularity,
     ) {}
 
     /**
@@ -156,9 +158,11 @@ class QuizController extends Controller
      * Grade a single answer for instant feedback
      *
      * Powers the practice-mode reveal: as soon as a learner picks an option, the client posts it
-     * here and gets back whether it was right, the correct answer id, and the question's
-     * explanation. Same guest-or-sanctum entitlement gate as attempts. Unlike `show`, this
-     * deliberately exposes the answer — but only for the one question the learner just committed to.
+     * here and gets back whether it was right, the correct answer id, the question's
+     * explanation, and how popular each option was among everyone who has completed this quiz
+     * (`answer_popularity`, null until at least one attempt has been submitted). Same
+     * guest-or-sanctum entitlement gate as attempts. Unlike `show`, this deliberately exposes the
+     * answer — but only for the one question the learner just committed to.
      */
     public function checkAnswer(CheckQuizAnswerRequest $request, Quiz $quiz, QuizQuestion $question): JsonResponse
     {
@@ -177,6 +181,7 @@ class QuizController extends Controller
             'correct_answer_id' => $graded['correct_answer_id'],
             'is_correct' => $graded['is_correct'],
             'explanation' => $question->explanation,
+            'answer_popularity' => ($this->computePopularity)($question),
         ]);
     }
 

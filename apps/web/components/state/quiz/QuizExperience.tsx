@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Bookmark, Flag, Gem, LogOut, RotateCcw, Settings } from "lucide-react";
 import type {
+  AmbientTrack,
   PublicQuiz,
   PublicQuizQuestion,
   QuizAnswerCheckResponse,
@@ -24,17 +25,6 @@ import { api, ApiError } from "@/lib/api";
 import { useEntitlement } from "@/lib/auth-context";
 
 const allowedToFail = 4;
-
-const ambientTracks = [
-  { value: "chasing-horizons", label: "Chasing Horizons" },
-  { value: "quiet-streets", label: "Driving Through Quiet Streets" },
-  { value: "smooth-lane-changes", label: "Smooth Lane Changes" },
-  { value: "stay-in-your-lane", label: "Stay in Your Lane" },
-  { value: "ready-to-ride", label: "Ready to Ride" },
-  { value: "go-the-distance", label: "Go the Distance" },
-  { value: "go-the-distance-2", label: "Go the Distance 2" },
-  { value: "in-the-drivers-seat", label: "In the Driver's Seat" },
-];
 
 // Fisher-Yates shuffle (returns a new array; never mutates the input).
 function shuffle<T>(items: T[]): T[] {
@@ -191,9 +181,33 @@ function QuizTaker({
   const [voiceOver, setVoiceOver] = useState(false);
   const [answerPopularity, setAnswerPopularity] = useState(false);
   const [ambientMusic, setAmbientMusic] = useState(false);
-  const [ambientTrack, setAmbientTrack] = useState("chasing-horizons");
+  const [ambientTrack, setAmbientTrack] = useState<number | null>(null);
+  const [ambientTracks, setAmbientTracks] = useState<AmbientTrack[]>([]);
   const [fontSize, setFontSize] = useState([50]);
   const [language, setLanguage] = useState<"en" | "es" | "ru">("en");
+
+  // The track list (admin-managed, category-scoped) and each track's S3 URL are server-resolved,
+  // not hardcoded — same disk/URL-resolution convention the API already uses for
+  // Video/QuizQuestionAsset. Scoped to this quiz's own category, which is stable for the
+  // lifetime of this mounted QuizTaker (the parent remounts it via key={quiz.id}).
+  useEffect(() => {
+    let cancelled = false;
+    const categoryQuery = quiz.category?.name ? `?category=${encodeURIComponent(quiz.category.name)}` : "";
+    api
+      .get<{ tracks: AmbientTrack[] }>(`/ambient-tracks${categoryQuery}`)
+      .then((res) => {
+        if (cancelled) return;
+        setAmbientTracks(res.tracks);
+        setAmbientTrack((prev) => prev ?? res.tracks[0]?.id ?? null);
+      })
+      .catch(() => {
+        // No ambient-track data available (offline, API error) — the settings row below already
+        // hides the picker when the list is empty, so this just leaves it that way.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [quiz.category?.name]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -202,6 +216,30 @@ function QuizTaker({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Loop the selected ambient track while enabled. Session-level (not per-question) so it keeps
+  // playing across question navigation instead of restarting. The URL is server-resolved (S3),
+  // so it's null until `ambientTracks` has loaded or if the API's bucket isn't configured — a
+  // missing/broken file fails silently via `onError` below rather than leaving a stuck attempt.
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+  const currentTrackUrl = ambientTracks.find((t) => t.id === ambientTrack)?.url ?? null;
+
+  useEffect(() => {
+    const audio = ambientAudioRef.current;
+    if (!audio) return;
+
+    if (ambientMusic && currentTrackUrl) {
+      audio.volume = 0.35;
+      audio.play().catch(() => {
+        // Autoplay can still be blocked in some browsers even from a user-gesture-triggered
+        // toggle — degrade silently rather than surfacing a broken play button.
+      });
+    } else {
+      audio.pause();
+    }
+
+    return () => audio.pause();
+  }, [ambientMusic, currentTrackUrl]);
 
   const isViewingFurthest = currentIndex === furthestIndex;
   const currentQuestion = loadedQuestions[currentIndex];
@@ -362,6 +400,21 @@ function QuizTaker({
 
   return (
     <>
+      <audio
+        ref={ambientAudioRef}
+        src={currentTrackUrl ?? undefined}
+        loop
+        preload="none"
+        onError={(e) => {
+          // Switching tracks aborts whatever the element was still loading, which itself fires
+          // an `error` event with code MEDIA_ERR_ABORTED (1) — not a real failure, just the
+          // browser cancelling the old track's in-flight load. Only a genuine load/decode error
+          // (network failure, missing file, unsupported format) should disable the toggle.
+          const code = e.currentTarget.error?.code;
+          if (code && code !== MediaError.MEDIA_ERR_ABORTED) setAmbientMusic(false);
+        }}
+        className="hidden"
+      />
       <div className="bg-white sticky top-0 z-90">
         <div className="max-w-container lg:mx-auto mx-5  flex items-center justify-between gap-3 py-3.5">
           <Button href={exitHref} variant="ghost" className=" text-neutral-700 p-0!" size="sm">
@@ -440,16 +493,16 @@ function QuizTaker({
                         </Paragraph>
                         <Switch checked={ambientMusic} onCheckedChange={setAmbientMusic} />
                       </div>
-                      {ambientMusic && (
+                      {ambientMusic && ambientTracks.length > 0 && (
                         <div className="pb-1.5">
                           <select
-                            value={ambientTrack}
-                            onChange={(e) => setAmbientTrack(e.target.value)}
+                            value={ambientTrack ?? ""}
+                            onChange={(e) => setAmbientTrack(Number(e.target.value))}
                             className="w-full rounded-full bg-neutral-100 px-3 py-2 text-sm"
                           >
                             {ambientTracks.map((track) => (
-                              <option key={track.value} value={track.value}>
-                                {track.label}
+                              <option key={track.id} value={track.id}>
+                                {track.title}
                               </option>
                             ))}
                           </select>
@@ -523,6 +576,7 @@ function QuizTaker({
               selectedOptionId={selectedOptionId}
               checkResult={currentCheck}
               voiceOver={voiceOver}
+              answerPopularity={answerPopularity}
               fontScale={questionFontScale}
               onSelectOption={selectOption}
             />

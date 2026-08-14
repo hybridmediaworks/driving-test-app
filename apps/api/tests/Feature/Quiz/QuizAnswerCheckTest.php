@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Quiz;
 
+use App\Enums\AttemptStatus;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
+use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -40,6 +42,44 @@ class QuizAnswerCheckTest extends TestCase
             'correct_answer_id' => $correct->id,
             'is_correct' => true,
             'explanation' => 'Because the sign says so.',
+            'answer_popularity' => null,
+        ]);
+    }
+
+    public function test_answer_popularity_reflects_completed_attempts(): void
+    {
+        ['quiz' => $quiz, 'question' => $question, 'correct' => $correct, 'wrong' => $wrong] = $this->makeQuestion();
+
+        // Three completed attempts: two picked the correct answer, one picked the wrong one.
+        foreach ([$correct, $correct, $wrong] as $picked) {
+            $attempt = QuizAttempt::query()->create([
+                'quiz_id' => $quiz->id,
+                'status' => AttemptStatus::Completed,
+                'total_questions' => 1,
+                'correct_count' => $picked->is_correct ? 1 : 0,
+                'score' => $picked->is_correct ? 100 : 0,
+                'passed' => $picked->is_correct,
+                'started_at' => now(),
+                'completed_at' => now(),
+            ]);
+            $attempt->answers()->create([
+                'quiz_question_id' => $question->id,
+                'quiz_answer_id' => $picked->id,
+                'is_correct' => $picked->is_correct,
+                'answered_at' => now(),
+            ]);
+        }
+
+        $response = $this->postJson("/api/v1/quizzes/{$quiz->id}/questions/{$question->id}/check", [
+            'answer_id' => $correct->id,
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'answer_popularity' => [
+                ['answer_id' => $correct->id, 'percentage' => 67],
+                ['answer_id' => $wrong->id, 'percentage' => 33],
+            ],
         ]);
     }
 
