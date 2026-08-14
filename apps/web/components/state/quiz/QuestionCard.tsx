@@ -3,6 +3,7 @@ import { CheckCircle2, Volume2, XCircle } from "lucide-react";
 import type { PublicQuizQuestion, QuizAnswerCheckResponse } from "@driving-test-app/shared";
 import Paragraph from "@/components/ui/Paragraph";
 import QuestionAnimation from "@/components/quiz/QuestionAnimation";
+import type { TFunction } from "@/lib/i18n/quiz";
 
 /**
  * A small canvas confetti burst that fires once from the center of the correct answer's letter
@@ -96,6 +97,7 @@ export default function QuestionCard({
   answerPopularity = false,
   fontScale = 1,
   onSelectOption,
+  t,
 }: {
   question: PublicQuizQuestion;
   selectedOptionId: number | undefined;
@@ -104,6 +106,7 @@ export default function QuestionCard({
   answerPopularity?: boolean;
   fontScale?: number;
   onSelectOption: (optionId: number) => void;
+  t: TFunction;
 }) {
   const lottieAsset = question.assets.find((asset) => asset.type === "lottie");
   const isChecked = checkResult !== undefined;
@@ -264,7 +267,7 @@ export default function QuestionCard({
                       {isCorrectOption && (
                         <>
                           <span className="hidden rounded-full border border-green-300 px-3 py-1 text-xs font-semibold text-green-600 sm:inline">
-                            Correct answer
+                            {t("correctAnswerBadge")}
                           </span>
                           <CheckCircle2 className="h-6 w-6 text-green-500" />
                         </>
@@ -272,7 +275,7 @@ export default function QuestionCard({
                       {isChosenWrong && (
                         <>
                           <span className="hidden rounded-full border border-red-300 px-3 py-1 text-xs font-semibold text-red-600 sm:inline">
-                            Your answer
+                            {t("yourAnswerBadge")}
                           </span>
                           <XCircle className="h-6 w-6 text-red-500" />
                         </>

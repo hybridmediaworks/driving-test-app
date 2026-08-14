@@ -3,6 +3,7 @@ import { ChevronDown, Lightbulb, SendHorizontal } from "lucide-react";
 import type { QuizAssistResponse } from "@driving-test-app/shared";
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api";
+import type { TFunction } from "@/lib/i18n/quiz";
 
 type HintMessage = { role: "hint" | "user" | "tutor"; text: string };
 
@@ -16,11 +17,13 @@ export default function HintPanel({
   questionId,
   open,
   onToggle,
+  t,
 }: {
   quizId: number;
   questionId: number;
   open: boolean;
   onToggle: () => void;
+  t: TFunction;
 }) {
   const [messages, setMessages] = useState<HintMessage[]>([]);
   const [input, setInput] = useState("");
@@ -50,7 +53,7 @@ export default function HintPanel({
       });
       setMessages((m) => [...m, { role: mode === "hint" ? "hint" : "tutor", text: res.reply }]);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "The AI tutor is unavailable right now.");
+      setError(err instanceof ApiError ? err.message : t("aiTutorUnavailable"));
     } finally {
       setLoading(false);
     }
@@ -71,7 +74,7 @@ export default function HintPanel({
         onClick={onToggle}
         className="flex w-full items-start justify-between gap-2 text-left text-sm text-neutral-600"
       >
-        Need a hint or a quick explanation? Tap the button or type a question for instant help.
+        {t("hintPrompt")}
         <ChevronDown
           className={`mt-0.5 h-4 w-4 shrink-0 text-neutral-400 transition-transform ${open ? "rotate-180" : ""}`}
         />
@@ -90,7 +93,7 @@ export default function HintPanel({
                   >
                     {m.role === "hint" && (
                       <span className="mb-1 flex items-center gap-1 text-xs font-semibold text-blue-600">
-                        <Lightbulb className="h-3.5 w-3.5" /> Hint
+                        <Lightbulb className="h-3.5 w-3.5" /> {t("hintBadge")}
                       </span>
                     )}
                     {m.text}
@@ -110,7 +113,7 @@ export default function HintPanel({
                 void requestAssist("hint");
               }}
             >
-              <Lightbulb className="h-4 w-4" /> Get a Hint
+              <Lightbulb className="h-4 w-4" /> {t("getAHint")}
             </Button>
           )}
 
@@ -125,7 +128,7 @@ export default function HintPanel({
                 if (e.key === "Enter") submit();
               }}
               disabled={loading}
-              placeholder="Ask your question here"
+              placeholder={t("askYourQuestionPlaceholder")}
               className="w-full text-sm outline-none placeholder:text-neutral-400"
             />
             <Button

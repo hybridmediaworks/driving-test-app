@@ -24,6 +24,7 @@ import Toast, { type ToastVariant } from "@/components/state/quiz/Toast";
 import QuizResults from "@/components/state/quiz/QuizResults";
 import { api, ApiError } from "@/lib/api";
 import { useEntitlement } from "@/lib/auth-context";
+import { translate, type QuizLanguage, type TFunction } from "@/lib/i18n/quiz";
 
 const allowedToFail = 4;
 
@@ -53,7 +54,7 @@ function loadStoredFlags(quizId: number): Set<number> {
 }
 
 // Learner-level preference (not per-quiz) — carries across every quiz they take.
-function loadStoredLanguage(): "en" | "es" | "ru" {
+function loadStoredLanguage(): QuizLanguage {
   try {
     const raw = localStorage.getItem("quiz-language");
     return raw === "es" || raw === "ru" ? raw : "en";
@@ -99,30 +100,35 @@ export default function QuizExperience({
   stateCode?: string;
   onContinue: () => void | Promise<void>;
 }) {
+  // No QuizTaker mounted yet at this stage (loading/locked/empty), so read the stored preference
+  // directly rather than via QuizTaker's own state, so these states respect it too.
+  const t: TFunction = (key, vars) =>
+    translate(loadStoredLanguage(), key, vars);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <main className="flex-1 relative">
         {quiz === undefined ? (
           <Paragraph className="py-20 text-center" color="muted">
-            Loading test…
+            {t("loadingTest")}
           </Paragraph>
         ) : quiz === null ? (
           <div className="py-20 text-center space-y-4">
-            <Paragraph color="muted">{loadError ?? "This test isn't available right now."}</Paragraph>
+            <Paragraph color="muted">{loadError ?? t("testUnavailable")}</Paragraph>
             <Button href={notFoundHref}>{notFoundLabel}</Button>
           </div>
         ) : locked ? (
           <div className="py-20 text-center space-y-4">
             <Paragraph color="muted">
-              This test is a premium test. Upgrade to unlock it.
+              {t("premiumQuizNotice")}
             </Paragraph>
             <Button href="/pricing">
-              <Gem className="w-5" /> Upgrade to Premium
+              <Gem className="w-5" /> {t("upgradeToPremium")}
             </Button>
           </div>
         ) : !data?.questions || data.questions.length === 0 ? (
           <Paragraph className="py-20 text-center" color="muted">
-            This test doesn&apos;t have any questions yet.
+            {t("testHasNoQuestions")}
           </Paragraph>
         ) : (
           <QuizTaker
@@ -196,7 +202,9 @@ function QuizTaker({
   const [ambientTracks, setAmbientTracks] = useState<AmbientTrack[]>([]);
   const [fontSize, setFontSize] = useState([50]);
 
-  const [language, setLanguageState] = useState<"en" | "es" | "ru">(loadStoredLanguage);
+  const [language, setLanguageState] = useState<QuizLanguage>(loadStoredLanguage);
+  const t: TFunction = (key, vars) =>
+    translate(language, key, vars);
   // What was actually served for the current `language` — may be "en" even when `language` is
   // "es"/"ru" if translation isn't available (unconfigured, or failed) for this quiz right now.
   const [contentLanguage, setContentLanguage] = useState<ContentLanguage>("en");
@@ -207,7 +215,7 @@ function QuizTaker({
 
   // Re-maps `order` (an existing loadedQuestions array, whatever its current shuffle/progress
   // position) onto the requested language's text, by question id — never changes array order.
-  function applyLanguageToOrder(order: PublicQuizQuestion[], lang: "en" | "es" | "ru"): PublicQuizQuestion[] {
+  function applyLanguageToOrder(order: PublicQuizQuestion[], lang: QuizLanguage): PublicQuizQuestion[] {
     const source = lang === "en" ? questions : translatedCacheRef.current[lang];
     if (!source) return order;
     const byId = new Map(source.map((q) => [q.id, q]));
@@ -216,7 +224,7 @@ function QuizTaker({
 
   // Fetches (if not already cached) and applies a language, updating loadedQuestions in place —
   // shared by both the user-driven language switch and restoring a stored preference on mount.
-  async function applyLanguage(next: "en" | "es" | "ru") {
+  async function applyLanguage(next: QuizLanguage) {
     if (next === "en" || translatedCacheRef.current[next]) {
       setLoadedQuestions((prev) => applyLanguageToOrder(prev, next));
       setContentLanguage(next);
@@ -231,18 +239,18 @@ function QuizTaker({
       setLoadedQuestions((prev) => applyLanguageToOrder(prev, next));
       setContentLanguage(res.content_language);
       if (res.content_language === "en") {
-        setToast({ message: "Translation isn't ready for this quiz yet — showing English for now.", variant: "error" });
+        setToast({ message: t("translationNotReadyToast"), variant: "error" });
       }
     } catch {
       setContentLanguage("en");
-      setToast({ message: "Couldn't translate this quiz right now — showing English.", variant: "error" });
+      setToast({ message: t("translationFailedToast"), variant: "error" });
     } finally {
       setTranslating(false);
     }
     setLanguageState(next);
   }
 
-  function changeLanguage(next: "en" | "es" | "ru") {
+  function changeLanguage(next: QuizLanguage) {
     if (next === language || translating) return;
     try {
       localStorage.setItem("quiz-language", next);
@@ -435,7 +443,7 @@ function QuizTaker({
       setAttempt(res.attempt);
       setShowResults(true);
     } catch (err) {
-      setSubmitError(err instanceof ApiError ? err.message : "Failed to submit your answers. Please try again.");
+      setSubmitError(err instanceof ApiError ? err.message : t("submitFailedError"));
     } finally {
       setSubmitting(false);
     }
@@ -474,6 +482,7 @@ function QuizTaker({
         onRetry={restart}
         onContinue={onContinue}
         onSelectQuestion={viewQuestion}
+        t={t}
       />
     );
   }
@@ -499,7 +508,7 @@ function QuizTaker({
         <div className="max-w-container lg:mx-auto mx-5  flex items-center justify-between gap-3 py-3.5">
           <Button href={exitHref} variant="ghost" className=" text-neutral-700 p-0!" size="sm">
             <LogOut className="w-5 h-5 text-neutral-500" />
-            Exit
+            {t("exit")}
           </Button>
           <div className="flex shrink-0 items-center justify-center gap-4">
             <Paragraph
@@ -507,14 +516,14 @@ function QuizTaker({
               color="primary"
               className="hidden md:block rounded-full border border-blue-300 bg-blue-50 px-3 py-0.5 font-semibold"
             >
-              ✦ Practice
+              ✦ {t("practiceBadge")}
             </Paragraph>
             <Paragraph size="sm" color="dark" className=" font-semibold">
               {title}
             </Paragraph>
           </div>
           <Button href="/pricing" size="sm" variant="gold">
-            <Gem className="w-5" /> Upgrade
+            <Gem className="w-5" /> {t("upgrade")}
           </Button>
         </div>
         <div className="h-2.5 flex-1 overflow-hidden bg-background2">
@@ -555,21 +564,21 @@ function QuizTaker({
                     <div className="absolute top-full right-0 z-50 mt-2 w-72 rounded-lg border bg-white p-3 shadow-lg">
                       <div className="flex items-center justify-between py-1.5">
                         <Paragraph size="sm" color="dark">
-                          Voice over
+                          {t("voiceOver")}
                         </Paragraph>
                         <Switch checked={voiceOver} onCheckedChange={setVoiceOver} />
                       </div>
                       <hr className="my-1 border-border" />
                       <div className="flex items-center justify-between py-1.5">
                         <Paragraph size="sm" color="dark">
-                          Answer popularity
+                          {t("answerPopularity")}
                         </Paragraph>
                         <Switch checked={answerPopularity} onCheckedChange={setAnswerPopularity} />
                       </div>
                       <hr className="my-1 border-border" />
                       <div className="flex items-center justify-between py-1.5">
                         <Paragraph size="sm" color="dark">
-                          Ambient music
+                          {t("ambientMusic")}
                         </Paragraph>
                         <Switch checked={ambientMusic} onCheckedChange={setAmbientMusic} />
                       </div>
@@ -592,11 +601,11 @@ function QuizTaker({
                       <div className="py-1.5">
                         <div className="mb-2 flex items-center justify-between">
                           <Paragraph size="sm" color="dark">
-                            Font size
+                            {t("fontSize")}
                           </Paragraph>
                           <button type="button" onClick={() => setFontSize([50])} className="cursor-pointer">
                             <Paragraph size="xs" color="primary">
-                              Default
+                              {t("default")}
                             </Paragraph>
                           </button>
                         </div>
@@ -609,7 +618,7 @@ function QuizTaker({
                       <hr className="my-1 border-border" />
                       <div className="flex items-center justify-between py-1.5">
                         <Paragraph size="sm" color="dark">
-                          Keyboard shortcuts
+                          {t("keyboardShortcuts")}
                         </Paragraph>
                         <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-500">
                           Shift + ?
@@ -650,12 +659,12 @@ function QuizTaker({
                       </div>
                       {translating && (
                         <Paragraph size="xs" color="muted" className="pt-2 text-center">
-                          Translating this quiz — this can take a little while the first time…
+                          {t("translatingQuiz")}
                         </Paragraph>
                       )}
                       {contentLanguage !== "en" && !translating && (
                         <Paragraph size="xs" color="muted" className="pt-2 text-center">
-                          Machine-translated — verify with an official source before your exam.
+                          {t("machineTranslatedNotice")}
                         </Paragraph>
                       )}
                     </div>
@@ -672,6 +681,7 @@ function QuizTaker({
               answerPopularity={answerPopularity}
               fontScale={questionFontScale}
               onSelectOption={selectOption}
+              t={t}
             />
             {submitError && <p className="text-sm text-destructive">{submitError}</p>}
           </div>
@@ -681,9 +691,9 @@ function QuizTaker({
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
                   <Paragraph size="2xl" color="dark" className="font-semibold">
-                    Your Progress
+                    {t("yourProgress")}
                   </Paragraph>
-                  <Paragraph size="sm">{allowedToFail} allowed to pass</Paragraph>
+                  <Paragraph size="sm">{t("allowedToFail", { count: allowedToFail })}</Paragraph>
                 </div>
 
                 <Button
@@ -692,17 +702,17 @@ function QuizTaker({
                   onClick={() => setShowRestartConfirm(true)}
                   className="border border-blue-300 hover:bg-blue-50"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" /> <span className="hidden md:inline-block">Restart</span>
+                  <RotateCcw className="h-3.5 w-3.5" /> <span className="hidden md:inline-block">{t("restart")}</span>
                 </Button>
               </div>
 
               <div className="mb-4 mt-4 flex w-full flex-wrap items-center justify-between gap-2 text-xs font-semibold">
                 {(
                   [
-                    { key: "all", label: "All", count: loadedQuestions.length },
-                    { key: "correct", label: "Correct", count: correctCount },
-                    { key: "incorrect", label: "Incorrect", count: incorrectCount },
-                    { key: "flagged", label: "Flagged", count: flaggedCount },
+                    { key: "all", label: t("all"), count: loadedQuestions.length },
+                    { key: "correct", label: t("correct"), count: correctCount },
+                    { key: "incorrect", label: t("incorrect"), count: incorrectCount },
+                    { key: "flagged", label: t("flagged"), count: flaggedCount },
                   ] as const
                 ).map((tab) => (
                   <button
@@ -772,12 +782,13 @@ function QuizTaker({
               questionId={currentQuestion.id}
               open={hintOpen}
               onToggle={() => setHintOpen((v) => !v)}
+              t={t}
             />
           </div>
         </div>
         <div className="bg-white border-t border py-4 px-5 h-20 fixed w-full bottom-0 left-0">
           <div className="max-w-container mx-auto relative flex items-center justify-between gap-2">
-            {streak >= 2 && <StreakBadge key={streak} streak={streak} />}
+            {streak >= 2 && <StreakBadge key={streak} streak={streak} language={language} />}
             <Button
               variant="ghost"
               className=" text-neutral-700 p-0!"
@@ -785,7 +796,7 @@ function QuizTaker({
               onClick={() => setShowReportDialog(true)}
             >
               <Flag className="w-5 stroke-neutral-500" />
-              Flag for Mistake
+              {t("flagForMistake")}
             </Button>
             <div className="flex items-center gap-2">
               <Button
@@ -795,15 +806,15 @@ function QuizTaker({
                 onClick={previousQuestion}
                 className="border border-blue-300 hover:bg-blue-50"
               >
-                <ArrowLeft /> Previous
+                <ArrowLeft /> {t("previous")}
               </Button>
               {currentIndex + 1 === loadedQuestions.length ? (
                 <Button size="md" disabled={(isViewingFurthest && !isAnswered) || submitting} onClick={submitAttempt}>
-                  {submitting ? "Grading…" : "See Results"}
+                  {submitting ? t("grading") : t("seeResults")}
                 </Button>
               ) : (
                 <Button size="md" disabled={isViewingFurthest && !isAnswered} onClick={nextQuestion}>
-                  Next Question <ArrowRight />
+                  {t("nextQuestion")} <ArrowRight />
                 </Button>
               )}
             </div>
@@ -811,7 +822,7 @@ function QuizTaker({
         </div>
       </section>
 
-      <RestartDialog open={showRestartConfirm} onOpenChange={setShowRestartConfirm} onConfirm={restart} />
+      <RestartDialog open={showRestartConfirm} onOpenChange={setShowRestartConfirm} onConfirm={restart} t={t} />
       {currentQuestion && (
         <ReportMistakeDialog
           key={currentQuestion.id}
@@ -820,6 +831,7 @@ function QuizTaker({
           quizId={quiz.id}
           question={currentQuestion}
           onToast={(message, variant) => setToast({ message, variant })}
+          t={t}
         />
       )}
       {toast && <Toast message={toast.message} variant={toast.variant} onDismiss={() => setToast(null)} />}

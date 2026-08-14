@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { api, ApiError } from "@/lib/api";
+import type { TFunction } from "@/lib/i18n/quiz";
 
 function CheckRow({
   checked,
@@ -38,12 +39,14 @@ export default function ReportMistakeDialog({
   quizId,
   question,
   onToast,
+  t,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   quizId: number;
   question: PublicQuizQuestion;
   onToast: (message: string, variant: "success" | "error") => void;
+  t: TFunction;
 }) {
   const hasImage = question.image_urls.length > 0 || question.assets.some((a) => a.type === "lottie");
 
@@ -68,7 +71,7 @@ export default function ReportMistakeDialog({
   async function submit() {
     if (submitting) return;
     if (!comment.trim()) {
-      onToast("Please describe the mistake before sending.", "error");
+      onToast(t("describeBeforeSending"), "error");
       return;
     }
     setSubmitting(true);
@@ -85,10 +88,10 @@ export default function ReportMistakeDialog({
         reporter_email: email.trim() || null,
       });
       onOpenChange(false);
-      onToast("Thanks! Your report has been submitted.", "success");
+      onToast(t("reportSubmitted"), "success");
     } catch (err) {
       onToast(
-        err instanceof ApiError ? err.message : "Couldn't send your report. Please try again.",
+        err instanceof ApiError ? err.message : t("reportFailed"),
         "error",
       );
     } finally {
@@ -100,23 +103,21 @@ export default function ReportMistakeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-lg! overflow-y-auto rounded-3xl p-6 sm:p-8">
         <Heading size="xs" className="pr-6 text-center">
-          Report a mistake in this question
+          {t("reportMistakeTitle")}
         </Heading>
         <Paragraph size="sm" color="muted" className="mt-2">
-          Please check the box with the mistake or typo and provide a comment in the form below.
-          Remember to read through the hint and explanation (check for words like &quot;NOT&quot; and
-          &quot;EXCEPT&quot;), and double-check your answer. Thanks for your help!
+          {t("reportMistakeInstructions")}
         </Paragraph>
 
         <div className="mt-4 space-y-1">
-          <p className="text-sm font-semibold text-neutral-900">Question:</p>
+          <p className="text-sm font-semibold text-neutral-900">{t("questionLabel")}</p>
           <CheckRow checked={flagQuestion} onChange={setFlagQuestion} label={question.question_text} />
 
           {hasImage && (
-            <CheckRow checked={flagImage} onChange={setFlagImage} label="Sign / Image" />
+            <CheckRow checked={flagImage} onChange={setFlagImage} label={t("signOrImage")} />
           )}
 
-          <p className="pt-2 text-sm font-semibold text-neutral-900">Answers:</p>
+          <p className="pt-2 text-sm font-semibold text-neutral-900">{t("answersLabel")}</p>
           {question.answers.map((a) => (
             <CheckRow
               key={a.id}
@@ -126,12 +127,12 @@ export default function ReportMistakeDialog({
             />
           ))}
 
-          <p className="pt-2 text-sm font-semibold text-neutral-900">Hint:</p>
-          <CheckRow checked={flagHint} onChange={setFlagHint} label="The hint / explanation for this question" />
+          <p className="pt-2 text-sm font-semibold text-neutral-900">{t("hintLabel")}</p>
+          <CheckRow checked={flagHint} onChange={setFlagHint} label={t("hintExplanationCheckbox")} />
         </div>
 
         <label className="mt-4 block text-sm text-neutral-600">
-          Please describe what is wrong with the sentence you have ticked:
+          {t("describeWhatIsWrong")}
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -144,14 +145,14 @@ export default function ReportMistakeDialog({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name"
+          placeholder={t("enterYourName")}
           className="mt-3 w-full rounded-xl bg-background2 px-4 py-3 text-sm outline-none placeholder:text-neutral-400 focus:ring-2 focus:ring-blue-300"
         />
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your e-mail address"
+          placeholder={t("enterYourEmail")}
           className="mt-3 w-full rounded-xl bg-background2 px-4 py-3 text-sm outline-none placeholder:text-neutral-400 focus:ring-2 focus:ring-blue-300"
         />
 
@@ -161,10 +162,10 @@ export default function ReportMistakeDialog({
             onClick={() => onOpenChange(false)}
             className="flex-1 border border-blue-300 hover:bg-blue-50"
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button onClick={submit} disabled={submitting} className="flex-1">
-            {submitting ? "Sending…" : "Send"}
+            {submitting ? t("sending") : t("send")}
           </Button>
         </div>
       </DialogContent>

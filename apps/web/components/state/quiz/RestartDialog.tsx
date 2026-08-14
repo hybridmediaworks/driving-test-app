@@ -3,6 +3,7 @@ import Button from "@/components/ui/Button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
+import type { TFunction } from "@/lib/i18n/quiz";
 
 /**
  * Confirmation shown before restarting a quiz, so progress isn't wiped by an accidental tap.
@@ -12,10 +13,12 @@ export default function RestartDialog({
   open,
   onOpenChange,
   onConfirm,
+  t,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  t: TFunction;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -44,9 +47,9 @@ export default function RestartDialog({
         </div>
 
         <div className="space-y-4 bg-white p-8 text-center">
-          <Heading size="xs">Restart your test?</Heading>
+          <Heading size="xs">{t("restartTestTitle")}</Heading>
           <Paragraph className="text-center">
-            Are you sure you want to restart your test? Your test progress will be lost.
+            {t("restartTestBody")}
           </Paragraph>
 
           <div className="flex items-center gap-3 pt-2">
@@ -55,7 +58,7 @@ export default function RestartDialog({
               onClick={() => onOpenChange(false)}
               className="flex-1 border border-blue-300 hover:bg-blue-50"
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -64,7 +67,7 @@ export default function RestartDialog({
               }}
               className="flex-1"
             >
-              Restart
+              {t("restart")}
             </Button>
           </div>
         </div>

@@ -6,6 +6,7 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import Button from "@/components/ui/Button";
 import ReadinessUpsell from "@/components/state/quiz/ReadinessUpsell";
+import type { TFunction } from "@/lib/i18n/quiz";
 
 // 270° gauge, gap at the bottom. Angles in degrees, 0 = straight up.
 const CX = 115;
@@ -55,40 +56,40 @@ function zoneDotClass(percent: number) {
   return "bg-status-critical";
 }
 
-function statusFor(percent: number) {
+function statusFor(percent: number, t: TFunction) {
   if (percent === 100)
     return {
-      label: "Perfect score",
-      sub: "Flawless run — you nailed every question.",
+      label: t("perfectScoreTitle"),
+      sub: t("perfectScoreSub"),
     };
   if (percent >= 80)
     return {
-      label: "Passed",
-      sub: "Above the passing line. You're test-ready on this set.",
+      label: t("passedTitle"),
+      sub: t("passedSub"),
     };
   if (percent >= 50)
     return {
-      label: "Almost there",
-      sub: "Close to passing — tighten up the misses and go again.",
+      label: t("almostThereTitle"),
+      sub: t("almostThereSub"),
     };
   return {
-    label: "Keep practicing",
-    sub: "Review the missed rules and retry to build your streak.",
+    label: t("keepPracticingTitle"),
+    sub: t("keepPracticingSub"),
   };
 }
 
 type Badge = { name: string; note: string; progress: number };
 
-function defaultBadges(percent: number): Badge[] {
+function defaultBadges(percent: number, t: TFunction): Badge[] {
   return [
     {
-      name: "Bronze Marathoner",
-      note: "nice work",
+      name: t("badgeBronzeMarathoner"),
+      note: t("badgeNoteNiceWork"),
       progress: percent === 100 ? 100 : percent >= 80 ? 22 : 8,
     },
     {
-      name: "Road Scholar",
-      note: "keep it up",
+      name: t("badgeRoadScholar"),
+      note: t("badgeNoteKeepItUp"),
       progress: percent === 100 ? 80 : percent >= 80 ? 60 : 20,
     },
   ];
@@ -105,6 +106,7 @@ export default function QuizResults({
   onRetry,
   onContinue,
   onSelectQuestion,
+  t,
 }: {
   quizName: string;
   results: boolean[];
@@ -114,31 +116,29 @@ export default function QuizResults({
   onRetry: () => void;
   onContinue: () => void;
   onSelectQuestion: (index: number) => void;
+  t: TFunction;
 }) {
   const total = results.length;
   const correct = results.filter(Boolean).length;
   const incorrect = total - correct;
   const percent = total ? Math.round((correct / total) * 100) : 0;
 
-  const { label, sub } = statusFor(percent);
+  const { label, sub } = statusFor(percent, t);
   const isPerfect = percent === 100;
-  const badges = useMemo(() => defaultBadges(percent), [percent]);
+  const badges = useMemo(() => defaultBadges(percent, t), [percent, t]);
 
   const [filter, setFilter] = useState<Filter>("all");
-  const [animPercent, setAnimPercent] = useState(0);
-  const [barsOn, setBarsOn] = useState(false);
+  // Reduced motion skips the count-up/bar-fill entirely — read once at mount via lazy initial
+  // state (not an effect) so there's no extra render just to jump straight to the final values.
+  const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  const [animPercent, setAnimPercent] = useState(() => (prefersReducedMotion() ? percent : 0));
+  const [barsOn, setBarsOn] = useState(prefersReducedMotion);
   const rafRef = useRef(0);
 
-  // Count-up + bar fill run once on mount, skipped entirely under reduced motion.
+  // Count-up + bar fill run once on mount, skipped entirely under reduced motion (already
+  // reflected in the initial state above).
   useEffect(() => {
-    const reduceMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduceMotion) {
-      setAnimPercent(percent);
-      setBarsOn(true);
-      return;
-    }
+    if (prefersReducedMotion()) return;
 
     const start = performance.now();
     const duration = 1100;
@@ -232,7 +232,7 @@ export default function QuizResults({
                 <span className="text-lg font-bold">%</span>
               </Heading>
               <Paragraph className="text-neutral-300!">
-                {correct} of {total} correct
+                {t("correctOfTotal", { correct, total })}
               </Paragraph>
             </div>
           </div>
@@ -255,21 +255,21 @@ export default function QuizResults({
                 active={filter}
                 onSelect={setFilter}
                 count={total}
-                label="All"
+                label={t("all")}
               />
               <ResultTab
                 k="correct"
                 active={filter}
                 onSelect={setFilter}
                 count={correct}
-                label="Correct"
+                label={t("correct")}
               />
               <ResultTab
                 k="incorrect"
                 active={filter}
                 onSelect={setFilter}
                 count={incorrect}
-                label="Incorrect"
+                label={t("incorrect")}
               />
             </div>
 
@@ -302,7 +302,7 @@ export default function QuizResults({
             color="muted"
             className="mt-6 mb-3 px-1 font-bold tracking-[0.12em] uppercase"
           >
-            Progress unlocked
+            {t("progressUnlocked")}
           </Paragraph>
           {badges.map((badge) => (
             <div
@@ -311,7 +311,7 @@ export default function QuizResults({
             >
               <div className="min-w-0 flex-1">
                 <Paragraph size="sm" color="dark" className="leading-snug!">
-                  Leveled up your <b>{badge.name}</b> badge — {badge.note}.
+                  {t("leveledUpBadge", { badge: badge.name, note: badge.note })}
                 </Paragraph>
                 <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-background2">
                   <div
@@ -337,12 +337,12 @@ export default function QuizResults({
                 variant="outline"
                 className="w-full text-red-600 border-red-600"
               >
-                Retry {incorrect} missed question{incorrect > 1 ? "s" : ""}
+                {t("retryMissedQuestions", { count: incorrect, plural: incorrect > 1 ? "s" : "" })}
                 <RotateCcw className="size-4" />
               </Button>
             )}
             <Button onClick={onContinue} className="w-full">
-              Continue
+              {t("continueLabel")}
               <ArrowRight className="size-4.5" />
             </Button>
           </div>
