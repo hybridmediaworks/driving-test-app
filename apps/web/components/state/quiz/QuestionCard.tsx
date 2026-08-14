@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Volume2, XCircle } from "lucide-react";
 import type { PublicQuizQuestion, QuizAnswerCheckResponse } from "@driving-test-app/shared";
 import Paragraph from "@/components/ui/Paragraph";
@@ -105,12 +105,77 @@ export default function QuestionCard({
 }) {
   const lottieAsset = question.assets.find((asset) => asset.type === "lottie");
   const isChecked = checkResult !== undefined;
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Speaks a line of text via the browser's built-in speech synthesizer, replacing whatever is
+  // currently queued. No TTS library is installed and no pre-recorded "audio" question assets are
+  // ever populated by the API, so `SpeechSynthesis` is the only functional option here.
+  const speak = useCallback((text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith("en"));
+      if (voice) utterance.voice = voice;
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // Some browsers/engines throw on malformed voices or mid-navigation speak() calls — voice-over
+      // is a nice-to-have, so fail silently rather than taking the whole question card down with it.
+      setIsSpeaking(false);
+    }
+  }, []);
+
+  const speakQuestion = useCallback(() => {
+    const optionsText = question.answers
+      .map((option, index) => `Option ${String.fromCharCode(65 + index)}: ${option.answer_text}`)
+      .join(". ");
+    speak(`${question.question_text}. ${optionsText}`);
+  }, [question, speak]);
+
+  // Read the question + options aloud whenever voice-over is on and the question changes; stop
+  // (and clear anything mid-sentence) the moment it's switched off or the question changes again.
+  useEffect(() => {
+    if (!voiceOver) return;
+    speakQuestion();
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    };
+  }, [voiceOver, speakQuestion]);
+
+  // Once the answer is graded, read the result and explanation aloud too.
+  useEffect(() => {
+    if (!voiceOver || !checkResult) return;
+    const correctAnswer = question.answers.find((a) => a.id === checkResult.correct_answer_id);
+    const resultText = checkResult.is_correct
+      ? "Correct!"
+      : `Incorrect. The correct answer is ${correctAnswer?.answer_text ?? ""}.`;
+    speak(checkResult.explanation ? `${resultText} ${checkResult.explanation}` : resultText);
+  }, [checkResult, voiceOver, question, speak]);
 
   return (
     <div className="space-y-4">
       <div className="relative" style={{ zoom: fontScale }}>
         {voiceOver && (
-          <Volume2 className="absolute top-1 -left-9 h-7 w-7 rounded-full bg-blue-600 p-1.5 text-white" />
+          <button
+            type="button"
+            onClick={() => {
+              if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+              } else {
+                speakQuestion();
+              }
+            }}
+            aria-label={isSpeaking ? "Stop reading question aloud" : "Read question aloud"}
+            className={`absolute top-1 -left-9 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-blue-600 p-1.5 text-white ${
+              isSpeaking ? "animate-pulse" : ""
+            }`}
+          >
+            <Volume2 className="h-full w-full" />
+          </button>
         )}
         <Paragraph size="2xl" className="font-semibold font-sora" color="dark">
           {question.question_text}
