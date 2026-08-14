@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Bookmark, Flag, Gem, LogOut, RotateCcw, Settings } from "lucide-react";
 import type {
   AmbientTrack,
+  ContentLanguage,
   PublicQuiz,
   PublicQuizQuestion,
   QuizAnswerCheckResponse,
@@ -48,6 +49,16 @@ function loadStoredFlags(quizId: number): Set<number> {
     return raw ? new Set(JSON.parse(raw) as number[]) : new Set();
   } catch {
     return new Set();
+  }
+}
+
+// Learner-level preference (not per-quiz) — carries across every quiz they take.
+function loadStoredLanguage(): "en" | "es" | "ru" {
+  try {
+    const raw = localStorage.getItem("quiz-language");
+    return raw === "es" || raw === "ru" ? raw : "en";
+  } catch {
+    return "en";
   }
 }
 
@@ -184,7 +195,74 @@ function QuizTaker({
   const [ambientTrack, setAmbientTrack] = useState<number | null>(null);
   const [ambientTracks, setAmbientTracks] = useState<AmbientTrack[]>([]);
   const [fontSize, setFontSize] = useState([50]);
-  const [language, setLanguage] = useState<"en" | "es" | "ru">("en");
+
+  const [language, setLanguageState] = useState<"en" | "es" | "ru">(loadStoredLanguage);
+  // What was actually served for the current `language` — may be "en" even when `language` is
+  // "es"/"ru" if translation isn't available (unconfigured, or failed) for this quiz right now.
+  const [contentLanguage, setContentLanguage] = useState<ContentLanguage>("en");
+  const [translating, setTranslating] = useState(false);
+  // Per-language translated question sets already fetched this attempt, so switching back and
+  // forth (or restarting) never re-hits the API for a language already seen once.
+  const translatedCacheRef = useRef<Partial<Record<"es" | "ru", PublicQuizQuestion[]>>>({});
+
+  // Re-maps `order` (an existing loadedQuestions array, whatever its current shuffle/progress
+  // position) onto the requested language's text, by question id — never changes array order.
+  function applyLanguageToOrder(order: PublicQuizQuestion[], lang: "en" | "es" | "ru"): PublicQuizQuestion[] {
+    const source = lang === "en" ? questions : translatedCacheRef.current[lang];
+    if (!source) return order;
+    const byId = new Map(source.map((q) => [q.id, q]));
+    return order.map((q) => byId.get(q.id) ?? q);
+  }
+
+  // Fetches (if not already cached) and applies a language, updating loadedQuestions in place —
+  // shared by both the user-driven language switch and restoring a stored preference on mount.
+  async function applyLanguage(next: "en" | "es" | "ru") {
+    if (next === "en" || translatedCacheRef.current[next]) {
+      setLoadedQuestions((prev) => applyLanguageToOrder(prev, next));
+      setContentLanguage(next);
+      setLanguageState(next);
+      return;
+    }
+
+    setTranslating(true);
+    try {
+      const res = await api.get<QuizShowResponse>(`/quizzes/${quiz.id}?language=${next}`);
+      if (res.questions) translatedCacheRef.current[next] = res.questions;
+      setLoadedQuestions((prev) => applyLanguageToOrder(prev, next));
+      setContentLanguage(res.content_language);
+      if (res.content_language === "en") {
+        setToast({ message: "Translation isn't ready for this quiz yet — showing English for now.", variant: "error" });
+      }
+    } catch {
+      setContentLanguage("en");
+      setToast({ message: "Couldn't translate this quiz right now — showing English.", variant: "error" });
+    } finally {
+      setTranslating(false);
+    }
+    setLanguageState(next);
+  }
+
+  function changeLanguage(next: "en" | "es" | "ru") {
+    if (next === language || translating) return;
+    try {
+      localStorage.setItem("quiz-language", next);
+    } catch {
+      // ignore quota / private-mode errors
+    }
+    applyLanguage(next);
+  }
+
+  // Restore a stored non-English preference once on mount (the initial loadedQuestions/questions
+  // props are always English, since `show` without `?language=` always serves English).
+  useEffect(() => {
+    // applyLanguage only sets state synchronously in this effect's own tick when the cache
+    // already has the language (never true on mount); otherwise every setState happens after the
+    // `await` below, i.e. asynchronously — a false positive for this rule, same as the ambient
+    // track fetch above.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (language !== "en") applyLanguage(language);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The track list (admin-managed, category-scoped) and each track's S3 URL are server-resolved,
   // not hardcoded — same disk/URL-resolution convention the API already uses for
@@ -277,8 +355,9 @@ function QuizTaker({
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
 
     try {
+      const languageQuery = language !== "en" ? `?language=${language}` : "";
       const res = await api.post<QuizAnswerCheckResponse>(
-        `/quizzes/${quiz.id}/questions/${questionId}/check`,
+        `/quizzes/${quiz.id}/questions/${questionId}/check${languageQuery}`,
         { answer_id: optionId },
       );
       setCheckedByQuestionId((prev) => ({ ...prev, [questionId]: res }));
@@ -337,8 +416,8 @@ function QuizTaker({
     setCheckedByQuestionId({});
     streakRef.current = 0;
     setStreak(0);
-    // Re-shuffle questions for the new attempt.
-    setLoadedQuestions(shuffleQuiz(questions));
+    // Re-shuffle questions for the new attempt, keeping whatever language is currently active.
+    setLoadedQuestions(applyLanguageToOrder(shuffleQuiz(questions), language));
   }
 
   async function submitAttempt() {
@@ -382,6 +461,7 @@ function QuizTaker({
     const timer = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
+
 
   if (showResults) {
     return (
@@ -538,8 +618,9 @@ function QuizTaker({
                       <div className="flex items-center justify-center gap-1 rounded-full bg-neutral-100 p-1 text-sm">
                         <button
                           type="button"
-                          onClick={() => setLanguage("en")}
-                          className={`rounded-full px-4 py-1.5 font-semibold transition-colors ${
+                          disabled={translating}
+                          onClick={() => changeLanguage("en")}
+                          className={`rounded-full px-4 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                             language === "en" ? "bg-blue-600 text-white" : "text-neutral-500"
                           }`}
                         >
@@ -547,8 +628,9 @@ function QuizTaker({
                         </button>
                         <button
                           type="button"
-                          onClick={() => setLanguage("es")}
-                          className={`rounded-full px-3 py-1.5 font-semibold transition-colors ${
+                          disabled={translating}
+                          onClick={() => changeLanguage("es")}
+                          className={`rounded-full px-3 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                             language === "es" ? "bg-blue-600 text-white" : "text-neutral-500"
                           }`}
                         >
@@ -557,14 +639,25 @@ function QuizTaker({
                         <span className="text-white/30">|</span>
                         <button
                           type="button"
-                          onClick={() => setLanguage("ru")}
-                          className={`rounded-full px-3 py-1.5 font-semibold transition-colors ${
+                          disabled={translating}
+                          onClick={() => changeLanguage("ru")}
+                          className={`rounded-full px-3 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                             language === "ru" ? "bg-blue-600 text-white" : "text-neutral-500"
                           }`}
                         >
                           Russian
                         </button>
                       </div>
+                      {translating && (
+                        <Paragraph size="xs" color="muted" className="pt-2 text-center">
+                          Translating this quiz — this can take a little while the first time…
+                        </Paragraph>
+                      )}
+                      {contentLanguage !== "en" && !translating && (
+                        <Paragraph size="xs" color="muted" className="pt-2 text-center">
+                          Machine-translated — verify with an official source before your exam.
+                        </Paragraph>
+                      )}
                     </div>
                   )}
                 </div>

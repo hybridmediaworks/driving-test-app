@@ -161,10 +161,16 @@ export type PublicQuizQuestion = {
   answers: PublicAnswerOption[];
 };
 
+// "en" unless a non-English `language` was requested AND actually available — falls back to
+// "en" (not the requested locale) whenever translation isn't configured/cached/successful, so the
+// client always knows what was actually served, not just what was asked for.
+export type ContentLanguage = "en" | "es" | "ru";
+
 export type QuizShowResponse = {
   quiz: PublicQuiz;
   locked: boolean;
   questions: PublicQuizQuestion[] | null;
+  content_language: ContentLanguage;
 };
 
 // Instant per-question feedback (practice mode). Returned by

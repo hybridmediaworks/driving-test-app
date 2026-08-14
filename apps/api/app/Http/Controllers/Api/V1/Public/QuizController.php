@@ -6,6 +6,7 @@ use App\Actions\Quiz\ComputeAnswerPopularity;
 use App\Actions\Quiz\GenerateQuestionAssist;
 use App\Actions\Quiz\GradeQuizAttempt;
 use App\Actions\Quiz\GradeSingleAnswer;
+use App\Actions\Quiz\TranslateQuizContent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Public\CheckQuizAnswerRequest;
 use App\Http\Requests\Api\V1\Public\QuizAssistRequest;
@@ -17,6 +18,7 @@ use App\Http\Resources\Api\V1\QuizAttemptResource;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionReport;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -32,6 +34,7 @@ class QuizController extends Controller
         private readonly GradeSingleAnswer $gradeSingleAnswer,
         private readonly GenerateQuestionAssist $generateAssist,
         private readonly ComputeAnswerPopularity $computePopularity,
+        private readonly TranslateQuizContent $translateQuizContent,
     ) {}
 
     /**
@@ -93,6 +96,13 @@ class QuizController extends Controller
      * **`is_correct` and `explanation` are deliberately omitted** on every answer — the client has
      * no way to know the right answer before submitting. Those fields only appear in the response
      * from `storeAttempt` below, after grading, and only for the questions actually answered.
+     *
+     * Optional `language` (`es`/`ru`) machine-translates the question/answer text, cached after
+     * the first request for a given quiz+language (see TranslateQuizContent) — later requests are
+     * instant, but the first one for a not-yet-seen quiz+language pair blocks on the translation.
+     * `content_language` in the response reports what was actually served: `en` whenever
+     * translation wasn't available/configured or failed, even if a non-English `language` was
+     * requested — the quiz is still fully usable, just not in that language yet.
      */
     public function show(Request $request, Quiz $quiz): JsonResponse
     {
@@ -104,15 +114,74 @@ class QuizController extends Controller
         // when one is sent, so the entitled user must be resolved explicitly here.
         $unlocked = Gate::forUser($request->user('sanctum'))->allows('attempt', $quiz);
 
+        $contentLanguage = 'en';
+
         if ($unlocked) {
-            $quiz->load(['quizQuestions.answers', 'quizQuestions.media', 'quizQuestions.assets']);
+            $requestedLocale = $request->filled('language') ? $request->string('language')->toString() : null;
+            $translating = $requestedLocale !== null && $requestedLocale !== 'en';
+
+            // TranslateQuizContent queries quizQuestions itself (via the relation query builder,
+            // not the loaded collection), so it's safe to call before the load() below.
+            if ($translating) {
+                ($this->translateQuizContent)($quiz, $requestedLocale);
+            }
+
+            // A single load() call — calling load() twice (once for answers/media/assets, again
+            // for translations) would re-fetch quizQuestions fresh the second time and silently
+            // drop whatever wasn't re-specified in that second call.
+            $quiz->load([
+                'quizQuestions.answers',
+                'quizQuestions.media',
+                'quizQuestions.assets',
+                ...($translating ? [
+                    'quizQuestions.translations' => fn ($q) => $q->where('locale', $requestedLocale),
+                    'quizQuestions.answers.translations' => fn ($q) => $q->where('locale', $requestedLocale),
+                ] : []),
+            ]);
+
+            if ($translating && $this->applyContentLanguage($quiz->quizQuestions, $requestedLocale)) {
+                $contentLanguage = $requestedLocale;
+            }
         }
 
         return response()->json([
             'quiz' => new QuizResource($quiz),
             'locked' => ! $unlocked,
             'questions' => $unlocked ? QuizQuestionResource::collection($quiz->quizQuestions) : null,
+            'content_language' => $contentLanguage,
         ]);
+    }
+
+    /**
+     * Overlays cached translations (already eager-loaded, locale-filtered) onto the in-memory
+     * question/answer models before serialization — never persisted, just swaps what gets
+     * serialized for this one response. Returns whether at least one question actually had a
+     * cached translation applied, so the caller can report the real served language rather than
+     * just echoing back whatever was requested.
+     *
+     * @param  EloquentCollection<int, QuizQuestion>  $questions
+     */
+    private function applyContentLanguage(EloquentCollection $questions, string $locale): bool
+    {
+        $anyApplied = false;
+
+        foreach ($questions as $question) {
+            $translation = $question->translationFor($locale);
+            if ($translation) {
+                $question->question_text = $translation->fields['question_text'] ?? $question->question_text;
+                $question->explanation = $translation->fields['explanation'] ?? $question->explanation;
+                $anyApplied = true;
+            }
+
+            foreach ($question->answers as $answer) {
+                $answerTranslation = $answer->translationFor($locale);
+                if ($answerTranslation) {
+                    $answer->answer_text = $answerTranslation->fields['answer_text'] ?? $answer->answer_text;
+                }
+            }
+        }
+
+        return $anyApplied;
     }
 
     /**
@@ -163,6 +232,11 @@ class QuizController extends Controller
      * (`answer_popularity`, null until at least one attempt has been submitted). Same
      * guest-or-sanctum entitlement gate as attempts. Unlike `show`, this deliberately exposes the
      * answer — but only for the one question the learner just committed to.
+     *
+     * Optional `language` (`es`/`ru`) returns the explanation translated — but only from whatever
+     * `show` already cached for this quiz+language; unlike `show`, this endpoint never triggers a
+     * fresh translation itself (an answer submission shouldn't have to wait on an LLM call), so it
+     * silently falls back to English if the quiz was never viewed in that language first.
      */
     public function checkAnswer(CheckQuizAnswerRequest $request, Quiz $quiz, QuizQuestion $question): JsonResponse
     {
@@ -175,12 +249,21 @@ class QuizController extends Controller
         $question->load('answers');
         $graded = ($this->gradeSingleAnswer)($question, $request->integer('answer_id'));
 
+        $explanation = $question->explanation;
+        $requestedLocale = $request->filled('language') ? $request->string('language')->toString() : null;
+        if ($requestedLocale !== null && $requestedLocale !== 'en') {
+            $translation = $question->translationFor($requestedLocale);
+            if ($translation) {
+                $explanation = $translation->fields['explanation'] ?? $explanation;
+            }
+        }
+
         return response()->json([
             'question_id' => $question->id,
             'selected_answer_id' => $graded['selected_answer_id'],
             'correct_answer_id' => $graded['correct_answer_id'],
             'is_correct' => $graded['is_correct'],
-            'explanation' => $question->explanation,
+            'explanation' => $explanation,
             'answer_popularity' => ($this->computePopularity)($question),
         ]);
     }
