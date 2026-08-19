@@ -474,8 +474,12 @@ function QuizTaker({
   if (showResults) {
     return (
       <QuizResults
-        quizName={title}
         results={questionStatuses.map((s) => s === "correct")}
+        quizId={quiz.id}
+        wrongQuestionIds={loadedQuestions
+          .filter((_, i) => questionStatuses[i] === "incorrect")
+          .map((q) => q.id)}
+        passingThreshold={quiz.passing_score_percent ?? 80}
         showUpsell={!isPremium}
         stateName={stateName}
         stateCode={stateCode}

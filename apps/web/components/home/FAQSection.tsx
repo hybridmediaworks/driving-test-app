@@ -73,39 +73,39 @@ type FAQSectionProps = {
 
 export default function FAQSection({ className }: FAQSectionProps) {
   return (
-    <section className={cn("px-5 pb-15 lg:pt-15 lg:pb-30", className)}>
-      <div className="mx-auto max-w-226.5 space-y-15 rounded-xl bg-white px-5 py-5 lg:py-10">
-        <div className="flex flex-col items-center justify-center gap-6">
+    <section className={cn("px-5 pb-15 lg:pt-15 lg:pb-12", className)}>
+      <div className="mx-auto max-w-226.5 space-y-15 rounded-xl bg-white p-6 lg:p-15">
+        <div className="flex flex-col items-center justify-center gap-8">
           <Paragraph
-            className="border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
+            className="border-b border-blue-100 px-3.5 py-1.25 font-bold tracking-[1.2px] text-blue-700! uppercase"
             size="xs"
             color="primary"
           >
-            ✦ How we help
+            ✦&nbsp; How we help
           </Paragraph>
           <Heading as="h2" className="mx-auto max-w-176 text-center">
             Frequently asked questions
           </Heading>
         </div>
         <div>
-          <Accordion defaultValue={["item-0"]}>
+          <Accordion defaultValue={["item-0"]} className="gap-5">
             {faqs.map((faq, index) => (
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border-b-2 border-blue-100 py-2"
+                className="border-b-2 border-blue-100 pb-5 data-open:border-blue-500"
               >
-                <AccordionTrigger className="py-3 hover:no-underline">
-                  <div className="flex items-center gap-4">
-                    <Paragraph className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-500!">
+                <AccordionTrigger className="items-start gap-3 py-0 hover:no-underline **:data-[slot=accordion-trigger-icon]:size-6 **:data-[slot=accordion-trigger-icon]:text-neutral-400">
+                  <div className="flex flex-1 items-start gap-3">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-base font-normal text-blue-500">
                       {String(index + 1).padStart(2, "0")}
-                    </Paragraph>
-                    <Paragraph size="xl" className="font-semibold">
+                    </span>
+                    <Paragraph size="xl" className="flex-1 font-semibold">
                       {faq.question}
                     </Paragraph>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="ml-12 pb-3">
+                <AccordionContent className="ml-11 pt-3 pb-0">
                   <Paragraph className="font-medium text-neutral-500!">
                     {faq.answer}
                   </Paragraph>

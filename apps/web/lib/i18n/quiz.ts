@@ -97,6 +97,27 @@ const en = {
   streakOnARoll: "You're on a roll!",
   streakNice: "Nice streak!",
   streakInARow: "{count} in a row",
+
+  correctAnswersLabel: "Correct answers",
+  incorrectAnswersLabel: "Incorrect answers",
+  resultLookingGood: "Looking good",
+  passingThresholdLabel: "Passing threshold: {percent}%",
+  questionCoverageLabel: "Question coverage",
+  practicedCoverageA: "You've practiced {seen} of {total} {state} questions. There are ",
+  practicedCoverageB: "{remaining} more questions",
+  practicedCoverageC: " you haven't covered yet.",
+  takeNextPracticeTest: "Take next practice test",
+  newQuestionsMeta: "{count} new questions · {min} min",
+  getAllQuestionsCta: "Get all {total} exam-like questions for {state}",
+  quickCramGuide: "Quick cram guide",
+  cramGuideTitle: "The 50 {state} questions to review first",
+  cramGuideDesc:
+    "These are the questions students get wrong most often, ranked from 70M+ practice answers. Instant PDF - study on your phone or print it before test day.",
+  downloadCheatSheet: "Download {state} Cheat Sheet - $9.99",
+  yourWeakAreas: "Your weak areas",
+  fixWeakAreasNow: "Fix my weak areas now",
+  noWeakAreas: "No weak areas, you nailed it!",
+  analyzingResults: "Analyzing your results…",
 };
 
 const es: Record<keyof typeof en, string> = {
@@ -190,6 +211,27 @@ const es: Record<keyof typeof en, string> = {
   streakOnARoll: "¡Vas muy bien!",
   streakNice: "¡Buena racha!",
   streakInARow: "{count} seguidas",
+
+  correctAnswersLabel: "Respuestas correctas",
+  incorrectAnswersLabel: "Respuestas incorrectas",
+  resultLookingGood: "Muy bien",
+  passingThresholdLabel: "Umbral de aprobación: {percent}%",
+  questionCoverageLabel: "Cobertura de preguntas",
+  practicedCoverageA: "Has practicado {seen} de {total} preguntas de {state}. Hay ",
+  practicedCoverageB: "{remaining} preguntas más",
+  practicedCoverageC: " que aún no has visto.",
+  takeNextPracticeTest: "Hacer el siguiente examen de práctica",
+  newQuestionsMeta: "{count} preguntas nuevas · {min} min",
+  getAllQuestionsCta: "Obtén las {total} preguntas tipo examen de {state}",
+  quickCramGuide: "Guía de repaso rápido",
+  cramGuideTitle: "Las 50 preguntas de {state} para repasar primero",
+  cramGuideDesc:
+    "Son las preguntas que los estudiantes fallan con más frecuencia, clasificadas a partir de más de 70 M de respuestas. PDF al instante: estúdialo en el móvil o imprímelo antes del examen.",
+  downloadCheatSheet: "Descargar la chuleta de {state} - $9.99",
+  yourWeakAreas: "Tus áreas débiles",
+  fixWeakAreasNow: "Mejora tus áreas débiles ahora",
+  noWeakAreas: "Sin áreas débiles: ¡lo lograste!",
+  analyzingResults: "Analizando tus resultados…",
 };
 
 const ru: Record<keyof typeof en, string> = {
@@ -283,6 +325,27 @@ const ru: Record<keyof typeof en, string> = {
   streakOnARoll: "Отличная серия!",
   streakNice: "Хорошая серия!",
   streakInARow: "{count} подряд",
+
+  correctAnswersLabel: "Правильные ответы",
+  incorrectAnswersLabel: "Неправильные ответы",
+  resultLookingGood: "Отлично",
+  passingThresholdLabel: "Порог сдачи: {percent}%",
+  questionCoverageLabel: "Охват вопросов",
+  practicedCoverageA: "Вы прошли {seen} из {total} вопросов ({state}). Осталось ещё ",
+  practicedCoverageB: "{remaining} вопросов",
+  practicedCoverageC: ", которые вы не видели.",
+  takeNextPracticeTest: "Следующий пробный тест",
+  newQuestionsMeta: "{count} новых вопросов · {min} мин",
+  getAllQuestionsCta: "Открыть все {total} экзаменационных вопросов для {state}",
+  quickCramGuide: "Быстрая шпаргалка",
+  cramGuideTitle: "50 вопросов ({state}), которые стоит повторить первыми",
+  cramGuideDesc:
+    "Это вопросы, в которых студенты ошибаются чаще всего, по данным более 70 млн ответов. Мгновенный PDF - учите с телефона или распечатайте перед экзаменом.",
+  downloadCheatSheet: "Скачать шпаргалку {state} - $9.99",
+  yourWeakAreas: "Ваши слабые места",
+  fixWeakAreasNow: "Исправить слабые места",
+  noWeakAreas: "Нет слабых мест, отличная работа!",
+  analyzingResults: "Анализируем ваши результаты…",
 };
 
 const dictionaries: Record<QuizLanguage, Record<keyof typeof en, string>> = { en, es, ru };

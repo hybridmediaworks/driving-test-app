@@ -4,6 +4,7 @@ import {
   Bike,
   Car,
   ChevronDown,
+  Gem,
   GraduationCap,
   HelpCircle,
   MapPin,
@@ -116,15 +117,16 @@ export default function Header({
   const showNav = !hideNav && (variant === "states" || hasStoredState);
 
   return (
-    <header className="relative w-full px-5 py-4 lg:py-6">
+    <header className="relative w-full px-5 py-2 lg:py-3">
       <div className="mx-auto flex max-w-container items-center justify-between">
         <Link href="/">
           <Image
-            src="/company-logo.svg"
-            alt=""
-            width={146}
-            height={48}
-            className="w-full max-w-36.5"
+            src="/driving-test-logo.png"
+            alt="Driving Test"
+            width={529}
+            height={198}
+            className="h-[100px] w-auto"
+            priority
           />
         </Link>
 
@@ -244,8 +246,14 @@ export default function Header({
               >
                 Login
               </Button>
-              <Button className="py-3! font-semibold" href="/register">
-                Signup
+              <Button
+                size="md"
+                variant="gold"
+                className="gap-2 bg-yellow-500! font-semibold text-neutral-700! shadow-xs hover:bg-yellow-600!"
+                href="/pricing"
+              >
+                <Gem className="h-5 w-5" />
+                Upgrade to Premium
               </Button>
             </>
           )}
@@ -387,10 +395,13 @@ export default function Header({
                   Login
                 </Button>
                 <Button
-                  className="flex-1 justify-center py-3! font-semibold"
-                  href="/register"
+                  size="md"
+                  variant="gold"
+                  className="flex-1 justify-center gap-2 bg-yellow-500! font-semibold text-neutral-700! shadow-xs hover:bg-yellow-600!"
+                  href="/pricing"
                 >
-                  Signup
+                  <Gem className="h-5 w-5" />
+                  Upgrade to Premium
                 </Button>
               </>
             )}

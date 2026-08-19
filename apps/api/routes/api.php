@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Public\HandbookController as PublicHandbookContr
 use App\Http\Controllers\Api\V1\Public\PlanController;
 use App\Http\Controllers\Api\V1\Public\QuizCategoryController as PublicQuizCategoryController;
 use App\Http\Controllers\Api\V1\Public\QuizController as PublicQuizController;
+use App\Http\Controllers\Api\V1\Public\QuizQuestionAssetController;
 use App\Http\Controllers\Api\V1\Public\StateController;
 use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
 use App\Http\Controllers\Api\V1\Public\VideoController as PublicVideoController;
@@ -63,6 +64,13 @@ Route::prefix('v1')->group(function (): void {
     // Report a mistake/typo in a question.
     Route::post('quizzes/{quiz}/questions/{question}/report', [PublicQuizController::class, 'report'])
         ->middleware('throttle:10,1');
+    // Results-screen weak areas + dynamic coach message (LLM-backed).
+    Route::post('quizzes/{quiz}/results-insight', [PublicQuizController::class, 'resultsInsight'])
+        ->middleware('throttle:20,1');
+
+    // Self-hosted question asset (Lottie JSON) — served through the API rather than raw /storage so
+    // the player's cross-origin fetch gets CORS headers. See QuizQuestionAssetController::content.
+    Route::get('quiz-question-assets/{asset}/content', [QuizQuestionAssetController::class, 'content']);
 
     // Public flashcard browsing/study — front text is always visible; back_text/image_url are
     // withheld per-card by FlashcardResource for premium cards the caller isn't entitled to.

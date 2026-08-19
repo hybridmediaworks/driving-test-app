@@ -7,7 +7,6 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import HeroSection from "@/components/home/HeroSection";
 import JourneySection from "@/components/home/JourneySection";
 import MapSection from "@/components/home/MapSection";
-import SocialProof from "@/components/home/SocialProof";
 import SuccessStories from "@/components/home/SuccessStories";
 import ToolkitSection from "@/components/home/ToolkitSection";
 import WhyChooseSection from "@/components/home/WhyChooseSection";
@@ -38,13 +37,12 @@ export default function Home() {
         <Header variant="home" />
         <main className="flex-1">
           <HeroSection />
-          <SocialProof />
           <WhyChooseSection />
           <FeaturesSection />
           <MapSection />
-          <JourneySection />
           <SuccessStories />
           <ToolkitSection />
+          <JourneySection />
           <FAQSection />
           <CTASection />
         </main>

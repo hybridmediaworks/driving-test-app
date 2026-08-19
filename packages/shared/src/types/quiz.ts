@@ -190,6 +190,13 @@ export type QuizAssistResponse = {
   reply: string;
 };
 
+// Results-screen insight from POST /quizzes/{quiz}/results-insight — weak areas grounded on the
+// missed questions' topics, plus a short dynamic coach message.
+export type QuizResultsInsightResponse = {
+  weak_areas: string[];
+  message: string;
+};
+
 export type QuizAttemptStatus = "in_progress" | "completed";
 
 export type QuizAttemptAnswer = {

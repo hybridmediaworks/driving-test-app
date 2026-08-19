@@ -62,13 +62,14 @@ const testimonials = [
   },
 ];
 
-const WIDTHS = [220, 320, 448, 320, 220];
-const HEIGHTS = [230, 363, 473, 363, 230];
+const WIDTHS = [259, 346, 448, 346, 259];
+const HEIGHTS = [274, 365, 473, 365, 274];
+const TOP_OFFSETS = [262, 111, 0, 111, 262];
 const OPACITIES = [0.3, 0.5, 1.0, 0.5, 0.3];
 const GRAYSCALE = [true, true, false, true, true];
 const ZINDICES = [1, 2, 3, 2, 1];
 const ROUNDED = [true, true, false, true, true];
-const LEFT_OFFSETS = [-632, -460, -224, 140, 412];
+const LEFT_OFFSETS = [-641, -452, -224, 106, 382];
 const CENTER_IDX = 2;
 
 export default function TestimonialCarousel() {
@@ -101,7 +102,7 @@ export default function TestimonialCarousel() {
 
     return {
       position: "absolute",
-      bottom: "0",
+      top: `${TOP_OFFSETS[slotIdx]}px`,
       left: `${cw / 2 + LEFT_OFFSETS[slotIdx]}px`,
       width: `${WIDTHS[slotIdx]}px`,
       height: `${HEIGHTS[slotIdx]}px`,
@@ -111,7 +112,7 @@ export default function TestimonialCarousel() {
       overflow: "hidden",
       borderRadius: ROUNDED[slotIdx] ? "0.75rem" : "0",
       transition:
-        "left 0.45s ease, width 0.45s ease, height 0.45s ease, opacity 0.45s ease, filter 0.45s ease",
+        "top 0.45s ease, left 0.45s ease, width 0.45s ease, height 0.45s ease, opacity 0.45s ease, filter 0.45s ease",
     };
   }
 
@@ -135,7 +136,7 @@ export default function TestimonialCarousel() {
         <ArrowLeft className="h-8 w-8 text-neutral-500" />
       </button>
 
-      <div ref={containerRef} className="relative h-118.25 overflow-hidden">
+      <div ref={containerRef} className="relative h-144 overflow-hidden">
         <div className="absolute top-0 left-0 z-10 h-full w-20 bg-linear-to-r from-background to-transparent md:w-40 lg:w-111" />
 
         {testimonials.map((item, index) => (
@@ -148,14 +149,14 @@ export default function TestimonialCarousel() {
         <div className="absolute top-0 right-0 z-10 h-full w-20 bg-linear-to-r from-transparent to-background md:w-40 lg:w-111" />
       </div>
 
-      <div className="relative z-10 mx-auto -mt-10 max-w-142.25">
+      <div className="relative z-10 mx-auto -mt-[165px] max-w-[667px]">
         <div
-          className="space-y-3 rounded-2xl bg-white p-8 text-center"
+          className="space-y-3 rounded-xl bg-white p-8 text-center"
           style={{
-            boxShadow: "0 20px 24px -4px rgba(20, 60, 120, 0.08), 0 8px 8px -4px rgba(20, 60, 120, 0.03)",
+            boxShadow: "0px 20px 12px rgba(20, 60, 120, 0.08), 0px 8px 4px rgba(20, 60, 120, 0.03)",
           }}
         >
-          <Heading as="h5" color="primary" className="font-bold!">
+          <Heading as="h3" size="lg" className="text-green-500!">
             {active.quote}
           </Heading>
           <Paragraph color="muted">{active.text}</Paragraph>

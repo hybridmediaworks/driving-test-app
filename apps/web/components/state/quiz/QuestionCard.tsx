@@ -196,12 +196,12 @@ export default function QuestionCard({
         <QuestionAnimation asset={lottieAsset} />
       ) : (
         question.image_urls[0] && (
-          <div className="flex items-center justify-center rounded-2xl border border-border bg-background2/40 p-6">
+          <div className="overflow-hidden rounded-2xl border border-border bg-background2/40">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={question.image_urls[0]}
               alt={question.question_text}
-              className="max-h-64 w-auto object-contain"
+              className="block max-h-80 w-full object-cover"
             />
           </div>
         )

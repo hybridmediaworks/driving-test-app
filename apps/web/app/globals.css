@@ -16,6 +16,21 @@
   --color-blue-1000: var(--blue-1000);
   --color-grey: var(--grey);
 
+  /* Pin the blue ramp to the classic (Figma / Tailwind-v3) hexes. Tailwind v4's
+     default oklch blues render slightly violet and don't match the design's
+     Brand blues (#2563EB / #1D4ED8 / #DBEAFE …) used across the whole site. */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
+
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
@@ -274,6 +289,21 @@ button {
 
   .correct-glow {
     animation: correct-glow 900ms ease-out;
+  }
+
+  /* Gentle bob for the results-screen character. */
+  @keyframes character-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+      transform: translateY(-9px) rotate(2deg);
+    }
+  }
+
+  .character-float {
+    animation: character-float 2.6s ease-in-out infinite;
   }
 }
 

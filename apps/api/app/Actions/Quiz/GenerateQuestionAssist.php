@@ -75,7 +75,9 @@ class GenerateQuestionAssist
             ->post($baseUrl.'/chat/completions', [
                 'model' => config('services.grok.model'),
                 'temperature' => 0.2,
-                'max_tokens' => 400,
+                // gpt-oss models spend tokens on hidden reasoning first — give room + light effort.
+                'max_tokens' => 1024,
+                'reasoning_effort' => 'low',
                 'messages' => [
                     ['role' => 'system', 'content' => $system],
                     ['role' => 'user', 'content' => $userText],

@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api\V1\Public;
 
 use App\Actions\Quiz\ComputeAnswerPopularity;
 use App\Actions\Quiz\GenerateQuestionAssist;
+use App\Actions\Quiz\GenerateResultsInsight;
 use App\Actions\Quiz\GradeQuizAttempt;
 use App\Actions\Quiz\GradeSingleAnswer;
 use App\Actions\Quiz\TranslateQuizContent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Public\CheckQuizAnswerRequest;
 use App\Http\Requests\Api\V1\Public\QuizAssistRequest;
+use App\Http\Requests\Api\V1\Public\QuizResultsInsightRequest;
 use App\Http\Requests\Api\V1\Public\StoreQuizAttemptRequest;
 use App\Http\Requests\Api\V1\Public\StoreQuizQuestionReportRequest;
 use App\Http\Resources\Api\V1\Public\QuizQuestionResource;
@@ -35,6 +37,7 @@ class QuizController extends Controller
         private readonly GenerateQuestionAssist $generateAssist,
         private readonly ComputeAnswerPopularity $computePopularity,
         private readonly TranslateQuizContent $translateQuizContent,
+        private readonly GenerateResultsInsight $generateResultsInsight,
     ) {}
 
     /**
@@ -323,5 +326,27 @@ class QuizController extends Controller
         ]);
 
         return response()->json(['message' => 'Thanks! Your report has been submitted.'], 201);
+    }
+
+    /**
+     * Results-screen insight
+     *
+     * Given the score and which questions were missed, returns the learner's "weak areas" (grounded
+     * on the topics of the missed questions) plus a short, dynamic coach message. Same entitlement
+     * gate as attempts; degrades to topic-based weak areas + a template message when the LLM is
+     * unavailable.
+     */
+    public function resultsInsight(QuizResultsInsightRequest $request, Quiz $quiz): JsonResponse
+    {
+        Gate::forUser($request->user('sanctum'))->authorize('attempt', $quiz);
+
+        $insight = ($this->generateResultsInsight)(
+            $quiz,
+            $request->integer('correct'),
+            $request->integer('total'),
+            array_map('intval', $request->input('wrong_question_ids', [])),
+        );
+
+        return response()->json($insight);
     }
 }

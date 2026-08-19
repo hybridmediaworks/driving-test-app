@@ -40,7 +40,7 @@ return [
     // https://api.x.ai/v1, GROK_MODEL to a grok-* model, and use an xai-... key.
     'grok' => [
         'key' => env('GROK_API_KEY'),
-        'model' => env('GROK_MODEL', 'llama-3.3-70b-versatile'),
+        'model' => env('GROK_MODEL', 'openai/gpt-oss-20b'),
         'base_url' => env('GROK_BASE_URL', 'https://api.groq.com/openai/v1'),
     ],
 
