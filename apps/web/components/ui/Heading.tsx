@@ -32,10 +32,18 @@ const colorClasses = {
   white: "text-white",
 };
 
+const weightClasses = {
+  medium: "font-medium",
+  semibold: "font-semibold",
+  bold: "font-bold",
+  extrabold: "font-extrabold",
+};
+
 type HeadingProps = {
   as?: Tag;
   size?: Size;
   color?: keyof typeof colorClasses;
+  weight?: keyof typeof weightClasses;
   gradient?: boolean;
   className?: string;
   id?: string;
@@ -46,6 +54,7 @@ export default function Heading({
   as = "h2",
   size,
   color = "default",
+  weight = "semibold",
   gradient = false,
   className = "",
   id,
@@ -54,7 +63,7 @@ export default function Heading({
   const activeSize = size ?? defaultSizeByTag[as];
 
   const classes = [
-    "font-sora font-semibold tracking-tight",
+    `font-sora ${weightClasses[weight]} tracking-tight`,
     sizeClasses[activeSize],
     gradient
       ? "bg-linear-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent"

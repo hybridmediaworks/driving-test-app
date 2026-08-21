@@ -38,7 +38,7 @@ function QuizzesBrowseInner() {
               <p className="text-neutral-500">Free to take — no account required. Sign up to save your results.</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <select
                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
                 value={searchParams.get("state") ?? ""}
@@ -58,6 +58,15 @@ function QuizzesBrowseInner() {
                 {vehicleTypes.map((v) => (
                   <option key={v.id} value={v.name}>{v.title}</option>
                 ))}
+              </select>
+              <select
+                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                value={searchParams.get("test_track") ?? ""}
+                onChange={(e) => updateFilter("test_track", e.target.value)}
+              >
+                <option value="">All test tracks</option>
+                <option value="permit_test">Permit Test</option>
+                <option value="driving_test">Driving Test</option>
               </select>
               <select
                 className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"

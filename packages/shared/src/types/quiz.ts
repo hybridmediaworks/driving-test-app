@@ -82,6 +82,10 @@ export type Quiz = {
   // lib/phaseLadder.ts, WrittenTestContent.tsx) — the admin endpoint doesn't compute it, since
   // admins bypass all entitlement gates.
   locked?: boolean;
+  // Real pass rate (0-100) from graded quiz_attempts, null when there's no real attempt data yet
+  // — show nothing rather than a misleading 0%. Same "only present from the public endpoint" note
+  // as `locked` above.
+  pass_rate?: number | null;
   category?: QuizCategory;
   quiz_type?: QuizType;
   state?: State;
@@ -125,6 +129,7 @@ export type PublicQuiz = {
   passing_score_percent: number | null;
   is_premium: boolean;
   locked: boolean;
+  pass_rate: number | null;
   cover_image_url: string | null;
   category?: { id: number; name: string; title: string };
   quiz_type?: { id: number; name: string; title: string };
@@ -137,19 +142,59 @@ export type PublicAnswerOption = {
   answer_text: string;
 };
 
+export type QuizQuestionAssetType = "video" | "audio" | "lottie";
+
+export type PublicQuizQuestionAsset = {
+  id: number;
+  type: QuizQuestionAssetType;
+  url: string | null;
+  duration_seconds: number | null;
+};
+
 export type PublicQuizQuestion = {
   id: number;
   question_text: string;
   topic: string | null;
   difficulty: QuizDifficulty;
   image_urls: string[];
+  assets: PublicQuizQuestionAsset[];
   answers: PublicAnswerOption[];
 };
+
+// "en" unless a non-English `language` was requested AND actually available — falls back to
+// "en" (not the requested locale) whenever translation isn't configured/cached/successful, so the
+// client always knows what was actually served, not just what was asked for.
+export type ContentLanguage = "en" | "es" | "ru";
 
 export type QuizShowResponse = {
   quiz: PublicQuiz;
   locked: boolean;
   questions: PublicQuizQuestion[] | null;
+  content_language: ContentLanguage;
+};
+
+// Instant per-question feedback (practice mode). Returned by
+// POST /quizzes/{quiz}/questions/{question}/check once the learner commits to an answer.
+export type QuizAnswerCheckResponse = {
+  question_id: number;
+  selected_answer_id: number | null;
+  correct_answer_id: number | null;
+  is_correct: boolean;
+  explanation: string | null;
+  // Null until at least one attempt has been submitted for this question.
+  answer_popularity: { answer_id: number; percentage: number }[] | null;
+};
+
+// AI tutor reply from POST /quizzes/{quiz}/questions/{question}/assist.
+export type QuizAssistResponse = {
+  reply: string;
+};
+
+// Results-screen insight from POST /quizzes/{quiz}/results-insight — weak areas grounded on the
+// missed questions' topics, plus a short dynamic coach message.
+export type QuizResultsInsightResponse = {
+  weak_areas: string[];
+  message: string;
 };
 
 export type QuizAttemptStatus = "in_progress" | "completed";

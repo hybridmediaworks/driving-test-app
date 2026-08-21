@@ -12,8 +12,8 @@ export default function HeroSection() {
   const { selectedState } = useWebLayout();
   const stats = useStateStats();
   const quizzesHref = selectedState
-    ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=motorcycle`
-    : "/quizzes?vehicle_type=motorcycle";
+    ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=motorcycle&test_track=permit_test`
+    : "/quizzes?vehicle_type=motorcycle&test_track=permit_test";
 
   return (
     <>

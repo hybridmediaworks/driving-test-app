@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\QuestionDifficulty;
+use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class QuizQuestion extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, HasTranslations, InteractsWithMedia;
 
     public const MEDIA_COLLECTION_IMAGES = 'images';
 
@@ -76,7 +77,8 @@ class QuizQuestion extends Model implements HasMedia
      */
     public function answers(): HasMany
     {
-        return $this->hasMany(QuizAnswer::class)->orderBy('sort_order');
+        // `id` tiebreaker keeps option order deterministic even if two rows share a sort_order.
+        return $this->hasMany(QuizAnswer::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /**
@@ -85,5 +87,13 @@ class QuizQuestion extends Model implements HasMedia
     public function assets(): HasMany
     {
         return $this->hasMany(QuizQuestionAsset::class)->orderBy('sort_order');
+    }
+
+    /**
+     * @return HasMany<QuizAttemptAnswer, $this>
+     */
+    public function attemptAnswers(): HasMany
+    {
+        return $this->hasMany(QuizAttemptAnswer::class);
     }
 }

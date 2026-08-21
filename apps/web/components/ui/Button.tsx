@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
 
-type Variant = "primary" | "secondary" | "outline" | "ghost";
+type Variant = "primary" | "secondary" | "outline" | "ghost" | "gold";
 type Size = "sm" | "md" | "lg";
 
 const sizeClasses: Record<Size, string> = {
@@ -22,6 +22,7 @@ const variantClasses: Record<Variant, string> = {
   outline:
     "border border-border text-neutral-900 bg-transparent hover:bg-blue-50",
   ghost: "text-blue-500 bg-transparent",
+  gold: "bg-[#E3B23C] text-neutral-900 hover:bg-[#d6a32e]",
 };
 
 type ButtonProps = {

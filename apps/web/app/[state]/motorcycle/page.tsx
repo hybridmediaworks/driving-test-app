@@ -38,7 +38,7 @@ export default async function MotorcyclePage({
   const { state } = await params;
 
   return (
-    <WebLayoutProvider stateSlug={state}>
+    <WebLayoutProvider stateSlug={state} vehicleSlug="motorcycle">
       <div className="flex min-h-screen flex-col bg-background">
         <Header variant="states" />
         <main className="flex-1">

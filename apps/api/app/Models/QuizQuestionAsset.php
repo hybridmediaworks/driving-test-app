@@ -47,7 +47,18 @@ class QuizQuestionAsset extends Model
      */
     protected function url(): Attribute
     {
-        return Attribute::get(fn (): ?string => $this->external_url
-            ?? ($this->disk && $this->path ? Storage::disk($this->disk)->url($this->path) : null));
+        return Attribute::get(function (): ?string {
+            // Prefer a self-hosted copy when we have one, falling back to the original external URL
+            // (kept on the row for provenance). Lottie is fetched cross-origin by the player, so it
+            // can't be served from the raw /storage URL — it goes through the CORS-covered API route
+            // instead (see QuizQuestionAssetController::content); other types serve straight off disk.
+            if ($this->disk && $this->path) {
+                return $this->type === QuizQuestionAssetType::Lottie
+                    ? url("/api/v1/quiz-question-assets/{$this->id}/content")
+                    : Storage::disk($this->disk)->url($this->path);
+            }
+
+            return $this->external_url;
+        });
     }
 }

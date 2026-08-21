@@ -7,11 +7,18 @@ import { useWebLayout } from "@/lib/web-layout-context";
 import { stateAbbreviations } from "@/lib/usStates";
 import { ArrowRight, BadgeCheck, Play } from "lucide-react";
 
+const vehicleSlugs: Record<string, string> = {
+  Car: "car",
+  Motorcycle: "motorcycle",
+  CDL: "cdl",
+};
+
 export default function HeroSection() {
-  const { selectedState } = useWebLayout();
+  const { selectedState, selectedVehicle } = useWebLayout();
+  const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
   const quizzesHref = selectedState
-    ? `/quizzes?state=${stateAbbreviations[selectedState]}&test_track=driving_test`
-    : "/quizzes?test_track=driving_test";
+    ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=${vehicleType}&test_track=driving_test`
+    : `/quizzes?vehicle_type=${vehicleType}&test_track=driving_test`;
 
   return (
     <section className="py-15 lg:py-30 px-5">

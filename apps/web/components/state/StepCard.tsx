@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Gem } from "lucide-react";
+import { BookMarked, Gem } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 
@@ -18,6 +18,7 @@ type Step = {
   style?: "large";
   completed?: boolean;
   justCompleted?: boolean;
+  placeholder?: boolean;
 };
 
 export default function StepCard({
@@ -35,6 +36,25 @@ export default function StepCard({
 }) {
   const isFilled = !!step.completed && !step.justCompleted;
   const isTrigger = !!step.justCompleted;
+
+  // A non-quiz "coming soon" rung — rendered inside the step grid so it inherits the same ladder
+  // connectors as a real step, but shows a guides-being-prepared message instead of a quiz card.
+  if (step.placeholder) {
+    return (
+      <div
+        className={`relative flex md:min-h-32 items-center gap-3 rounded-xl border bg-white p-4 ${
+          step.style === "large" ? "lg:col-span-2" : ""
+        }`}
+      >
+        <div className="flex min-w-10 min-h-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+          <BookMarked className="w-4.5 h-4.5" />
+        </div>
+        <Paragraph color="muted" size="sm">
+          Downloadable study guides for this section are being prepared — check back soon.
+        </Paragraph>
+      </div>
+    );
+  }
 
   const content = (
     <div

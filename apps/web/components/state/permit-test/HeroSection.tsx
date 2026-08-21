@@ -8,10 +8,19 @@ import { stateAbbreviations } from "@/lib/usStates";
 import { useStateStats } from "@/lib/useStateStats";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 
+const vehicleSlugs: Record<string, string> = {
+  Car: "car",
+  Motorcycle: "motorcycle",
+  CDL: "cdl",
+};
+
 export default function HeroSection() {
-  const { selectedState } = useWebLayout();
+  const { selectedState, selectedVehicle } = useWebLayout();
   const stats = useStateStats();
-  const quizzesHref = selectedState ? `/quizzes?state=${stateAbbreviations[selectedState]}` : "/quizzes";
+  const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
+  const quizzesHref = selectedState
+    ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=${vehicleType}&test_track=permit_test`
+    : `/quizzes?vehicle_type=${vehicleType}&test_track=permit_test`;
 
   return (
     <>
@@ -38,8 +47,8 @@ export default function HeroSection() {
             </Heading>
             <Paragraph size="lg">
               Real exam-style questions, pulled straight from the current{" "}
-              {selectedState} driver's handbook and updated for 2026. Stop
-              wasting hours on the manual — practice the questions you'll
+              {selectedState} driver&apos;s handbook and updated for 2026. Stop
+              wasting hours on the manual — practice the questions you&apos;ll
               actually see.
             </Paragraph>
             <Paragraph className="flex gap-3 items-center flex-wrap font-semibold">
@@ -102,7 +111,7 @@ export default function HeroSection() {
             place.
           </Paragraph>
           <Paragraph size="lg">
-            DriveLane turns the {selectedState} driver's handbook into short,
+            DriveLane turns the {selectedState} driver&apos;s handbook into short,
             exam-style practice tests, an AI tutor that explains every wrong
             answer, full DMV exam simulations, and a personalized retest of the
             questions you miss. Practice free, or unlock Premium for the full

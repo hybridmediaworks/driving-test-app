@@ -26,3 +26,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Python venv for the sign-mask helper (rembg)
+scripts/.venv/

@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             VehicleTypeSeeder::class,
             QuizTypeSeeder::class,
             QuizCategorySeeder::class,
+            AmbientTrackSeeder::class,
             UserSeeder::class,
             QuizSeeder::class,
             StateCoverageSeeder::class,

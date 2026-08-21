@@ -16,6 +16,21 @@
   --color-blue-1000: var(--blue-1000);
   --color-grey: var(--grey);
 
+  /* Pin the blue ramp to the classic (Figma / Tailwind-v3) hexes. Tailwind v4's
+     default oklch blues render slightly violet and don't match the design's
+     Brand blues (#2563EB / #1D4ED8 / #DBEAFE …) used across the whole site. */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
+
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
@@ -223,6 +238,72 @@ button {
     opacity: 0;
     animation: circle-fill-in 0.4s ease-out forwards;
     animation-delay: calc(var(--fill-index, 0) * 150ms);
+  }
+
+  /* Streak badge fade/scale-in. No overshoot above 1× — an overshoot grows the pill past its
+     final size and reads as an upward position jump before it settles. */
+  @keyframes streak-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .streak-pop {
+    animation: streak-pop 220ms ease-out;
+  }
+
+  /* Toast slide/fade-in. Keeps translateX(-50%) in every frame so the element stays centered
+     (matches the element's base -translate-x-1/2 after the animation ends). */
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -10px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .toast-in {
+    animation: toast-in 250ms ease-out;
+  }
+
+  /* Quick, light green glow pulse around the correct answer box when it's picked right. */
+  @keyframes correct-glow {
+    0% {
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+    35% {
+      box-shadow: 0 0 16px 2px rgba(34, 197, 94, 0.45);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+  }
+
+  .correct-glow {
+    animation: correct-glow 900ms ease-out;
+  }
+
+  /* Gentle bob for the results-screen character. */
+  @keyframes character-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+      transform: translateY(-9px) rotate(2deg);
+    }
+  }
+
+  .character-float {
+    animation: character-float 2.6s ease-in-out infinite;
   }
 }
 

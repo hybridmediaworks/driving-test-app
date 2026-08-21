@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Public;
 
+use App\Enums\AttemptStatus;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -30,6 +31,7 @@ class QuizResource extends JsonResource
             'passing_score_percent' => $this->passing_score_percent,
             'is_premium' => $this->is_premium,
             'locked' => ! $unlocked,
+            'pass_rate' => $this->passRate(),
             'cover_image_url' => $this->cover_image_url,
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,
@@ -52,5 +54,25 @@ class QuizResource extends JsonResource
                 'title' => $this->vehicleType->title,
             ]),
         ];
+    }
+
+    /**
+     * Real pass rate for this specific quiz (0-100), from graded attempts' persisted `passed`
+     * flag — null (not 0) when there's no real attempt data yet, so the frontend can omit the
+     * stat entirely instead of showing a misleading 0%. One aggregate query per row when this
+     * resource backs a collection — acceptable at this app's current quiz/traffic volume (same
+     * per-row cost class as the `Gate::allows` check above), revisit if `/quizzes` listings ever
+     * need to scale past a few hundred rows per request.
+     */
+    private function passRate(): ?int
+    {
+        $graded = $this->attempts()->where('status', AttemptStatus::Completed)->whereNotNull('passed');
+        $total = (clone $graded)->count();
+
+        if ($total === 0) {
+            return null;
+        }
+
+        return (int) round((clone $graded)->where('passed', true)->count() / $total * 100);
     }
 }

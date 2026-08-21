@@ -4,13 +4,41 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
-import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
+import { stateToSlug } from "@/lib/usStates";
+import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
+import { useStateStats } from "@/lib/useStateStats";
 import { ArrowRight, BadgeCheck, Clock, SignalHigh } from "lucide-react";
 
-export default function HeroSection() {
+function formatMinutes(durationSeconds: number | null | undefined): string | null {
+  if (!durationSeconds) return null;
+  const minutes = Math.round(durationSeconds / 60);
+  return minutes > 0 ? `${minutes} min` : null;
+}
+
+export default function HeroSection({ testSlug }: { testSlug: string }) {
   const { selectedState } = useWebLayout();
   const stateSlug = stateToSlug(selectedState);
-  const stateCode = stateAbbreviations[selectedState] ?? "";
+  const quiz = useResolvedQuiz(testSlug);
+  const stats = useStateStats();
+
+  const isDrivingTest = quiz?.test_track === "driving_test";
+  const quizHref = `/${stateSlug}/${testSlug}/quiz`;
+  const duration = formatMinutes(quiz?.duration_seconds);
+
+  const statCards = [
+    stats?.pass_rate != null && {
+      value: `${stats.pass_rate}%`,
+      label: `Avg. pass rate on our ${selectedState} tests`,
+    },
+    quiz?.pass_rate != null && {
+      value: `${quiz.pass_rate}%`,
+      label: "Pass rate for this test",
+    },
+    stats && {
+      value: stats.students_practiced_30d.toLocaleString(),
+      label: `${selectedState} learners practiced (30d)`,
+    },
+  ].filter((c): c is { value: string; label: string } => !!c);
 
   return (
     <section className="py-15 lg:py-30 px-5">
@@ -26,52 +54,55 @@ export default function HeroSection() {
             </span>
             <span className=" text-green-500">Live</span>
             <span>
-              Students practicing right now: <strong>1,847</strong>
+              Active learners today: <strong>{stats ? stats.active_today.toLocaleString() : "—"}</strong>
             </span>
           </Paragraph>
           <Heading as="h1">
-            Free <span className="text-blue-500">{selectedState}</span> DMV
-            Permit Practice Test 2026
+            {quiz === null ? (
+              `Test not found`
+            ) : (
+              <>
+                Free <span className="text-blue-500">{selectedState}</span> DMV{" "}
+                {isDrivingTest ? "Driving" : "Permit"} Practice Test 2026
+              </>
+            )}
           </Heading>
           <Paragraph size="lg">
-            46 questions written from the current {selectedState} Driver
-            Handbook. Answer, see why, and find out which topics would fail you
-            — before the DMV does.
+            {typeof quiz?.total_questions === "number" ? (
+              <>
+                {quiz.total_questions} questions written from the current {selectedState} Driver Handbook.
+              </>
+            ) : (
+              <>Questions written from the current {selectedState} Driver Handbook.</>
+            )}{" "}
+            Answer, see why, and find out which topics would fail you — before the DMV does.
           </Paragraph>
-          <div className="grid grid-cols-3 gap-4 py-4">
-            <div className="bg-white border rounded-xl px-6 py-4.5">
-              <Heading size="sm">92%</Heading>
-              <Paragraph size="sm">
-                Avg. pass rate on our {selectedState} tests
-              </Paragraph>
+          {statCards.length > 0 && (
+            <div className="flex flex-wrap gap-4 py-4">
+              {statCards.map((card) => (
+                <div key={card.label} className="bg-white border rounded-xl px-6 py-4.5 min-w-37.5 flex-1">
+                  <Heading size="sm">{card.value}</Heading>
+                  <Paragraph size="sm">{card.label}</Paragraph>
+                </div>
+              ))}
             </div>
-            <div className="bg-white border rounded-xl px-6 py-4.5">
-              <Heading size="sm">78%</Heading>
-              <Paragraph size="sm">Average pass rate for this test</Paragraph>
-            </div>
-            <div className="bg-white border rounded-xl px-6 py-4.5">
-              <Heading size="sm">4.8M+</Heading>
-              <Paragraph size="sm">Drivers prepped on DriveLane</Paragraph>
-            </div>
-          </div>
-          <Button
-            className="w-full md:w-fit"
-            href={`/${stateSlug}/dmv-written-test`}
-          >
-            Start Free Practice Test <ArrowRight />
+          )}
+          <Button className="w-full md:w-fit" href={quizHref} disabled={!quiz}>
+            {quiz ? (quiz.locked ? `Unlock ${quiz.title}` : `Start Free: ${quiz.title}`) : "Start Free Practice Test"}{" "}
+            <ArrowRight />
           </Button>
           <div className="flex gap-4 flex-wrap">
             <Paragraph className="flex items-center gap-1" size="sm">
               <BadgeCheck className="w-5 h-5 text-green-700" /> 5-min quizzes
             </Paragraph>
             <Paragraph className="flex items-center gap-1" size="sm">
-              <BadgeCheck className="w-5 h-5 text-green-700" /> No signup
-              required
+              <BadgeCheck className="w-5 h-5 text-green-700" /> No signup required
             </Paragraph>
-            <Paragraph className="flex items-center gap-1" size="sm">
-              <BadgeCheck className="w-5 h-5 text-green-700" /> Accuracy
-              verified Jan 2026 by M. Reyes
-            </Paragraph>
+            {quiz?.category?.title && (
+              <Paragraph className="flex items-center gap-1" size="sm">
+                <BadgeCheck className="w-5 h-5 text-green-700" /> Part of our {quiz.category.title} set
+              </Paragraph>
+            )}
           </div>
         </div>
         <div className="mt-20 max-w-158 relative rounded-[32px] space-y-5 bg-blue-100 px-8 pb-10">
@@ -80,63 +111,39 @@ export default function HeroSection() {
           </div>
 
           <div className="-mt-20 relative z-10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/signature-license.png"
+              src={quiz?.cover_image_url ?? "/signature-license.png"}
               alt=""
               className="w-full relative rounded-xl md:rounded-[34px] shadow-[inset_0_1.565px_0_0_rgba(255,255,255,0.22),inset_0_0_0_1.565px_rgba(255,255,255,0.09),0_37.571px_78.273px_-34.44px_rgba(8,9,12,0.55),0_12.524px_31.309px_-18.786px_rgba(8,9,12,0.45)]"
             />
             <div className="absolute w-full flex gap-2 items-center justify-center bottom-6">
-              <div className="min-h-10.5 relative inline-flex px-2.5 py-2 items-center gap-1 bg-white text-sm leading-none whitespace-nowrap border rounded-full text-neutral-700">
-                <SignalHigh className="text-yellow-500" />
-                Moderate
-              </div>
-              <div className=" min-h-10.5 relative inline-flex px-2.5 py-2 items-center gap-1 bg-white text-sm leading-none whitespace-nowrap border rounded-full text-neutral-700">
-                <Clock className="text-neutral-700 w-4 h-4" />
-                30 min
-              </div>
-              <div className=" min-h-10.5 relative inline-flex px-2.5 py-2 items-center gap-1 bg-white text-sm leading-none whitespace-nowrap border rounded-full text-neutral-700">
-                46 questions{" "}
-                <span className="hidden lg:inline">· 38 to pass</span>
-              </div>
+              {quiz?.is_premium && (
+                <div className="min-h-10.5 relative inline-flex px-2.5 py-2 items-center gap-1 bg-white text-sm leading-none whitespace-nowrap border rounded-full text-neutral-700">
+                  <SignalHigh className="text-yellow-500" />
+                  Premium
+                </div>
+              )}
+              {duration && (
+                <div className=" min-h-10.5 relative inline-flex px-2.5 py-2 items-center gap-1 bg-white text-sm leading-none whitespace-nowrap border rounded-full text-neutral-700">
+                  <Clock className="text-neutral-700 w-4 h-4" />
+                  {duration}
+                </div>
+              )}
+              {typeof quiz?.total_questions === "number" && (
+                <div className=" min-h-10.5 relative inline-flex px-2.5 py-2 items-center gap-1 bg-white text-sm leading-none whitespace-nowrap border rounded-full text-neutral-700">
+                  {quiz.total_questions} questions{" "}
+                  {typeof quiz.passing_score_percent === "number" && (
+                    <span className="hidden lg:inline">· {quiz.passing_score_percent}% to pass</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="relative space-y-5 z-10">
             <Paragraph className="pt-4 flex gap-3 items-center justify-center flex-wrap font-semibold">
-              <img src="/trustpilotstar.svg" alt="" /> Trustpilot 4.7/5 from
-              38,000+ students
-            </Paragraph>
-            <div className="space-y-4 text-center py-4">
-              <Paragraph>Tricky exam topics covered here:</Paragraph>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {[
-                  "Right-of-way at 4-way stops",
-                  "Blood alcohol limits by age",
-                  "Parking on a grade",
-                  "Flashing red vs. flashing yellow",
-                ].map((t) => (
-                  <Paragraph
-                    size="sm"
-                    key={t}
-                    className="rounded-full bg-neutral-50 px-3.5 border py-1.75 whitespace-nowrap"
-                  >
-                    {t}
-                  </Paragraph>
-                ))}
-              </div>
-            </div>
-
-            <Paragraph
-              size="sm"
-              className="flex font-semibold items-center gap-2 justify-center"
-            >
-              <span className="relative inline-flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-200" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
-              </span>
-              <span className=" text-blue-500">Live</span>
-              <span>
-                <strong> 9,617 </strong>tests completed today statewide
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/trustpilotstar.svg" alt="" /> Trustpilot 4.7/5 from 38,000+ students
             </Paragraph>
           </div>
         </div>

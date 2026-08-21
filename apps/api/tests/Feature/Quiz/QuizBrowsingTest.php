@@ -7,6 +7,7 @@ use App\Models\QuizAnswer;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionAsset;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class QuizBrowsingTest extends TestCase
@@ -103,6 +104,48 @@ class QuizBrowsingTest extends TestCase
         $response->assertJsonPath('questions.0.assets.0.type', 'video');
         $response->assertJsonPath('questions.0.assets.0.url', 'https://example.com/hazard-1.mp4');
         $response->assertJsonPath('questions.0.assets.0.duration_seconds', 12);
+    }
+
+    public function test_self_hosted_lottie_asset_is_served_through_the_cors_covered_api_route(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('quiz-lottie/rs-animation-1.json', '{"v":"5.2.1"}');
+
+        $quiz = Quiz::factory()->create(['is_active' => true]);
+        $question = QuizQuestion::factory()->for($quiz, 'quiz')->create();
+        // A localized Lottie keeps its external_url for provenance but is now backed by a local file.
+        $asset = QuizQuestionAsset::factory()->for($question, 'quizQuestion')->create([
+            'type' => 'lottie',
+            'external_url' => 'https://driving-tests.org/rs-animation-1.json',
+            'disk' => 'public',
+            'path' => 'quiz-lottie/rs-animation-1.json',
+        ]);
+
+        // The published URL prefers the local copy and routes it through the API (not raw external_url,
+        // and not the CORS-less /storage URL) so the player's cross-origin fetch succeeds.
+        $expectedUrl = url("/api/v1/quiz-question-assets/{$asset->id}/content");
+        $this->getJson("/api/v1/quizzes/{$quiz->id}")
+            ->assertOk()
+            ->assertJsonPath('questions.0.assets.0.url', $expectedUrl);
+
+        $content = $this->get("/api/v1/quiz-question-assets/{$asset->id}/content");
+        $content->assertOk();
+        $this->assertStringContainsString('application/json', (string) $content->headers->get('Content-Type'));
+        $this->assertSame('{"v":"5.2.1"}', $content->streamedContent());
+    }
+
+    public function test_asset_content_route_404s_when_no_local_file_is_stored(): void
+    {
+        $quiz = Quiz::factory()->create(['is_active' => true]);
+        $question = QuizQuestion::factory()->for($quiz, 'quiz')->create();
+        $asset = QuizQuestionAsset::factory()->for($question, 'quizQuestion')->create([
+            'type' => 'lottie',
+            'external_url' => 'https://driving-tests.org/rs-animation-1.json',
+            'disk' => null,
+            'path' => null,
+        ]);
+
+        $this->get("/api/v1/quiz-question-assets/{$asset->id}/content")->assertNotFound();
     }
 
     public function test_show_blocks_inactive_quiz(): void

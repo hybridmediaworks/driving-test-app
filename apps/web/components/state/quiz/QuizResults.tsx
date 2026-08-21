@@ -1,339 +1,276 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Award, RotateCcw } from "lucide-react";
-import Heading from "@/components/ui/Heading";
-import Paragraph from "@/components/ui/Paragraph";
+import { useEffect, useRef, useState } from "react";
+import { ChevronRight, Eye, RotateCcw, Zap } from "lucide-react";
+import type { QuizResultsInsightResponse } from "@driving-test-app/shared";
 import Button from "@/components/ui/Button";
+import { api } from "@/lib/api";
+import type { TFunction } from "@/lib/i18n/quiz";
+import ResultCharacter from "@/components/state/quiz/ResultCharacter";
 
-// 270° gauge, gap at the bottom. Angles in degrees, 0 = straight up.
-const CX = 115;
-const CY = 120;
-const R = 88;
-const A0 = -135;
-const A1 = 135;
+// Marketing framing for the coverage bar — the "full bank" the learner is being nudged toward.
+const TOTAL_BANK = 500;
 
-function polar(a: number): [number, number] {
-  const r = (a * Math.PI) / 180;
-  return [CX + R * Math.sin(r), CY - R * Math.cos(r)];
+function headingLabel(percent: number, t: TFunction): string {
+  if (percent === 100) return t("perfectScoreTitle");
+  if (percent >= 80) return t("resultLookingGood");
+  if (percent >= 50) return t("almostThereTitle");
+  return t("keepPracticingTitle");
 }
 
-function arc(a: number, b: number) {
-  const [x1, y1] = polar(a);
-  const [x2, y2] = polar(b);
-  const large = b - a > 180 ? 1 : 0;
-  return `M${x1} ${y1} A${R} ${R} 0 ${large} 1 ${x2} ${y2}`;
+function SteeringWheel({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className} aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+      <line x1="12" y1="9.6" x2="12" y2="3" />
+      <line x1="13.9" y1="13.2" x2="19.6" y2="16.5" />
+      <line x1="10.1" y1="13.2" x2="4.4" y2="16.5" />
+    </svg>
+  );
 }
-
-const val2ang = (v: number) => A0 + (A1 - A0) * v;
-
-const TRACK = arc(A0, A1);
-const ZONE_RED = arc(val2ang(0), val2ang(0.5));
-const ZONE_AMBER = arc(val2ang(0.5), val2ang(0.8));
-const ZONE_GREEN = arc(val2ang(0.8), val2ang(1));
-
-const TICKS = Array.from({ length: 11 }, (_, i) => {
-  const a = (val2ang(i / 10) * Math.PI) / 180;
-  return {
-    x1: CX + (R - 11) * Math.sin(a),
-    y1: CY - (R - 11) * Math.cos(a),
-    x2: CX + (R - 3) * Math.sin(a),
-    y2: CY - (R - 3) * Math.cos(a),
-  };
-});
-
-function zoneStrokeClass(percent: number) {
-  if (percent >= 80) return "stroke-status-good";
-  if (percent >= 50) return "stroke-status-warning";
-  return "stroke-status-critical";
-}
-
-function zoneDotClass(percent: number) {
-  if (percent >= 80) return "bg-status-good";
-  if (percent >= 50) return "bg-status-warning";
-  return "bg-status-critical";
-}
-
-function statusFor(percent: number) {
-  if (percent === 100)
-    return {
-      label: "Perfect score",
-      sub: "Flawless run — you nailed every question.",
-    };
-  if (percent >= 80)
-    return {
-      label: "Passed",
-      sub: "Above the passing line. You're test-ready on this set.",
-    };
-  if (percent >= 50)
-    return {
-      label: "Almost there",
-      sub: "Close to passing — tighten up the misses and go again.",
-    };
-  return {
-    label: "Keep practicing",
-    sub: "Review the missed rules and retry to build your streak.",
-  };
-}
-
-type Badge = { name: string; note: string; progress: number };
-
-function defaultBadges(percent: number): Badge[] {
-  return [
-    {
-      name: "Bronze Marathoner",
-      note: "nice work",
-      progress: percent === 100 ? 100 : percent >= 80 ? 22 : 8,
-    },
-    {
-      name: "Road Scholar",
-      note: "keep it up",
-      progress: percent === 100 ? 80 : percent >= 80 ? 60 : 20,
-    },
-  ];
-}
-
-type Filter = "all" | "correct" | "incorrect";
 
 export default function QuizResults({
-  quizName,
   results,
+  quizId,
+  wrongQuestionIds,
+  passingThreshold = 80,
+  showUpsell = false,
+  stateName = "",
+  stateCode = "",
   onRetry,
   onContinue,
   onSelectQuestion,
+  t,
 }: {
-  quizName: string;
   results: boolean[];
+  quizId: number;
+  wrongQuestionIds: number[];
+  passingThreshold?: number;
+  showUpsell?: boolean;
+  stateName?: string;
+  stateCode?: string;
   onRetry: () => void;
-  onContinue: () => void;
+  onContinue: () => void | Promise<void>;
   onSelectQuestion: (index: number) => void;
+  t: TFunction;
 }) {
   const total = results.length;
   const correct = results.filter(Boolean).length;
   const incorrect = total - correct;
   const percent = total ? Math.round((correct / total) * 100) : 0;
+  const isPass = percent >= passingThreshold;
+  const remaining = Math.max(0, TOTAL_BANK - total);
+  const estMinutes = Math.max(1, Math.ceil(total * 0.3));
+  // Animated officer character for every outcome (no trophy/book). The Lottie plays when the asset
+  // exists at the path below; until then the officer emoji is the fallback.
+  const characterLottie: string | undefined = "/lottie/result-officer.json";
+  const charEmoji = "👮";
 
-  const { label, sub } = statusFor(percent);
-  const isPerfect = percent === 100;
-  const badges = useMemo(() => defaultBadges(percent), [percent]);
+  const [barOn, setBarOn] = useState(false);
+  const [insight, setInsight] = useState<QuizResultsInsightResponse | null>(null);
+  const [insightLoading, setInsightLoading] = useState(true);
 
-  const [filter, setFilter] = useState<Filter>("all");
-  const [animPercent, setAnimPercent] = useState(0);
-  const [barsOn, setBarsOn] = useState(false);
-  const rafRef = useRef(0);
-
-  // Count-up + bar fill run once on mount, skipped entirely under reduced motion.
+  // Animate the bars in after mount (rAF keeps the setState out of the effect body).
   useEffect(() => {
-    const reduceMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduceMotion) {
-      setAnimPercent(percent);
-      setBarsOn(true);
-      return;
-    }
+    const id = requestAnimationFrame(() => setBarOn(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
-    const start = performance.now();
-    const duration = 1100;
-    const step = (t: number) => {
-      const e = Math.min(1, (t - start) / duration);
-      const eased = 1 - (1 - e) ** 3;
-      setAnimPercent(percent * eased);
-      if (e < 1) rafRef.current = requestAnimationFrame(step);
-    };
-    rafRef.current = requestAnimationFrame(step);
-    const barsTimer = setTimeout(() => setBarsOn(true), 60);
+  // Fetch the LLM-backed weak areas + coach message once.
+  const wrongKey = wrongQuestionIds.join(",");
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .post<QuizResultsInsightResponse>(`/quizzes/${quizId}/results-insight`, {
+        correct,
+        total,
+        wrong_question_ids: wrongQuestionIds,
+      })
+      .then((res) => {
+        if (!cancelled) setInsight(res);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setInsightLoading(false);
+      });
     return () => {
-      cancelAnimationFrame(rafRef.current);
-      clearTimeout(barsTimer);
+      cancelled = true;
     };
-  }, [percent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizId, wrongKey]);
 
-  const v = animPercent / 100;
-  const progressArc = arc(A0, val2ang(v));
-  const needleAngle = val2ang(v);
+  const hasWeakAreas = !!insight && insight.weak_areas.length > 0;
 
   return (
-    <section className="relative grid min-h-screen items-center mx-auto w-full max-w-container px-5 py-10">
-      {percent >= 80 && <ConfettiBurst intensity={isPerfect ? 170 : 90} />}
+    <section className="relative mx-auto w-full max-w-[1080px] px-5 py-10">
+      {isPass && <ConfettiBurst intensity={percent === 100 ? 170 : 90} />}
 
-      <div className="flex justify-between gap-6 md:flex-row flex-col">
-        <div
-          className="bg-blue-1000 flex flex-col justify-center w-full quiz-hero rounded-3xl px-6 pt-9 pb-8 text-center text-white shadow-[0_20px_46px_-20px_rgba(13,20,44,0.55)]"
-          style={{ backgroundImage: "url('/state-premium-cta.png')" }}
-        >
-          <Paragraph
-            size="xs"
-            color="white"
-            className="font-semibold tracking-[0.18em] uppercase"
-          >
-            {quizName}
-          </Paragraph>
-
-          <div className="relative mx-auto min-h-43">
-            <svg
-              viewBox="0 0 230 172"
-              className="block size-full overflow-visible"
-            >
-              <path
-                d={TRACK}
-                fill="none"
-                className="stroke-white/10"
-                strokeWidth="14"
-                strokeLinecap="round"
-              />
-              <path
-                d={ZONE_RED}
-                fill="none"
-                className="stroke-[rgba(208,59,59,0.28)]"
-                strokeWidth="14"
-              />
-              <path
-                d={ZONE_AMBER}
-                fill="none"
-                className="stroke-[rgba(250,178,25,0.3)]"
-                strokeWidth="14"
-              />
-              <path
-                d={ZONE_GREEN}
-                fill="none"
-                className="stroke-[rgba(12,163,12,0.28)]"
-                strokeWidth="14"
-              />
-              <path
-                d={progressArc}
-                fill="none"
-                className={`${zoneStrokeClass(percent)} transition-colors`}
-                strokeWidth="14"
-                strokeLinecap="round"
-              />
-              <g className="stroke-white/25" strokeWidth="2">
-                {TICKS.map((t, i) => (
-                  <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />
-                ))}
-              </g>
-              <g transform={`rotate(${needleAngle} ${CX} ${CY})`}>
-                <path
-                  d="M115 34 L118.5 54 L111.5 54 Z"
-                  className="fill-white"
-                />
-              </g>
-            </svg>
-            <div className="absolute w-full top-28 text-center">
-              <Heading as="h2" color="white">
-                {Math.round(animPercent)}
-                <span className="text-lg font-bold">%</span>
-              </Heading>
-              <Paragraph className="text-neutral-300!">
-                {correct} of {total} correct
-              </Paragraph>
+      <div className="grid gap-5 lg:grid-cols-[2fr_1fr] lg:items-stretch">
+        {/* ── Left: score + coverage + next-test (pixel-matched to reference) ── */}
+        <div className="rounded-3xl border border-border bg-white p-6 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.2)] sm:p-10 lg:p-14">
+          <div className="relative">
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-sm text-neutral-700">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+                <strong className="text-neutral-900">{correct}</strong> {t("correctAnswersLabel")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-red-400" />
+                <strong className="text-neutral-900">{incorrect}</strong> {t("incorrectAnswersLabel")}
+              </span>
             </div>
-          </div>
-
-          <Heading as="h1" size="2xs" color="white" className="pt-10.5">
-            <span
-              className={`mr-2 inline-block size-2.5 -translate-y-0.5 rounded-full align-middle ${zoneDotClass(percent)}`}
-            />
-            {label}
-          </Heading>
-          <Paragraph size="sm" className="mt-1.5 text-neutral-300!">
-            {sub}
-          </Paragraph>
-        </div>
-        <div className="w-full">
-          <div className="rounded-3xl border border-border bg-white p-4.5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
-            <div className="flex flex-wrap gap-2">
-              <ResultTab
-                k="all"
-                active={filter}
-                onSelect={setFilter}
-                count={total}
-                label="All"
-              />
-              <ResultTab
-                k="correct"
-                active={filter}
-                onSelect={setFilter}
-                count={correct}
-                label="Correct"
-              />
-              <ResultTab
-                k="incorrect"
-                active={filter}
-                onSelect={setFilter}
-                count={incorrect}
-                label="Incorrect"
-              />
-            </div>
-
-            <div className="mt-4 flex flex-wrap justify-start gap-1.5">
-              {results.map((ok, i) => {
-                if (
-                  filter !== "all" &&
-                  filter !== (ok ? "correct" : "incorrect")
-                )
-                  return null;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => onSelectQuestion(i)}
-                    className={`flex aspect-square w-10.5 items-center justify-center rounded-md border text-sm font-semibold ${
-                      ok
-                        ? "border-green-200 bg-green-50 text-green-500"
-                        : "border-red-200 bg-red-50 text-red-500"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <Paragraph
-            size="xs"
-            color="muted"
-            className="mt-6 mb-3 px-1 font-bold tracking-[0.12em] uppercase"
-          >
-            Progress unlocked
-          </Paragraph>
-          {badges.map((badge) => (
-            <div
-              key={badge.name}
-              className="mt-3 flex items-center gap-3.5 rounded-2xl border border-border bg-white p-4"
-            >
-              <div className="min-w-0 flex-1">
-                <Paragraph size="sm" color="dark" className="leading-snug!">
-                  Leveled up your <b>{badge.name}</b> badge — {badge.note}.
-                </Paragraph>
-                <div className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-background2">
-                  <div
-                    className="h-full rounded-full bg-linear-to-r from-blue-500 to-blue-700 transition-[width] duration-900 ease-out"
-                    style={{ width: `${barsOn ? badge.progress : 0}%` }}
-                  />
-                </div>
-              </div>
-              <div className="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-background2 to-background3 text-neutral-400">
-                <Award className="size-6.5" />
-              </div>
-            </div>
-          ))}
-
-          <div className="mt-6 space-y-2.5">
-            {incorrect > 0 && (
-              <Button
+            <div className="absolute -top-1 right-0 flex gap-2">
+              <button
+                type="button"
                 onClick={onRetry}
-                variant="outline"
-                className="w-full text-red-600 border-red-600"
+                title={t("restart")}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-600"
               >
-                Retry {incorrect} missed question{incorrect > 1 ? "s" : ""}
-                <RotateCcw className="size-4" />
+                <RotateCcw className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectQuestion(0)}
+                title={t("all")}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-600"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <h1 className="mt-3 text-center font-sora text-[2.5rem] font-extrabold leading-tight text-neutral-900">
+            {headingLabel(percent, t)} - {percent}%
+          </h1>
+
+          {/* Full-width score bar (header spans the whole card). */}
+          <div className="mt-4 h-2.5 w-full">
+            <div className="relative h-full w-full rounded-full bg-neutral-200/80">
+              <div
+                className="h-full rounded-full bg-[#7ed957] transition-[width] duration-1000 ease-out"
+                style={{ width: `${barOn ? percent : 0}%` }}
+              />
+              <div
+                className="absolute -top-1 h-[18px] border-l border-dashed border-neutral-400"
+                style={{ left: `${passingThreshold}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Body is inset narrower than the full-width green bar (matches the reference). */}
+          <div className="px-2 sm:px-6 lg:px-12">
+            <p className="mt-2 text-right text-xs text-neutral-500">
+              {t("passingThresholdLabel", { percent: passingThreshold })}
+            </p>
+
+            {showUpsell && (
+              <>
+                <p className="mt-5 text-center text-sm leading-relaxed text-neutral-600">
+                  {t("practicedCoverageA", { seen: total, total: TOTAL_BANK, state: stateName })}
+                  <strong className="text-neutral-900">{t("practicedCoverageB", { remaining })}</strong>
+                  {t("practicedCoverageC")}
+                </p>
+
+                <div className="mt-4">
+                  <div className="text-sm">
+                    <span className="font-bold text-neutral-900">{total}</span>
+                    <span className="text-neutral-400">/{TOTAL_BANK}</span>
+                  </div>
+                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+                    <div
+                      className="h-full rounded-full bg-blue-600 transition-[width] duration-1000 ease-out"
+                      style={{ width: `${barOn ? Math.max(4, (total / TOTAL_BANK) * 100) : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Quick cram guide card (exact reference layout — compact so text fits one line). */}
+                <div className="mt-5 rounded-2xl border border-blue-100 bg-linear-to-br from-blue-50/70 to-white p-5 shadow-[0_14px_40px_-14px_rgba(37,99,235,0.28)]">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-[18px] bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/40">
+                      <span className="text-[8px] font-bold uppercase leading-none tracking-wide opacity-90">Top</span>
+                      <span className="text-[22px] font-extrabold leading-none">50</span>
+                      <span className="text-[8px] font-bold uppercase leading-none tracking-wide opacity-90">Missed</span>
+                    </div>
+                    <div className="min-w-0">
+                      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-blue-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        {t("quickCramGuide")}
+                      </span>
+                      <p className="mt-1 text-base font-bold leading-snug text-neutral-900">
+                        {t("cramGuideTitle", { state: stateName })}
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-neutral-600">{t("cramGuideDesc")}</p>
+                      <Button href="/cheat-sheets" size="md" className="mt-4 rounded-xl! text-sm! whitespace-nowrap">
+                        {t("downloadCheatSheet", { state: stateName })} <ChevronRight className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <Button onClick={onContinue} className="mt-6 w-full rounded-2xl!">
+              <SteeringWheel className="size-5" /> {t("takeNextPracticeTest")} <ChevronRight className="size-4" />
+            </Button>
+            <p className="mt-2.5 text-center text-xs text-neutral-500">
+              {t("newQuestionsMeta", { count: total, min: estMinutes })}
+            </p>
+
+            {showUpsell && (
+              <Button href="/pricing" variant="ghost" className="mt-3 w-full rounded-2xl! border border-blue-300 hover:bg-blue-50">
+                {t("getAllQuestionsCta", { total: `${TOTAL_BANK}+`, state: stateCode })}
               </Button>
             )}
-            <Button onClick={onContinue} className="w-full">
-              Continue
-              <ArrowRight className="size-4.5" />
+          </div>
+        </div>
+
+        {/* ── Right: AI weak areas + coach message + character ── */}
+        <div className="relative flex flex-col overflow-hidden rounded-3xl border border-border bg-white p-6 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.2)]">
+          <h3 className="text-lg font-bold text-neutral-900">{t("yourWeakAreas")}</h3>
+
+          <div className="mt-3">
+            {insightLoading ? (
+              <p className="text-sm text-neutral-400">{t("analyzingResults")}</p>
+            ) : hasWeakAreas ? (
+              <div className="flex flex-wrap gap-2">
+                {insight!.weak_areas.map((area) => (
+                  <span key={area} className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
+                    {area}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
+                {t("noWeakAreas")}
+              </span>
+            )}
+          </div>
+
+          {hasWeakAreas && incorrect > 0 && (
+            <Button
+              variant="ghost"
+              onClick={onRetry}
+              className="mt-4 w-full rounded-2xl! border border-blue-400 hover:bg-blue-50"
+            >
+              <Zap className="size-4" /> {t("fixWeakAreasNow")}
             </Button>
+          )}
+
+          {/* spacer pushes the coach bubble + character to the bottom, as in the reference */}
+          <div className="min-h-6 flex-1" />
+
+          {!insightLoading && insight?.message && (
+            <div className="relative rounded-2xl bg-blue-50 p-4 text-sm leading-relaxed text-neutral-700">
+              {insight.message}
+              {/* tail pointing down to the character */}
+              <span className="absolute -bottom-2 left-10 h-4 w-4 rotate-45 bg-blue-50" />
+            </div>
+          )}
+
+          <div className="-mb-6 mt-4 flex justify-center">
+            <ResultCharacter emoji={charEmoji} lottieSrc={characterLottie} />
           </div>
         </div>
       </div>
@@ -341,49 +278,9 @@ export default function QuizResults({
   );
 }
 
-function ResultTab({
-  k,
-  active,
-  onSelect,
-  count,
-  label,
-}: {
-  k: Filter;
-  active: Filter;
-  onSelect: (k: Filter) => void;
-  count: number;
-  label: string;
-}) {
-  const isActive = active === k;
-
-  const toneClasses =
-    k === "correct"
-      ? isActive
-        ? "border-transparent bg-green-500 text-white"
-        : "border-green-200 bg-green-50 text-green-600 hover:bg-green-100"
-      : k === "incorrect"
-        ? isActive
-          ? "border-transparent bg-red-500 text-white"
-          : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-        : isActive
-          ? "border-transparent bg-blue-1000 text-white"
-          : "border-border bg-white text-neutral-900 hover:bg-background2";
-
-  return (
-    <button
-      onClick={() => onSelect(k)}
-      className={`rounded-full border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors ${toneClasses}`}
-    >
-      {label} <span className="font-bold tabular-nums">{count}</span>
-    </button>
-  );
-}
-
 function readThemeColor(varName: string, fallback: string) {
   if (typeof window === "undefined") return fallback;
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(varName)
-    .trim();
+  const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
   return value || fallback;
 }
 
@@ -460,11 +357,5 @@ function ConfettiBurst({ intensity = 90 }: { intensity?: number }) {
     };
   }, [intensity]);
 
-  return (
-    <canvas
-      ref={ref}
-      className="pointer-events-none fixed inset-0 z-50"
-      aria-hidden="true"
-    />
-  );
+  return <canvas ref={ref} className="pointer-events-none fixed inset-0 z-50" aria-hidden="true" />;
 }

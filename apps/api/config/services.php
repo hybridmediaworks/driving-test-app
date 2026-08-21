@@ -35,4 +35,42 @@ return [
         ],
     ],
 
+    // Powers the quiz AI tutor (hint / ask) via Groq's OpenAI-compatible API. The key you set as
+    // GROK_API_KEY (gsk_...) is a Groq key. To target xAI Grok instead, set GROK_BASE_URL to
+    // https://api.x.ai/v1, GROK_MODEL to a grok-* model, and use an xai-... key.
+    'grok' => [
+        'key' => env('GROK_API_KEY'),
+        'model' => env('GROK_MODEL', 'openai/gpt-oss-20b'),
+        'base_url' => env('GROK_BASE_URL', 'https://api.groq.com/openai/v1'),
+    ],
+
+    // Ideogram image API — regenerates copyright-free quiz question images (describe -> generate).
+    // Set IDEOGRAM_API_KEY only in the environment; it is never committed.
+    'ideogram' => [
+        'key' => env('IDEOGRAM_API_KEY'),
+        'base_url' => env('IDEOGRAM_BASE_URL', 'https://api.ideogram.ai'),
+        'rendering_speed' => env('IDEOGRAM_RENDERING_SPEED', 'DEFAULT'),
+        'style_type' => env('IDEOGRAM_STYLE_TYPE', 'REALISTIC'),
+        // Source images are 1080x420 (~2.57:1). Generate a wider 3:1 and centre-crop down, so the
+        // vertical content (road + sky) is preserved rather than cropped.
+        'aspect_ratio' => env('IDEOGRAM_ASPECT_RATIO', '3x1'),
+        // Elements to actively exclude — the model loves inventing extra "name" sub-signs and captions
+        // (e.g. writing "RODEO AHEAD" under a cattle symbol), which both looks wrong and leaks the answer.
+        'negative_prompt' => env('IDEOGRAM_NEGATIVE_PROMPT', 'extra sign, second sign, sub-sign, name plate, '
+            .'banner, caption, label, added text, words, letters, numbers, watermark, logo, signature, '
+            .'gibberish text, misspelled text'),
+        // Sign/symbol images use Remix (image-to-image) so the exact pictogram is preserved — text-to-image
+        // re-invents it and breaks the answer. This needs QUALITY speed and a fairly high weight. 88 is the
+        // sweet spot found in testing: fragile symbols stay correct, yet the background varies noticeably
+        // (lower ~82 drifts the symbol; higher ~92 looks almost identical to the original). Independent of
+        // the scene-image (Describe -> Generate) settings above, which can stay on the cheaper Turbo.
+        'remix_image_weight' => (int) env('IDEOGRAM_REMIX_IMAGE_WEIGHT', 88),
+        'remix_rendering_speed' => env('IDEOGRAM_REMIX_RENDERING_SPEED', 'QUALITY'),
+        // Sign images are inpainted (Edit): the sign is masked and kept exactly while the background is
+        // regenerated to a fresh setting. The mask comes from a small Python helper (rembg) — point
+        // python_bin at an interpreter that has scripts/requirements.txt installed.
+        'python_bin' => env('IDEOGRAM_PYTHON_BIN', base_path('scripts/.venv/bin/python')),
+        'mask_script' => base_path('scripts/sign_mask.py'),
+    ],
+
 ];

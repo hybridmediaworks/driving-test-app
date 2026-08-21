@@ -1,0 +1,37 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy repo to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "."
+          target: "/home/ec2-user/driving-test-app"
+          strip_components: 0
+
+      - name: Build image and restart container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ec2-user/driving-test-app
+            sudo docker build -t driving-test-app:latest .
+            sudo docker stop driving-test-app || true
+            sudo docker rm driving-test-app || true
+            sudo docker run -d --name driving-test-app --restart unless-stopped \
+              -p 80:10000 --env-file production.env driving-test-app:latest
+            sudo docker image prune -f
