@@ -57,16 +57,23 @@ class GenerateQuizImageCandidate
 
         $tmp = null;
         $maskPath = null;
+        $originalTmp = null;
         try {
+            // Pull the original into a local temp file first, so the rest works whether media lives on
+            // the local disk or a remote one like S3 — `$media->getPath()` is only a real filesystem
+            // path for local disks; on S3 it is just the object key and reading it locally fails.
+            $originalTmp = tempnam(sys_get_temp_dir(), 'orig_').'.jpg';
+            File::put($originalTmp, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+
             // Sign/symbol images are inpainted (Edit): the sign is masked and kept EXACTLY while only
             // the background is regenerated to a fresh setting — so the pictogram never drifts yet the
             // scene can be anywhere. Everything else uses the copyright-safest Describe -> Generate path.
             if ($this->looksLikeSign($row->question_context)) {
-                $maskPath = $this->buildSignMask($media->getPath());
+                $maskPath = $this->buildSignMask($originalTmp);
                 $prompt = $this->buildBackgroundPrompt($row->id);
-                $imageUrl = $this->ideogram->edit($media->getPath(), $maskPath, $prompt);
+                $imageUrl = $this->ideogram->edit($originalTmp, $maskPath, $prompt);
             } else {
-                $caption = $this->ideogram->describe($media->getPath());
+                $caption = $this->ideogram->describe($originalTmp);
                 $prompt = $this->buildPrompt($caption, $row->question_context);
                 $imageUrl = $this->ideogram->generate($prompt);
             }
@@ -100,7 +107,7 @@ class GenerateQuizImageCandidate
                 'attempts' => $row->attempts + 1,
             ]);
         } finally {
-            foreach ([$tmp, $maskPath] as $path) {
+            foreach ([$tmp, $maskPath, $originalTmp] as $path) {
                 if ($path !== null && File::exists($path)) {
                     File::delete($path);
                 }

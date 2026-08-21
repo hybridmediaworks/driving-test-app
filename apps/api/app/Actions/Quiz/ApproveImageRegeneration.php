@@ -4,17 +4,19 @@ namespace App\Actions\Quiz;
 
 use App\Enums\ImageRegenerationStatus;
 use App\Models\QuizImageRegeneration;
+use App\Models\QuizQuestion;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
- * Approve a regenerated candidate: back the original bytes up to the private disk (independent
- * inode — a plain copy, never a hardlink), then overwrite the live file IN PLACE so every media
- * path hardlinked to that inode picks up the new image at once. Deleting/replacing the path would
- * break the hardlink group and only change one question, so we truncate-and-rewrite instead.
+ * Approve a regenerated candidate: back up the current original, then replace the image for EVERY
+ * media that shares this source image so all questions using it get the new one. Disk-agnostic via
+ * the Storage abstraction — on the local disk these media were hardlinks; on S3 each is its own
+ * object, so we write to each explicitly (the read/write never assumes a local filesystem path).
  */
 class ApproveImageRegeneration
 {
@@ -34,15 +36,20 @@ class ApproveImageRegeneration
             throw ValidationException::withMessages(['media' => __('The original image is missing.')]);
         }
 
-        return DB::transaction(function () use ($row, $admin, $media): QuizImageRegeneration {
-            $livePath = $media->getPath();
+        $candidateBytes = Storage::disk($row->candidate_disk)->get($row->candidate_path);
 
-            // Back up the current original first (read its bytes BEFORE overwriting).
+        return DB::transaction(function () use ($row, $admin, $media, $candidateBytes): QuizImageRegeneration {
+            // Back up the current original (read from its own disk — local or S3 — before overwriting).
             $backupPath = "quiz-image-backups/{$row->id}/".now()->format('Ymd_His').'-'.$media->file_name;
-            Storage::disk('local')->put($backupPath, File::get($livePath));
+            Storage::disk('local')->put(
+                $backupPath,
+                Storage::disk($media->disk)->get($media->getPathRelativeToRoot()),
+            );
 
-            // Replace in place — truncates the shared inode, so all hardlinks update together.
-            File::put($livePath, Storage::disk($row->candidate_disk)->get($row->candidate_path));
+            // Replace the image for every media that uses this source image, on its own disk.
+            foreach ($this->sharedMedia($row->source_url) as $item) {
+                Storage::disk($item->disk)->put($item->getPathRelativeToRoot(), $candidateBytes);
+            }
 
             // The staged candidate has served its purpose; drop it to reclaim space.
             Storage::disk($row->candidate_disk)->delete($row->candidate_path);
@@ -57,5 +64,19 @@ class ApproveImageRegeneration
 
             return $row->fresh();
         });
+    }
+
+    /**
+     * Every quiz-image media that shares this source URL (the questions the approval affects).
+     *
+     * @return Collection<int, Media>
+     */
+    private function sharedMedia(string $sourceUrl): Collection
+    {
+        return Media::query()
+            ->where('model_type', QuizQuestion::class)
+            ->where('collection_name', QuizQuestion::MEDIA_COLLECTION_IMAGES)
+            ->where('custom_properties->source_url', $sourceUrl)
+            ->get();
     }
 }

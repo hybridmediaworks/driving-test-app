@@ -2,6 +2,7 @@
 .turbo
 **/.turbo
 **/node_modules
+**/.venv
 **/.next
 **/.env
 **/.env.*
