@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptControlle
 use App\Http\Controllers\Api\V1\Admin\CheatSheetController as AdminCheatSheetController;
 use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
 use App\Http\Controllers\Api\V1\Admin\HandbookController as AdminHandbookController;
+use App\Http\Controllers\Api\V1\Admin\ImageApprovalController;
 use App\Http\Controllers\Api\V1\Admin\PassGuaranteeClaimController as AdminPassGuaranteeClaimController;
 use App\Http\Controllers\Api\V1\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
@@ -196,6 +197,16 @@ Route::prefix('v1')->group(function (): void {
             Route::post('pass-guarantee-claims/{passGuaranteeClaim}/approve', [AdminPassGuaranteeClaimController::class, 'approve']);
             Route::post('pass-guarantee-claims/{passGuaranteeClaim}/deny', [AdminPassGuaranteeClaimController::class, 'deny']);
             Route::post('pass-guarantee-claims/{passGuaranteeClaim}/refund', [AdminPassGuaranteeClaimController::class, 'refund']);
+
+            // AI image regeneration review — approve swaps the original (backing it up) across every
+            // question sharing the image; reject queues it for another generation pass.
+            Route::get('image-approvals', [ImageApprovalController::class, 'index']);
+            Route::get('image-approvals/{regeneration}/candidate', [ImageApprovalController::class, 'candidate']);
+            Route::get('image-approvals/{regeneration}/backup', [ImageApprovalController::class, 'backup']);
+            Route::post('image-approvals/{regeneration}/generate', [ImageApprovalController::class, 'generate']);
+            Route::post('image-approvals/{regeneration}/upload', [ImageApprovalController::class, 'upload']);
+            Route::post('image-approvals/{regeneration}/approve', [ImageApprovalController::class, 'approveDecision']);
+            Route::post('image-approvals/{regeneration}/reject', [ImageApprovalController::class, 'rejectDecision']);
 
             Route::get('stats', [AdminStatsController::class, 'index']);
         });
