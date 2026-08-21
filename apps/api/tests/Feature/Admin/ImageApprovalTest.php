@@ -85,9 +85,9 @@ class ImageApprovalTest extends TestCase
         $row->refresh();
         $this->assertEquals(ImageRegenerationStatus::Approved, $row->status);
         $this->assertNotNull($row->backup_path);
-        // Live file is now the candidate; the backup holds the original bytes.
+        // Live file is now the candidate; the backup (on the media's disk) holds the original bytes.
         $this->assertSame('REGENERATED-BYTES', file_get_contents($media->getPath()));
-        $this->assertSame($originalBytes, Storage::disk('local')->get($row->backup_path));
+        $this->assertSame($originalBytes, Storage::disk($media->disk)->get($row->backup_path));
         // Candidate staging is cleaned up after approval.
         $this->assertFalse(Storage::disk('local')->exists('quiz-candidates/1/cand.jpg'));
     }

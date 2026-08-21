@@ -68,7 +68,8 @@ class ImageApprovalController extends Controller
     {
         abort_unless((bool) $regeneration->backup_path, 404);
 
-        $disk = Storage::disk('local');
+        // Backups live on the media's own disk (S3 in production).
+        $disk = Storage::disk($regeneration->media()?->disk ?? 'local');
         abort_unless($disk->exists($regeneration->backup_path), 404);
 
         return $disk->response($regeneration->backup_path);

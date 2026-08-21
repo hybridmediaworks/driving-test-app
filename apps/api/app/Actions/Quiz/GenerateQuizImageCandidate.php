@@ -101,12 +101,14 @@ class GenerateQuizImageCandidate
                 Storage::disk($row->candidate_disk)->delete($row->candidate_path);
             }
 
+            // Stage on the media's own disk (S3 in production) so it survives container redeploys —
+            // container-local storage is wiped on every recreate.
             $relativePath = "quiz-candidates/{$row->id}/".Str::uuid()->toString().'.jpg';
-            Storage::disk('local')->put($relativePath, File::get($tmp));
+            Storage::disk($media->disk)->put($relativePath, File::get($tmp));
 
             $row->update([
                 'prompt' => $prompt,
-                'candidate_disk' => 'local',
+                'candidate_disk' => $media->disk,
                 'candidate_path' => $relativePath,
                 'status' => ImageRegenerationStatus::AwaitingReview,
                 'attempts' => $row->attempts + 1,
