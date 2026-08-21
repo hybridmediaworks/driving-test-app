@@ -92,16 +92,20 @@ class ImageApprovalController extends Controller
      * On-demand AI generation for one row (the CLI does batches; this is the per-row button). Runs
      * synchronously — the caller shows a pending state. A generation failure comes back as a 422.
      */
-    public function generate(QuizImageRegeneration $regeneration): JsonResponse
+    public function generate(QuizImageRegeneration $regeneration, Request $request): JsonResponse
     {
         // Generation calls out to Ideogram (and, for signs, the rembg mask helper) and can run well
         // past PHP's default 30s cap; lift it here (the HTTP client's own timeouts still bound it).
         @set_time_limit(0);
 
+        // An optional reviewer prompt is appended to the base prompt (the base always runs) to fix a
+        // specific problem in the picture on this re-roll.
+        $customPrompt = trim($request->string('prompt')->toString()) ?: null;
+
         // Interactive re-rolls use TURBO so the request returns quickly and never hits a web timeout;
         // for inpaint the sign is preserved by the mask, so only the background is lighter. Bulk runs
         // via the CLI keep the config's QUALITY.
-        $row = ($this->generate)($regeneration, 'TURBO');
+        $row = ($this->generate)($regeneration, 'TURBO', $customPrompt);
 
         if ($row->status === ImageRegenerationStatus::Failed) {
             return response()->json(['message' => $row->error ?? 'Generation failed.'], 422);
@@ -118,5 +122,25 @@ class ImageApprovalController extends Controller
         $row = ($this->upload)($regeneration, $request->file('image'));
 
         return response()->json(['image_regeneration' => new ImageRegenerationResource($row)]);
+    }
+
+    /**
+     * Discard the current candidate (delete the staged file, reset to pending) so a fresh one can be
+     * generated. Does not touch the live original or any approval.
+     */
+    public function discard(QuizImageRegeneration $regeneration): JsonResponse
+    {
+        if ($regeneration->candidate_disk && $regeneration->candidate_path) {
+            Storage::disk($regeneration->candidate_disk)->delete($regeneration->candidate_path);
+        }
+
+        $regeneration->update([
+            'candidate_disk' => null,
+            'candidate_path' => null,
+            'status' => ImageRegenerationStatus::Pending,
+            'error' => null,
+        ]);
+
+        return response()->json(['image_regeneration' => new ImageRegenerationResource($regeneration->fresh())]);
     }
 }

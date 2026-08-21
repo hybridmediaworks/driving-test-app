@@ -35,7 +35,7 @@ class GenerateQuizImageCandidate
      *                                      the mask regardless of speed, so only the background is
      *                                      faster/lighter). The CLI passes null and keeps config speeds.
      */
-    public function __invoke(QuizImageRegeneration $row, ?string $speedOverride = null): QuizImageRegeneration
+    public function __invoke(QuizImageRegeneration $row, ?string $speedOverride = null, ?string $customPrompt = null): QuizImageRegeneration
     {
         if ($speedOverride !== null && $speedOverride !== '') {
             config([
@@ -68,14 +68,26 @@ class GenerateQuizImageCandidate
             // Sign/symbol images are inpainted (Edit): the sign is masked and kept EXACTLY while only
             // the background is regenerated to a fresh setting — so the pictogram never drifts yet the
             // scene can be anywhere. Everything else uses the copyright-safest Describe -> Generate path.
-            if ($this->looksLikeSign($row->question_context)) {
+            // Decide sign vs scene. The question wording usually says "sign", but not always — so if it
+            // doesn't, describe the image and detect a sign from the caption too (a dedicated road sign
+            // must go through inpaint, otherwise the scene path reinvents its symbol and breaks it).
+            $caption = null;
+            $isSign = $this->looksLikeSign($row->question_context);
+            if (! $isSign) {
+                $caption = $this->ideogram->describe($originalTmp);
+                $isSign = $this->captionLooksLikeSign($caption);
+            }
+
+            if ($isSign) {
+                // Sign: mask the sign (kept exactly) and regenerate only the background.
                 $maskPath = $this->buildSignMask($originalTmp);
-                $prompt = $this->buildBackgroundPrompt($row->id);
+                $prompt = $this->appendCustom($this->buildBackgroundPrompt($row->id), $customPrompt);
                 $imageUrl = $this->ideogram->edit($originalTmp, $maskPath, $prompt);
             } else {
-                $caption = $this->ideogram->describe($originalTmp);
-                $prompt = $this->buildPrompt($caption, $row->question_context);
-                $imageUrl = $this->ideogram->generate($prompt);
+                // Scene: Remix keeps the ACTUAL scene (same vehicles, riders, positions, arrows/labels)
+                // and just re-renders it cleanly — text-to-image reinvents it and drops/adds vehicles.
+                $prompt = $this->appendCustom($this->buildScenePrompt(), $customPrompt);
+                $imageUrl = $this->ideogram->remix($originalTmp, $prompt);
             }
 
             $bytes = Http::timeout(60)->get($imageUrl)->throw()->body();
@@ -118,40 +130,51 @@ class GenerateQuizImageCandidate
     }
 
     /**
-     * Scene prompt (Describe -> Generate path, i.e. non-sign traffic/road scenes). It must reproduce
-     * the scene faithfully — same vehicles AND their occupants (a rider dropped off a motorcycle is a
-     * common failure) — and must NOT invent road signs or any text (the other common failure: a
-     * hallucinated gibberish sign). Sign images never reach here; they go through the inpaint path.
+     * Scene prompt for the Remix path. Remix is fed the original image, so it already sees the exact
+     * vehicles/riders/positions — the prompt just tells it to re-render cleanly and keep everything as
+     * is (do not add or drop vehicles/people, do not invent signs or text), and drop the watermark.
      */
-    private function buildPrompt(?string $caption, ?string $questionContext): string
+    private function buildScenePrompt(): string
     {
-        $caption = trim((string) $caption);
-        $context = trim((string) $questionContext);
+        return 'Re-render this exact US road/traffic scene as a clean, professional, photorealistic '
+            .'image. Reproduce ONLY the vehicles that are actually in the reference — the SAME count, '
+            .'types, colours, positions and directions. Do NOT add or clone any extra vehicle, '
+            .'motorcycle, or bicycle, and do NOT remove or move any. Every vehicle must face and travel '
+            .'in the SAME direction as in the reference — never reverse, flip, mirror, or turn one '
+            .'around. IMPORTANT: keep any letter labels on the vehicles (such as A, B, C, D) EXACTLY as '
+            .'they are — the same letter on the same vehicle in the same position — never remove, move, '
+            .'relabel, or add extra labels. Keep any coloured arrows or path lines exactly as they are. '
+            .'Remove any watermark or logo. Do not add any OTHER text, captions, road signs, or '
+            .'gibberish beyond those existing vehicle labels. Realistic lighting.';
+    }
 
-        $parts = [
-            'Recreate this US road/traffic scene as a clean, professional, photorealistic image that '
-                .'replaces an existing driving-test illustration. Faithfully reproduce the SAME scene: '
-                .'the same vehicles (their types, colours, positions and directions of travel), the same '
-                .'road layout and lane markings, and KEEP EVERY PERSON present — every motorcycle or '
-                .'bicycle MUST have its rider seated on it, and every car its driver, exactly as in the '
-                .'reference. Never remove a rider or leave a motorbike riderless.',
-        ];
+    /**
+     * Append an admin's runtime custom instruction to the base prompt (keeps the safety constraints
+     * while letting a reviewer steer a re-roll, e.g. "keep the motorcycle facing right, no extra cars").
+     */
+    private function appendCustom(string $base, ?string $custom): string
+    {
+        $custom = trim((string) $custom);
 
-        if ($caption !== '') {
-            $parts[] = 'Reference of the scene: '.$caption;
+        return $custom === '' ? $base : $base.' Additional instructions from the reviewer (follow these): '.$custom;
+    }
+
+    /**
+     * Detect a dedicated road sign from the visual caption (used when the question wording didn't
+     * already flag it). Matched conservatively so ordinary traffic scenes that merely mention a
+     * "stop sign" in passing are not misrouted to the sign/inpaint path.
+     */
+    private function captionLooksLikeSign(?string $caption): bool
+    {
+        $c = Str::lower((string) $caption);
+
+        foreach (['road sign', 'warning sign', 'traffic sign', 'yield sign', 'diamond sign', 'sign post', 'sign showing', 'sign depicting', 'sign with a'] as $needle) {
+            if (str_contains($c, $needle)) {
+                return true;
+            }
         }
 
-        if ($context !== '') {
-            $parts[] = 'For context, the questions about this scene are: '.$context
-                .'. Keep the scene\'s meaning intact, but do not render any of these words in the image.';
-        }
-
-        $parts[] = 'Hard rules: do NOT add any road signs, warning signs, billboards, plates, or signs '
-            .'bearing words; no captions, labels, letters, numbers, watermark, logo, or signature '
-            .'anywhere; absolutely no invented or gibberish text of any kind. Photorealistic, wide '
-            .'landscape composition, realistic lighting.';
-
-        return implode(' ', $parts);
+        return false;
     }
 
     /**

@@ -1,12 +1,12 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { Check, RefreshCw, Trash2, Upload, X, type LucideIcon } from "lucide-react";
 import type { ImageRegeneration } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AuthImage from "@/components/admin/AuthImage";
 import Lightbox from "@/components/admin/Lightbox";
 import AppLayout from "@/components/app/AppLayout";
-import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Paginator from "@/components/ui/Paginator";
 import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
@@ -15,6 +15,35 @@ import { api, ApiError } from "@/lib/api";
 function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div className="aspect-[1080/420] w-full overflow-hidden rounded-md border border-border bg-muted">{children}</div>
+  );
+}
+
+function ActionIcon({
+  title,
+  Icon,
+  onClick,
+  disabled,
+  spinning,
+  className,
+}: {
+  title: string;
+  Icon: LucideIcon;
+  onClick?: () => void;
+  disabled?: boolean;
+  spinning?: boolean;
+  className: string;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    >
+      <Icon className={`size-5 ${spinning ? "animate-spin" : ""}`} />
+    </button>
   );
 }
 
@@ -27,10 +56,11 @@ function ApprovalRow({
   onChanged: () => void;
   onPreview: (src: string) => void;
 }) {
-  const [busy, setBusy] = useState<"approve" | "reject" | "generate" | "upload" | null>(null);
+  const [busy, setBusy] = useState<"approve" | "reject" | "generate" | "upload" | "discard" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [customPrompt, setCustomPrompt] = useState("");
 
-  async function run(action: "approve" | "reject" | "generate" | "upload", fn: () => Promise<unknown>) {
+  async function run(action: "approve" | "reject" | "generate" | "upload" | "discard", fn: () => Promise<unknown>) {
     setBusy(action);
     setError(null);
     try {
@@ -46,7 +76,10 @@ function ApprovalRow({
   const decide = (action: "approve" | "reject") =>
     run(action, () => api.post(`/admin/image-approvals/${row.id}/${action}`));
 
-  const generate = () => run("generate", () => api.post(`/admin/image-approvals/${row.id}/generate`));
+  const generate = () =>
+    run("generate", () =>
+      api.post(`/admin/image-approvals/${row.id}/generate`, customPrompt.trim() ? { prompt: customPrompt.trim() } : {}),
+    );
 
   function upload(file: File) {
     const formData = new FormData();
@@ -54,10 +87,12 @@ function ApprovalRow({
     return run("upload", () => api.post(`/admin/image-approvals/${row.id}/upload`, formData));
   }
 
+  const discard = () => run("discard", () => api.post(`/admin/image-approvals/${row.id}/discard`));
+
   const isApproved = row.status === "approved" && row.has_backup;
 
   return (
-    <li className="grid gap-4 p-4 sm:grid-cols-[1fr_1fr_minmax(180px,auto)] sm:items-start">
+    <li className="grid gap-4 p-4 sm:grid-cols-[1fr_1fr_280px] sm:items-stretch">
       <div className="space-y-1">
         <p className="text-xs font-medium text-muted-foreground">Original</p>
         <Frame>
@@ -112,25 +147,42 @@ function ApprovalRow({
         </Frame>
       </div>
 
-      <div className="space-y-2">
-        <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-xs font-medium capitalize">
-          {row.status.replace("_", " ")}
-        </span>
-        <p className="text-xs text-muted-foreground">Used in {row.usage_count} questions</p>
-        {row.error && <p className="text-xs text-destructive">{row.error}</p>}
-        {error && <p className="text-sm text-destructive">{error}</p>}
+      <div className="flex h-full flex-col gap-3">
+        <div className="space-y-1">
+          <span className="inline-block rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium capitalize">
+            {row.status.replace("_", " ")}
+          </span>
+          <p className="text-xs text-muted-foreground">Used in {row.usage_count} questions</p>
+          {row.error && <p className="text-xs break-words text-destructive">{row.error}</p>}
+          {error && <p className="text-xs break-words text-destructive">{error}</p>}
+        </div>
 
-        <div className="flex flex-col gap-2 pt-1">
-          <Button variant="outline" onClick={generate} disabled={busy !== null}>
-            {busy === "generate" ? "Generating…" : row.has_candidate ? "Regenerate" : "Generate"}
-          </Button>
+        <textarea
+          value={customPrompt}
+          onChange={(e) => setCustomPrompt(e.target.value)}
+          placeholder="Optional fix — e.g. keep the sign symbol, no extra cars, motorcycle facing right…"
+          disabled={busy !== null}
+          className="min-h-24 w-full flex-1 resize-none rounded-md border border-border bg-background px-3 py-2 text-sm leading-snug disabled:opacity-50"
+        />
+
+        <div className="flex items-center justify-between gap-2">
+          <ActionIcon
+            title={row.has_candidate ? "Regenerate" : "Generate"}
+            Icon={RefreshCw}
+            onClick={generate}
+            disabled={busy !== null}
+            spinning={busy === "generate"}
+            className="border-blue-200 text-blue-600 hover:bg-blue-50"
+          />
 
           <label
-            className={`inline-flex cursor-pointer items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted ${
+            title="Upload image"
+            aria-label="Upload image"
+            className={`inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border text-neutral-700 transition hover:bg-neutral-50 ${
               busy !== null ? "pointer-events-none opacity-50" : ""
             }`}
           >
-            {busy === "upload" ? "Uploading…" : "Upload image"}
+            <Upload className="size-5" />
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -145,14 +197,30 @@ function ApprovalRow({
           </label>
 
           {row.has_candidate && (
-            <div className="flex gap-2">
-              <Button onClick={() => decide("approve")} disabled={busy !== null}>
-                {busy === "approve" ? "Approving…" : "Approve"}
-              </Button>
-              <Button variant="outline" onClick={() => decide("reject")} disabled={busy !== null}>
-                {busy === "reject" ? "Rejecting…" : "Reject"}
-              </Button>
-            </div>
+            <>
+              <ActionIcon
+                title="Approve"
+                Icon={Check}
+                onClick={() => decide("approve")}
+                disabled={busy !== null}
+                className="border-green-600 bg-green-600 text-white hover:bg-green-700"
+              />
+              <ActionIcon
+                title="Reject"
+                Icon={X}
+                onClick={() => decide("reject")}
+                disabled={busy !== null}
+                className="border-red-500 bg-red-500 text-white hover:bg-red-600"
+              />
+              <ActionIcon
+                title="Delete generated image"
+                Icon={Trash2}
+                onClick={discard}
+                disabled={busy !== null}
+                spinning={busy === "discard"}
+                className="border-red-300 text-red-600 hover:bg-red-50"
+              />
+            </>
           )}
         </div>
       </div>
