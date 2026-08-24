@@ -11,10 +11,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Admin\UploadImageCandidateRequest;
 use App\Http\Resources\Api\V1\Admin\ImageRegenerationResource;
 use App\Models\QuizImageRegeneration;
+use App\Models\QuizQuestion;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImageApprovalController extends Controller
@@ -126,11 +129,25 @@ class ImageApprovalController extends Controller
     }
 
     /**
-     * Discard the current candidate (delete the staged file, reset to pending) so a fresh one can be
-     * generated. Does not touch the live original or any approval.
+     * The trash button. For an awaiting-review row: delete the staged candidate and reset to pending.
+     * For an approved row: undo the approval — restore the backed-up original everywhere it's used and
+     * reopen the row — so a fresh candidate can be generated.
      */
     public function discard(QuizImageRegeneration $regeneration): JsonResponse
     {
+        $media = $regeneration->media();
+
+        // If it was approved, undo the swap first: restore the backed-up original across every media
+        // that shares this image, so the live picture goes back to the real original.
+        if ($regeneration->status === ImageRegenerationStatus::Approved && $regeneration->backup_path
+            && $media && Storage::disk($media->disk)->exists($regeneration->backup_path)) {
+            $bytes = Storage::disk($media->disk)->get($regeneration->backup_path);
+            foreach ($this->sharedMedia($regeneration->source_url) as $item) {
+                Storage::disk($item->disk)->put($item->getPathRelativeToRoot(), $bytes);
+            }
+            Storage::disk($media->disk)->delete($regeneration->backup_path);
+        }
+
         if ($regeneration->candidate_disk && $regeneration->candidate_path) {
             Storage::disk($regeneration->candidate_disk)->delete($regeneration->candidate_path);
         }
@@ -138,10 +155,25 @@ class ImageApprovalController extends Controller
         $regeneration->update([
             'candidate_disk' => null,
             'candidate_path' => null,
+            'backup_path' => null,
             'status' => ImageRegenerationStatus::Pending,
+            'admin_user_id' => null,
+            'decided_at' => null,
             'error' => null,
         ]);
 
         return response()->json(['image_regeneration' => new ImageRegenerationResource($regeneration->fresh())]);
+    }
+
+    /**
+     * @return Collection<int, Media>
+     */
+    private function sharedMedia(string $sourceUrl)
+    {
+        return Media::query()
+            ->where('model_type', QuizQuestion::class)
+            ->where('collection_name', QuizQuestion::MEDIA_COLLECTION_IMAGES)
+            ->where('custom_properties->source_url', $sourceUrl)
+            ->get();
     }
 }

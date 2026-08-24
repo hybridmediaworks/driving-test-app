@@ -96,8 +96,16 @@ function ApprovalRow({
       <div className="space-y-1">
         <p className="text-xs font-medium text-muted-foreground">Original</p>
         <Frame>
-          {isApproved ? (
-            // The live original file was overwritten on approval — show the backed-up pre-approval one.
+          {isApproved && row.backup_url ? (
+            // The live original was overwritten on approval — show the backed-up pre-approval one.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={row.backup_url}
+              alt="Original (backed up)"
+              className="h-full w-full cursor-zoom-in object-cover"
+              onClick={() => onPreview(row.backup_url as string)}
+            />
+          ) : isApproved ? (
             <AuthImage
               path={`/admin/image-approvals/${row.id}/backup`}
               alt="Original (backed up)"
@@ -130,10 +138,17 @@ function ApprovalRow({
               className="h-full w-full cursor-zoom-in object-cover"
               onClick={() => onPreview(`${row.original_url}?v=${row.attempts}`)}
             />
+          ) : row.candidate_url ? (
+            // Direct (signed) URL — loads from storage without streaming through the API.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={row.candidate_url}
+              alt="Regenerated"
+              className="h-full w-full cursor-zoom-in object-cover"
+              onClick={() => onPreview(row.candidate_url as string)}
+            />
           ) : row.has_candidate ? (
             <AuthImage
-              // `attempts` changes on every regenerate/upload; it busts the cache so the new candidate
-              // loads without a manual refresh (the /candidate URL itself is otherwise stable).
               path={`/admin/image-approvals/${row.id}/candidate?v=${row.attempts}`}
               alt="Regenerated"
               className="h-full w-full cursor-zoom-in object-cover"
@@ -212,15 +227,17 @@ function ApprovalRow({
                 disabled={busy !== null}
                 className="border-red-500 bg-red-500 text-white hover:bg-red-600"
               />
-              <ActionIcon
-                title="Delete generated image"
-                Icon={Trash2}
-                onClick={discard}
-                disabled={busy !== null}
-                spinning={busy === "discard"}
-                className="border-red-300 text-red-600 hover:bg-red-50"
-              />
             </>
+          )}
+          {(row.has_candidate || row.status === "approved") && (
+            <ActionIcon
+              title={row.status === "approved" ? "Revert approval — restore original" : "Delete generated image"}
+              Icon={Trash2}
+              onClick={discard}
+              disabled={busy !== null}
+              spinning={busy === "discard"}
+              className="border-red-300 text-red-600 hover:bg-red-50"
+            />
           )}
         </div>
       </div>
