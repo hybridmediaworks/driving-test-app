@@ -54,23 +54,22 @@ return [
         // Source images are 1080x420 (~2.57:1). Generate a wider 3:1 and centre-crop down, so the
         // vertical content (road + sky) is preserved rather than cropped.
         'aspect_ratio' => env('IDEOGRAM_ASPECT_RATIO', '3x1'),
-        // Elements to actively exclude — the model loves inventing extra "name" sub-signs and captions
-        // (e.g. writing "RODEO AHEAD" under a cattle symbol), which both looks wrong and leaks the answer.
+        // Elements to actively exclude. This is the STRONGEST lever against Ideogram's habit of
+        // sprinkling stray letters/characters on the road and vehicles (the positive prompt only asks;
+        // negation is what the sampler actually suppresses). Tune on the server via IDEOGRAM_NEGATIVE_PROMPT
+        // (an env change, no image rebuild) if a specific artifact keeps slipping through.
         'negative_prompt' => env('IDEOGRAM_NEGATIVE_PROMPT', 'extra sign, second sign, sub-sign, name plate, '
-            .'banner, caption, label, added text, words, letters, numbers, watermark, logo, signature, '
-            .'gibberish text, misspelled text'),
-        // Sign/symbol images use Remix (image-to-image) so the exact pictogram is preserved — text-to-image
-        // re-invents it and breaks the answer. This needs QUALITY speed and a fairly high weight. 88 is the
-        // sweet spot found in testing: fragile symbols stay correct, yet the background varies noticeably
-        // (lower ~82 drifts the symbol; higher ~92 looks almost identical to the original). Independent of
-        // the scene-image (Describe -> Generate) settings above, which can stay on the cheaper Turbo.
+            .'banner, caption, label, added text, words, letters, alphabet, alphabet characters, single '
+            .'letters, floating letters, stray letters, characters, symbols, numbers, digits, text on road, '
+            .'text on car, painted road text, road markings text, writing, text overlay, random marks, '
+            .'watermark, logo, signature, gibberish text, misspelled text'),
+        // Everything runs through Remix (image-to-image) — a single strong prompt, no masks. Scene images
+        // use this weight: higher keeps arrows/labels truer, lower allows a stronger car recolour.
         'remix_image_weight' => (int) env('IDEOGRAM_REMIX_IMAGE_WEIGHT', 88),
         'remix_rendering_speed' => env('IDEOGRAM_REMIX_RENDERING_SPEED', 'QUALITY'),
-        // Sign images are inpainted (Edit): the sign is masked and kept exactly while the background is
-        // regenerated to a fresh setting. The mask comes from a small Python helper (rembg) — point
-        // python_bin at an interpreter that has scripts/requirements.txt installed.
-        'python_bin' => env('IDEOGRAM_PYTHON_BIN', base_path('scripts/.venv/bin/python')),
-        'mask_script' => base_path('scripts/sign_mask.py'),
+        // Sign/symbol images use a HIGHER weight so the fragile pictogram survives the re-render (a wrong
+        // symbol = wrong answer). Only the background varies; the prompt forbids touching the symbol.
+        'remix_sign_image_weight' => (int) env('IDEOGRAM_REMIX_SIGN_IMAGE_WEIGHT', 95),
     ],
 
 ];

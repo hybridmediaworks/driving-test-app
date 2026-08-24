@@ -24,6 +24,9 @@ class UploadQuizImageCandidate
 
     public function __invoke(QuizImageRegeneration $row, UploadedFile $file): QuizImageRegeneration
     {
+        // Persist on the media's own disk (S3 in production) so it survives container redeploys.
+        $disk = $row->media()?->disk ?? 'local';
+
         $out = tempnam(sys_get_temp_dir(), 'upl_').'.jpg';
         Image::load($file->getRealPath())->fit(Fit::Crop, self::WIDTH, self::HEIGHT)->save($out);
 
@@ -32,12 +35,12 @@ class UploadQuizImageCandidate
         }
 
         $relativePath = "quiz-candidates/{$row->id}/".Str::uuid()->toString().'.jpg';
-        Storage::disk('local')->put($relativePath, File::get($out));
+        Storage::disk($disk)->put($relativePath, File::get($out));
         File::delete($out);
 
         $row->update([
             'prompt' => 'Manual designer upload',
-            'candidate_disk' => 'local',
+            'candidate_disk' => $disk,
             'candidate_path' => $relativePath,
             'status' => ImageRegenerationStatus::AwaitingReview,
             'attempts' => $row->attempts + 1,

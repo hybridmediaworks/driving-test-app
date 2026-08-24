@@ -15,5 +15,7 @@ export interface ImageRegeneration {
   original_url: string | null;
   has_candidate: boolean;
   has_backup: boolean;
+  candidate_url: string | null;
+  backup_url: string | null;
   decided_at: string | null;
 }

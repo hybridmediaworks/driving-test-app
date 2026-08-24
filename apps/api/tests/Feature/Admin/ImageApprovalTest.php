@@ -85,9 +85,9 @@ class ImageApprovalTest extends TestCase
         $row->refresh();
         $this->assertEquals(ImageRegenerationStatus::Approved, $row->status);
         $this->assertNotNull($row->backup_path);
-        // Live file is now the candidate; the backup holds the original bytes.
+        // Live file is now the candidate; the backup (on the media's disk) holds the original bytes.
         $this->assertSame('REGENERATED-BYTES', file_get_contents($media->getPath()));
-        $this->assertSame($originalBytes, Storage::disk('local')->get($row->backup_path));
+        $this->assertSame($originalBytes, Storage::disk($media->disk)->get($row->backup_path));
         // Candidate staging is cleaned up after approval.
         $this->assertFalse(Storage::disk('local')->exists('quiz-candidates/1/cand.jpg'));
     }
@@ -118,6 +118,35 @@ class ImageApprovalTest extends TestCase
             ->assertJsonPath('image_regeneration.status', 'rejected');
 
         $this->assertEquals(ImageRegenerationStatus::Rejected, $row->refresh()->status);
+    }
+
+    public function test_discard_reverts_an_approved_image_to_the_original(): void
+    {
+        $question = $this->questionWithImage('https://src/rev.jpg');
+        $media = $question->getFirstMedia(QuizQuestion::MEDIA_COLLECTION_IMAGES);
+        $originalBytes = file_get_contents($media->getPath());
+
+        // Simulate an approved row: original backed up on the media disk, live file overwritten.
+        Storage::disk($media->disk)->put('quiz-image-backups/9/orig.jpg', $originalBytes);
+        file_put_contents($media->getPath(), 'APPROVED-BYTES');
+        $row = QuizImageRegeneration::query()->create([
+            'source_url' => 'https://src/rev.jpg',
+            'representative_media_id' => $media->id,
+            'usage_count' => 1,
+            'status' => ImageRegenerationStatus::Approved,
+            'backup_path' => 'quiz-image-backups/9/orig.jpg',
+        ]);
+
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson("/api/v1/admin/image-approvals/{$row->id}/discard")
+            ->assertOk()
+            ->assertJsonPath('image_regeneration.status', 'pending');
+
+        // The live image is restored to the original and the row is reopened.
+        $this->assertSame($originalBytes, file_get_contents($media->getPath()));
+        $row->refresh();
+        $this->assertEquals(ImageRegenerationStatus::Pending, $row->status);
+        $this->assertNull($row->backup_path);
     }
 
     public function test_upload_stages_a_designer_image_as_candidate(): void
