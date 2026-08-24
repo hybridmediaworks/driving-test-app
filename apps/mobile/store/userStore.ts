@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export type VehicleType = "car" | "truck" | "motorcycle";
+export type VehicleType = "car" | "cdl" | "motorcycle";
 export type ExamDateRange = "0-3" | "4-7" | "8-14" | "15+";
 export type RetakeStatus = "first" | "retake";
 

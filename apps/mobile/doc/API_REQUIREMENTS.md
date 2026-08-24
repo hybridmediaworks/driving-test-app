@@ -22,6 +22,38 @@ Spec for the APIs the Driving Test mobile app needs, so the current static/mock 
 
 ---
 
+## Connection status
+
+Tracks which of the endpoints below are actually wired up in the mobile app (`apps/mobile`) against a live backend, vs. still running on mock/local data. Update this table whenever a screen is switched over.
+
+| Area | Endpoint(s) | Backend ready | Mobile connected | Notes |
+| --- | --- | --- | --- | --- |
+| Auth — login | `POST /login` | ✅ | ✅ | `store/authStore.ts` |
+| Auth — register | `POST /register` | ✅ | ✅ | `store/authStore.ts` |
+| Auth — logout | `POST /logout` | ✅ | ✅ | `store/authStore.ts` |
+| Auth — current user | `GET /me` | ✅ | ✅ | `store/authStore.ts` (hydrate) |
+| Auth — forgot/reset password | `POST /forgot-password`, `POST /reset-password` | ✅ | ✅ | `app/auth/forgot-password.tsx`, `app/auth/reset-password.tsx` |
+| Auth — confirm password | `POST /confirm-password` | ✅ | ✅ | `app/auth/confirm-password.tsx` |
+| Auth — resend verification | `POST /email/verification-notification` | ✅ | ✅ | `app/auth/verify-email.tsx` |
+| States | `GET /states` | ✅ | ✅ | `store/referenceDataStore.ts`, used by `app/onboarding/states.tsx` + `app/(tabs)/settings.tsx` |
+| Vehicle types | `GET /vehicle-types` | ✅ | ✅ | `store/referenceDataStore.ts`, used by `app/onboarding/vehicle.tsx` |
+| Tests (list/detail) | `GET /tests`, `GET /tests/{id}` | 🟡 renamed → `GET /quizzes`, `GET /quizzes/{quiz}` | ❌ | Mobile still reads `data/mockTests.ts` via `services/testService.ts` |
+| Tests — hero card | `GET /tests/hero` | ❌ not built | ❌ | Mobile uses `MOCK_HERO_TESTS` |
+| Quiz questions | `GET /tests/{id}/questions` | 🟡 merged into `GET /quizzes/{quiz}` | ❌ | Mobile uses `data/mockQuestions.ts` |
+| Quiz attempts — submit | `POST /tests/{id}/attempts` | 🟡 renamed → `POST /quizzes/{quiz}/attempts` | ❌ | |
+| Quiz attempts — fetch one | `GET /tests/{id}/attempts/{attemptId}` | 🟡 no single-attempt show; `GET /attempts` (list, 🔒) covers review | ❌ | |
+| Exam simulator | `GET /exams/config`, `POST /exams/{id}/simulations` | ❌ not built | ❌ | Mobile uses `MOCK_EXAM_CONFIGS` |
+| Challenge bank | `GET /challenge-bank`, `DELETE /challenge-bank/{questionId}` | ❌ not built | ❌ | Mobile uses local `store/challengeBankStore.ts` only |
+| Theory / study material | `GET /theory`, `GET /theory/{id}/download` | 🟡 replaced by `handbooks`, `cheat-sheets` (+download), `flashcards`, `videos` | ❌ | Mobile uses `MOCK_THEORY_ITEMS`; response shape differs from this doc |
+| Progress summary | `GET /progress`, `POST /progress/manual-read` | 🟡 no matching shape; closest is `GET /me/stats` 🔒 | ❌ | Mobile uses local `store/progressStore.ts` only |
+| Plans / pricing | `GET /plans` | ✅ | ❌ | `app/premium.tsx` still uses static pricing copy |
+| Billing checkout | `POST /billing/checkout` | ✅ | ❌ | |
+| AI chat (exam coach) | `POST /ai/chat` | 🟡 no generic endpoint; closest are `POST quizzes/{quiz}/questions/{question}/assist` and `POST quizzes/{quiz}/results-insight` | ❌ | `hooks/use-ai-chat.ts` fakes a canned reply |
+
+Legend: ✅ done · 🟡 backend exists but under a different route/shape than this doc describes · ❌ not connected / not built.
+
+---
+
 ## 1. Tests (practice tests)
 
 ### `GET /tests`

@@ -4,15 +4,15 @@ import { Heading } from "@/components/ui/heading";
 import { Primary, Secondary } from "@/constants/theme";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
-import { US_STATES } from "@/constants/us-states";
 import { useAuthStore } from "@/store/authStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useChallengeBankStore } from "@/store/challengeBankStore";
+import { useReferenceDataStore } from "@/store/referenceDataStore";
 import { useThemeStore } from "@/store/themeStore";
 import { useUserStore } from "@/store/userStore";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Animated, Share, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -139,18 +139,21 @@ const EXAM_DATE_LABELS: Record<string, string> = {
   "15+": "15+ days",
 };
 
-const VEHICLE_LABELS: Record<string, string> = {
-  car: "Car",
-  motorcycle: "Motorcycle",
-  truck: "Truck (CDL)",
-};
-
 export default function SettingsScreen() {
   const { preference, setPreference } = useThemeStore();
   const { vehicleType, state, examDateRange } = useUserStore();
   const { resetProgress } = useProgressStore();
   const { clearAll: clearChallengeBank } = useChallengeBankStore();
   const { user, logout } = useAuthStore();
+  const states = useReferenceDataStore((s) => s.states);
+  const vehicleTypes = useReferenceDataStore((s) => s.vehicleTypes);
+  const fetchStates = useReferenceDataStore((s) => s.fetchStates);
+  const fetchVehicleTypes = useReferenceDataStore((s) => s.fetchVehicleTypes);
+
+  useEffect(() => {
+    fetchStates();
+    fetchVehicleTypes();
+  }, [fetchStates, fetchVehicleTypes]);
 
   const isDark = preference === "dark";
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -168,9 +171,11 @@ export default function SettingsScreen() {
     }
   }
 
-  const stateEntry = US_STATES.find((s) => s.id === state);
-  const stateLabel = stateEntry ? stateEntry.id : "Not Set";
-  const vehicleLabel = vehicleType ? VEHICLE_LABELS[vehicleType] : "Not Set";
+  const stateEntry = states.find((s) => s.code === state);
+  const stateLabel = stateEntry ? stateEntry.code : "Not Set";
+  const vehicleLabel = vehicleType
+    ? (vehicleTypes.find((v) => v.name === vehicleType)?.title ?? "Not Set")
+    : "Not Set";
   const examLabel = examDateRange ? EXAM_DATE_LABELS[examDateRange] : "Not Set";
 
   const handleShare = async () => {

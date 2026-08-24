@@ -25,7 +25,7 @@ const GOLD = "#F5A623";
 const vehicleTitle: Record<VehicleType, string> = {
   motorcycle: "Ace Your Motorcycle Rider\nDMV Exam",
   car: "Ace Your Car Driver\nDMV Exam",
-  truck: "Ace Your CDL Truck\nDriver Exam",
+  cdl: "Ace Your CDL Truck\nDriver Exam",
 };
 
 const FEATURES = [

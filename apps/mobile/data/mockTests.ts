@@ -248,7 +248,7 @@ export const MOCK_TESTS: MockTest[] = [
     subtitle: "Questions 1–30",
     image: px(1095814),
     difficulty: "easy",
-    vehicle: "truck",
+    vehicle: "cdl",
     questionsCount: 30,
     passingScore: 80,
     description:
@@ -260,7 +260,7 @@ export const MOCK_TESTS: MockTest[] = [
     subtitle: "Questions 31–60",
     image: px(2199293),
     difficulty: "easy",
-    vehicle: "truck",
+    vehicle: "cdl",
     questionsCount: 30,
     passingScore: 80,
     description:
@@ -272,7 +272,7 @@ export const MOCK_TESTS: MockTest[] = [
     subtitle: "Questions 1–50",
     image: px(1427107),
     difficulty: "hard",
-    vehicle: "truck",
+    vehicle: "cdl",
     questionsCount: 50,
     passingScore: 80,
     description:
@@ -284,7 +284,7 @@ export const MOCK_TESTS: MockTest[] = [
     subtitle: "Questions 51–100",
     image: px(3024454),
     difficulty: "hard",
-    vehicle: "truck",
+    vehicle: "cdl",
     questionsCount: 50,
     passingScore: 80,
     description:
@@ -296,7 +296,7 @@ export const MOCK_TESTS: MockTest[] = [
     subtitle: "50 Questions",
     image: px(2449454),
     difficulty: "hardest",
-    vehicle: "truck",
+    vehicle: "cdl",
     questionsCount: 50,
     passingScore: 85,
     description:
@@ -309,7 +309,7 @@ export const MOCK_TESTS: MockTest[] = [
     image: px(4063789),
     difficulty: "hardest",
     locked: true,
-    vehicle: "truck",
+    vehicle: "cdl",
     questionsCount: 200,
     passingScore: 85,
     description:
@@ -396,7 +396,7 @@ export const MOCK_THEORY_ITEMS: MockTheoryItem[] = [
     title: "CDL Manual",
     icon: "cloud-download",
     action: "get",
-    vehicle: "truck",
+    vehicle: "cdl",
     description: "Printable PDF e-book. View them inside the app or send to your printer.",
     fileInfo: "PDF, 95 pages, 31.5 MB",
   },
@@ -405,7 +405,7 @@ export const MOCK_THEORY_ITEMS: MockTheoryItem[] = [
     title: "CDL Test Questions",
     icon: "lock",
     action: "unlock",
-    vehicle: "truck",
+    vehicle: "cdl",
     description: "60 Most Common Questions",
     fileInfo: "PDF, 10 pages, 2.8 MB",
   },
@@ -414,7 +414,7 @@ export const MOCK_THEORY_ITEMS: MockTheoryItem[] = [
     title: "HazMat Guide",
     icon: "lock",
     action: "unlock",
-    vehicle: "truck",
+    vehicle: "cdl",
     description: "HazMat & Air Brake Regulations",
     fileInfo: "PDF, 14 pages, 4.1 MB",
   },
@@ -423,7 +423,7 @@ export const MOCK_THEORY_ITEMS: MockTheoryItem[] = [
     title: "CDL General Knowledge",
     icon: "lock",
     action: "unlock",
-    vehicle: "truck",
+    vehicle: "cdl",
     description: "100 Most Common CDL Questions",
     fileInfo: "PDF, 16 pages, 4.8 MB",
   },
@@ -453,7 +453,7 @@ export const MOCK_EXAM_CONFIGS: MockExamConfig[] = [
   },
   {
     id: "exam-truck",
-    vehicle: "truck",
+    vehicle: "cdl",
     title: "CDL Exam Simulator",
     subtitle: "50 random questions",
     image: px(1392616),
@@ -482,7 +482,7 @@ export const MOCK_HERO_TESTS: MockHeroTest[] = [
     testId: "car-e1",
   },
   {
-    vehicle: "truck",
+    vehicle: "cdl",
     title: "CDL Practice Test 1",
     description:
       "Use this card to proceed. It'll always point to the next test you need to take.",
