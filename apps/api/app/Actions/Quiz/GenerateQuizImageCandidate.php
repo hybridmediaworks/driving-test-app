@@ -7,7 +7,6 @@ use App\Models\QuizImageRegeneration;
 use App\Services\Ideogram\IdeogramClient;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Image\Enums\Fit;
@@ -56,7 +55,6 @@ class GenerateQuizImageCandidate
         }
 
         $tmp = null;
-        $maskPath = null;
         $originalTmp = null;
         try {
             // Pull the original into a local temp file first, so the rest works whether media lives on
@@ -79,14 +77,16 @@ class GenerateQuizImageCandidate
             }
 
             if ($isSign) {
-                // Sign: mask the sign (kept exactly) and regenerate only the background.
-                $maskPath = $this->buildSignMask($originalTmp);
-                $prompt = $this->appendCustom($this->buildBackgroundPrompt($row->id), $customPrompt);
-                $imageUrl = $this->ideogram->edit($originalTmp, $maskPath, $prompt);
+                // Sign: one strong Remix prompt keeps the pictogram/shape/colours EXACT and just puts it
+                // in a fresh setting (copyright). Higher image_weight so the fragile symbol survives.
+                $prompt = $this->appendCustom($this->buildSignPrompt($row->id), $customPrompt);
+                $imageUrl = $this->ideogram->remix($originalTmp, $prompt, (int) config('services.ideogram.remix_sign_image_weight'));
             } else {
-                // Scene: Remix keeps the ACTUAL scene (same vehicles, riders, positions, arrows/labels)
-                // and just re-renders it cleanly — text-to-image reinvents it and drops/adds vehicles.
-                $prompt = $this->appendCustom($this->buildScenePrompt(), $customPrompt);
+                // Scene/traffic image: a single, well-explained Remix prompt does everything — keeps the
+                // actual vehicles/arrows/paths/labels, recolours the cars, and drops the watermark. No
+                // mask, no image code — just the prompt. Raise IDEOGRAM_REMIX_IMAGE_WEIGHT for truer
+                // arrows/labels (at the cost of a lighter recolour).
+                $prompt = $this->appendCustom($this->buildScenePrompt($row->id), $customPrompt);
                 $imageUrl = $this->ideogram->remix($originalTmp, $prompt);
             }
 
@@ -121,7 +121,7 @@ class GenerateQuizImageCandidate
                 'attempts' => $row->attempts + 1,
             ]);
         } finally {
-            foreach ([$tmp, $maskPath, $originalTmp] as $path) {
+            foreach ([$tmp, $originalTmp] as $path) {
                 if ($path !== null && File::exists($path)) {
                     File::delete($path);
                 }
@@ -132,22 +132,81 @@ class GenerateQuizImageCandidate
     }
 
     /**
-     * Scene prompt for the Remix path. Remix is fed the original image, so it already sees the exact
-     * vehicles/riders/positions — the prompt just tells it to re-render cleanly and keep everything as
-     * is (do not add or drop vehicles/people, do not invent signs or text), and drop the watermark.
+     * The single prompt for every scene/traffic image (Remix path — no mask, no image code). Remix is
+     * fed the original (image_weight from config; raise it for truer arrows/labels), so the composition/
+     * vehicles/positions carry over; the prompt makes only targeted edits. It recolours the cars (single
+     * -> blue, multiple -> distinct natural colours) for copyright distinctness while the scenario stays
+     * identical, lifts lane markings, darkens the road, adds roadside buildings, and removes the
+     * watermark — and, above all (rule 8), keeps the answer graphics (arrows/paths/cones/icons/labels)
+     * exact. Rule 9 applies a per-id subtle colour-grade/lighting shift (SCENE_LOOKS) so each result is
+     * visibly distinct from the scraped original. The strict-preservation tail guards composition,
+     * vehicle direction, and invented text.
      */
-    private function buildScenePrompt(): string
+    private function buildScenePrompt(int $id): string
     {
-        return 'Re-render this exact US road/traffic scene as a clean, professional, photorealistic '
-            .'image. Reproduce ONLY the vehicles that are actually in the reference — the SAME count, '
-            .'types, colours, positions and directions. Do NOT add or clone any extra vehicle, '
-            .'motorcycle, or bicycle, and do NOT remove or move any. Every vehicle must face and travel '
-            .'in the SAME direction as in the reference — never reverse, flip, mirror, or turn one '
-            .'around. IMPORTANT: keep any letter labels on the vehicles (such as A, B, C, D) EXACTLY as '
-            .'they are — the same letter on the same vehicle in the same position — never remove, move, '
-            .'relabel, or add extra labels. Keep any coloured arrows or path lines exactly as they are. '
-            .'Remove any watermark or logo. Do not add any OTHER text, captions, road signs, or '
-            .'gibberish beyond those existing vehicle labels. Realistic lighting.';
+        // Per-image look so each result is visibly distinct from the scraped original (and from each
+        // other) — a subtle, natural daytime grade, never so dark that anything becomes hard to read.
+        $look = self::SCENE_LOOKS[$id % count(self::SCENE_LOOKS)];
+
+        return 'You are editing a US driving-test question image. TWO THINGS ARE NON-NEGOTIABLE and '
+            .'override every other instruction: (a) never change, move, redraw, or remove any coloured '
+            .'directional arrow, path line, cone, signal/sensor icon, or letter/number label — these are '
+            .'the answer and must stay pixel-identical and legible; (b) never change the number, '
+            .'positions, shapes, or facing/direction of the vehicles, and never turn an arrow, path, or '
+            .'label into a 3D object, barrier, or sign. Preservation ALWAYS wins over any other '
+            .'instruction below. Within those limits, edit the image while preserving the original '
+            .'composition, camera angle, perspective, framing, road layout and traffic exactly. Make '
+            .'ONLY the following changes: '
+            .'1. Recolour the vehicles where you cleanly can: give each car body a realistic natural '
+            .'colour different from the original (for a single car, a medium blue; if it is already '
+            .'blue, a red), recolouring the whole body while keeping its metallic shading. This is '
+            .'SUBORDINATE to preservation — never distort, duplicate, move, reshape, or add a vehicle, '
+            .'and never disturb an arrow/label, just to change a colour; if staying faithful keeps a car '
+            .'close to its original colour, that is acceptable. '
+            .'2. If there are several vehicles, prefer giving each a different natural colour (blue, '
+            .'white, black, silver, grey, red, or dark green), each different from its own original — '
+            .'but keep every vehicle in exactly the same position, shape, size and orientation, and add '
+            .'or remove none. '
+            .'IMPORTANT COLOUR EXCEPTION: if a car is paired with a matching-coloured directional arrow '
+            .'or path line (for example a red car with a red arrow/path, or a blue car with a blue '
+            .'arrow/path), KEEP that car in its original colour so it still matches its path — only '
+            .'recolour cars that have NO associated coloured path. '
+            .'3. Make the existing yellow and white road lane markings significantly more prominent, '
+            .'sharper, and easier to see while keeping their exact original positions and shapes. '
+            .'4. DARKEN THE ROAD — this is required. Make the asphalt/road surface clearly and noticeably '
+            .'darker: a deeper, richer realistic grey with more contrast, distinctly darker than the '
+            .'original, while keeping its exact geometry, lane lines and layout unchanged. '
+            .'5. Add realistic buildings along the sides of the existing road, integrated naturally into '
+            .'the environment and perspective. Buildings must remain outside the existing roadway and '
+            .'must not obstruct, replace, or remove any existing objects. '
+            .'6. Make the existing sign board more prominent and visually noticeable only. Do not change '
+            ."the sign's text, design, shape, colour, graphics, or content in any way. "
+            .'7. Remove the existing watermark completely and reconstruct the underlying area naturally '
+            .'so there is no visible trace of the watermark. '
+            .'8. THIS IS THE MOST IMPORTANT RULE. Keep EVERY coloured directional arrow, curved path line, '
+            .'trajectory indicator, signal/sensor/wifi icon, AND any letter or number label that is on or '
+            .'beside a vehicle (such as A, B, C) EXACTLY as in the original — same colour, shape, curve, '
+            .'thickness, start point, end point, direction it points, exact glyph, and count. Do NOT '
+            .'redraw, move, recolour, distort, straighten, blur, garble, duplicate, add, or remove any '
+            .'arrow, path, icon, or label. Every existing label letter must stay crisp and legible as the '
+            .'same character. These graphics encode the correct answer to the question and must remain '
+            .'pixel-faithful. '
+            .'9. OVERALL LOOK — the result must clearly read as a DIFFERENT photograph from the original, '
+            .'not a copy. Apply a subtle but real, natural colour-grade and lighting shift to the whole '
+            .'scene: render it under '.$look.', giving the road, ground, greenery, sky and vehicles a '
+            .'slightly different tone and white balance. Keep it photorealistic and clearly daytime and '
+            .'well-lit (never so dark or tinted that anything becomes hard to see). This colour/lighting '
+            .'shift applies ONLY to the environment and vehicles — the answer graphics (arrows, paths, '
+            .'cones, icons, labels) and any road sign keep their EXACT original colours. '
+            .'STRICT PRESERVATION: Do not change, add, remove, resize, reposition, or redesign the '
+            .'geometry of the scene. Preserve the exact road perspective, camera position, vehicle '
+            .'positions, vehicle shapes, traffic arrangement, road/lane geometry, sidewalks and overall '
+            .'composition. Every vehicle must keep the SAME facing and direction of travel as in the '
+            .'original — never reverse, flip, or mirror any vehicle. Do NOT invent, scatter, or add any '
+            .'letters, numbers, captions, or labels that are not physically in the original. The result '
+            .'must be the SAME scene and layout as the original — same everything in place — re-lit and '
+            .'re-graded per rule 9, with only the requested modifications. Photorealistic, realistic '
+            .'road textures, realistic vehicle colours, seamless edits, no artificial or CGI appearance.';
     }
 
     /**
@@ -188,7 +247,23 @@ class GenerateQuizImageCandidate
         return str_contains(Str::lower((string) $questionContext), 'sign');
     }
 
-    /** A pool of plausible US road settings, so each inpainted sign lands in a visibly different place. */
+    /**
+     * A pool of subtle daytime colour-grade / lighting looks, indexed by row id, so every regenerated
+     * scene is visibly distinct from the scraped original (and from other scenes) without ever getting
+     * dark or unnatural — the copyright "make it different" lever that keeps the answer readable.
+     */
+    private const SCENE_LOOKS = [
+        'soft warm late-afternoon sunlight with gentle long shadows and a faint golden tone',
+        'cool, bright overcast daylight with soft even shadows and a slightly blue-grey tone',
+        'crisp clear midday sun with strong clean shadows, vivid greenery and a bright blue sky',
+        'hazy diffused daylight with a soft, slightly desaturated low-contrast look',
+        'fresh clear morning light with a cool white balance and vivid natural colours',
+        'warm sunlit tone with richer, slightly more saturated colours and a clear sky',
+        'gentle cloudy daylight with a neutral, muted palette and soft shadows',
+        'bright early-day light with a pale sky, cooler tone and lively green foliage',
+    ];
+
+    /** A pool of plausible US road settings, so each sign lands in a visibly different place. */
     private const BACKGROUND_SETTINGS = [
         'a quiet rural highway through open farmland at midday, distant low hills, clear sky',
         'a country road winding through green rolling hills and scattered trees on an overcast morning',
@@ -201,36 +276,21 @@ class GenerateQuizImageCandidate
     ];
 
     /**
-     * Run the Python helper (rembg) to build the keep-the-sign mask; returns the temp mask path.
+     * The single Remix prompt for a road-sign image: reproduce the pictogram EXACTLY and only place it
+     * in a fresh roadside setting (varied by id) — no mask, no image code. A high image_weight (config)
+     * protects the fragile symbol; the strict wording forbids restyling it or adding any text/sub-sign.
      */
-    private function buildSignMask(string $imagePath): string
-    {
-        $maskPath = tempnam(sys_get_temp_dir(), 'mask_').'.png';
-
-        $result = Process::timeout(120)->run([
-            (string) config('services.ideogram.python_bin'),
-            (string) config('services.ideogram.mask_script'),
-            $imagePath,
-            $maskPath,
-        ]);
-
-        if ($result->failed()) {
-            throw new \RuntimeException('Sign mask helper failed: '.trim($result->errorOutput() ?: $result->output()));
-        }
-
-        return $maskPath;
-    }
-
-    /**
-     * The inpaint prompt: replace the surroundings with a varied setting, keep the sign untouched.
-     */
-    private function buildBackgroundPrompt(int $id): string
+    private function buildSignPrompt(int $id): string
     {
         $setting = self::BACKGROUND_SETTINGS[$id % count(self::BACKGROUND_SETTINGS)];
 
-        return 'Replace the surroundings with '.$setting.'. Keep the existing road sign exactly as it '
-            .'is — do not change the sign, its shape, colour, or symbol in any way. Photorealistic, wide '
-            .'landscape, realistic lighting and shadows. Do not add any watermark, logo, extra sign, or '
-            .'any text.';
+        return 'This image shows a single US road sign. Reproduce the sign EXACTLY as in the original — '
+            .'the same pictogram/symbol, arrows, shape, outline, border, colours and proportions, '
+            .'pixel-faithful. Do NOT redraw, simplify, restyle, recolour, mirror, rotate, thicken, or '
+            .'alter the symbol in ANY way, and do not add or remove any part of it. Keep it on its post '
+            .'and place it in a fresh, clean, photorealistic US roadside setting: '.$setting.'. Remove '
+            .'any watermark or logo completely. Do NOT add any extra sign, sub-sign, name plate, caption, '
+            .'banner, words, letters, or numbers anywhere. Photorealistic, natural daylight, realistic '
+            .'materials, sharp and readable sign, no CGI or cartoon look.';
     }
 }

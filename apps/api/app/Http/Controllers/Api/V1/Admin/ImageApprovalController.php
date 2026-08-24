@@ -98,17 +98,16 @@ class ImageApprovalController extends Controller
      */
     public function generate(QuizImageRegeneration $regeneration, Request $request): JsonResponse
     {
-        // Generation calls out to Ideogram (and, for signs, the rembg mask helper) and can run well
-        // past PHP's default 30s cap; lift it here (the HTTP client's own timeouts still bound it).
+        // Generation calls out to Ideogram and can run well past PHP's default 30s cap; lift it here
+        // (the HTTP client's own timeouts still bound it).
         @set_time_limit(0);
 
         // An optional reviewer prompt is appended to the base prompt (the base always runs) to fix a
         // specific problem in the picture on this re-roll.
         $customPrompt = trim($request->string('prompt')->toString()) ?: null;
 
-        // Interactive re-rolls use TURBO so the request returns quickly and never hits a web timeout;
-        // for inpaint the sign is preserved by the mask, so only the background is lighter. Bulk runs
-        // via the CLI keep the config's QUALITY.
+        // Interactive re-rolls use TURBO so the request returns quickly and never hits a web timeout.
+        // Bulk runs via the CLI keep the config's QUALITY.
         $row = ($this->generate)($regeneration, 'TURBO', $customPrompt);
 
         if ($row->status === ImageRegenerationStatus::Failed) {
