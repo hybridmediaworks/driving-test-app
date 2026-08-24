@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Check, RefreshCw, Trash2, Upload, X, type LucideIcon } from "lucide-react";
 import type { ImageRegeneration } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
@@ -9,7 +10,7 @@ import Lightbox from "@/components/admin/Lightbox";
 import AppLayout from "@/components/app/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Paginator from "@/components/ui/Paginator";
-import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
+import { usePaginatedList } from "@/hooks/use-paginated-list";
 import { api, ApiError } from "@/lib/api";
 
 function Frame({ children }: { children: React.ReactNode }) {
@@ -250,11 +251,25 @@ function ApprovalRow({
 }
 
 function AdminImageApprovalsInner() {
-  const { searchParams, filterQuery, page, updateFilter, setPage } = useUrlQuery();
+  const searchParams = useSearchParams();
   const [preview, setPreview] = useState<string | null>(null);
 
+  const status = searchParams.get("status") ?? "awaiting_review";
+  const page = Number(searchParams.get("page") ?? "1") || 1;
+
+  // Pagination and the status filter do a FULL page reload (not SPA soft-nav) so the list reliably
+  // refetches and renders on this custom Next.js build; per-row actions keep using the fast reload().
+  function go(next: Record<string, string>) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(next)) {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    }
+    window.location.href = `/admin/image-approvals?${params.toString()}`;
+  }
+
   const { data: rows, reload } = usePaginatedList<ImageRegeneration>(
-    `/admin/image-approvals${filterQuery ? `?${filterQuery}` : ""}`,
+    `/admin/image-approvals?status=${encodeURIComponent(status)}`,
     page,
   );
   const items = rows?.data ?? [];
@@ -283,8 +298,8 @@ function AdminImageApprovalsInner() {
             <select
               id="f-status"
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-              value={searchParams.get("status") ?? "awaiting_review"}
-              onChange={(e) => updateFilter("status", e.target.value)}
+              value={status}
+              onChange={(e) => go({ status: e.target.value, page: "1" })}
             >
               <option value="awaiting_review">Awaiting review</option>
               <option value="approved">Approved</option>
@@ -311,7 +326,7 @@ function AdminImageApprovalsInner() {
                   ))}
                 </ul>
               )}
-              {rows && rows.meta.total > 0 && <Paginator meta={rows.meta} onPageChange={setPage} />}
+              {rows && rows.meta.total > 0 && <Paginator meta={rows.meta} onPageChange={(n) => go({ page: String(n) })} />}
             </CardContent>
           </Card>
         </div>
