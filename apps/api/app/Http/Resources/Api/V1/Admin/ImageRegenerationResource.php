@@ -17,6 +17,11 @@ class ImageRegenerationResource extends JsonResource
     {
         $media = $this->media();
 
+        // A backup row can point at a file that no longer exists — anything approved before backups
+        // moved to S3 was on wiped container storage. Verify existence so the UI shows a clean
+        // "not available" instead of a broken image.
+        $backupExists = $this->exists($media?->disk, $this->backup_path);
+
         return [
             'id' => $this->id,
             'status' => $this->status,
@@ -27,14 +32,27 @@ class ImageRegenerationResource extends JsonResource
             // Live original — a direct (S3) URL the browser loads itself.
             'original_url' => $media?->getUrl(),
             'has_candidate' => (bool) ($this->candidate_disk && $this->candidate_path),
-            'has_backup' => (bool) $this->backup_path,
+            'has_backup' => $backupExists,
             // Direct (signed) URLs for the candidate/backup so the browser loads them straight from
             // storage in parallel — far faster than streaming each image through the API. Null when the
             // disk can't sign (e.g. local dev); the UI then falls back to the guarded stream route.
             'candidate_url' => $this->signedUrl($this->candidate_disk, $this->candidate_path),
-            'backup_url' => $this->signedUrl($media?->disk, $this->backup_path),
+            'backup_url' => $backupExists ? $this->signedUrl($media?->disk, $this->backup_path) : null,
             'decided_at' => $this->decided_at,
         ];
+    }
+
+    private function exists(?string $disk, ?string $path): bool
+    {
+        if (! $disk || ! $path) {
+            return false;
+        }
+
+        try {
+            return Storage::disk($disk)->exists($path);
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     private function signedUrl(?string $disk, ?string $path): ?string

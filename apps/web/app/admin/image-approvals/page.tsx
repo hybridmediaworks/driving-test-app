@@ -89,7 +89,7 @@ function ApprovalRow({
 
   const discard = () => run("discard", () => api.post(`/admin/image-approvals/${row.id}/discard`));
 
-  const isApproved = row.status === "approved" && row.has_backup;
+  const isApproved = row.status === "approved";
 
   return (
     <li className="grid gap-4 p-4 sm:grid-cols-[1fr_1fr_280px] sm:items-stretch">
@@ -105,13 +105,17 @@ function ApprovalRow({
               className="h-full w-full cursor-zoom-in object-cover"
               onClick={() => onPreview(row.backup_url as string)}
             />
-          ) : isApproved ? (
+          ) : isApproved && row.has_backup ? (
             <AuthImage
               path={`/admin/image-approvals/${row.id}/backup`}
               alt="Original (backed up)"
               className="h-full w-full cursor-zoom-in object-cover"
               onClick={onPreview}
             />
+          ) : isApproved ? (
+            <div className="flex h-full items-center justify-center px-3 text-center text-xs text-muted-foreground">
+              Original not available — it was backed up before the storage update.
+            </div>
           ) : row.original_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
