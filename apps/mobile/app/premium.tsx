@@ -1,263 +1,366 @@
+import { TrialSheet } from "@/components/premium/trial-sheet";
+import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
-import { Primary, Secondary, White } from "@/constants/theme";
-import { useUserStore, type VehicleType } from "@/store/userStore";
-import { FontAwesome5 } from "@expo/vector-icons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Primary, Warning, White } from "@/constants/theme";
+import { useReferenceDataStore } from "@/store/referenceDataStore";
+import { useUserStore } from "@/store/userStore";
+import { FontAwesome5, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useRef, useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-} from "react-native";
+import { useEffect, useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const NAVY_BG = Primary[1000]; // "#0D142C" — dark navy paywall background
+const CARD_BG = "#121B3B";
+const BORDER = "rgba(255,255,255,0.08)";
+const MUTED = "rgba(255,255,255,0.55)";
+const GREEN = "#4ADE80";
+const TEAL = "#2DD4BF";
+const TEAL_BG = "rgba(45,212,191,0.12)";
+const STAR_COLOR = Warning[500];
 
-const GOLD = "#F5A623";
-
-const vehicleTitle: Record<VehicleType, string> = {
-  motorcycle: "Ace Your Motorcycle Rider\nDMV Exam",
-  car: "Ace Your Car Driver\nDMV Exam",
-  cdl: "Ace Your CDL Truck\nDriver Exam",
-};
-
-const FEATURES = [
-  {
-    title: "500+ exam-like questions",
-    description:
-      "Our users swear these questions are nearly identical to the real exam",
-  },
-  {
-    title: "Proprietary, truly state-specific question bank",
-    description: "You won't find these questions anywhere else.",
-  },
-  {
-    title: "Instant feedback",
-    description: "In-depth explanations help you understand every question",
-  },
-  {
-    title: "2 Printable PDF Cheat Sheets",
-    description: "Trickiest questions most people miss.",
-  },
+const AVATAR_COLORS = [
+  "#3B5BDB",
+  "#2F9E44",
+  "#E8590C",
+  "#9C36B5",
+  "#1098AD",
+  "#C2255C",
+  "#5C7CFA",
+  "#F08C00",
 ];
 
-const SLIDES = [
-  "features",
-  "testimonials",
-  "study-plan",
-  "guarantee",
-  "pricing",
-];
-
-function FeatureItem({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function PlaceholderPhoto({ index, size = 72 }: { index: number; size?: number }) {
   return (
-    <View style={{ flexDirection: "row", gap: 14, marginBottom: 20 }}>
-      <MaterialIcons
-        name="check"
-        size={22}
-        color={Primary.DEFAULT}
-        style={{ marginTop: 2 }}
-      />
-      <View style={{ flex: 1 }}>
-        <Heading level="h5" color="white" className="mb-1">
-          {title}
-        </Heading>
-        <Text className="text-secondary-400">{description}</Text>
-      </View>
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 14,
+        backgroundColor: AVATAR_COLORS[index % AVATAR_COLORS.length],
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <FontAwesome5 name="user-alt" size={size * 0.36} color="rgba(255,255,255,0.55)" />
     </View>
   );
 }
 
-function PassRateBadge() {
+function TrustStat({ value, label }: { value: string; label: string }) {
   return (
-    <View className="items-center my-2">
-      <View className="flex-row items-center gap-2">
-        <FontAwesome5 name="angle-left" size={60} color={Primary.DEFAULT} />
-        <View className="items-center px-2" style={{ alignItems: "center" }}>
-          <Heading
-            color="white"
-            style={{
-              fontSize: 44,
-              fontWeight: "900",
-              lineHeight: 48,
-            }}
-          >
-            97%
-          </Heading>
-          <Text className="text-white text-base">Pass Rate</Text>
-        </View>
-        <FontAwesome5 name="angle-right" size={60} color={Primary.DEFAULT} />
+    <View className="flex-1 items-center">
+      <View className="flex-row items-center gap-1.5">
+        <FontAwesome5 name="angle-left" size={22} color="rgba(255,255,255,0.3)" />
+        <Text className="text-white text-lg font-extrabold">{value}</Text>
+        <FontAwesome5 name="angle-right" size={22} color="rgba(255,255,255,0.3)" />
       </View>
+      <Text style={{ color: MUTED }} className="text-xs text-center mt-1">
+        {label}
+      </Text>
     </View>
   );
 }
+
+const TRIAL_HIGHLIGHTS = [
+  { icon: "clipboard-text-outline" as const, label: "500+ exam-\nlike questions" },
+  { icon: "shield-check" as const, label: "Plain-English\nexplanations" },
+];
+
+const COMPARE_ROWS: { feature: string; limited: boolean }[] = [
+  { feature: "Exam-like questions", limited: true },
+  { feature: "AI Driving Coach", limited: true },
+  { feature: "Challenge Bank™", limited: true },
+  { feature: "2 PDF Cheat Sheets", limited: false },
+  { feature: "Exam Simulator", limited: false },
+  { feature: "Marathons", limited: false },
+  { feature: "Pass Guarantee", limited: false },
+];
+
+function Stars({ count = 5 }: { count?: number }) {
+  return (
+    <View className="flex-row gap-1">
+      {Array.from({ length: count }).map((_, i) => (
+        <FontAwesome5 key={i} name="star" solid size={16} color={STAR_COLOR} />
+      ))}
+    </View>
+  );
+}
+
+const REVIEWS = [
+  {
+    title: "This helps WAYYYYY more that I thought it would",
+    author: "Shellrockgun",
+    date: "May 30, 2026",
+    body: "Before I felt confident, but I didn't know much for the actual DMV wording until I started using this every day.",
+  },
+  {
+    title: "100% suggest if you're struggling with the Dmv test",
+    author: "Luckyeye88",
+    date: "Jun 28, 2026",
+    body: "This is the best app I ever found for the DMV. It helped me pass all my tests with flying colors. The same questions they ask you at the DMV are the same practice questions they ask you in here.",
+  },
+];
+
+const PRESS = [
+  "USA TODAY",
+  "NBC",
+  "CBS NEWS",
+  "Newsweek",
+  "FORTUNE",
+  "Cars.com",
+  "McKinsey & Company",
+  "THE DRIVE",
+];
 
 export default function PremiumScreen() {
   const router = useRouter();
-  const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
-  const [activeSlide, setActiveSlide] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const [showTrialSheet, setShowTrialSheet] = useState(false);
+  const stateCode = useUserStore((s) => s.state);
+  const states = useReferenceDataStore((s) => s.states);
+  const fetchStates = useReferenceDataStore((s) => s.fetchStates);
 
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    setActiveSlide(index);
-  };
+  useEffect(() => {
+    fetchStates();
+  }, [fetchStates]);
+
+  const stateName =
+    states.find((s) => s.code === stateCode)?.name ?? "your state";
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: Secondary.DEFAULT }}
-      edges={["top", "bottom"]}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: NAVY_BG }} edges={["top", "bottom"]}>
       <StatusBar style="light" />
-      {/* Background glow */}
-      <View
-        style={{
-          boxShadow: `${Primary.DEFAULT} 0px 0px 100px 100px`,
-          position: "absolute",
-          top: 0,
-          left: SCREEN_WIDTH / 2 - 5,
-          width: 1,
-          height: 1,
-          borderRadius: 80,
-          backgroundColor: Primary.DEFAULT,
-          opacity: 0.5,
-        }}
-      />
 
-      {/* Close button */}
-      <TouchableOpacity
-        onPress={() => router.back()}
-        activeOpacity={0.8}
-        style={{
-          position: "absolute",
-          top: 56,
-          right: 20,
-          zIndex: 10,
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: Secondary[700],
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
       >
-        <MaterialIcons name="close" size={20} color={White.DEFAULT} />
-      </TouchableOpacity>
+        {/* Photo grid */}
+        <View className="flex-row flex-wrap px-4 pt-4 gap-3 justify-center">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <PlaceholderPhoto key={i} index={i} />
+          ))}
+        </View>
 
-      {/* Static header — Premium badge, title, subtitle */}
-      <View className="px-5 pt-4 items-center">
-        <View className="px-5 py-2 border-2 border-primary-400 rounded-full mb-5">
-          <Heading level="h4" style={{ color: Primary[400] }}>
-            Premium
+        {/* Headline */}
+        <View className="px-6 mt-6">
+          <Heading level="h2" color="white" className="text-center leading-tight">
+            See exactly what the DMV test looks like in {stateName}
           </Heading>
         </View>
 
-        <Heading color="white" className="text-center mb-3">
-          {vehicleTitle[vehicleType]}
-        </Heading>
-        <Text className="text-base text-secondary-400">
-          Get all exam-like questions and pass the first time
+        {/* Trust stats */}
+        <View className="flex-row px-6 mt-6">
+          <TrustStat value="97%" label={"Pass on\na first try"} />
+          <TrustStat value="4.8" label={"In Google\nPlay"} />
+          <TrustStat value="9M+" label={"Drivers\npassed"} />
+        </View>
+
+        {/* Free trial card */}
+        <View
+          className="mx-5 mt-6 rounded-3xl p-5"
+          style={{ backgroundColor: CARD_BG, borderWidth: 1, borderColor: BORDER }}
+        >
+          <Text className="text-center text-xl font-bold">
+            <Text style={{ color: GREEN }}>3-day free trial</Text>
+            <Text className="text-white"> includes everything</Text>
+          </Text>
+          <Text style={{ color: MUTED }} className="text-center text-sm mt-1">
+            No fluff, just what your state actually tests.
+          </Text>
+
+          <View className="flex-row justify-center gap-10 mt-5">
+            {TRIAL_HIGHLIGHTS.map((item) => (
+              <View key={item.label} className="items-center" style={{ maxWidth: 100 }}>
+                <View
+                  className="w-14 h-14 rounded-full items-center justify-center mb-2"
+                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                >
+                  <MaterialCommunityIcons name={item.icon} size={26} color={White.DEFAULT} />
+                </View>
+                <Text className="text-white text-xs text-center font-medium">{item.label}</Text>
+              </View>
+            ))}
+            <View className="items-center" style={{ maxWidth: 100 }}>
+              <View
+                className="w-14 h-14 rounded-full items-center justify-center mb-2"
+                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+              >
+                <FontAwesome5 name="user-shield" size={22} color={White.DEFAULT} />
+              </View>
+              <Text className="text-white text-xs text-center font-medium">{"AI Officer\nFrank"}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Feature comparison table */}
+        <View className="px-5 mt-8">
+          <View className="flex-row items-center pb-3">
+            <Text style={{ color: MUTED }} className="flex-1 text-xs font-semibold uppercase tracking-wide">
+              Features
+            </Text>
+            <Text className="w-20 text-center text-white text-xs font-bold uppercase">
+              No trial
+            </Text>
+            <View className="w-24 items-center">
+              <LinearGradient
+                colors={["#8B5CF6", "#22D3EE"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}
+              >
+                <Text className="text-white text-xs font-bold uppercase">3-Day Trial</Text>
+              </LinearGradient>
+            </View>
+          </View>
+
+          <View className="flex-row">
+            <View className="flex-1">
+              {COMPARE_ROWS.map((row) => (
+                <View key={row.feature} style={{ paddingVertical: 10 }}>
+                  <Text className="text-white text-sm">{row.feature}</Text>
+                </View>
+              ))}
+            </View>
+            <View className="w-20 items-center">
+              {COMPARE_ROWS.map((row) => (
+                <View key={row.feature} style={{ paddingVertical: 10 }}>
+                  {row.limited ? (
+                    <Text style={{ color: MUTED }} className="text-xs font-semibold uppercase">
+                      Limited
+                    </Text>
+                  ) : (
+                    <MaterialIcons name="lock" size={16} color="rgba(255,255,255,0.35)" />
+                  )}
+                </View>
+              ))}
+            </View>
+            <View
+              className="w-24 items-center"
+              style={{ backgroundColor: TEAL_BG, borderRadius: 16 }}
+            >
+              {COMPARE_ROWS.map((row) => (
+                <View key={row.feature} style={{ paddingVertical: 10 }}>
+                  <Text style={{ color: TEAL, fontSize: 16, fontWeight: "700" }}>&#8734;</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Pull-quote */}
+        <View className="px-6 mt-10">
+          <Text className="text-white text-2xl font-semibold text-center italic leading-8">
+            "These questions were identical to my real test"
+          </Text>
+          <View className="items-center mt-4">
+            <Stars />
+          </View>
+          <Text style={{ color: MUTED }} className="text-center mt-4 leading-6">
+            The #1 worry we hear: "Real questions will look different." Our
+            questions mirror your state wording and tricky edge cases, so the
+            real exam feels familiar. Our users are saying the same thing:
+            "It felt like I'd seen every question before."
+          </Text>
+        </View>
+
+        {/* Photo row */}
+        <View className="flex-row justify-center gap-3 px-4 mt-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <PlaceholderPhoto key={i} index={i + 4} />
+          ))}
+        </View>
+
+        {/* Reviews */}
+        {REVIEWS.map((review) => (
+          <View
+            key={review.author}
+            className="mx-5 mt-6 rounded-3xl p-5"
+            style={{ backgroundColor: CARD_BG, borderWidth: 1, borderColor: BORDER }}
+          >
+            <Stars />
+            <Text className="text-white text-lg font-bold mt-3">{review.title}</Text>
+            <Text style={{ color: MUTED }} className="text-xs mt-1">
+              {review.date} - {review.author}
+            </Text>
+            <Text style={{ color: MUTED }} className="text-sm mt-3 leading-6">
+              {review.body}
+            </Text>
+          </View>
+        ))}
+
+        {/* Large closing photo */}
+        <View className="px-5 mt-6">
+          <View
+            style={{
+              height: 200,
+              borderRadius: 20,
+              backgroundColor: AVATAR_COLORS[2],
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <MaterialCommunityIcons
+              name="card-account-details-outline"
+              size={48}
+              color="rgba(255,255,255,0.5)"
+            />
+          </View>
+        </View>
+
+        {/* Skip */}
+        <View className="items-center mt-6">
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.back()}
+            style={{
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.25)",
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+            }}
+          >
+            <Text style={{ color: MUTED }} className="text-sm">
+              Skip, I don't want free trial
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Seen on */}
+        <View className="mt-8 px-6">
+          <Text style={{ color: MUTED }} className="text-center text-sm font-semibold mb-4">
+            Seen on
+          </Text>
+          <View className="flex-row flex-wrap justify-center gap-x-8 gap-y-4">
+            {PRESS.map((name) => (
+              <Text key={name} className="text-white text-sm font-bold opacity-70">
+                {name}
+              </Text>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Sticky bottom CTA */}
+      <View className="px-5 pt-3 pb-2" style={{ borderTopWidth: 1, borderTopColor: BORDER }}>
+        <Button
+          variant="primary"
+          size="lg"
+          showArrow
+          className="w-full"
+          onPress={() => setShowTrialSheet(true)}
+        >
+          Continue
+        </Button>
+        <Text style={{ color: MUTED }} className="text-center text-xs mt-2">
+          No payment required now, easy to cancel
         </Text>
       </View>
 
-      {/* Slide pager — only feature content scrolls */}
-      <FlatList
-        ref={flatListRef}
-        data={SLIDES}
-        keyExtractor={(item) => item}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-        renderItem={() => (
-          <ScrollView
-            style={{ width: SCREEN_WIDTH }}
-            contentContainerStyle={{
-              paddingHorizontal: 24,
-              paddingTop: 24,
-              paddingBottom: 8,
-            }}
-            showsVerticalScrollIndicator={false}
-          >
-            {FEATURES.map((f) => (
-              <FeatureItem
-                key={f.title}
-                title={f.title}
-                description={f.description}
-              />
-            ))}
-            <PassRateBadge />
-            {/* Pagination dots */}
-            <View className="flex-row py-4 justify-center gap-2 mt-6">
-              {SLIDES.map((_, i) => (
-                <View
-                  key={i}
-                  style={{
-                    width: i === activeSlide ? 10 : 8,
-                    height: i === activeSlide ? 10 : 8,
-                    borderRadius: 5,
-                    backgroundColor:
-                      i === activeSlide ? White.DEFAULT : Secondary[500],
-                  }}
-                />
-              ))}
-            </View>
-          </ScrollView>
-        )}
-      />
-
-      {/* Bottom CTA */}
-      <View className="px-4 pb-3 pt-1">
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => console.log("get lifetime access")}
-          style={{
-            backgroundColor: GOLD,
-            borderRadius: 32,
-            paddingVertical: 18,
-            alignItems: "center",
-          }}
-        >
-          <Text className="text-secondary text-lg font-extrabold">
-            Get Lifetime Access: $39.00
-          </Text>
-        </TouchableOpacity>
-
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 6,
-            marginTop: 12,
-          }}
-        >
-          <TouchableOpacity onPress={() => console.log("terms")}>
-            <Text className="text-sm text-secondary-400">Terms</Text>
-          </TouchableOpacity>
-          <Text className="text-sm text-secondary-400">&</Text>
-          <TouchableOpacity onPress={() => console.log("privacy")}>
-            <Text className="text-sm text-secondary-400">Privacy</Text>
-          </TouchableOpacity>
-          <Text className="text-sm text-secondary-400">|</Text>
-          <TouchableOpacity onPress={() => console.log("restore")}>
-            <Text className="text-sm text-secondary-400">Restore purchase</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <TrialSheet visible={showTrialSheet} onClose={() => setShowTrialSheet(false)} />
     </SafeAreaView>
   );
 }

@@ -46,7 +46,7 @@ Tracks which of the endpoints below are actually wired up in the mobile app (`ap
 | Challenge bank | `GET /challenge-bank`, `DELETE /challenge-bank/{questionId}` | ❌ not built | ❌ | Mobile uses local `store/challengeBankStore.ts` only |
 | Theory / study material | `GET /theory`, `GET /theory/{id}/download` | 🟡 replaced by `handbooks`, `cheat-sheets` (+download), `flashcards`, `videos` | ❌ | Mobile uses `MOCK_THEORY_ITEMS`; response shape differs from this doc |
 | Progress summary | `GET /progress`, `POST /progress/manual-read` | 🟡 no matching shape; closest is `GET /me/stats` 🔒 | ❌ | Mobile uses local `store/progressStore.ts` only |
-| Plans / pricing | `GET /plans` | ✅ | ❌ | `app/premium.tsx` still uses static pricing copy |
+| Plans / pricing | `GET /plans` | ✅ | ✅ | `store/planStore.ts`; `components/premium/trial-sheet.tsx` derives the trial timeline/price from the weekly plan's real `price_cents`/`trial_days` |
 | Billing checkout | `POST /billing/checkout` | ✅ | ❌ | |
 | AI chat (exam coach) | `POST /ai/chat` | 🟡 no generic endpoint; closest are `POST quizzes/{quiz}/questions/{question}/assist` and `POST quizzes/{quiz}/results-insight` | ❌ | `hooks/use-ai-chat.ts` fakes a canned reply |
 
@@ -318,18 +318,22 @@ Only states the app actually has content for — not a hardcoded 50-state list, 
 ## 9. Plans / pricing
 
 ### `GET /plans`
+Actual response shape (differs from an earlier draft of this doc — matches `App\Http\Resources\Api\V1\Public\PlanResource` and the shared `Plan` type in `packages/shared/src/types/billing.ts`). No `features`/`is_popular` — those are curated client-side per `key` (see `apps/web/app/pricing/page.tsx`'s `FEATURES_BY_KEY`).
+
 **Response `200`:**
 ```json
 {
   "data": [
     {
-      "id": "plan_monthly",
+      "id": 2,
+      "key": "monthly",
       "name": "Monthly",
-      "price": 9.99,
-      "currency": "USD",
-      "interval": "month",
-      "is_popular": false,
-      "features": ["500+ exam-like questions", "State-specific question bank", "Instant feedback", "2 Printable PDF Cheat Sheets"]
+      "type": "recurring",
+      "billing_interval": "month",
+      "price_cents": 7500,
+      "trial_days": null,
+      "max_seats": 1,
+      "sort_order": 2
     }
   ]
 }
