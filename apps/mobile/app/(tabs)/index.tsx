@@ -60,12 +60,14 @@ export default function TodayScreen() {
   const completedIds = useMemo(() => new Set(Object.keys(testResults)), [testResults]);
   const heroTest = pickHeroTest(testRows, completedIds);
 
-  // Same "Continue" rule as test/see-all.tsx: only the row's first card, and only when it's
-  // still unlocked and untouched — once it has a result, the passed/failed badge takes over.
-  const withResult = (tests: TodayTestCard[]) =>
-    tests.map((t, index) => {
+  // "Continue" goes on the first test in the row that's still unlocked and not yet completed —
+  // not just index 0, so it moves on to the next test once the current one is finished, same
+  // idea as the hero card's "next test" pick.
+  const withResult = (tests: TodayTestCard[]) => {
+    const continueId = tests.find((t) => !t.locked && !testResults[t.id])?.id;
+    return tests.map((t) => {
       const r = testResults[t.id];
-      const showContinue = index === 0 && !t.locked && !r;
+      const showContinue = t.id === continueId;
       if (!r) return { ...t, showContinue };
       const passed = r.score >= t.passingScore;
       return { ...t, showContinue, result: passed ? "passed" : "failed" } as typeof t & {
@@ -73,6 +75,7 @@ export default function TodayScreen() {
         result: "passed" | "failed";
       };
     });
+  };
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const handleTestPress = (id: string) => {
@@ -91,7 +94,7 @@ export default function TodayScreen() {
       });
       return;
     }
-    router.push(`/test/${id}`);
+    router.push(`/test/quiz/${id}`);
   };
 
   if (loading) {
@@ -137,7 +140,7 @@ export default function TodayScreen() {
               title={heroTest.title}
               description={heroTest.description}
               image={heroTest.image}
-              onPress={() => router.push(`/test/${heroTest.testId}`)}
+              onPress={() => router.push(`/test/quiz/${heroTest.testId}`)}
             />
           </View>
         )}
@@ -210,7 +213,9 @@ export default function TodayScreen() {
               progress={`0 / ${examCard.totalQuestions}`}
               locked={examCard.locked}
               onPress={() =>
-                examCard.locked ? router.push("/premium") : router.push(`/test/${examCard.id}`)
+                examCard.locked
+                  ? router.push("/premium")
+                  : router.push(`/test/quiz/${examCard.id}`)
               }
             />
           </>

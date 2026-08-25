@@ -52,12 +52,16 @@ export default function SeeAllScreen() {
       router.push({ pathname: "/test/results/[id]", params: { id, correct: String(correct), total: String(total), missedIds: r.missedIds ?? "" } });
       return;
     }
-    router.push(`/test/${id}`);
+    router.push(`/test/quiz/${id}`);
   };
   const { width } = useWindowDimensions();
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const cardWidth = (width - PADDING * 2 - COLUMN_GAP) / 2;
+
+  // Same rule as the Today tab: "Continue" goes on the first unlocked, not-yet-completed test —
+  // not just index 0 — so it moves on once the current one is finished.
+  const continueId = tests.find((t) => !t.locked && !testResults[t.id])?.id;
 
   if (loading) {
     return (
@@ -96,7 +100,7 @@ export default function SeeAllScreen() {
           gap: COLUMN_GAP,
         }}
         columnWrapperStyle={{ gap: COLUMN_GAP }}
-        renderItem={({ item, index }) => (
+        renderItem={({ item }) => (
           <View style={{ width: cardWidth }}>
             <TestCard
               image={item.image}
@@ -104,7 +108,7 @@ export default function SeeAllScreen() {
               subtitle={item.subtitle}
               locked={item.locked}
               result={getResult(item.id, item.passingScore)}
-              showContinue={index === 0 && !item.locked && !testResults[item.id]}
+              showContinue={item.id === continueId}
               gridStyle
               onPress={() => handlePress(item.id, item.locked, item.passingScore)}
             />

@@ -269,6 +269,25 @@ export async function fetchTestsByCategory(
   return quizzes.filter((q) => q.quiz_type?.name !== "final").map((q) => toCard(q, vehicle));
 }
 
+/**
+ * The next quiz after this one in its own category list — powers the results screen's "Continue
+ * to the next test". Only looks within the same category (not the whole ladder), so this is
+ * `null` once the user finishes the last test in a category, even if a later category has more.
+ */
+export async function fetchNextTest(quizId: string): Promise<TodayTestCard | null> {
+  const { quiz } = await fetchQuiz(quizId).catch(() => ({ quiz: null }) as { quiz: null });
+  if (!quiz || !quiz.category || !quiz.vehicle_type || !quiz.state) return null;
+
+  const siblings = await fetchTestsByCategory(
+    toVehicleType(quiz.vehicle_type.name),
+    quiz.state.code,
+    quiz.category.name,
+  );
+  const index = siblings.findIndex((t) => t.id === String(quiz.id));
+  if (index === -1) return null;
+  return siblings[index + 1] ?? null;
+}
+
 export interface TheoryListItem {
   id: string;
   title: string;
