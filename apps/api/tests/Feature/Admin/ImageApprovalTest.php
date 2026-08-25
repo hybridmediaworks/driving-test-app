@@ -180,6 +180,35 @@ class ImageApprovalTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_upload_accepts_a_large_within_limit_image(): void
+    {
+        Storage::fake('local');
+        $row = QuizImageRegeneration::query()->create(['source_url' => 'big', 'status' => ImageRegenerationStatus::Pending]);
+
+        // ~7 MB — under the app's 8 MB cap. In production this only works when PHP's upload_max_filesize
+        // sits above it (docker/php.ini raises it to 16M); the stock 2M cap is what made real uploads
+        // fail with "The image failed to upload." for anything larger than 2 MB.
+        $this->actingAs($this->admin(), 'sanctum')
+            ->post("/api/v1/admin/image-approvals/{$row->id}/upload", [
+                'image' => UploadedFile::fake()->image('big.jpg', 1200, 500)->size(7000),
+            ])
+            ->assertOk()
+            ->assertJsonPath('image_regeneration.status', 'awaiting_review');
+    }
+
+    public function test_upload_rejects_an_oversized_image_with_a_clear_error(): void
+    {
+        $row = QuizImageRegeneration::query()->create(['source_url' => 'big2', 'status' => ImageRegenerationStatus::Pending]);
+
+        // Over the 8 MB cap -> a clear size validation error on the `image` field, never a silent failure.
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson("/api/v1/admin/image-approvals/{$row->id}/upload", [
+                'image' => UploadedFile::fake()->image('huge.jpg', 1200, 500)->size(9000),
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('image');
+    }
+
     public function test_candidate_route_streams_the_staged_image(): void
     {
         Storage::fake('local');

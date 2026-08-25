@@ -36,6 +36,10 @@ COPY --from=web-build /repo/apps/web/.next/standalone ./
 COPY --from=web-build /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=web-build /repo/apps/web/public ./apps/web/public
 
+# Raise PHP upload/memory limits — `php artisan serve` uses the CLI ini, whose default 2M upload cap
+# made larger designer image uploads fail ("The image failed to upload."). conf.d is scanned by all SAPIs.
+COPY docker/php.ini /usr/local/etc/php/conf.d/zz-app.ini
+
 COPY docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY docker/supervisord.conf /etc/supervisor/supervisord.conf
 COPY docker/entrypoint.sh /entrypoint.sh
