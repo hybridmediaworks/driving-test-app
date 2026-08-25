@@ -10,7 +10,10 @@ function linkLabel(label: string): string {
 // to directly (see the note in hooks/use-paginated-list.ts).
 function pageFromUrl(url: string): number | null {
   try {
-    const page = new URL(url).searchParams.get("page");
+    // Pass a base URL so RELATIVE links parse too — behind a proxy Laravel often emits paths like
+    // "/api/v1/...?page=2" (no host), which `new URL(url)` alone rejects, leaving every page button
+    // disabled and clicks doing nothing. The base is only used to resolve relative URLs.
+    const page = new URL(url, "http://paginator.local").searchParams.get("page");
     return page ? Number(page) : null;
   } catch {
     return null;

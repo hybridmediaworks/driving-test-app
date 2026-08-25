@@ -39,9 +39,10 @@ class ApproveImageRegeneration
         $candidateBytes = Storage::disk($row->candidate_disk)->get($row->candidate_path);
 
         return DB::transaction(function () use ($row, $admin, $media, $candidateBytes): QuizImageRegeneration {
-            // Back up the current original (read from its own disk — local or S3 — before overwriting).
+            // Back up the current original on the media's own disk (S3 in production) so it survives
+            // redeploys — read it before overwriting.
             $backupPath = "quiz-image-backups/{$row->id}/".now()->format('Ymd_His').'-'.$media->file_name;
-            Storage::disk('local')->put(
+            Storage::disk($media->disk)->put(
                 $backupPath,
                 Storage::disk($media->disk)->get($media->getPathRelativeToRoot()),
             );

@@ -31,15 +31,13 @@ class AppServiceProvider extends ServiceProvider
         // (see app/Models/Subscription.php) that stock Cashier's model doesn't know about.
         Cashier::useSubscriptionModel(Subscription::class);
 
-        // Gates the /docs/api Swagger UI in any non-local environment (RestrictedDocsAccess
-        // middleware falls back to this once APP_ENV isn't 'local'). Admins only — the docs
-        // expose the full endpoint map, including admin routes, which is real recon value for
-        // an attacker even though the endpoints themselves still require their own auth.
-        //
-        // Checks the `sanctum` guard explicitly rather than relying on Gate's auto-injected
-        // user: this app has no session/cookie login (Sanctum token auth only), so the default
-        // guard never has an authenticated user and a plain `fn (User $user)` signature would
-        // always short-circuit to false before this closure even runs.
+        // NOTE: the Scramble docs are currently PUBLIC (RestrictedDocsAccess was removed from
+        // config/scramble.php so the /docs/api Swagger UI opens on the live server in a plain
+        // browser), so this gate is NOT consulted right now. It is kept so docs can be re-locked
+        // by simply re-adding RestrictedDocsAccess to the Scramble middleware. It checks the
+        // `sanctum` guard explicitly rather than Gate's auto-injected user because this app has no
+        // session/cookie login (Sanctum token auth only), so the default guard never has an
+        // authenticated user and a plain `fn (User $user)` signature would short-circuit to false.
         Gate::define('viewApiDocs', function (?User $user): bool {
             $sanctumUser = Auth::guard('sanctum')->user();
 

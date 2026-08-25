@@ -207,6 +207,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('image-approvals/{regeneration}/upload', [ImageApprovalController::class, 'upload']);
             Route::post('image-approvals/{regeneration}/approve', [ImageApprovalController::class, 'approveDecision']);
             Route::post('image-approvals/{regeneration}/reject', [ImageApprovalController::class, 'rejectDecision']);
+            Route::post('image-approvals/{regeneration}/discard', [ImageApprovalController::class, 'discard']);
 
             Route::get('stats', [AdminStatsController::class, 'index']);
         });

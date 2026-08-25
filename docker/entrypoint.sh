@@ -16,5 +16,9 @@ php artisan config:clear
 php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
+# Pre-generate the (now public) Scramble OpenAPI spec so /docs requests don't regenerate it per hit
+# and spike CPU. Non-fatal: if it ever fails, the container must still boot (docs fall back to
+# on-demand generation) rather than crash-loop.
+php artisan scramble:cache || true
 
 exec supervisord -c /etc/supervisor/supervisord.conf
