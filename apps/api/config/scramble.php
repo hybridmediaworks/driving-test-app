@@ -1,6 +1,5 @@
 <?php
 
-use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
 use Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy;
 
 return [
@@ -141,9 +140,11 @@ return [
      */
     'flatten_deep_query_parameters' => true,
 
+    // Docs are intentionally PUBLIC (no RestrictedDocsAccess) so the Swagger UI opens on the live
+    // server in a plain browser — a JSON-only API has no web session for a gate to check, and the
+    // browser can't attach a Bearer token. This exposes the API schema (endpoints/params), not data.
     'middleware' => [
         'web',
-        RestrictedDocsAccess::class,
     ],
 
     'extensions' => [],
