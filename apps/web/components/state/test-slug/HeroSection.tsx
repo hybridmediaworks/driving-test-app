@@ -7,7 +7,7 @@ import { useWebLayout } from "@/lib/web-layout-context";
 import { stateToSlug } from "@/lib/usStates";
 import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useStateStats } from "@/lib/useStateStats";
-import { ArrowRight, BadgeCheck, Clock, SignalHigh } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock, RotateCcw, SignalHigh } from "lucide-react";
 
 function formatMinutes(durationSeconds: number | null | undefined): string | null {
   if (!durationSeconds) return null;
@@ -87,10 +87,24 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
               ))}
             </div>
           )}
-          <Button className="w-full md:w-fit" href={quizHref} disabled={!quiz}>
-            {quiz ? (quiz.locked ? `Unlock ${quiz.title}` : `Start Free: ${quiz.title}`) : "Start Free Practice Test"}{" "}
-            <ArrowRight />
-          </Button>
+          {quiz?.attempted && !quiz.locked ? (
+            // Already taken this test → let them retake it or revisit their last results, instead of
+            // the first-time "Start" CTA. Restart just opens the player (which begins a fresh
+            // attempt); View results opens it straight on the results screen (?view=results).
+            <div className="flex w-full flex-col gap-3 sm:flex-row md:w-fit">
+              <Button className="w-full sm:w-fit" href={quizHref}>
+                <RotateCcw /> Restart
+              </Button>
+              <Button className="w-full sm:w-fit" variant="outline" href={`${quizHref}?view=results`}>
+                View results
+              </Button>
+            </div>
+          ) : (
+            <Button className="w-full md:w-fit" href={quizHref} disabled={!quiz}>
+              {quiz ? (quiz.locked ? `Unlock ${quiz.title}` : `Start Free: ${quiz.title}`) : "Start Free Practice Test"}{" "}
+              <ArrowRight />
+            </Button>
+          )}
           <div className="flex gap-4 flex-wrap">
             <Paragraph className="flex items-center gap-1" size="sm">
               <BadgeCheck className="w-5 h-5 text-green-700" /> 5-min quizzes

@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@driving-test-app/shared";
 import { api, setToken, ApiError } from "./api";
+import { invalidatePhaseLadder } from "./phaseLadder";
+import { invalidateResolvedQuiz } from "./useResolvedQuiz";
 
 type AuthContextValue = {
   user: User | null;
@@ -32,6 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.post<{ user: User; token: string }>("/login", { email, password });
     setToken(res.token);
     setUser(res.user);
+    // Ladder lock/completion state is per-user — drop any cache built as a guest (or a previous
+    // account) so the ladder reflects this user's entitlement and progress.
+    invalidatePhaseLadder();
+    invalidateResolvedQuiz();
   }
 
   async function register(name: string, email: string, password: string, passwordConfirmation: string) {
@@ -43,6 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setToken(res.token);
     setUser(res.user);
+    invalidatePhaseLadder();
+    invalidateResolvedQuiz();
   }
 
   async function logout() {
@@ -53,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setToken(null);
     setUser(null);
+    invalidatePhaseLadder();
+    invalidateResolvedQuiz();
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, use, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { PaginatedResponse, PublicQuiz, QuizShowResponse } from "@driving-test-app/shared";
 import QuizExperience from "@/components/state/quiz/QuizExperience";
 import { api, ApiError } from "@/lib/api";
@@ -16,6 +16,10 @@ const vehicleSlugs: Record<string, string> = {
 
 function QuizPageInner({ state, testSlug }: { state: string; testSlug: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // "?view=results" (from the detail page's "View results" button) opens the player straight on the
+  // last attempt's results instead of starting a fresh quiz.
+  const initialView = searchParams.get("view") === "results" ? "results" : undefined;
   const { selectedVehicle } = useWebLayout();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
 
@@ -98,6 +102,7 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
       stateName={stateName}
       stateCode={stateCode}
       onContinue={goToNextQuiz}
+      initialView={initialView}
     />
   );
 }
@@ -111,8 +116,11 @@ export default function TestQuizPage({
 
   return (
     <WebLayoutProvider stateSlug={state}>
-      {/* key by slug so moving to another quiz (Continue → next) starts with a clean state. */}
-      <QuizPageInner key={testSlug} state={state} testSlug={testSlug} />
+      {/* Suspense boundary required by useSearchParams (read inside QuizPageInner). */}
+      <Suspense>
+        {/* key by slug so moving to another quiz (Continue → next) starts with a clean state. */}
+        <QuizPageInner key={testSlug} state={state} testSlug={testSlug} />
+      </Suspense>
     </WebLayoutProvider>
   );
 }

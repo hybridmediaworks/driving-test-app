@@ -18,6 +18,15 @@ const vehicleSlugs: Record<string, string> = {
  * lib/phaseLadder.ts's `ladderCache`. */
 const quizCache = new Map<string, Promise<Quiz | null>>();
 
+/**
+ * Clears the resolved-quiz cache so the next read reflects fresh per-user state (e.g. `attempted`
+ * after finishing a quiz, or entitlement after login/logout). Called from the same places as
+ * invalidatePhaseLadder() so the detail page and the ladder stay in sync.
+ */
+export function invalidateResolvedQuiz(): void {
+  quizCache.clear();
+}
+
 async function loadQuiz(stateCode: string, vehicleType: string, testSlug: string): Promise<Quiz | null> {
   const res = await api.get<PaginatedResponse<Quiz>>(
     `/quizzes?state=${stateCode}&vehicle_type=${vehicleType}&slug=${testSlug}`,

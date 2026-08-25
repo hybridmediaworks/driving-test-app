@@ -90,6 +90,26 @@ class QuizAssistTest extends TestCase
         $response->assertStatus(503);
     }
 
+    public function test_ask_mode_prompt_forbids_revealing_the_answer(): void
+    {
+        ['quiz' => $quiz, 'question' => $question] = $this->makeQuestion();
+        $this->fakeGrok("I can't give you the answer, but think about what happens to traction on a wet road.");
+
+        $this->postJson("/api/v1/quizzes/{$quiz->id}/questions/{$question->id}/assist", [
+            'mode' => 'ask',
+            'message' => 'what is the correct answer?',
+        ])->assertOk();
+
+        // The system prompt sent to the model must carry the no-reveal guardrail even in ask mode —
+        // this is the exact path that previously answered "the correct answer is ...".
+        Http::assertSent(function ($request) {
+            $system = $request->data()['messages'][0]['content'] ?? '';
+
+            return str_contains($system, 'never reveal the answer')
+                && str_contains($system, "can't give the answer");
+        });
+    }
+
     public function test_question_not_belonging_to_the_quiz_is_rejected(): void
     {
         ['quiz' => $quiz] = $this->makeQuestion();

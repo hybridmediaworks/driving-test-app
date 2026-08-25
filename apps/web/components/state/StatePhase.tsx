@@ -123,6 +123,8 @@ export default function StatePhase({
             totalTime: step.totalTime,
             type: step.type,
             locked: step.locked,
+            lockMode: step.lockMode,
+            outcome: step.outcome,
             image: step.image,
             status: step.status,
             style: step.style,
