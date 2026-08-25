@@ -134,7 +134,7 @@ export function TodayHeader({ emoji = "🧑", scrollY }: TodayHeaderProps) {
                 {
                   position: "absolute",
                   top: 0,
-                  fontWeight: "600",
+                  fontFamily: "Inter_600SemiBold",
                   color: Secondary[isDark ? 400 : 500],
                 },
                 detailStyle,
@@ -144,7 +144,7 @@ export function TodayHeader({ emoji = "🧑", scrollY }: TodayHeaderProps) {
             </Animated.Text>
 
             <Animated.Text
-              style={[{ fontWeight: "bold", color: textColor }, titleStyle]}
+              style={[{ fontFamily: "Sora_700Bold", color: textColor }, titleStyle]}
             >
               Today
             </Animated.Text>

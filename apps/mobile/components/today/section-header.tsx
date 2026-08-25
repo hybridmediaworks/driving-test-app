@@ -15,14 +15,14 @@ export function SectionHeader({
   showSeeAll = true,
 }: SectionHeaderProps) {
   return (
-    <View className="flex-row items-center justify-between px-4 mb-3">
-      <View className="flex-row items-center gap-2">
-        <Heading level="h3" weight="semibold">
+    <View className="flex-row items-start justify-between px-4 mb-3 gap-3">
+      <View className="flex-1 flex-row items-start gap-2">
+        <Heading level="h3" weight="semibold" className="flex-shrink">
           {title}
         </Heading>
         {badge && (
-          <View className="bg-secondary-200 dark:bg-secondary-700 rounded-full px-2.5 py-0.5">
-            <Text className="text-sm font-semibold text-secondary-600 dark:text-secondary-300 tracking-wide uppercase">
+          <View className="bg-blue-100 dark:bg-secondary-700 rounded-full px-2.5 py-0.5 mt-0.5">
+            <Text className="text-sm font-semibold text-secondary-700 dark:text-secondary-300 tracking-wide uppercase">
               {badge}
             </Text>
           </View>
@@ -30,8 +30,10 @@ export function SectionHeader({
       </View>
 
       {showSeeAll && (
-        <TouchableOpacity activeOpacity={0.7} onPress={onSeeAll}>
-          <Text className="text-base font-semibold text-primary">See All</Text>
+        <TouchableOpacity activeOpacity={0.7} onPress={onSeeAll} className="shrink-0">
+          <Text className="text-base font-semibold text-primary">
+            See All
+          </Text>
         </TouchableOpacity>
       )}
     </View>

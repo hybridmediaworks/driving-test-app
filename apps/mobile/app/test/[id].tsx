@@ -2,12 +2,14 @@ import TestIntroHeader from "@/components/intro-header";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Primary } from "@/constants/theme";
+import { fetchTestDetail, TodayTestDetail } from "@/services/api/todayService";
 import { getTestById } from "@/services/testService";
 import { useUserStore } from "@/store/userStore";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Image,
   Share,
@@ -18,6 +20,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 const DESCRIPTION_LINE_LIMIT = 4;
 
+// Cards sourced from the live API carry a numeric id (e.g. "452"); the older mock test bank
+// (still used by pages not yet migrated, like "see all") uses string ids like "car-e1".
+const isApiId = (value: string) => /^\d+$/.test(value);
+
 export default function TestIntroScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -27,7 +33,36 @@ export default function TestIntroScreen() {
   const isTruncated =
     totalLines !== null && totalLines > DESCRIPTION_LINE_LIMIT;
   const scrollY = useRef(new Animated.Value(0)).current;
-  const test = getTestById(id);
+
+  const mockTest = isApiId(id) ? undefined : getTestById(id);
+  const [apiTest, setApiTest] = useState<TodayTestDetail | undefined>(undefined);
+  const [loading, setLoading] = useState(isApiId(id));
+
+  useEffect(() => {
+    if (!isApiId(id)) return;
+    let cancelled = false;
+    setLoading(true);
+    fetchTestDetail(id)
+      .then((detail) => {
+        if (!cancelled) setApiTest(detail);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const test = mockTest ?? apiTest;
+
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900 items-center justify-center">
+        <ActivityIndicator size="large" color={Primary.DEFAULT} />
+      </SafeAreaView>
+    );
+  }
 
   if (!test) {
     return (

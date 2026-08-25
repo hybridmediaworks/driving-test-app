@@ -1,3 +1,5 @@
+import { Secondary } from "@/constants/theme";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   ImageBackground,
   ImageSourcePropType,
@@ -11,6 +13,7 @@ type ExamCardProps = {
   subtitle: string;
   image: ImageSourcePropType;
   progress?: string;
+  locked?: boolean;
   onPress?: () => void;
 };
 
@@ -19,6 +22,7 @@ export function ExamCard({
   subtitle,
   image,
   progress,
+  locked = false,
   onPress,
 }: ExamCardProps) {
   return (
@@ -30,13 +34,20 @@ export function ExamCard({
       {/* Image */}
       <View className="h-48 rounded-2xl overflow-hidden">
         <ImageBackground source={image} style={{ flex: 1 }} resizeMode="cover">
-          {/* Progress badge */}
-          {progress && (
-            <View className="absolute bottom-3 self-center bg-black/60 rounded-full px-4 py-1">
-              <Text className="text-white text-xs font-semibold">
-                {progress}
-              </Text>
+          {locked ? (
+            <View className="flex-1 bg-black/20 items-center justify-center">
+              <View className="bg-white/90 w-9 h-9 rounded-full items-center justify-center">
+                <MaterialIcons name="lock" size={18} color={Secondary[700]} />
+              </View>
             </View>
+          ) : (
+            progress && (
+              <View className="absolute bottom-3 self-center bg-black/60 rounded-full px-4 py-1">
+                <Text className="text-white text-xs font-semibold">
+                  {progress}
+                </Text>
+              </View>
+            )
           )}
         </ImageBackground>
       </View>

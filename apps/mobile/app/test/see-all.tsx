@@ -1,29 +1,41 @@
 import TestIntroHeader from "@/components/intro-header";
 import { TestCard } from "@/components/today/test-card";
-import { Difficulty } from "@/data/mockTests";
-import { getQuestionsByTestId, getTests } from "@/services/testService";
+import { Primary } from "@/constants/theme";
+import { fetchTestsByCategory, TodayTestCard } from "@/services/api/todayService";
+import { getQuestionsByTestId } from "@/services/testService";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef } from "react";
-import { Animated, useWindowDimensions, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const COLUMN_GAP = 12;
 const PADDING = 16;
 
-const difficultyLabel: Record<Difficulty, string> = {
-  easy: "Easy",
-  hard: "Hard",
-  hardest: "Hardest",
-};
-
 export default function SeeAllScreen() {
-  const { difficulty } = useLocalSearchParams<{ difficulty: Difficulty }>();
+  const { category, title } = useLocalSearchParams<{ category: string; title?: string }>();
   const router = useRouter();
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
-  const tests = getTests(vehicleType, difficulty);
+  const stateCode = useUserStore((s) => s.state) ?? "CA";
   const { testResults } = useProgressStore();
+
+  const [tests, setTests] = useState<TodayTestCard[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchTestsByCategory(vehicleType, stateCode, category).then((result) => {
+      if (!cancelled) {
+        setTests(result);
+        setLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [vehicleType, stateCode, category]);
 
   const getResult = (id: string, passingScore = 80): "passed" | "failed" | undefined => {
     const r = testResults[id];
@@ -47,6 +59,14 @@ export default function SeeAllScreen() {
 
   const cardWidth = (width - PADDING * 2 - COLUMN_GAP) / 2;
 
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white-off dark:bg-secondary-900 items-center justify-center">
+        <ActivityIndicator size="large" color={Primary.DEFAULT} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView
       className="flex-1 bg-white-off dark:bg-secondary-900"
@@ -54,7 +74,7 @@ export default function SeeAllScreen() {
     >
       <TestIntroHeader
         backUrl={() => router.back()}
-        title={difficultyLabel[difficulty]}
+        title={title ?? "Tests"}
         description={`${tests.length} Tests`}
         scrollY={scrollY}
       />

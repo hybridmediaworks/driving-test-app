@@ -1,4 +1,4 @@
-import { Animated, View } from "react-native";
+import { ActivityIndicator, Animated, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Header from "@/components/header";
@@ -9,41 +9,74 @@ import { PromoCard } from "@/components/today/promo-card";
 import { TestsRow } from "@/components/today/tests-row";
 import { TheorySection } from "@/components/today/theory-section";
 import { Heading } from "@/components/ui/heading";
+import { Primary } from "@/constants/theme";
 import {
-  getExamConfig,
-  getHeroTest,
-  getQuestionsByTestId,
-  getTestById,
-  getTests,
-  getTheoryItems,
-} from "@/services/testService";
+  fetchTodayData,
+  pickHeroTest,
+  TodayData,
+  TodayTestCard,
+} from "@/services/api/todayService";
+import { getQuestionsByTestId } from "@/services/testService";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { router } from "expo-router";
-import { useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const EMPTY_DATA: TodayData = {
+  testRows: [],
+  theoryItems: [],
+  examCard: null,
+};
 
 export default function TodayScreen() {
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
-  const easyTests = getTests(vehicleType, "easy");
-  const hardTests = getTests(vehicleType, "hard");
-  const hardestTests = getTests(vehicleType, "hardest");
-  const heroTest = getHeroTest(vehicleType);
-  const theoryItems = getTheoryItems(vehicleType);
-  const examConfig = getExamConfig(vehicleType);
+  const stateCode = useUserStore((s) => s.state) ?? "CA";
   const { testResults } = useProgressStore();
 
-  const withResult = (tests: typeof easyTests) =>
-    tests.map((t) => {
+  const [data, setData] = useState<TodayData>(EMPTY_DATA);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchTodayData(vehicleType, stateCode).then((result) => {
+      if (!cancelled) {
+        setData(result);
+        setLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [vehicleType, stateCode]);
+
+  const { testRows, theoryItems, examCard } = data;
+
+  const allCards: Record<string, TodayTestCard> = {};
+  testRows.forEach((row) => row.tests.forEach((t) => {
+    allCards[t.id] = t;
+  }));
+
+  const completedIds = useMemo(() => new Set(Object.keys(testResults)), [testResults]);
+  const heroTest = pickHeroTest(testRows, completedIds);
+
+  // Same "Continue" rule as test/see-all.tsx: only the row's first card, and only when it's
+  // still unlocked and untouched — once it has a result, the passed/failed badge takes over.
+  const withResult = (tests: TodayTestCard[]) =>
+    tests.map((t, index) => {
       const r = testResults[t.id];
-      if (!r) return t;
-      const passed = r.score >= (t.passingScore ?? 80);
-      return { ...t, result: passed ? "passed" : "failed" } as typeof t & { result: "passed" | "failed" };
+      const showContinue = index === 0 && !t.locked && !r;
+      if (!r) return { ...t, showContinue };
+      const passed = r.score >= t.passingScore;
+      return { ...t, showContinue, result: passed ? "passed" : "failed" } as typeof t & {
+        showContinue: boolean;
+        result: "passed" | "failed";
+      };
     });
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const handleTestPress = (id: string) => {
-    const test = getTestById(id);
-    if (test?.locked) {
+    if (allCards[id]?.locked) {
       router.push("/premium");
       return;
     }
@@ -60,6 +93,17 @@ export default function TodayScreen() {
     }
     router.push(`/test/${id}`);
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView
+        className="flex-1 bg-white dark:bg-secondary-900 items-center justify-center"
+        edges={["top"]}
+      >
+        <ActivityIndicator size="large" color={Primary.DEFAULT} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -87,77 +131,90 @@ export default function TodayScreen() {
         )}
       >
         {/* Hero — Take Me Next */}
-        <View className="mb-6 mt-2">
-          <HeroCard
-            title={heroTest.title}
-            description={heroTest.description}
-            image={heroTest.image}
-            onPress={() => router.push(`/test/${heroTest.testId}`)}
-          />
-        </View>
+        {heroTest && (
+          <View className="mb-6 mt-2">
+            <HeroCard
+              title={heroTest.title}
+              description={heroTest.description}
+              image={heroTest.image}
+              onPress={() => router.push(`/test/${heroTest.testId}`)}
+            />
+          </View>
+        )}
 
-        {/* Tests */}
-        <View className="px-4 mb-3">
-          <Heading level="h2">Tests</Heading>
-        </View>
+        {/* Tests — one row per category the backend returns for this vehicle/state, in the
+            backend's own display order. Adding or removing a category server-side changes what
+            shows up here with no app changes needed. */}
+        {testRows.length > 0 && (
+          <>
+            <View className="px-4 mb-3">
+              <Heading level="h2">Tests</Heading>
+            </View>
 
-        <TestsRow
-          title="Easy"
-          badge="Step 1"
-          tests={withResult(easyTests)}
-          onSeeAll={() => router.push("/test/see-all?difficulty=easy")}
-          onTestPress={handleTestPress}
-        />
-
-        <TestsRow
-          title="Hard"
-          badge="Step 2"
-          tests={withResult(hardTests)}
-          onSeeAll={() => router.push("/test/see-all?difficulty=hard")}
-          onTestPress={handleTestPress}
-        />
-
-        <PromoCard
-          title="Pass the first time"
-          subtitle="Unlock all exam-like questions"
-          previewImage={easyTests[1]?.image ?? easyTests[0]?.image}
-          onPress={() => router.push("/premium")}
-        />
-
-        <TestsRow
-          title="Hardest"
-          badge="Step 3"
-          tests={withResult(hardestTests)}
-          onSeeAll={() => router.push("/test/see-all?difficulty=hardest")}
-          onTestPress={handleTestPress}
-        />
+            {testRows.map((row, index) => (
+              <View key={row.category || row.title}>
+                <TestsRow
+                  title={row.title}
+                  badge={row.badge}
+                  tests={withResult(row.tests)}
+                  onSeeAll={() =>
+                    router.push({
+                      pathname: "/test/see-all",
+                      params: { category: row.category, title: row.title },
+                    })
+                  }
+                  onTestPress={handleTestPress}
+                />
+                {index === 0 && (
+                  <PromoCard
+                    title="Pass the first time"
+                    subtitle="Unlock all exam-like questions"
+                    previewImage={row.tests[1]?.image ?? row.tests[0]?.image}
+                    onPress={() => router.push("/premium")}
+                  />
+                )}
+              </View>
+            ))}
+          </>
+        )}
 
         {/* Theory */}
-        <View className="px-4 mb-3">
-          <Heading level="h2">Theory</Heading>
-        </View>
-        <TheorySection
-          title="Cheat sheet"
-          badge={`${theoryItems.length} PDF`}
-          items={theoryItems.slice(0, 3)}
-          onSeeAll={() => router.push("/theory/see-all")}
-          onItemPress={(id) => {
-            const item = theoryItems.find((t) => t.id === id);
-            if (item?.action === "unlock") router.push("/premium");
-          }}
-        />
+        {theoryItems.length > 0 && (
+          <>
+            <View className="px-4 mb-3">
+              <Heading level="h2">Theory</Heading>
+            </View>
+            <TheorySection
+              title="Cheat sheet"
+              badge={`${theoryItems.length} PDF`}
+              items={theoryItems.slice(0, 3)}
+              onSeeAll={() => router.push("/theory/see-all")}
+              onItemPress={(id) => {
+                const item = theoryItems.find((t) => t.id === id);
+                if (item?.action === "unlock") router.push("/premium");
+              }}
+            />
+          </>
+        )}
 
         {/* Exam */}
-        <View className="px-4 mb-3">
-          <Heading level="h2">Exam</Heading>
-        </View>
-        <ExamCard
-          title={examConfig.title}
-          subtitle={examConfig.subtitle}
-          image={examConfig.image}
-          progress={`0 / ${examConfig.totalSimulations}`}
-          onPress={() => router.push(`/test/${examConfig.id}`)}
-        />
+        {examCard && (
+          <>
+            <View className="px-4 mb-3">
+              <Heading level="h2">Exam</Heading>
+            </View>
+            <ExamCard
+              title={examCard.title}
+              subtitle={examCard.subtitle}
+              image={examCard.image}
+              progress={`0 / ${examCard.totalQuestions}`}
+              locked={examCard.locked}
+              onPress={() =>
+                examCard.locked ? router.push("/premium") : router.push(`/test/${examCard.id}`)
+              }
+            />
+          </>
+        )}
 
         {/* Feedback */}
         <FeedbackCard
