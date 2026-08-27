@@ -116,37 +116,41 @@ Route::prefix('v1')->group(function (): void {
     Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
+        // Account basics stay reachable regardless of verification status — an unverified user
+        // must still be able to see who they are, sign out, and ask for another verification email.
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/confirm-password', [AuthController::class, 'confirmPassword']);
         Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend']);
 
-        Route::patch('/profile', [ProfileController::class, 'update']);
-        Route::delete('/profile', [ProfileController::class, 'destroy']);
-        Route::put('/password', [ProfileController::class, 'updatePassword']);
+        Route::middleware('verified')->group(function (): void {
+            Route::patch('/profile', [ProfileController::class, 'update']);
+            Route::delete('/profile', [ProfileController::class, 'destroy']);
+            Route::put('/password', [ProfileController::class, 'updatePassword']);
 
-        Route::get('/attempts', [QuizAttemptController::class, 'index']);
-        Route::get('/me/stats', [StatsController::class, 'index']);
+            Route::get('/attempts', [QuizAttemptController::class, 'index']);
+            Route::get('/me/stats', [StatsController::class, 'index']);
 
-        Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
-            ->middleware('throttle:60,1');
+            Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
+                ->middleware('throttle:60,1');
 
-        Route::post('billing/checkout', [BillingController::class, 'checkout'])->middleware('throttle:10,1');
-        Route::get('billing/subscription', [BillingController::class, 'subscription']);
-        Route::post('billing/subscription/cancel', [BillingController::class, 'cancelSubscription']);
-        Route::get('billing/invoices', [BillingController::class, 'invoices']);
-        Route::get('billing/portal', [BillingController::class, 'portal']);
+            Route::post('billing/checkout', [BillingController::class, 'checkout'])->middleware('throttle:10,1');
+            Route::get('billing/subscription', [BillingController::class, 'subscription']);
+            Route::post('billing/subscription/cancel', [BillingController::class, 'cancelSubscription']);
+            Route::get('billing/invoices', [BillingController::class, 'invoices']);
+            Route::get('billing/portal', [BillingController::class, 'portal']);
 
-        Route::get('billing/family', [FamilyController::class, 'show']);
-        Route::post('billing/family/invite', [FamilyController::class, 'invite']);
-        Route::post('billing/family/claim', [FamilyController::class, 'claim']);
-        Route::delete('billing/family/members/{member}', [FamilyController::class, 'revoke']);
+            Route::get('billing/family', [FamilyController::class, 'show']);
+            Route::post('billing/family/invite', [FamilyController::class, 'invite']);
+            Route::post('billing/family/claim', [FamilyController::class, 'claim']);
+            Route::delete('billing/family/members/{member}', [FamilyController::class, 'revoke']);
 
-        Route::get('pass-guarantee/eligibility', [PassGuaranteeClaimController::class, 'eligibility']);
-        Route::post('pass-guarantee/claims', [PassGuaranteeClaimController::class, 'store']);
-        Route::get('pass-guarantee/claims', [PassGuaranteeClaimController::class, 'index']);
+            Route::get('pass-guarantee/eligibility', [PassGuaranteeClaimController::class, 'eligibility']);
+            Route::post('pass-guarantee/claims', [PassGuaranteeClaimController::class, 'store']);
+            Route::get('pass-guarantee/claims', [PassGuaranteeClaimController::class, 'index']);
+        });
 
-        Route::prefix('admin')->middleware('admin')->group(function (): void {
+        Route::prefix('admin')->middleware(['verified', 'admin'])->group(function (): void {
             Route::apiResource('quiz-categories', QuizCategoryController::class)->except(['show'])->parameters([
                 'quiz-categories' => 'quizCategory',
             ]);
