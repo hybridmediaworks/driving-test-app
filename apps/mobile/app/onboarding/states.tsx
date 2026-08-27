@@ -1,13 +1,13 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SelectionCard } from "@/components/ui/selection-card";
-import { US_STATES } from "@/constants/us-states";
+import { useReferenceDataStore } from "@/store/referenceDataStore";
 import { useUserStore } from "@/store/userStore";
 
 export default function StatesScreen() {
@@ -16,6 +16,15 @@ export default function StatesScreen() {
   const { from } = useLocalSearchParams<{ from?: string }>();
   const [selected, setSelected] = useState<string | null>(currentState);
   const [query, setQuery] = useState("");
+
+  const states = useReferenceDataStore((s) => s.states);
+  const loading = useReferenceDataStore((s) => s.statesLoading);
+  const error = useReferenceDataStore((s) => s.statesError);
+  const fetchStates = useReferenceDataStore((s) => s.fetchStates);
+
+  useEffect(() => {
+    fetchStates();
+  }, [fetchStates]);
 
   function handleNext() {
     setStateStore(selected!);
@@ -27,10 +36,11 @@ export default function StatesScreen() {
   }
 
   const filtered = useMemo(() => {
+    const list = states.map((s) => ({ id: s.code, title: s.name }));
     const q = query.trim().toLowerCase();
-    if (!q) return US_STATES;
-    return US_STATES.filter((s) => s.title.toLowerCase().includes(q));
-  }, [query]);
+    if (!q) return list;
+    return list.filter((s) => s.title.toLowerCase().includes(q));
+  }, [query, states]);
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900">
@@ -59,7 +69,11 @@ export default function StatesScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: 24, gap: 10 }}
       >
-        {filtered.length === 0 ? (
+        {loading && states.length === 0 ? (
+          <ActivityIndicator className="mt-10" />
+        ) : error && states.length === 0 ? (
+          <Text className="text-center text-red-500 mt-10">{error}</Text>
+        ) : filtered.length === 0 ? (
           <Text className="text-center text-secondary-400 mt-6">
             No state found for "{query}"
           </Text>

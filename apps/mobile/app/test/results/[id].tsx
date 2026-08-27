@@ -2,36 +2,72 @@ import { Button } from "@/components/ui/button";
 import { DonutChart } from "@/components/ui/donut-chart";
 import { Secondary } from "@/constants/theme";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { fetchNextTest, fetchTestDetail } from "@/services/api/todayService";
 import { getNextTest, getTestById } from "@/services/testService";
 import { useChallengeBankStore } from "@/store/challengeBankStore";
 import { useProgressStore } from "@/store/progressStore";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// Cards sourced from the live API carry a numeric id; the older mock test bank (Progress tab,
+// Challenge Bank) uses string ids like "car-e1", or "challenge-bank".
+const isApiId = (value: string) => /^\d+$/.test(value);
+
 export default function ResultsScreen() {
-  const { id, correct, total, missedIds, fromQuiz } = useLocalSearchParams<{
+  const { id, correct, total, missedIds, fromQuiz, passed: passedParam } = useLocalSearchParams<{
     id: string;
     correct: string;
     total: string;
     missedIds?: string;
     fromQuiz?: string;
+    passed?: string;
   }>();
   const router = useRouter();
   const isDark = useIsDark();
-  const test = getTestById(id);
   const recordTestResult = useProgressStore((s) => s.recordTestResult);
   const addMissedQuestions = useChallengeBankStore((s) => s.addMissedQuestions);
+
+  const isApi = isApiId(id);
+  const mockTest = isApi ? undefined : getTestById(id);
+  const mockNextTest = isApi ? undefined : getNextTest(id);
+
+  // Only needed for an API id revisited without a fresh `passed`/next-test hand-off (e.g. tapping
+  // an already-completed card from Today/see-all rather than just finishing the quiz) — a fresh
+  // submission already carries `passed` as a route param and doesn't need either fetch.
+  const [apiPassingScore, setApiPassingScore] = useState<number | undefined>(undefined);
+  const [apiNextTestId, setApiNextTestId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isApi) return;
+    let cancelled = false;
+    if (passedParam === undefined) {
+      fetchTestDetail(id).then((d) => {
+        if (!cancelled) setApiPassingScore(d.passingScore);
+      });
+    }
+    fetchNextTest(id).then((t) => {
+      if (!cancelled) setApiNextTestId(t?.id);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isApi, passedParam]);
 
   const correctCount = Number(correct ?? 0);
   const totalCount = Number(total ?? 0);
   const incorrectCount = totalCount - correctCount;
   const percentage =
     totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-  const passed = test ? percentage >= test.passingScore : percentage >= 80;
-  const nextTest = getNextTest(id);
+  const passed =
+    passedParam !== undefined
+      ? passedParam === "true"
+      : mockTest
+        ? percentage >= mockTest.passingScore
+        : percentage >= (apiPassingScore ?? 80);
+  const nextTestId = isApi ? apiNextTestId : mockNextTest?.id;
   const iconColor = isDark ? Secondary[100] : Secondary[700];
 
   useEffect(() => {
@@ -109,12 +145,12 @@ export default function ResultsScreen() {
       {/* Continue button */}
       <Button
         onPress={() =>
-          nextTest
-            ? router.replace(`/test/${nextTest.id}` as any)
+          nextTestId
+            ? router.replace(`/test/quiz/${nextTestId}` as any)
             : router.replace("/(tabs)" as any)
         }
       >
-        {nextTest ? "Continue to the next test" : "Back to Home"}
+        {nextTestId ? "Continue to the next test" : "Back to Home"}
       </Button>
 
       {/* Missed questions link */}

@@ -37,7 +37,7 @@ export default function IntroHeader({
 
   const fontSize = scrollY.interpolate({
     inputRange: [0, 60],
-    outputRange: [40, 28],
+    outputRange: [30, 28],
     extrapolate: "clamp",
   });
 
