@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\AmbientTrackController as AdminAmbientTrackController;
 use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptController;
 use App\Http\Controllers\Api\V1\Admin\CheatSheetController as AdminCheatSheetController;
+use App\Http\Controllers\Api\V1\Admin\EmailSubscriberController as AdminEmailSubscriberController;
 use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
 use App\Http\Controllers\Api\V1\Admin\HandbookController as AdminHandbookController;
 use App\Http\Controllers\Api\V1\Admin\ImageApprovalController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Api\V1\FlashcardReviewController;
 use App\Http\Controllers\Api\V1\PassGuaranteeClaimController;
 use App\Http\Controllers\Api\V1\Public\AmbientTrackController;
 use App\Http\Controllers\Api\V1\Public\CheatSheetController as PublicCheatSheetController;
+use App\Http\Controllers\Api\V1\Public\EmailSubscriberController;
 use App\Http\Controllers\Api\V1\Public\FlashcardController as PublicFlashcardController;
 use App\Http\Controllers\Api\V1\Public\HandbookController as PublicHandbookController;
 use App\Http\Controllers\Api\V1\Public\PlanController;
@@ -103,6 +105,11 @@ Route::prefix('v1')->group(function (): void {
     Route::get('quiz-categories', [PublicQuizCategoryController::class, 'index']);
 
     Route::get('plans', [PlanController::class, 'index']);
+
+    // Public marketing signup — captures an email for the daily-question newsletter from the home
+    // page hero. Throttled since it's unauthenticated and writes.
+    Route::post('newsletter/subscribe', [EmailSubscriberController::class, 'store'])
+        ->middleware('throttle:10,1');
 
     // No auth:sanctum — Cashier's own VerifyWebhookSignature middleware (applied in the base
     // controller's constructor) is the real guard here, driven by STRIPE_WEBHOOK_SECRET.
@@ -192,6 +199,9 @@ Route::prefix('v1')->group(function (): void {
             Route::get('plans/{plan}', [AdminPlanController::class, 'show']);
 
             Route::get('attempts', [AdminAttemptController::class, 'index']);
+
+            Route::get('email-subscribers', [AdminEmailSubscriberController::class, 'index']);
+            Route::delete('email-subscribers/{emailSubscriber}', [AdminEmailSubscriberController::class, 'destroy']);
 
             Route::get('pass-guarantee-claims', [AdminPassGuaranteeClaimController::class, 'index']);
             Route::post('pass-guarantee-claims/{passGuaranteeClaim}/approve', [AdminPassGuaranteeClaimController::class, 'approve']);

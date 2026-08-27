@@ -6,15 +6,41 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { Input } from "@/components/ui/Input";
 import { useWebLayout } from "@/lib/web-layout-context";
-import { Mail, Sparkles } from "lucide-react";
-import Subheading from "../ui/Subheading";
+import { api, ApiError } from "@/lib/api";
+import { CheckCircle2, Mail, Sparkles } from "lucide-react";
+
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function EmailCaptureSection() {
   const { selectedState } = useWebLayout();
   const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
+  const [message, setMessage] = useState("");
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (status === "loading") return;
+
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const res = await api.post<{ message: string }>("/newsletter/subscribe", {
+        email,
+        state: selectedState || undefined,
+        source: "home_hero",
+      });
+      setStatus("success");
+      setMessage(res.message);
+      setEmail("");
+    } catch (err) {
+      setStatus("error");
+      setMessage(
+        err instanceof ApiError
+          ? err.errors?.email?.[0] ?? err.message
+          : "Something went wrong. Please try again.",
+      );
+    }
   }
 
   return (
@@ -37,25 +63,47 @@ export default function EmailCaptureSection() {
           onSubmit={handleSubmit}
           className="w-full xl:w-fit space-y-2.5 shrink-0"
         >
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Input
-              type="email"
-              required
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-auto min-w-70 rounded-full bg-white px-4.5 py-3 text-neutral-900 border-transparent"
-            />
-            <Button type="submit" className="w-full sm:w-fit text-nowrap">
-              Send me questions
-            </Button>
-          </div>
-          <Paragraph
-            size="sm"
-            className="flex items-center gap-1.5 text-neutral-400!"
-          >
-            <Mail className="w-3.5 h-3.5" /> Unsubscribe anytime · no spam, ever
-          </Paragraph>
+          {status === "success" ? (
+            <div className="flex items-center gap-2.5 rounded-full bg-white/10 px-5 py-3 text-white min-w-70">
+              <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+              <Paragraph size="sm" className="text-white!">
+                {message}
+              </Paragraph>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  type="email"
+                  required
+                  disabled={status === "loading"}
+                  placeholder="you@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-auto min-w-70 rounded-full bg-white px-4.5 py-3 text-neutral-900 border-transparent disabled:opacity-70"
+                />
+                <Button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="w-full sm:w-fit text-nowrap"
+                >
+                  {status === "loading" ? "Sending…" : "Send me questions"}
+                </Button>
+              </div>
+              {status === "error" && (
+                <Paragraph size="sm" className="text-red-400!">
+                  {message}
+                </Paragraph>
+              )}
+              <Paragraph
+                size="sm"
+                className="flex items-center gap-1.5 text-neutral-400!"
+              >
+                <Mail className="w-3.5 h-3.5" /> Unsubscribe anytime · no spam,
+                ever
+              </Paragraph>
+            </>
+          )}
         </form>
       </div>
     </section>

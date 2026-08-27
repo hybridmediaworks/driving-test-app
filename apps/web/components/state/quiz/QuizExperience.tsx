@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Bookmark, Flag, Gem, LogOut, RotateCcw, Settings } from "lucide-react";
 import type {
   AmbientTrack,
@@ -18,6 +18,7 @@ import Slider from "@/components/ui/Slider";
 import Switch from "@/components/ui/Switch";
 import QuestionCard from "@/components/state/quiz/QuestionCard";
 import HintPanel from "@/components/state/quiz/HintPanel";
+import KeyboardShortcutsDialog from "@/components/state/quiz/KeyboardShortcutsDialog";
 import RestartDialog from "@/components/state/quiz/RestartDialog";
 import StreakBadge from "@/components/state/quiz/StreakBadge";
 import ReportMistakeDialog from "@/components/state/quiz/ReportMistakeDialog";
@@ -207,6 +208,7 @@ function QuizTaker({
   const [toast, setToast] = useState<{ message: string; variant: ToastVariant } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const [voiceOver, setVoiceOver] = useState(false);
   const [answerPopularity, setAnswerPopularity] = useState(false);
@@ -368,6 +370,78 @@ function QuizTaker({
   const incorrectCount = loadedQuestions.filter((q) => checkedByQuestionId[q.id]?.is_correct === false).length;
   const flaggedCount = loadedQuestions.filter((q) => flaggedIds.has(q.id)).length;
 
+  // ----- Voice-over (Web Speech API) -----
+  // Owned by the parent (not QuestionCard) so the `v` / `e` / `tv` keyboard shortcuts and the
+  // in-card speaker button all drive the same speech state. No TTS library is installed and the
+  // API never returns pre-recorded audio assets, so SpeechSynthesis is the only option here.
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const speak = useCallback((text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith("en"));
+      if (voice) utterance.voice = voice;
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // Some engines throw on malformed voices or mid-navigation speak() calls — voice-over is a
+      // nice-to-have, so fail silently rather than taking the screen down with it.
+      setIsSpeaking(false);
+    }
+  }, []);
+
+  const stopSpeaking = useCallback(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  }, []);
+
+  const speakQuestion = useCallback(() => {
+    if (!currentQuestion) return;
+    const optionsText = currentQuestion.answers
+      .map((option, index) => `Option ${String.fromCharCode(65 + index)}: ${option.answer_text}`)
+      .join(". ");
+    speak(`${currentQuestion.question_text}. ${optionsText}`);
+  }, [currentQuestion, speak]);
+
+  const speakExplanation = useCallback(() => {
+    if (!currentQuestion || !currentCheck) return;
+    const correctAnswer = currentQuestion.answers.find((a) => a.id === currentCheck.correct_answer_id);
+    const resultText = currentCheck.is_correct
+      ? "Correct!"
+      : `Incorrect. The correct answer is ${correctAnswer?.answer_text ?? ""}.`;
+    speak(currentCheck.explanation ? `${resultText} ${currentCheck.explanation}` : resultText);
+  }, [currentQuestion, currentCheck, speak]);
+
+  const toggleSpeakQuestion = useCallback(
+    () => (isSpeaking ? stopSpeaking() : speakQuestion()),
+    [isSpeaking, stopSpeaking, speakQuestion],
+  );
+
+  // Auto-read the question whenever voice-over is on and the question changes; stop on toggle-off
+  // or when navigating away.
+  useEffect(() => {
+    if (!voiceOver) return;
+    // speak() only flips isSpeaking asynchronously inside the utterance callbacks, never
+    // synchronously here — a false positive for this rule.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    speakQuestion();
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    };
+  }, [voiceOver, speakQuestion]);
+
+  // Once the current answer is graded, read the result + explanation aloud too.
+  useEffect(() => {
+    if (!voiceOver || !currentCheck) return;
+    // Same false positive as above.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    speakExplanation();
+  }, [voiceOver, currentCheck, speakExplanation]);
+
   async function selectOption(optionId: number) {
     if (!currentQuestion) return;
     // Once a question is graded it's locked — the reveal is final.
@@ -427,6 +501,140 @@ function QuizTaker({
   function previousQuestion() {
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
   }
+
+  // ----- Keyboard shortcuts (reference sheet: KeyboardShortcutsDialog) -----
+  // "t" arms a two-key chord (ta / tf / tv); the timer disarms it if no second key follows in time.
+  const chordArmedRef = useRef(false);
+  const chordTimerRef = useRef<number | null>(null);
+
+  // Cycle the question font size small → default → large → small (mirrors the settings slider).
+  function cycleFontSize() {
+    setFontSize(([v]) => [v <= 0 ? 50 : v < 100 ? 100 : 0]);
+  }
+
+  // Enter/confirm: submit on the last question, otherwise advance — gated by the same conditions
+  // that enable the bottom-bar Next / See-results buttons.
+  function advance() {
+    const isLast = currentIndex + 1 === loadedQuestions.length;
+    if (isLast) {
+      if (!((isViewingFurthest && !isAnswered) || submitting)) submitAttempt();
+    } else if (!(isViewingFurthest && !isAnswered)) {
+      nextQuestion();
+    }
+  }
+
+  function handleShortcutKey(e: KeyboardEvent) {
+    const target = e.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    // A blocking dialog owns the keyboard while it's open.
+    if (showReportDialog || showRestartConfirm) return;
+
+    // "?" (Shift + /) toggles the reference sheet from anywhere.
+    if (e.key === "?") {
+      e.preventDefault();
+      setShowShortcuts((v) => !v);
+      return;
+    }
+    // While the sheet is open, let the dialog own the keyboard (Esc / the close button dismiss it).
+    if (showShortcuts) return;
+    // Shortcuts only apply while actively taking the quiz, not on the loading/results screens.
+    if (showResults || loadingResults) return;
+
+    const key = e.key.toLowerCase();
+
+    // Second key of a "t…" chord.
+    if (chordArmedRef.current) {
+      chordArmedRef.current = false;
+      if (chordTimerRef.current) window.clearTimeout(chordTimerRef.current);
+      if (key === "a") {
+        e.preventDefault();
+        setAnswerPopularity((v) => !v);
+        return;
+      }
+      if (key === "f") {
+        e.preventDefault();
+        cycleFontSize();
+        return;
+      }
+      if (key === "v") {
+        e.preventDefault();
+        setVoiceOver((v) => !v);
+        return;
+      }
+      // Any other key after "t" falls through and is handled on its own below.
+    }
+
+    // Arm the chord prefix.
+    if (key === "t") {
+      chordArmedRef.current = true;
+      if (chordTimerRef.current) window.clearTimeout(chordTimerRef.current);
+      chordTimerRef.current = window.setTimeout(() => {
+        chordArmedRef.current = false;
+      }, 1200);
+      return;
+    }
+
+    // 1–4 select the answer at that position (1 → A) while the question is still open.
+    if (key >= "1" && key <= "4") {
+      const idx = Number(key) - 1;
+      if (currentQuestion && !checkedByQuestionId[currentQuestion.id] && idx < currentQuestion.answers.length) {
+        e.preventDefault();
+        selectOption(currentQuestion.answers[idx].id);
+      }
+      return;
+    }
+
+    switch (key) {
+      case "enter":
+        e.preventDefault();
+        advance();
+        break;
+      case "n":
+      case "arrowright":
+        e.preventDefault();
+        nextQuestion();
+        break;
+      case "p":
+      case "arrowleft":
+        e.preventDefault();
+        previousQuestion();
+        break;
+      case "c":
+        e.preventDefault();
+        goToQuestion(furthestIndex);
+        break;
+      case "v":
+        e.preventDefault();
+        toggleSpeakQuestion();
+        break;
+      case "e":
+        e.preventDefault();
+        if (isSpeaking) stopSpeaking();
+        else speakExplanation();
+        break;
+    }
+  }
+
+  // Bind the listener once, but always call the freshest handler so it reads current state
+  // (question, indexes, toggles) without re-subscribing on every keystroke.
+  const shortcutHandlerRef = useRef(handleShortcutKey);
+  useEffect(() => {
+    shortcutHandlerRef.current = handleShortcutKey;
+  });
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => shortcutHandlerRef.current(e);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   function restart() {
     setAnswers({});
@@ -694,14 +902,21 @@ function QuizTaker({
                         </div>
                       </div>
                       <hr className="my-1 border-border" />
-                      <div className="flex items-center justify-between py-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettingsOpen(false);
+                          setShowShortcuts(true);
+                        }}
+                        className="flex w-full cursor-pointer items-center justify-between rounded-md py-1.5 transition-colors hover:bg-neutral-50"
+                      >
                         <Paragraph size="sm" color="dark">
                           {t("keyboardShortcuts")}
                         </Paragraph>
                         <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-500">
                           Shift + ?
                         </span>
-                      </div>
+                      </button>
                       <div className="flex items-center justify-center gap-1 rounded-full bg-neutral-100 p-1 text-sm">
                         <button
                           type="button"
@@ -756,6 +971,8 @@ function QuizTaker({
               selectedOptionId={selectedOptionId}
               checkResult={currentCheck}
               voiceOver={voiceOver}
+              isSpeaking={isSpeaking}
+              onToggleSpeak={toggleSpeakQuestion}
               answerPopularity={answerPopularity}
               fontScale={questionFontScale}
               onSelectOption={selectOption}
@@ -901,6 +1118,7 @@ function QuizTaker({
       </section>
 
       <RestartDialog open={showRestartConfirm} onOpenChange={setShowRestartConfirm} onConfirm={restart} t={t} />
+      <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} t={t} />
       {currentQuestion && (
         <ReportMistakeDialog
           key={currentQuestion.id}
