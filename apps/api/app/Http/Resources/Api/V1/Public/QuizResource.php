@@ -31,8 +31,37 @@ class QuizResource extends JsonResource
             'passing_score_percent' => $this->passing_score_percent,
             'is_premium' => $this->is_premium,
             'locked' => ! $unlocked,
+            // `best_score` is this user's highest score across their completed attempts of this quiz
+            // (from withMax on the list endpoint; null for guests and on the single-quiz show response).
+            //  - attempted: has completed it at least once → drives the progressive ladder (finish one
+            //    to unlock the next).
+            //  - user_passed: true/false against the pass line, or null when not attempted → drives the
+            //    pass (green tick) / fail (red mark) badge. The 80% default mirrors the quiz player's
+            //    own line (quiz.passing_score_percent ?? 80).
+            'attempted' => $this->best_score !== null,
+            'user_passed' => $this->best_score === null
+                ? null
+                : (int) $this->best_score >= ($this->passing_score_percent ?? 80),
+            // Progressive ladder state, resolved server-side on a full ladder request (see
+            // ResolveQuizProgression) so every client renders the same chain:
+            //  - lock_reason: null = open, "premium" = not entitled (route to pricing), "progress" =
+            //    entitled but the previous quiz isn't finished yet (locked silently).
+            //  - is_next: the single quiz the learner should take now.
+            // When not resolved (e.g. a `slug` lookup), lock_reason falls back to the payment-only
+            // state and is_next is false.
+            'lock_reason' => array_key_exists('lock_reason', $this->resource->getAttributes())
+                ? $this->resource->getAttribute('lock_reason')
+                : ($unlocked ? null : 'premium'),
+            'is_next' => (bool) ($this->resource->getAttribute('is_next') ?? false),
             'pass_rate' => $this->passRate(),
             'cover_image_url' => $this->cover_image_url,
+            // A representative question image so listing cards can show real quiz content instead of
+            // a shared generic cover. Null when the quiz has no images or the relation wasn't loaded
+            // (e.g. the single-quiz `show` response, which doesn't need a thumbnail).
+            'preview_image_url' => $this->whenLoaded(
+                'previewImageQuestion',
+                fn () => $this->previewImageQuestion?->image_urls[0] ?? null,
+            ),
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,
                 'name' => $this->category->name,

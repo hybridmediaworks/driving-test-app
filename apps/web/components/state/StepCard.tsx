@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { BookMarked, Gem } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { BookMarked, Check, Gem, Lock } from "lucide-react";
 import Paragraph from "@/components/ui/Paragraph";
 
 type Step = {
@@ -13,6 +12,13 @@ type Step = {
   totalTime?: string;
   type?: "free" | "premium";
   locked?: boolean;
+  /** Why a locked step is locked — decides what a click does (see the wrapper at the bottom):
+   *  "premium" (not paid) → whole card goes to /pricing; "progress" (paid, previous test not yet
+   *  finished) → the card doesn't navigate at all. Undefined when the step is unlocked. */
+  lockMode?: "premium" | "progress";
+  /** The current user's result on a completed quiz — "passed" shows a green tick, "failed" a red
+   *  mark (top-right of the card). Undefined until the quiz has been completed. */
+  outcome?: "passed" | "failed";
   image?: string;
   status?: string;
   style?: "large";
@@ -81,9 +87,12 @@ export default function StepCard({
       {(step.image ||
         step.locked ||
         step.status === "next" ||
-        step.type === "free") && (
+        step.type === "free" ||
+        step.type === "premium") && (
         <div
-          className={`relative overflow-hidden md:rounded-xl rounded-md md:max-w-full w-full max-w-35`}
+          className={`relative overflow-hidden md:rounded-xl rounded-md md:max-w-full w-full max-w-35 ${
+            step.status === "next" ? "next-glow" : ""
+          }`}
         >
           {step.image && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -97,24 +106,30 @@ export default function StepCard({
             <div
               className={`absolute inset-0 flex items-center justify-center md:rounded-xl rounded-md ${
                 step.locked && step.status !== "next"
-                  ? "bg-white/60 backdrop-blur-[2px] group-hover:bg-linear-to-r group-hover:from-blue-500 group-hover:to-blue-700"
+                  ? step.lockMode === "progress"
+                    ? "bg-white/60 backdrop-blur-[2px]"
+                    : "bg-white/60 backdrop-blur-[2px] group-hover:bg-linear-to-r group-hover:from-blue-500 group-hover:to-blue-700"
                   : ""
               }`}
             >
-              {step.locked && step.status !== "next" && (
+              {step.locked && step.status !== "next" && step.lockMode === "progress" && (
+                // Paid learner who hasn't finished the previous test yet — a blue circle badge with a
+                // white lock, no upsell, and (see the wrapper below) the card doesn't navigate on click.
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 shadow-md">
+                  <Lock className="h-5 w-5 text-white" />
+                </div>
+              )}
+              {step.locked && step.status !== "next" && step.lockMode !== "progress" && (
+                // Not entitled — the whole card links to /pricing (see the wrapper below), so the
+                // hover CTA is a plain span here rather than a nested link.
                 <>
                   <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
                     <Gem className="text-blue-600 w-8 h-8 " />
                   </div>
                   <div className="hidden group-hover:flex px-2">
-                    <Button
-                      variant="outline"
-                      className="w-full md:w-fit bg-yellow-500! border-yellow-500!"
-                      size="sm"
-                      href="/pricing"
-                    >
-                      <Gem /> Upgrade to Premium
-                    </Button>
+                    <span className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-yellow-500 bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-black md:w-fit">
+                      <Gem className="h-4 w-4" /> Upgrade to Premium
+                    </span>
                   </div>
                 </>
               )}
@@ -133,10 +148,31 @@ export default function StepCard({
             <Paragraph
               color="white"
               size="xs"
-              className="absolute md:top-2 top-0.5 rounded-sm px-1.75 md:py-0.5 font-semibold md:tracking-wide uppercase md:right-2 right-0.5 bg-green-500"
+              className="absolute md:top-2 top-0.5 rounded-sm px-1.75 md:py-0.5 font-semibold md:tracking-wide uppercase md:left-2 left-0.5 bg-green-500"
             >
               Free
             </Paragraph>
+          )}
+          {step.type === "premium" && (
+            <Paragraph
+              color="white"
+              size="xs"
+              className="absolute md:top-2 top-0.5 rounded-sm px-1.75 md:py-0.5 font-semibold md:tracking-wide uppercase md:left-2 left-0.5 bg-orange-500"
+            >
+              Premium
+            </Paragraph>
+          )}
+          {/* Completed-quiz result badge, top-right (the FREE/PREMIUM tag sits top-left). Passed →
+              green tick, failed → red exclamation. Shown once the learner has taken the quiz. */}
+          {step.outcome === "passed" && (
+            <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-green-500 ring-2 ring-white">
+              <Check className="md:h-4 h-3 md:w-4 w-3 text-white" strokeWidth={3} />
+            </div>
+          )}
+          {step.outcome === "failed" && (
+            <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white">
+              <span className="md:text-sm text-xs font-bold leading-none text-white">!</span>
+            </div>
           )}
         </div>
       )}
@@ -172,9 +208,21 @@ export default function StepCard({
     </div>
   );
 
-  if (state && step.slug) {
+  // Where a click goes depends on why (if at all) the step is locked:
+  //  - unlocked → open the test.
+  //  - locked + "premium" (not paid) → straight to /pricing.
+  //  - locked + "progress" (paid, previous test not finished) → nowhere; the card is inert.
+  const href = step.locked
+    ? step.lockMode === "premium"
+      ? "/pricing"
+      : null
+    : state && step.slug
+      ? `/${state}/${step.slug}`
+      : null;
+
+  if (href) {
     return (
-      <Link href={`/${state}/${step.slug}`} className="block">
+      <Link href={href} className="block">
         {content}
       </Link>
     );

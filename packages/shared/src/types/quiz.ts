@@ -72,6 +72,9 @@ export type Quiz = {
   source_url: string | null;
   order_no: number;
   cover_image_url: string | null;
+  // A representative question image for listing cards — only present on the public /quizzes list
+  // endpoint (where the relation is eager-loaded), absent from the single-quiz show response.
+  preview_image_url?: string | null;
   test_track: "permit_test" | "driving_test";
   total_questions: number;
   duration_seconds: number | null;
@@ -82,6 +85,21 @@ export type Quiz = {
   // lib/phaseLadder.ts, WrittenTestContent.tsx) — the admin endpoint doesn't compute it, since
   // admins bypass all entitlement gates.
   locked?: boolean;
+  // Whether the current user has already completed this quiz — only present on the public /quizzes
+  // list endpoint (false for guests / on the single-quiz show response). Drives the progressive
+  // "finish one to unlock the next" ladder on the frontend.
+  attempted?: boolean;
+  // The current user's pass/fail outcome for this quiz against the pass line (passing_score_percent
+  // ?? 80): true = passed, false = failed, null = not attempted (also for guests / show response).
+  // Drives the pass (green tick) / fail (red mark) badge on the ladder card.
+  user_passed?: boolean | null;
+  // Server-resolved progressive-ladder lock state (only on a full ladder request — state +
+  // vehicle_type + test_track): null = open, "premium" = not entitled (route to /pricing),
+  // "progress" = entitled but the previous quiz isn't finished yet (locked silently).
+  lock_reason?: "premium" | "progress" | null;
+  // Whether this is the single quiz the learner should take now (the first open, not-yet-completed
+  // one). Only meaningful on a full ladder request; false otherwise.
+  is_next?: boolean;
   // Real pass rate (0-100) from graded quiz_attempts, null when there's no real attempt data yet
   // — show nothing rather than a misleading 0%. Same "only present from the public endpoint" note
   // as `locked` above.
@@ -131,6 +149,9 @@ export type PublicQuiz = {
   locked: boolean;
   pass_rate: number | null;
   cover_image_url: string | null;
+  // A representative question image for listing cards — only present on the public /quizzes list
+  // endpoint (where the relation is eager-loaded), absent from the single-quiz show response.
+  preview_image_url?: string | null;
   category?: { id: number; name: string; title: string };
   quiz_type?: { id: number; name: string; title: string };
   state?: { id: number; code: string; name: string } | null;

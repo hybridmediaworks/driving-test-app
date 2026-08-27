@@ -11,6 +11,16 @@ export type PhaseLadderStep = {
   /** Whether THIS viewer is actually locked out — distinct from `type`, which only describes
    * the content's own pricing. An entitled subscriber sees `type: "premium"` but `locked: false`. */
   locked?: boolean;
+  /** Why a locked step is locked, so the card knows what a click should do:
+   *  - "premium": the viewer isn't entitled (hasn't paid) — the whole card sends them to /pricing.
+   *  - "progress": the viewer IS entitled but hasn't finished the previous step yet — silent, no nav.
+   *  Undefined when the step is unlocked. Mirrors the API's `lock_reason` (see ResolveQuizProgression). */
+  lockMode?: "premium" | "progress";
+  /** Whether the current user has already completed this quiz (from the API's `attempted`). */
+  attempted?: boolean;
+  /** The current user's result on a completed quiz — "passed" shows a green tick, "failed" a red
+   *  mark. Undefined when the quiz hasn't been completed yet. */
+  outcome?: "passed" | "failed";
   image?: string;
   status?: "next";
   style?: "large";
@@ -52,10 +62,36 @@ function formatMinutes(durationSeconds: number | null): string | undefined {
   return minutes > 0 ? String(minutes) : undefined;
 }
 
+/** Maps the API's tri-state `user_passed` (true/false/null) to a completed-quiz badge outcome. */
+function outcomeOf(quiz: Quiz): "passed" | "failed" | undefined {
+  if (quiz.user_passed == null) return undefined;
+  return quiz.user_passed ? "passed" : "failed";
+}
+
 /** In-flight/resolved request cache, keyed by state+vehicle+track — StatePhase/PremiumCTA each
  * call usePhaseCompletion independently (once per phase they render), so without this a single
  * page render would fire one real network request per phase instead of sharing one. */
 const ladderCache = new Map<string, Promise<PhaseLadderPhase[]>>();
+
+/**
+ * Drops the cached ladders so the next fetch reflects fresh completion state. Called right after a
+ * quiz attempt is submitted — otherwise the module-level cache would keep serving the pre-attempt
+ * ladder (with the just-finished quiz still marked not-completed) for the rest of the session, so a
+ * newly unlocked step wouldn't appear until a hard reload.
+ */
+export function invalidatePhaseLadder(): void {
+  ladderCache.clear();
+}
+
+/**
+ * Maps a quiz's server-resolved `lock_reason` (see the API's ResolveQuizProgression) to the step's
+ * lock state. The progressive "finish one to unlock the next" chain is computed server-side now, so
+ * both web and mobile render the same result — the frontend just reflects it.
+ */
+function lockFromQuiz(quiz: Quiz): { locked: boolean; lockMode: PhaseLadderStep["lockMode"] } {
+  const reason = quiz.lock_reason ?? null;
+  return { locked: reason !== null, lockMode: reason ?? undefined };
+}
 
 /**
  * Real replacement for the old stepsmockdata.json — builds the phase ladder from actual quizzes,
@@ -63,9 +99,11 @@ const ladderCache = new Map<string, Promise<PhaseLadderPhase[]>>();
  * quizzes for this state/vehicle/track combination simply doesn't produce a phase — the ladder
  * length is genuinely variable per combination now, not fixed at 7.
  *
- * Completion tracking isn't wired yet (see lib/usePhaseCompletion.ts) — every step currently
- * renders as not-completed, matching the documented "fresh user" baseline, until the quiz player
- * is wired to real attempts.
+ * Each quiz's progressive lock state (`lock_reason`, `is_next`) and completion (`attempted`,
+ * `user_passed`) are resolved server-side (see the API's ResolveQuizProgression), so this just
+ * reflects them. The result is cached per state/vehicle/track for the session;
+ * invalidatePhaseLadder() clears it after an attempt so a newly unlocked step shows up without a
+ * hard reload.
  */
 export function fetchPhaseLadder(stateCode: string, vehicleType: string, testTrack: string): Promise<PhaseLadderPhase[]> {
   const key = `${stateCode}|${vehicleType}|${testTrack}`;
@@ -128,9 +166,15 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
         totalQuestions: String(quiz.total_questions),
         totalTime: formatMinutes(quiz.duration_seconds),
         type: quiz.is_premium ? "premium" : "free",
-        locked: quiz.locked ?? quiz.is_premium,
-        image: quiz.cover_image_url ?? "/driving-tests.jpg",
-        status: phaseNumber === 1 && index === 0 ? "next" : undefined,
+        ...lockFromQuiz(quiz),
+        attempted: quiz.attempted ?? false,
+        // Drive the connector pipeline: a completed step's connectors render blue, so the line is
+        // blue up to the next (first not-yet-completed) task. justCompleted stays false — this is the
+        // static progress on load, not a live just-finished animation.
+        completed: quiz.attempted ?? false,
+        outcome: outcomeOf(quiz),
+        status: quiz.is_next ? "next" : undefined,
+        image: quiz.preview_image_url ?? quiz.cover_image_url ?? "/driving-tests.jpg",
       })),
     });
   }
@@ -161,8 +205,12 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
               totalQuestions: String(quiz.total_questions),
               totalTime: formatMinutes(quiz.duration_seconds),
               type: quiz.is_premium ? ("premium" as const) : ("free" as const),
-              locked: quiz.locked ?? quiz.is_premium,
-              image: quiz.cover_image_url ?? "/driving-tests.jpg",
+              ...lockFromQuiz(quiz),
+              attempted: quiz.attempted ?? false,
+              completed: quiz.attempted ?? false,
+              outcome: outcomeOf(quiz),
+              status: quiz.is_next ? ("next" as const) : undefined,
+              image: quiz.preview_image_url ?? quiz.cover_image_url ?? "/driving-tests.jpg",
             }))
           : [{ step: 1, placeholder: true, style: "large" as const }],
     });

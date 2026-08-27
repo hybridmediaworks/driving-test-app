@@ -54,4 +54,39 @@ class QuizAttemptHistoryTest extends TestCase
         $ids = collect($response->json('data'))->pluck('id');
         $this->assertEquals([$mine->id], $ids->all());
     }
+
+    public function test_attempts_can_be_filtered_to_a_single_quiz(): void
+    {
+        $user = User::factory()->create();
+        $quizA = Quiz::factory()->create();
+        $quizB = Quiz::factory()->create();
+
+        $attemptA = QuizAttempt::query()->create([
+            'user_id' => $user->id,
+            'quiz_id' => $quizA->id,
+            'status' => AttemptStatus::Completed,
+            'total_questions' => 5,
+            'correct_count' => 4,
+            'score' => 80,
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        QuizAttempt::query()->create([
+            'user_id' => $user->id,
+            'quiz_id' => $quizB->id,
+            'status' => AttemptStatus::Completed,
+            'total_questions' => 5,
+            'correct_count' => 2,
+            'score' => 40,
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->getJson("/api/v1/attempts?quiz={$quizA->id}&per_page=1");
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertEquals([$attemptA->id], $ids->all());
+    }
 }

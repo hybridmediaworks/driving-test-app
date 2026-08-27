@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -87,6 +88,25 @@ class Quiz extends Model implements HasMedia
     {
         // `id` tiebreaker keeps the order deterministic even if two rows share a sort_order.
         return $this->hasMany(QuizQuestion::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * The first question (by sort order) that actually has an image, used to give each quiz a
+     * representative thumbnail on listing cards instead of a shared generic cover. A one-of-many
+     * HasOne so it stays a single, eager-loadable relation (`with('previewImageQuestion.media')`)
+     * — the `whereHas('media', …)` constraint keeps it pointed at a question that has an image.
+     *
+     * @return HasOne<QuizQuestion, $this>
+     */
+    public function previewImageQuestion(): HasOne
+    {
+        return $this->hasOne(QuizQuestion::class)->ofMany(
+            ['sort_order' => 'min', 'id' => 'min'],
+            fn ($query) => $query->whereHas(
+                'media',
+                fn ($q) => $q->where('collection_name', QuizQuestion::MEDIA_COLLECTION_IMAGES),
+            ),
+        );
     }
 
     /**

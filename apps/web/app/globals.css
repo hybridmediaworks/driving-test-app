@@ -305,6 +305,31 @@ button {
   .character-float {
     animation: character-float 2.6s ease-in-out infinite;
   }
+
+  /* Soft, continuous glow that gently breathes around the "Next" test card, drawing the eye to the
+     one the learner should take now without being loud. Uses the brand blue rather than white — the
+     ladder sits on a light cream background (#f2f1ec) where a white glow is invisible. */
+  @keyframes next-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 122, 255, 0);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 16px 4px rgba(0, 122, 255, 0.55);
+      transform: scale(1.04);
+    }
+  }
+
+  .next-glow {
+    animation: next-glow 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .next-glow {
+      animation: none;
+    }
+  }
 }
 
 .dark {

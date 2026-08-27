@@ -10,6 +10,8 @@ type Step = {
   totalTime?: string;
   type?: "free" | "premium";
   locked?: boolean;
+  lockMode?: "premium" | "progress";
+  outcome?: "passed" | "failed";
   image?: string;
   status?: "next";
   style?: "large";
@@ -37,6 +39,21 @@ function rowFillState(row: Step[]): { trigger: boolean; filled: boolean } {
     trigger: hasTrigger && triggerIndex === row.length - 1,
     filled: fullyDone && !hasTrigger,
   };
+}
+
+// How far (in column spans) the blue "progress" line should reach across a row: over the leading
+// run of completed cards, plus the "Next" card that immediately follows them (so the pipeline
+// reaches the task you're on now, then stops). Lets a partly-done row show blue up to the current
+// task instead of the all-or-nothing row fill.
+function reachedSpan(row: Step[], spanOf: (step: Step) => number): number {
+  let span = 0;
+  let i = 0;
+  for (; i < row.length; i++) {
+    if (row[i].completed && !row[i].justCompleted) span += spanOf(row[i]);
+    else break;
+  }
+  if (i < row.length && row[i].status === "next") span += spanOf(row[i]);
+  return span;
 }
 
 const GAP_REM = 1.25;
@@ -111,6 +128,9 @@ export default function TestSteps({
     <div className="relative md:space-y-0 space-y-4">
       {rows.map((row, rowIndex) => {
         const rowSpan = row.reduce((total, step) => total + stepSpan(step), 0);
+        // Blue "you're here" progress across this row: covers the completed cards plus the current
+        // "Next" one, so the pipeline reads as blue up to the task you're on and white after it.
+        const rowReached = reachedSpan(row, stepSpan);
         const isPartialRow = rowSpan < effectiveColumns;
         const isLastRow = rowIndex === rows.length - 1;
         const showConnectorBelow = rowIndex < rows.length - 1 || nextConnector;
@@ -182,6 +202,13 @@ export default function TestSteps({
                     ? ({ "--fill-index": 1 } as React.CSSProperties)
                     : undefined),
                 }}
+              />
+            )}
+            {rowReached > 0 && (
+              // Blue overlay on top of the white horizontal connector, filled up to the current task.
+              <div
+                className="pointer-events-none absolute top-15.25 left-0 h-3.5 rounded-full bg-blue-500 max-md:hidden"
+                style={{ width: rowWidth(effectiveColumns, rowReached) }}
               />
             )}
 

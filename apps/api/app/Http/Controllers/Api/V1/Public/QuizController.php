@@ -7,7 +7,9 @@ use App\Actions\Quiz\GenerateQuestionAssist;
 use App\Actions\Quiz\GenerateResultsInsight;
 use App\Actions\Quiz\GradeQuizAttempt;
 use App\Actions\Quiz\GradeSingleAnswer;
+use App\Actions\Quiz\ResolveQuizProgression;
 use App\Actions\Quiz\TranslateQuizContent;
+use App\Enums\AttemptStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Public\CheckQuizAnswerRequest;
 use App\Http\Requests\Api\V1\Public\QuizAssistRequest;
@@ -38,6 +40,7 @@ class QuizController extends Controller
         private readonly ComputeAnswerPopularity $computePopularity,
         private readonly TranslateQuizContent $translateQuizContent,
         private readonly GenerateResultsInsight $generateResultsInsight,
+        private readonly ResolveQuizProgression $resolveProgression,
     ) {}
 
     /**
@@ -52,9 +55,19 @@ class QuizController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        // No auth:sanctum middleware on this route, so resolve the token holder explicitly (same as
+        // the resource/policy) to surface this user's best score per quiz — the frontend uses it to
+        // drive its progressive "finish one to unlock the next" ladder and the pass/fail badges.
+        $userId = $request->user('sanctum')?->id;
+
         $query = Quiz::query()
             ->where('is_active', true)
-            ->with(['category', 'quizType', 'state', 'vehicleType'])
+            ->with(['category', 'quizType', 'state', 'vehicleType', 'previewImageQuestion.media'])
+            ->when($userId !== null, fn ($q) => $q->withMax([
+                'attempts as best_score' => fn ($a) => $a
+                    ->where('user_id', $userId)
+                    ->where('status', AttemptStatus::Completed),
+            ], 'score'))
             ->orderBy('is_premium')
             ->orderBy('order_no')
             ->orderBy('title');
@@ -84,8 +97,29 @@ class QuizController extends Controller
         }
 
         $perPage = min(max($request->integer('per_page', 15), 5), 100);
+        $quizzes = $query->paginate($perPage)->withQueryString();
 
-        return QuizResource::collection($query->paginate($perPage)->withQueryString());
+        // A full ladder request (state + vehicle_type + test_track) gets its progressive lock state
+        // resolved server-side so web and mobile render the same "finish one to unlock the next"
+        // chain. Other requests (e.g. a `slug` lookup, or a category-only browse) fall back to the
+        // payment-only lock_reason the resource computes on its own.
+        if ($request->filled('state') && $request->filled('vehicle_type') && $request->filled('test_track')) {
+            $progression = ($this->resolveProgression)(
+                $request->string('state')->toString(),
+                $request->string('vehicle_type')->toString(),
+                $request->string('test_track')->toString(),
+                $userId !== null ? $request->user('sanctum') : null,
+            );
+
+            foreach ($quizzes as $quiz) {
+                if (isset($progression[$quiz->id])) {
+                    $quiz->setAttribute('lock_reason', $progression[$quiz->id]['lock_reason']);
+                    $quiz->setAttribute('is_next', $progression[$quiz->id]['is_next']);
+                }
+            }
+        }
+
+        return QuizResource::collection($quizzes);
     }
 
     /**

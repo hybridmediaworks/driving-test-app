@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Bookmark, Flag, Gem, LogOut, RotateCcw, Settings
 import type {
   AmbientTrack,
   ContentLanguage,
+  PaginatedResponse,
   PublicQuiz,
   PublicQuizQuestion,
   QuizAnswerCheckResponse,
@@ -23,6 +24,8 @@ import ReportMistakeDialog from "@/components/state/quiz/ReportMistakeDialog";
 import Toast, { type ToastVariant } from "@/components/state/quiz/Toast";
 import QuizResults from "@/components/state/quiz/QuizResults";
 import { api, ApiError } from "@/lib/api";
+import { invalidatePhaseLadder } from "@/lib/phaseLadder";
+import { invalidateResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useEntitlement } from "@/lib/auth-context";
 import { translate, type QuizLanguage, type TFunction } from "@/lib/i18n/quiz";
 
@@ -87,6 +90,7 @@ export default function QuizExperience({
   stateName = "",
   stateCode = "",
   onContinue,
+  initialView,
 }: {
   quiz: PublicQuiz | null | undefined;
   data: QuizShowResponse | null;
@@ -99,6 +103,9 @@ export default function QuizExperience({
   stateName?: string;
   stateCode?: string;
   onContinue: () => void | Promise<void>;
+  /** "results" opens the player straight on the last attempt's results (from the detail page's
+   *  "View results" button) rather than starting a fresh quiz. */
+  initialView?: "results";
 }) {
   // No QuizTaker mounted yet at this stage (loading/locked/empty), so read the stored preference
   // directly rather than via QuizTaker's own state, so these states respect it too.
@@ -140,6 +147,7 @@ export default function QuizExperience({
             stateName={stateName}
             stateCode={stateCode}
             onContinue={onContinue}
+            initialView={initialView}
           />
         )}
       </main>
@@ -155,6 +163,7 @@ function QuizTaker({
   stateName,
   stateCode,
   onContinue,
+  initialView,
 }: {
   quiz: PublicQuiz;
   questions: PublicQuizQuestion[];
@@ -163,10 +172,14 @@ function QuizTaker({
   stateName: string;
   stateCode: string;
   onContinue: () => void | Promise<void>;
+  initialView?: "results";
 }) {
   const { isPremium } = useEntitlement();
 
   const [showResults, setShowResults] = useState(false);
+  // When entered via "View results", we start on a loading screen while the last attempt is fetched
+  // and its graded answers are rehydrated, then flip straight to the results view below.
+  const [loadingResults, setLoadingResults] = useState(initialView === "results");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [furthestIndex, setFurthestIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -428,6 +441,54 @@ function QuizTaker({
     setLoadedQuestions(applyLanguageToOrder(shuffleQuiz(questions), language));
   }
 
+  // "View results" entry: fetch this quiz's latest attempt and rehydrate its graded answers so the
+  // results screen (and per-question review) renders exactly as it did right after finishing —
+  // gradedByQuestionId/questionStatuses derive from `attempt`, the rest from checkedByQuestionId.
+  // No attempt found (or the fetch fails) → fall through to a normal fresh quiz.
+  useEffect(() => {
+    if (initialView !== "results") return;
+    let cancelled = false;
+
+    api
+      .get<PaginatedResponse<QuizAttempt>>(`/attempts?quiz=${quiz.id}&per_page=1`)
+      .then((res) => {
+        if (cancelled) return;
+        const past = res.data[0];
+        if (!past) {
+          setLoadingResults(false);
+          return;
+        }
+
+        const checked: Record<number, QuizAnswerCheckResponse> = {};
+        const restoredAnswers: Record<number, number> = {};
+        for (const a of past.answers ?? []) {
+          checked[a.question_id] = {
+            question_id: a.question_id,
+            selected_answer_id: a.selected_answer_id,
+            correct_answer_id: a.correct_answer_id,
+            is_correct: a.is_correct,
+            explanation: a.explanation,
+            answer_popularity: null,
+          };
+          if (a.selected_answer_id != null) restoredAnswers[a.question_id] = a.selected_answer_id;
+        }
+
+        setCheckedByQuestionId(checked);
+        setAnswers(restoredAnswers);
+        setAttempt(past);
+        setShowResults(true);
+        setLoadingResults(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadingResults(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function submitAttempt() {
     setSubmitting(true);
     setSubmitError(null);
@@ -442,6 +503,11 @@ function QuizTaker({
       });
       setAttempt(res.attempt);
       setShowResults(true);
+      // This quiz is now completed — drop the cached ladder AND the resolved-quiz cache so both the
+      // ladder (newly unlocked step, pass/fail badge) and the detail page ("Restart" / "View
+      // results" buttons) rebuild with fresh completion state when the learner heads back.
+      invalidatePhaseLadder();
+      invalidateResolvedQuiz();
     } catch (err) {
       setSubmitError(err instanceof ApiError ? err.message : t("submitFailedError"));
     } finally {
@@ -470,6 +536,14 @@ function QuizTaker({
     return () => clearTimeout(timer);
   }, [toast]);
 
+
+  if (loadingResults) {
+    return (
+      <Paragraph className="py-20 text-center" color="muted">
+        {t("loadingTest")}
+      </Paragraph>
+    );
+  }
 
   if (showResults) {
     return (
