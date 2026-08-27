@@ -25,7 +25,7 @@ export function PromoCard({
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={onPress}
-      className="mx-4 mb-6 rounded-2xl overflow-hidden bg-primary"
+      className="mx-4 mb-6 rounded-2xl overflow-hidden bg-primary-1000"
     >
       <View className="flex-row items-center justify-between p-6">
         {/* Left content */}

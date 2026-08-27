@@ -1,12 +1,12 @@
 import IntroHeader from "@/components/intro-header";
 import { TheoryCard } from "@/components/today/theory-card";
 import { Button } from "@/components/ui/button";
-import { useIsDark } from "@/hooks/use-is-dark";
-import { getTheoryItems } from "@/services/testService";
+import { Primary } from "@/constants/theme";
+import { fetchTheoryList, TheoryListItem } from "@/services/api/todayService";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "expo-router";
-import { useRef } from "react";
-import { Animated, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const SUBTITLE =
@@ -14,10 +14,33 @@ const SUBTITLE =
 
 export default function TheorySeeAllScreen() {
   const router = useRouter();
-  const isDark = useIsDark();
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
-  const items = getTheoryItems(vehicleType);
+  const stateCode = useUserStore((s) => s.state) ?? "CA";
+  const [items, setItems] = useState<TheoryListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchTheoryList(vehicleType, stateCode).then((result) => {
+      if (!cancelled) {
+        setItems(result);
+        setLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [vehicleType, stateCode]);
+
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white-off dark:bg-secondary-900 items-center justify-center">
+        <ActivityIndicator size="large" color={Primary.DEFAULT} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -56,13 +79,8 @@ export default function TheorySeeAllScreen() {
             key={item.id}
             title={item.title}
             description={item.description}
-            fileInfo={item.fileInfo}
-            locked={item.action === "unlock"}
-            onPress={() =>
-              item.action === "unlock"
-                ? router.push("/premium")
-                : console.log("theory item pressed:", item.id)
-            }
+            locked={item.locked}
+            onPress={() => (item.locked ? router.push("/premium") : undefined)}
           />
         ))}
       </Animated.ScrollView>

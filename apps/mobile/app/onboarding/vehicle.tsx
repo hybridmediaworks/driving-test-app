@@ -1,39 +1,42 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/button";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { SelectionCard } from "@/components/ui/selection-card";
+import { useReferenceDataStore } from "@/store/referenceDataStore";
 import { type VehicleType, useUserStore } from "@/store/userStore";
 
-const vehicles = [
-  {
-    id: "car",
-    emoji: "🚗",
-    title: "Car",
-    description: "Learner's permit or driver's license",
-  },
-  {
-    id: "truck",
+// The vehicle-types API only returns id/name/title — emoji and marketing copy for the three
+// known categories stay client-side (per doc/API_REQUIREMENTS.md §8).
+const VEHICLE_META: Record<string, { emoji: string; description: string }> = {
+  car: { emoji: "🚗", description: "Learner's permit or driver's license" },
+  cdl: {
     emoji: "🚛",
-    title: "Truck (CDL)",
     description: "Commercial driver's license or learner's permit (CLP)",
   },
-  {
-    id: "motorcycle",
+  motorcycle: {
     emoji: "🏍️",
-    title: "Motorcycle",
     description: "Motorcycle rider's license or learner's permit",
   },
-];
+};
 
 export default function VehicleScreen() {
   const setVehicleType = useUserStore((s) => s.setVehicleType);
   const currentVehicle = useUserStore((s) => s.vehicleType);
   const { from } = useLocalSearchParams<{ from?: string }>();
   const [selected, setSelected] = useState<string | null>(currentVehicle);
+
+  const vehicleTypes = useReferenceDataStore((s) => s.vehicleTypes);
+  const loading = useReferenceDataStore((s) => s.vehicleTypesLoading);
+  const error = useReferenceDataStore((s) => s.vehicleTypesError);
+  const fetchVehicleTypes = useReferenceDataStore((s) => s.fetchVehicleTypes);
+
+  useEffect(() => {
+    fetchVehicleTypes();
+  }, [fetchVehicleTypes]);
 
   function handleNext() {
     setVehicleType(selected as VehicleType);
@@ -60,24 +63,31 @@ export default function VehicleScreen() {
           We'll customize your practice for your vehicle type
         </Text>
 
-        <View className="mt-8 gap-3">
-          {vehicles.map((vehicle) => (
-            <SelectionCard
-              key={vehicle.id}
-              {...vehicle}
-              selected={selected === vehicle.id}
-              onSelect={setSelected}
-            />
-          ))}
-        </View>
+        {loading && vehicleTypes.length === 0 ? (
+          <ActivityIndicator className="mt-10" />
+        ) : error && vehicleTypes.length === 0 ? (
+          <Text className="text-center text-red-500 mt-10">{error}</Text>
+        ) : (
+          <View className="mt-8 gap-3">
+            {vehicleTypes.map((vehicle) => (
+              <SelectionCard
+                key={vehicle.id}
+                id={vehicle.name}
+                title={vehicle.title}
+                emoji={VEHICLE_META[vehicle.name]?.emoji}
+                description={VEHICLE_META[vehicle.name]?.description}
+                selected={selected === vehicle.name}
+                onSelect={setSelected}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       <View className="px-5 pb-8">
-        <Button
-          showArrow
-          disabled={!selected}
-          onPress={handleNext}
-        >Next</Button>
+        <Button showArrow disabled={!selected} onPress={handleNext}>
+          Next
+        </Button>
       </View>
     </SafeAreaView>
   );

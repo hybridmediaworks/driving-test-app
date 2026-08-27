@@ -9,6 +9,7 @@ export type TestItem = {
   image: ImageSourcePropType;
   locked?: boolean;
   result?: "passed" | "failed";
+  showContinue?: boolean;
 };
 
 type TestsRowProps = {
@@ -36,6 +37,7 @@ export function TestsRow({ title, badge, tests, onSeeAll, onTestPress }: TestsRo
             image={test.image}
             locked={test.locked}
             result={test.result}
+            showContinue={test.showContinue}
             onPress={() => onTestPress?.(test.id)}
           />
         ))}

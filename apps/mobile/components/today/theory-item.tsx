@@ -2,6 +2,7 @@ import { Primary, Secondary } from "@/constants/theme";
 import { useIsDark } from "@/hooks/use-is-dark";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Text, TouchableOpacity, View } from "react-native";
+import { Button } from "../ui/button";
 
 type ActionType = "get" | "unlock";
 
@@ -51,14 +52,9 @@ export function TheoryItem({ title, icon, action, onPress }: TheoryItemProps) {
 
       {/* Action */}
       {action === "get" ? (
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={onPress}
-          className="px-4 py-1.5 rounded-full"
-          style={{ backgroundColor: Primary.DEFAULT }}
-        >
-          <Text className="text-white text-sm font-semibold">Get it</Text>
-        </TouchableOpacity>
+        <Button variant="primary" size="sm" onPress={onPress}>
+          Get it
+        </Button>
       ) : (
         <View className="flex-row items-center">
           <Text className="text-sm text-secondary-400 dark:text-secondary-500 font-medium">
