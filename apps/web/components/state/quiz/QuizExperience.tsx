@@ -10,6 +10,7 @@ import type {
   PublicQuizQuestion,
   QuizAnswerCheckResponse,
   QuizAttempt,
+  QuizAttemptStartResponse,
   QuizShowResponse,
 } from "@driving-test-app/shared";
 import Button from "@/components/ui/Button";
@@ -46,6 +47,15 @@ function shuffle<T>(items: T[]): T[] {
 // sends the real answer id, and the correct-answer reveal is matched by id, not display position.
 function shuffleQuiz(questions: PublicQuizQuestion[]): PublicQuizQuestion[] {
   return shuffle(questions);
+}
+
+// Re-orders `source` to match a server-persisted question id order (from starting/resuming an
+// attempt), so a resumed attempt reattaches to the exact same order instead of reshuffling. Drops
+// any id `source` no longer has (e.g. a question was removed after the attempt started) rather
+// than crashing on it.
+function orderQuestionsById(order: number[], source: PublicQuizQuestion[]): PublicQuizQuestion[] {
+  const byId = new Map(source.map((q) => [q.id, q]));
+  return order.map((id) => byId.get(id)).filter((q): q is PublicQuizQuestion => q !== undefined);
 }
 
 function loadStoredFlags(quizId: number): Set<number> {
@@ -189,8 +199,21 @@ function QuizTaker({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [startedAt] = useState(() => Date.now());
 
-  // Questions are shuffled per attempt (re-shuffled on Restart via `restart()` below).
-  const [loadedQuestions, setLoadedQuestions] = useState<PublicQuizQuestion[]>(() => shuffleQuiz(questions));
+  // The attempt this session is writing answers against — set once starting/resuming (below)
+  // resolves. Null on the "View results" path (nothing new is being attempted) or if starting one
+  // failed (e.g. offline), in which case the quiz still works, just without resume.
+  const [attemptId, setAttemptId] = useState<number | null>(null);
+  // Blocks the quiz UI until the attempt has been started/resumed and its question order and any
+  // already-graded answers are in place — skipped entirely for "View results", which populates
+  // loadedQuestions synchronously below instead.
+  const [startingAttempt, setStartingAttempt] = useState(initialView !== "results");
+
+  // Questions are ordered per attempt: server-persisted order once starting/resuming resolves
+  // (see the effect below), or a local shuffle for the "View results" path, which doesn't start a
+  // new attempt and only needs *some* stable order to review answers against.
+  const [loadedQuestions, setLoadedQuestions] = useState<PublicQuizQuestion[]>(() =>
+    initialView === "results" ? shuffleQuiz(questions) : [],
+  );
 
   // Practice mode: each answered question is graded immediately via the check endpoint.
   const [checkedByQuestionId, setCheckedByQuestionId] = useState<Record<number, QuizAnswerCheckResponse>>({});
@@ -453,7 +476,7 @@ function QuizTaker({
       const languageQuery = language !== "en" ? `?language=${language}` : "";
       const res = await api.post<QuizAnswerCheckResponse>(
         `/quizzes/${quiz.id}/questions/${questionId}/check${languageQuery}`,
-        { answer_id: optionId },
+        { answer_id: optionId, attempt_id: attemptId },
       );
       setCheckedByQuestionId((prev) => ({ ...prev, [questionId]: res }));
 
@@ -535,8 +558,8 @@ function QuizTaker({
       return;
     }
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    // A blocking dialog owns the keyboard while it's open.
-    if (showReportDialog || showRestartConfirm) return;
+    // A blocking dialog/popover owns the keyboard while it's open.
+    if (showReportDialog || showRestartConfirm || settingsOpen) return;
 
     // "?" (Shift + /) toggles the reference sheet from anywhere.
     if (e.key === "?") {
@@ -601,7 +624,9 @@ function QuizTaker({
       case "n":
       case "arrowright":
         e.preventDefault();
-        nextQuestion();
+        // Mirrors the on-screen Next button's disabled condition — no skipping an unanswered
+        // furthest question via keyboard when the mouse can't either.
+        if (!(isViewingFurthest && !isAnswered)) nextQuestion();
         break;
       case "p":
       case "arrowleft":
@@ -636,7 +661,7 @@ function QuizTaker({
     return () => window.removeEventListener("keydown", listener);
   }, []);
 
-  function restart() {
+  async function restart() {
     setAnswers({});
     setCurrentIndex(0);
     setFurthestIndex(0);
@@ -645,8 +670,22 @@ function QuizTaker({
     setCheckedByQuestionId({});
     streakRef.current = 0;
     setStreak(0);
-    // Re-shuffle questions for the new attempt, keeping whatever language is currently active.
-    setLoadedQuestions(applyLanguageToOrder(shuffleQuiz(questions), language));
+    setStartingAttempt(true);
+
+    // force_new: true always starts a brand-new attempt — without it, the old (never-submitted)
+    // one would just keep coming back and silently undo the restart on the next reload.
+    try {
+      const res = await api.post<QuizAttemptStartResponse>(`/quizzes/${quiz.id}/attempts/start`, {
+        force_new: true,
+      });
+      setAttemptId(res.attempt.id);
+      setLoadedQuestions(applyLanguageToOrder(orderQuestionsById(res.attempt.question_order, questions), language));
+    } catch {
+      setAttemptId(null);
+      setLoadedQuestions(applyLanguageToOrder(shuffleQuiz(questions), language));
+    } finally {
+      setStartingAttempt(false);
+    }
   }
 
   // "View results" entry: fetch this quiz's latest attempt and rehydrate its graded answers so the
@@ -697,6 +736,57 @@ function QuizTaker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Start (or resume) an attempt as soon as the quiz opens — before any answer is submitted, so
+  // the very first `check` call already has an attempt to persist against. If the caller already
+  // has an in-progress attempt on this quiz from within the last 7 days, this resumes it instead:
+  // same question order, and any already-graded answers rehydrated into local state so the
+  // learner picks up exactly where they left off. Skipped for "View results" (handled above) and
+  // best-effort otherwise — a failure here just falls back to a fresh, non-resumable local shuffle
+  // rather than blocking the quiz.
+  useEffect(() => {
+    if (initialView === "results") return;
+    let cancelled = false;
+
+    api
+      .post<QuizAttemptStartResponse>(`/quizzes/${quiz.id}/attempts/start`)
+      .then((res) => {
+        if (cancelled) return;
+
+        const ordered = orderQuestionsById(res.attempt.question_order, questions);
+        const checked: Record<number, QuizAnswerCheckResponse> = {};
+        const restoredAnswers: Record<number, number> = {};
+        for (const [questionId, check] of Object.entries(res.answers)) {
+          const id = Number(questionId);
+          checked[id] = check;
+          if (check.selected_answer_id != null) restoredAnswers[id] = check.selected_answer_id;
+        }
+        // Navigation only ever advances one question at a time (see nextQuestion/goToQuestion
+        // below), so "how many questions were answered" and "how far the learner got" are always
+        // the same index — land back on the first unanswered one, or the last question if every
+        // one was already answered but never submitted.
+        const resumeIndex = Math.min(Object.keys(checked).length, ordered.length - 1);
+
+        setAttemptId(res.attempt.id);
+        setLoadedQuestions(applyLanguageToOrder(ordered, language));
+        setCheckedByQuestionId(checked);
+        setAnswers(restoredAnswers);
+        setCurrentIndex(resumeIndex);
+        setFurthestIndex(resumeIndex);
+        setStartingAttempt(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAttemptId(null);
+        setLoadedQuestions(applyLanguageToOrder(shuffleQuiz(questions), language));
+        setStartingAttempt(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function submitAttempt() {
     setSubmitting(true);
     setSubmitError(null);
@@ -708,6 +798,7 @@ function QuizTaker({
           answer_id: answerId,
         })),
         duration_seconds: Math.round((Date.now() - startedAt) / 1000),
+        attempt_id: attemptId,
       });
       setAttempt(res.attempt);
       setShowResults(true);
@@ -745,7 +836,7 @@ function QuizTaker({
   }, [toast]);
 
 
-  if (loadingResults) {
+  if (loadingResults || startingAttempt) {
     return (
       <Paragraph className="py-20 text-center" color="muted">
         {t("loadingTest")}

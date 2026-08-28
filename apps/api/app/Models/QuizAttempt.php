@@ -19,6 +19,7 @@ class QuizAttempt extends Model
         'passed',
         'correct_count',
         'total_questions',
+        'question_order',
         'started_at',
         'completed_at',
         'duration_seconds',
@@ -29,6 +30,7 @@ class QuizAttempt extends Model
         return [
             'status' => AttemptStatus::class,
             'passed' => 'boolean',
+            'question_order' => 'array',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

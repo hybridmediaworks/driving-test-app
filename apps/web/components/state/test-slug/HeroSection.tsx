@@ -87,10 +87,18 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
               ))}
             </div>
           )}
-          {quiz?.attempted && !quiz.locked ? (
-            // Already taken this test → let them retake it or revisit their last results, instead of
-            // the first-time "Start" CTA. Restart just opens the player (which begins a fresh
-            // attempt); View results opens it straight on the results screen (?view=results).
+          {quiz?.in_progress && !quiz.locked ? (
+            // Left this test partway through → offer to pick up where they left off instead of
+            // either the first-time "Start" or the completed "Restart/View results" CTA. The quiz
+            // player resumes automatically once opened (it always starts by asking the API for
+            // this same in-progress attempt), this button just makes that state visible up front.
+            <Button className="w-full md:w-fit" href={quizHref}>
+              Continue: {quiz.title} ({quiz.in_progress.answered}/{quiz.in_progress.total}) <ArrowRight />
+            </Button>
+          ) : quiz?.attempted && !quiz.locked ? (
+            // Already completed this test → let them retake it or revisit their last results,
+            // instead of the first-time "Start" CTA. Restart just opens the player (which begins a
+            // fresh attempt); View results opens it straight on the results screen (?view=results).
             <div className="flex w-full flex-col gap-3 sm:flex-row md:w-fit">
               <Button className="w-full sm:w-fit" href={quizHref}>
                 <RotateCcw /> Restart

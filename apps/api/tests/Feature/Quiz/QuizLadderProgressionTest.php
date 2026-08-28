@@ -136,4 +136,64 @@ class QuizLadderProgressionTest extends TestCase
             ->assertJsonPath('data.0.lock_reason', 'premium')
             ->assertJsonPath('data.0.is_next', false);
     }
+
+    public function test_completing_a_quiz_advances_the_ladder_for_a_guest_too(): void
+    {
+        ['q1' => $q1] = $this->buildLadder();
+        $headers = ['X-Guest-Token' => 'guest-ladder-progress'];
+
+        QuizAttempt::query()->create([
+            'guest_token' => 'guest-ladder-progress',
+            'quiz_id' => $q1->id,
+            'status' => AttemptStatus::Completed,
+            'total_questions' => 5,
+            'correct_count' => 5,
+            'score' => 100,
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        $data = $this
+            ->getJson('/api/v1/quizzes?state=AL&vehicle_type=car&test_track=permit_test&per_page=100', $headers)
+            ->assertOk()
+            ->json('data');
+
+        // Same shape as the paid-user equivalent above: Test 1 done → not next; Test 2 now open +
+        // next (still gated by payment for a non-subscriber guest, but that's a separate axis —
+        // this asserts is_next tracks completion, not entitlement).
+        $this->assertTrue($data[0]['attempted']);
+        $this->assertFalse($data[0]['is_next']);
+
+        // A different guest (no matching token) must not see this guest's progress.
+        $stranger = $this
+            ->getJson('/api/v1/quizzes?state=AL&vehicle_type=car&test_track=permit_test&per_page=100', ['X-Guest-Token' => 'someone-else'])
+            ->assertOk()
+            ->json('data');
+        $this->assertFalse($stranger[0]['attempted']);
+        $this->assertTrue($stranger[0]['is_next']);
+    }
+
+    public function test_guest_attempted_and_best_score_show_on_a_plain_non_ladder_listing(): void
+    {
+        ['q1' => $q1] = $this->buildLadder();
+        $headers = ['X-Guest-Token' => 'guest-plain-listing'];
+
+        QuizAttempt::query()->create([
+            'guest_token' => 'guest-plain-listing',
+            'quiz_id' => $q1->id,
+            'status' => AttemptStatus::Completed,
+            'total_questions' => 5,
+            'correct_count' => 5,
+            'score' => 100,
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        // No state/vehicle_type/test_track together — this is the withMax(best_score) path, not
+        // the ResolveQuizProgression ladder path.
+        $this->getJson("/api/v1/quizzes?slug={$q1->slug}", $headers)
+            ->assertOk()
+            ->assertJsonPath('data.0.attempted', true)
+            ->assertJsonPath('data.0.user_passed', true);
+    }
 }

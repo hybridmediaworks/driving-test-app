@@ -104,6 +104,10 @@ export type Quiz = {
   // — show nothing rather than a misleading 0%. Same "only present from the public endpoint" note
   // as `locked` above.
   pass_rate?: number | null;
+  // Present (non-null) when this caller (user, or guest via X-Guest-Token) has a resumable
+  // in-progress attempt on this quiz — drives the "Continue (x/y)" CTA instead of "Start". Same
+  // "only from the public endpoint, requires a resolvable identity" scoping as `attempted` above.
+  in_progress?: { answered: number; total: number } | null;
   category?: QuizCategory;
   quiz_type?: QuizType;
   state?: State;
@@ -155,6 +159,9 @@ export type PublicQuiz = {
   // The current user's pass/fail outcome against the pass line: true = passed, false = failed,
   // null = not attempted (also for guests / on the show response).
   user_passed?: boolean | null;
+  // Present (non-null) when this caller (user, or guest via X-Guest-Token) has a resumable
+  // in-progress attempt on this quiz — drives the "Continue (x/y)" CTA instead of "Start".
+  in_progress: { answered: number; total: number } | null;
   cover_image_url: string | null;
   // A representative question image for listing cards — only present on the public /quizzes list
   // endpoint (where the relation is eager-loaded), absent from the single-quiz show response.
@@ -216,6 +223,25 @@ export type QuizAnswerCheckResponse = {
 // AI tutor reply from POST /quizzes/{quiz}/questions/{question}/assist.
 export type QuizAssistResponse = {
   reply: string;
+};
+
+// Response from POST /quizzes/{quiz}/attempts/start — either resumes the caller's existing
+// in-progress attempt on this quiz (from within the last 7 days) or starts a fresh one.
+// `question_order` is the question id order to render in — captured once at start time so a
+// resumed attempt reattaches to the exact same order. `answers`, keyed by question id, is shaped
+// exactly like QuizAnswerCheckResponse — one entry per question already answered in this attempt.
+export type QuizAttemptStartResponse = {
+  attempt: {
+    id: number;
+    question_order: number[];
+    started_at: string;
+    total_questions: number;
+  };
+  answers: Record<number, QuizAnswerCheckResponse>;
+  // Only present for a guest caller — the identity (existing or newly generated) this attempt is
+  // keyed to. The web client already persists this itself (see lib/api.ts's getGuestToken), so
+  // it's mainly a defensive fallback rather than something callers need to act on.
+  guest_token: string | null;
 };
 
 // Results-screen insight from POST /quizzes/{quiz}/results-insight — weak areas grounded on the

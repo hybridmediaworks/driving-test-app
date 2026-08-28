@@ -95,6 +95,14 @@ class TranslateQuizContent
                     'model' => config('services.grok.model'),
                     'temperature' => 0,
                     'response_format' => ['type' => 'json_object'],
+                    // Reasoning models (e.g. openai/gpt-oss-20b on Groq) otherwise spend most/all
+                    // of their token budget on hidden reasoning and never emit the JSON body,
+                    // which Groq then rejects with json_validate_failed. This is a plain
+                    // translation task with no need for deep reasoning, and max_completion_tokens
+                    // guarantees room left for the actual output regardless of reasoning length.
+                    // Both are no-ops (silently ignored) on models that don't support them.
+                    'reasoning_effort' => 'low',
+                    'max_completion_tokens' => 8000,
                     'messages' => [
                         ['role' => 'system', 'content' => $system],
                         ['role' => 'user', 'content' => json_encode(['questions' => $payload])],

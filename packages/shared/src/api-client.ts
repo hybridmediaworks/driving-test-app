@@ -12,17 +12,23 @@ export class ApiError extends Error {
 export type ApiClientOptions = {
   baseUrl: string;
   getToken: () => string | null | Promise<string | null>;
+  // Anonymous-caller identity, sent as `X-Guest-Token` whenever there's no auth token — lets the
+  // backend resume an in-progress quiz attempt for a guest across page reloads. Optional: a client
+  // that never calls it (e.g. mobile, for now) just never sends the header.
+  getGuestToken?: () => string | null | Promise<string | null>;
 };
 
-export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
+export function createApiClient({ baseUrl, getToken, getGuestToken }: ApiClientOptions) {
   async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const token = await getToken();
+    const guestToken = token ? null : await getGuestToken?.();
     const isFormData = options.body instanceof FormData;
 
     const headers: Record<string, string> = {
       Accept: "application/json",
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(guestToken ? { "X-Guest-Token": guestToken } : {}),
       ...(options.headers as Record<string, string>),
     };
 

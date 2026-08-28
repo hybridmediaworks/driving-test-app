@@ -19,6 +19,9 @@ type Step = {
   /** The current user's result on a completed quiz — "passed" shows a green tick, "failed" a red
    *  mark (top-right of the card). Undefined until the quiz has been completed. */
   outcome?: "passed" | "failed";
+  /** Present when the current learner has a resumable in-progress attempt on this quiz — shows a
+   *  "Continue x/y" line instead of nothing extra under the title. */
+  inProgress?: { answered: number; total: number };
   image?: string;
   status?: string;
   style?: "large";
@@ -187,6 +190,11 @@ export default function StepCard({
           {step.title && (
             <Paragraph color="dark" className="font-semibold">
               {step.title}
+            </Paragraph>
+          )}
+          {step.inProgress && (
+            <Paragraph color="primary" size="xs" className="font-semibold">
+              Continue: {step.inProgress.answered}/{step.inProgress.total}
             </Paragraph>
           )}
           {(step.questions !== undefined ||

@@ -8,12 +8,14 @@ use App\Actions\Quiz\GenerateResultsInsight;
 use App\Actions\Quiz\GradeQuizAttempt;
 use App\Actions\Quiz\GradeSingleAnswer;
 use App\Actions\Quiz\ResolveQuizProgression;
+use App\Actions\Quiz\StartOrResumeQuizAttempt;
 use App\Actions\Quiz\TranslateQuizContent;
 use App\Enums\AttemptStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Public\CheckQuizAnswerRequest;
 use App\Http\Requests\Api\V1\Public\QuizAssistRequest;
 use App\Http\Requests\Api\V1\Public\QuizResultsInsightRequest;
+use App\Http\Requests\Api\V1\Public\StartQuizAttemptRequest;
 use App\Http\Requests\Api\V1\Public\StoreQuizAttemptRequest;
 use App\Http\Requests\Api\V1\Public\StoreQuizQuestionReportRequest;
 use App\Http\Resources\Api\V1\Public\QuizQuestionResource;
@@ -21,6 +23,7 @@ use App\Http\Resources\Api\V1\Public\QuizResource;
 use App\Http\Resources\Api\V1\QuizAttemptResource;
 use App\Models\ChallengeBankItem;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionReport;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -42,7 +45,76 @@ class QuizController extends Controller
         private readonly TranslateQuizContent $translateQuizContent,
         private readonly GenerateResultsInsight $generateResultsInsight,
         private readonly ResolveQuizProgression $resolveProgression,
+        private readonly StartOrResumeQuizAttempt $startOrResumeAttempt,
     ) {}
+
+    /**
+     * A caller's guest identity, read from the `X-Guest-Token` header the web client attaches to
+     * every request once it has generated one (persisted client-side in localStorage), falling
+     * back to the `guest_token` body field some endpoints have historically accepted. Null means
+     * "no guest identity available" — never generates one; callers that need a guaranteed value
+     * for a brand-new guest attempt generate their own fallback at the point of use.
+     */
+    private function resolveGuestToken(Request $request): ?string
+    {
+        $token = $request->header('X-Guest-Token') ?: $request->input('guest_token');
+
+        return is_string($token) && $token !== '' ? $token : null;
+    }
+
+    /**
+     * Sets `in_progress_answered` on each quiz that has a resumable in-progress attempt for this
+     * caller (`user_id` match, or guest-token match when there's no user) — QuizResource reads it
+     * to expose the `in_progress` field that drives the "Continue" CTA. No-op for a caller with no
+     * identity at all (no user, no guest token) and for an empty quiz list.
+     *
+     * @param  iterable<Quiz>  $quizzes
+     */
+    private function attachInProgressSummaries(iterable $quizzes, ?int $userId, Request $request): void
+    {
+        $guestToken = $userId === null ? $this->resolveGuestToken($request) : null;
+        if ($userId === null && $guestToken === null) {
+            return;
+        }
+
+        $quizIds = [];
+        foreach ($quizzes as $quiz) {
+            $quizIds[] = $quiz->id;
+        }
+
+        if ($quizIds === []) {
+            return;
+        }
+
+        $inProgress = QuizAttempt::query()
+            ->where('status', AttemptStatus::InProgress)
+            ->where('updated_at', '>=', now()->subDays(StartOrResumeQuizAttempt::RESUMABLE_WITHIN_DAYS))
+            ->whereIn('quiz_id', $quizIds)
+            ->when(
+                $userId !== null,
+                fn ($q) => $q->where('user_id', $userId),
+                fn ($q) => $q->where('guest_token', $guestToken),
+            )
+            ->withCount('answers')
+            ->get()
+            ->keyBy('quiz_id');
+
+        if ($inProgress->isEmpty()) {
+            return;
+        }
+
+        foreach ($quizzes as $quiz) {
+            $attempt = $inProgress->get($quiz->id);
+            if ($attempt !== null) {
+                $quiz->setAttribute('in_progress_answered', $attempt->answers_count);
+                // From the attempt itself (captured once at start time), not the quiz's own,
+                // separately-maintained `total_questions` — the two can disagree (e.g. content
+                // edited after the attempt started), and the attempt's own count is what the
+                // "x/y" progress label should actually reflect.
+                $quiz->setAttribute('in_progress_total', $attempt->total_questions);
+            }
+        }
+    }
 
     /**
      * List quizzes
@@ -57,17 +129,25 @@ class QuizController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         // No auth:sanctum middleware on this route, so resolve the token holder explicitly (same as
-        // the resource/policy) to surface this user's best score per quiz — the frontend uses it to
-        // drive its progressive "finish one to unlock the next" ladder and the pass/fail badges.
+        // the resource/policy) to surface this caller's best score per quiz — the frontend uses it
+        // to drive its progressive "finish one to unlock the next" ladder and the pass/fail badges.
+        // A guest (no user) is identified the same way attempt resume already works — by whatever
+        // X-Guest-Token this browser has been sending since it first started a quiz — so completing
+        // a test as a guest advances the ladder for them too, not just for logged-in users.
         $userId = $request->user('sanctum')?->id;
+        $guestToken = $userId === null ? $this->resolveGuestToken($request) : null;
 
         $query = Quiz::query()
             ->where('is_active', true)
             ->with(['category', 'quizType', 'state', 'vehicleType', 'previewImageQuestion.media'])
-            ->when($userId !== null, fn ($q) => $q->withMax([
+            ->when($userId !== null || $guestToken !== null, fn ($q) => $q->withMax([
                 'attempts as best_score' => fn ($a) => $a
-                    ->where('user_id', $userId)
-                    ->where('status', AttemptStatus::Completed),
+                    ->where('status', AttemptStatus::Completed)
+                    ->when(
+                        $userId !== null,
+                        fn ($aq) => $aq->where('user_id', $userId),
+                        fn ($aq) => $aq->where('guest_token', $guestToken),
+                    ),
             ], 'score'))
             ->orderBy('is_premium')
             ->orderBy('order_no')
@@ -100,6 +180,8 @@ class QuizController extends Controller
         $perPage = min(max($request->integer('per_page', 15), 5), 100);
         $quizzes = $query->paginate($perPage)->withQueryString();
 
+        $this->attachInProgressSummaries($quizzes, $userId, $request);
+
         // A full ladder request (state + vehicle_type + test_track) gets its progressive lock state
         // resolved server-side so web and mobile render the same "finish one to unlock the next"
         // chain. Other requests (e.g. a `slug` lookup, or a category-only browse) fall back to the
@@ -110,6 +192,7 @@ class QuizController extends Controller
                 $request->string('vehicle_type')->toString(),
                 $request->string('test_track')->toString(),
                 $userId !== null ? $request->user('sanctum') : null,
+                $guestToken,
             );
 
             foreach ($quizzes as $quiz) {
@@ -151,6 +234,7 @@ class QuizController extends Controller
         // means Gate's ambient/default-guard user resolution never sees the Sanctum token even
         // when one is sent, so the entitled user must be resolved explicitly here.
         $unlocked = Gate::forUser($request->user('sanctum'))->allows('attempt', $quiz);
+        $this->attachInProgressSummaries([$quiz], $request->user('sanctum')?->id, $request);
 
         $contentLanguage = 'en';
 
@@ -223,6 +307,57 @@ class QuizController extends Controller
     }
 
     /**
+     * Start or resume a quiz attempt
+     *
+     * Works for both guests and logged-in users, same identity rules as `storeAttempt` below. If
+     * the caller already has an in-progress attempt on this quiz from within the last 7 days, that
+     * same attempt (and its `question_order` and already-graded `answers`) is returned instead of
+     * a new one being created — this is what makes leaving mid-quiz and coming back resumable.
+     * Pass `force_new: true` (used by Restart) to always start a brand-new attempt regardless of
+     * any existing in-progress one.
+     *
+     * `answers` in the response is keyed by question id and shaped exactly like `checkAnswer`'s
+     * response below, one entry per question already answered in this attempt — the client can
+     * rehydrate its practice-mode state from it directly.
+     */
+    public function startAttempt(StartQuizAttemptRequest $request, Quiz $quiz): JsonResponse
+    {
+        $user = $request->user('sanctum');
+        Gate::forUser($user)->authorize('attempt', $quiz);
+        $guestToken = $user === null
+            ? ($this->resolveGuestToken($request) ?? (string) Str::uuid())
+            : null;
+
+        $attempt = ($this->startOrResumeAttempt)($quiz, $user?->id, $guestToken, $request->boolean('force_new'));
+
+        $answers = [];
+        foreach ($attempt->answers as $answer) {
+            $answers[$answer->quiz_question_id] = [
+                'question_id' => $answer->quiz_question_id,
+                'selected_answer_id' => $answer->quiz_answer_id,
+                'correct_answer_id' => $answer->question?->answers->firstWhere('is_correct', true)?->id,
+                'is_correct' => $answer->is_correct,
+                'explanation' => $answer->question?->explanation,
+                'answer_popularity' => null,
+            ];
+        }
+
+        return response()->json([
+            'attempt' => [
+                'id' => $attempt->id,
+                'question_order' => $attempt->question_order,
+                'started_at' => $attempt->started_at,
+                'total_questions' => $attempt->total_questions,
+            ],
+            // Cast to object so an empty attempt serializes as `{}`, not `[]` — PHP's json_encode
+            // can't tell an empty map from an empty list on its own, and the client always expects
+            // an object here regardless of how many questions have been answered so far.
+            'answers' => (object) $answers,
+            'guest_token' => $guestToken,
+        ]);
+    }
+
+    /**
      * Submit and grade a quiz attempt
      *
      * Works for both guests and logged-in users on this same endpoint — send a Bearer token to
@@ -232,10 +367,11 @@ class QuizController extends Controller
      * scored. An `answer_id` that doesn't belong to the given `question_id` is silently treated
      * as unanswered/incorrect rather than accepted.
      *
-     * Guests: the response's `attempt` is not directly exposed with a `guest_token` field today,
-     * but one is generated and stored server-side (from the `guest_token` you send, or a new UUID
-     * if omitted) so a future "claim my guest history on signup" flow can use it — not yet built,
-     * so there is currently no way to retrieve a guest attempt after this response.
+     * Pass the `attempt_id` from `startAttempt` above to close out that same attempt (merging in
+     * any answers already persisted from `checkAnswer` calls) rather than creating a new one.
+     *
+     * Guests: identified via the `X-Guest-Token` header (or the `guest_token` field, kept for
+     * back-compat) — one is generated server-side if neither is sent.
      *
      * The response reveals what `show` above deliberately hid: each answer now includes
      * `is_correct`, `correct_answer_id`, and the question's `explanation`.
@@ -247,7 +383,7 @@ class QuizController extends Controller
         // must be passed explicitly rather than relying on $this->authorize()'s ambient resolution.
         Gate::forUser($user)->authorize('attempt', $quiz);
         $guestToken = $user === null
-            ? ($request->string('guest_token')->toString() ?: (string) Str::uuid())
+            ? ($this->resolveGuestToken($request) ?? (string) Str::uuid())
             : null;
 
         $attempt = ($this->gradeAttempt)(
@@ -256,6 +392,7 @@ class QuizController extends Controller
             $user?->id,
             $guestToken,
             $request->integer('duration_seconds') ?: null,
+            $request->integer('attempt_id') ?: null,
         );
 
         return response()->json(['attempt' => new QuizAttemptResource($attempt)], 201);
@@ -275,10 +412,16 @@ class QuizController extends Controller
      * `show` already cached for this quiz+language; unlike `show`, this endpoint never triggers a
      * fresh translation itself (an answer submission shouldn't have to wait on an LLM call), so it
      * silently falls back to English if the quiz was never viewed in that language first.
+     *
+     * Optional `attempt_id` (from `startAttempt` above) persists this answer against that attempt,
+     * so it's still there if the learner reloads or comes back later — silently ignored if it
+     * doesn't resolve to the caller's own in-progress attempt on this quiz (e.g. it was already
+     * submitted, or belongs to someone else), so grading/feedback still works either way.
      */
     public function checkAnswer(CheckQuizAnswerRequest $request, Quiz $quiz, QuizQuestion $question): JsonResponse
     {
-        Gate::forUser($request->user('sanctum'))->authorize('attempt', $quiz);
+        $user = $request->user('sanctum');
+        Gate::forUser($user)->authorize('attempt', $quiz);
 
         if ($question->quiz_id !== $quiz->id) {
             throw new NotFoundHttpException('This question does not belong to the quiz.');
@@ -287,10 +430,11 @@ class QuizController extends Controller
         $question->load('answers');
         $graded = ($this->gradeSingleAnswer)($question, $request->integer('answer_id'));
 
+        $user = $request->user('sanctum');
+
         // Keep the Challenge Bank live as the learner answers (signed-in users only): a wrong pick
         // files the question for re-practice immediately — no need to finish the whole test — and a
         // correct one clears it.
-        $user = $request->user('sanctum');
         if ($user !== null) {
             if ($graded['is_correct']) {
                 $user->challengeBankItems()->where('quiz_question_id', $question->id)->delete();
@@ -302,6 +446,27 @@ class QuizController extends Controller
                     'updated_at' => now(),
                 ]);
             }
+        }
+
+        // Persist the answer against the in-progress attempt so the player can resume ("Continue").
+        $attemptId = $request->integer('attempt_id') ?: null;
+        if ($attemptId !== null) {
+            $attempt = $this->startOrResumeAttempt->findOwned(
+                $attemptId,
+                $quiz,
+                $user?->id,
+                $user === null ? $this->resolveGuestToken($request) : null,
+            );
+
+            $attempt?->answers()->updateOrCreate(
+                ['quiz_question_id' => $question->id],
+                [
+                    'quiz_answer_id' => $graded['selected_answer_id'],
+                    'is_correct' => $graded['is_correct'],
+                    'answered_at' => now(),
+                ],
+            );
+            $attempt?->touch();
         }
 
         $explanation = $question->explanation;
