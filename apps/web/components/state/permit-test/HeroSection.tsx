@@ -3,12 +3,11 @@
 import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import { Avatar, AvatarImage } from "@/components/ui/Avatar";
+import ReviewerBadge from "@/components/state/ReviewerBadge";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
 import { useStateStats } from "@/lib/useStateStats";
 import { useNextQuizSlug } from "@/lib/usePhaseCompletion";
-import { useReviewerProfile, formatVerifiedMonth } from "@/lib/useReviewerProfile";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 
 const vehicleSlugs: Record<string, string> = {
@@ -20,7 +19,6 @@ const vehicleSlugs: Record<string, string> = {
 export default function HeroSection() {
   const { selectedState, selectedVehicle } = useWebLayout();
   const stats = useStateStats();
-  const reviewer = useReviewerProfile();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
   const nextQuizSlug = useNextQuizSlug("permit_test");
   // Jump straight to the test the learner should take now (first one if nothing's been taken yet,
@@ -89,18 +87,7 @@ export default function HeroSection() {
                 <BadgeCheck className="w-5 h-5 text-green-700" /> No signup
                 required
               </Paragraph>
-              <Paragraph className="flex items-center gap-1.5" size="sm">
-                {reviewer?.photo_url ? (
-                  <Avatar size="sm" className="shrink-0">
-                    <AvatarImage src={reviewer.photo_url} alt="" />
-                  </Avatar>
-                ) : (
-                  <BadgeCheck className="w-5 h-5 text-green-700" />
-                )}
-                {reviewer
-                  ? `Accuracy verified ${formatVerifiedMonth(reviewer.verified_at)} by ${reviewer.name}`
-                  : "Expert-reviewed by our editorial team"}
-              </Paragraph>
+              <ReviewerBadge className="text-sm text-neutral-700" />
             </div>
           </div>
           <div

@@ -70,7 +70,7 @@ const adminNavItems = [
   { title: "Vehicle Types", href: "/admin/vehicle-types", icon: Bike },
   { title: "Quiz Types", href: "/admin/quiz-types", icon: ListChecks },
   { title: "Plans", href: "/admin/plans", icon: CreditCard },
-  { title: "Reviewer Profile", href: "/admin/reviewer-profile", icon: UserCheck },
+  { title: "Experts", href: "/admin/experts", icon: UserCheck },
 ];
 
 export default function AppSidebar() {

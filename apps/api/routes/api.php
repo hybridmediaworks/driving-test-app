@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Admin\AmbientTrackController as AdminAmbientTrac
 use App\Http\Controllers\Api\V1\Admin\AttemptController as AdminAttemptController;
 use App\Http\Controllers\Api\V1\Admin\CheatSheetController as AdminCheatSheetController;
 use App\Http\Controllers\Api\V1\Admin\EmailSubscriberController as AdminEmailSubscriberController;
+use App\Http\Controllers\Api\V1\Admin\ExpertController as AdminExpertController;
 use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
 use App\Http\Controllers\Api\V1\Admin\HandbookController as AdminHandbookController;
 use App\Http\Controllers\Api\V1\Admin\ImageApprovalController;
@@ -13,7 +14,6 @@ use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
 use App\Http\Controllers\Api\V1\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Api\V1\Admin\QuizQuestionController;
 use App\Http\Controllers\Api\V1\Admin\QuizTypeController as AdminQuizTypeController;
-use App\Http\Controllers\Api\V1\Admin\ReviewerProfileController as AdminReviewerProfileController;
 use App\Http\Controllers\Api\V1\Admin\StateController as AdminStateController;
 use App\Http\Controllers\Api\V1\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
@@ -23,26 +23,26 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
 use App\Http\Controllers\Api\V1\BillingController;
+use App\Http\Controllers\Api\V1\ChallengeBankController;
 use App\Http\Controllers\Api\V1\FamilyController;
 use App\Http\Controllers\Api\V1\FlashcardReviewController;
 use App\Http\Controllers\Api\V1\PassGuaranteeClaimController;
 use App\Http\Controllers\Api\V1\Public\AmbientTrackController;
 use App\Http\Controllers\Api\V1\Public\CheatSheetController as PublicCheatSheetController;
 use App\Http\Controllers\Api\V1\Public\EmailSubscriberController;
+use App\Http\Controllers\Api\V1\Public\ExpertController;
 use App\Http\Controllers\Api\V1\Public\FlashcardController as PublicFlashcardController;
 use App\Http\Controllers\Api\V1\Public\HandbookController as PublicHandbookController;
 use App\Http\Controllers\Api\V1\Public\PlanController;
 use App\Http\Controllers\Api\V1\Public\QuizCategoryController as PublicQuizCategoryController;
 use App\Http\Controllers\Api\V1\Public\QuizController as PublicQuizController;
 use App\Http\Controllers\Api\V1\Public\QuizQuestionAssetController;
-use App\Http\Controllers\Api\V1\Public\ReviewerProfileController;
 use App\Http\Controllers\Api\V1\Public\StateController;
 use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
 use App\Http\Controllers\Api\V1\Public\VideoController as PublicVideoController;
 use App\Http\Controllers\Api\V1\QuizAttemptController;
-use App\Http\Controllers\Api\V1\ChallengeBankController;
-use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\RevenueCatWebhookController;
+use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -117,8 +117,10 @@ Route::prefix('v1')->group(function (): void {
 
     Route::get('plans', [PlanController::class, 'index']);
 
-    // Site-wide "accuracy verified by" trust badge shown on state/quiz pages — admin-managed.
-    Route::get('reviewer-profile', [ReviewerProfileController::class, 'show']);
+    // "Verified by" reviewer roster shown on state/quiz trust badges, each with a public
+    // /experts/{slug} profile page. Admin-managed.
+    Route::get('experts', [ExpertController::class, 'index']);
+    Route::get('experts/{expert:slug}', [ExpertController::class, 'show']);
 
     // Public marketing signup — captures an email for the daily-question newsletter from the home
     // page hero. Throttled since it's unauthenticated and writes.
@@ -227,9 +229,8 @@ Route::prefix('v1')->group(function (): void {
             Route::apiResource('plans', AdminPlanController::class)->except(['show']);
             Route::get('plans/{plan}', [AdminPlanController::class, 'show']);
 
-            // Singleton — no id, there's only ever one reviewer profile.
-            Route::get('reviewer-profile', [AdminReviewerProfileController::class, 'show']);
-            Route::put('reviewer-profile', [AdminReviewerProfileController::class, 'update']);
+            Route::apiResource('experts', AdminExpertController::class)->except(['show']);
+            Route::get('experts/{expert}', [AdminExpertController::class, 'show']);
 
             Route::get('attempts', [AdminAttemptController::class, 'index']);
 
