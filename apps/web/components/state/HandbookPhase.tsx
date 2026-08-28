@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { Handbook, PaginatedResponse } from "@driving-test-app/shared";
-import { ArrowDownToLine, BookOpen } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { ArrowDownToLine, BookOpen, Headphones } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import { api } from "@/lib/api";
+import { api, downloadFile, ApiError } from "@/lib/api";
 import { stateAbbreviations } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
@@ -15,6 +15,10 @@ const vehicleSlugs: Record<string, string> = {
   Motorcycle: "motorcycle",
   CDL: "cdl",
 };
+
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
 /**
  * The handbook rung of the phase ladder. The reference shows "Explore <STATE> Driver's Handbook"
@@ -27,6 +31,8 @@ const vehicleSlugs: Record<string, string> = {
 export default function HandbookPhase({ phaseNumber }: { phaseNumber: number }) {
   const { selectedState, selectedVehicle } = useWebLayout();
   const [handbook, setHandbook] = useState<Handbook | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const stateCode = stateAbbreviations[selectedState];
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
@@ -48,6 +54,19 @@ export default function HandbookPhase({ phaseNumber }: { phaseNumber: number }) 
       cancelled = true;
     };
   }, [stateCode, vehicleType]);
+
+  async function handleDownload() {
+    if (!handbook || downloading) return;
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      await downloadFile(`/handbooks/${handbook.id}/download`, `${slugify(handbook.title)}.pdf`);
+    } catch (err) {
+      setDownloadError(err instanceof ApiError ? err.message : "Failed to download the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div>
@@ -81,7 +100,7 @@ export default function HandbookPhase({ phaseNumber }: { phaseNumber: number }) 
           <div className="relative p-6 bg-white rounded-2xl flex flex-col lg:flex-row justify-between items-center xl:gap-4 gap-6 border">
             <div className="min-h-40 lg:min-h-53 shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)] bg-[linear-gradient(157deg,#1E3A8A_0%,var(--color-blue-1000)_100%)] w-full max-w-55 rounded-lg overflow-hidden flex items-stretch">
               <div className="bg-black/25 min-w-2.5" />
-              <div className="pt-6 ps-2.5 pb-5 flex flex-col justify-between gap-5">
+              <div className="pt-6 ps-2.5 pb-5 flex flex-col gap-5">
                 <div className="space-y-2">
                   <Paragraph size="sm" className="text-blue-200!">
                     {selectedState}
@@ -90,15 +109,13 @@ export default function HandbookPhase({ phaseNumber }: { phaseNumber: number }) 
                     {handbook.title}
                   </Paragraph>
                 </div>
-                {handbook.total_words && (
-                  <Paragraph size="xs" color="white">
-                    {handbook.total_words.toLocaleString()} words
-                  </Paragraph>
-                )}
               </div>
             </div>
-            <div className="flex-1 w-full grid md:grid-cols-2 grid-cols-1 gap-4">
-              <div className="p-4 flex gap-4 bg-neutral-50 border rounded-lg">
+            <div className="flex-1 w-full grid md:grid-cols-3 grid-cols-1 gap-4">
+              <Link
+                href={`/handbook/${handbook.id}`}
+                className="p-4 flex gap-4 bg-neutral-50 border rounded-lg hover:bg-neutral-100 transition-colors"
+              >
                 <BookOpen className="min-w-10.5 min-h-10.5 p-2.5 rounded-md border text-blue-700 " />
                 <div>
                   <Paragraph className="font-semibold" color="dark">
@@ -108,30 +125,44 @@ export default function HandbookPhase({ phaseNumber }: { phaseNumber: number }) 
                     Right here, on DriveLane
                   </Paragraph>
                 </div>
-              </div>
+              </Link>
+              <Link
+                href={`/handbook/${handbook.id}?listen=1`}
+                className="p-4 flex gap-4 bg-neutral-50 border rounded-lg hover:bg-neutral-100 transition-colors"
+              >
+                <Headphones className="min-w-10.5 min-h-10.5 p-2.5 rounded-md border text-blue-700 " />
+                <div>
+                  <Paragraph className="font-semibold" color="dark">
+                    Listen to handbook
+                  </Paragraph>
+                  <Paragraph color="dark" size="sm">
+                    The real text, read aloud
+                  </Paragraph>
+                </div>
+              </Link>
               {handbook.pdf_url && (
-                <div className="p-4 flex gap-4 bg-neutral-50 border rounded-lg">
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="p-4 flex gap-4 bg-neutral-50 border rounded-lg hover:bg-neutral-100 transition-colors text-left disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   <ArrowDownToLine className="min-w-10.5 min-h-10.5 p-2.5 rounded-md border text-blue-700 " />
                   <div>
                     <Paragraph className="font-semibold" color="dark">
-                      Download PDF
+                      {downloading ? "Downloading…" : "Download PDF"}
                     </Paragraph>
                     <Paragraph color="dark" size="sm">
                       Full handbook
                     </Paragraph>
                   </div>
-                </div>
+                </button>
               )}
-              <div className="pt-3.5 flex gap-3 md:col-span-2">
-                <Button variant="outline" href={`/handbook/${handbook.id}`}>
-                  Read online
-                </Button>
-                {handbook.pdf_url && (
-                  <Button variant="outline" href={handbook.pdf_url}>
-                    Download PDF
-                  </Button>
-                )}
-              </div>
+              {downloadError && (
+                <Paragraph size="sm" className="text-destructive md:col-span-3">
+                  {downloadError}
+                </Paragraph>
+              )}
             </div>
           </div>
         </div>

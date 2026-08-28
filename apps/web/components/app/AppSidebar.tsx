@@ -20,6 +20,7 @@ import {
   NotebookText,
   Receipt,
   ShieldCheck,
+  UserCheck,
   UserRound,
   Video,
 } from "lucide-react";
@@ -69,6 +70,7 @@ const adminNavItems = [
   { title: "Vehicle Types", href: "/admin/vehicle-types", icon: Bike },
   { title: "Quiz Types", href: "/admin/quiz-types", icon: ListChecks },
   { title: "Plans", href: "/admin/plans", icon: CreditCard },
+  { title: "Reviewer Profile", href: "/admin/reviewer-profile", icon: UserCheck },
 ];
 
 export default function AppSidebar() {

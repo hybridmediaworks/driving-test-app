@@ -3,10 +3,12 @@
 import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
+import { Avatar, AvatarImage } from "@/components/ui/Avatar";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
 import { useStateStats } from "@/lib/useStateStats";
 import { useNextQuizSlug } from "@/lib/usePhaseCompletion";
+import { useReviewerProfile, formatVerifiedMonth } from "@/lib/useReviewerProfile";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 
 const vehicleSlugs: Record<string, string> = {
@@ -18,6 +20,7 @@ const vehicleSlugs: Record<string, string> = {
 export default function HeroSection() {
   const { selectedState, selectedVehicle } = useWebLayout();
   const stats = useStateStats();
+  const reviewer = useReviewerProfile();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
   const nextQuizSlug = useNextQuizSlug("permit_test");
   // Jump straight to the test the learner should take now (first one if nothing's been taken yet,
@@ -62,12 +65,21 @@ export default function HeroSection() {
               <img src="/trustpilotstar.svg" alt="" /> Trustpilot 4.7/5 from
               38,000+ students
             </Paragraph>
-            <Button
-              className="w-full md:w-fit"
-              href={quizHref}
-            >
-              Start Free Practice Test <ArrowRight />
-            </Button>
+            <div className="flex gap-3 flex-wrap">
+              <Button
+                className="w-full md:w-fit"
+                href={quizHref}
+              >
+                Start Free Practice Test <ArrowRight />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full md:w-fit"
+                href={quizzesHref}
+              >
+                View All Tests
+              </Button>
+            </div>
 
             <div className="flex gap-4 flex-wrap">
               <Paragraph className="flex items-center gap-1" size="sm">
@@ -77,9 +89,17 @@ export default function HeroSection() {
                 <BadgeCheck className="w-5 h-5 text-green-700" /> No signup
                 required
               </Paragraph>
-              <Paragraph className="flex items-center gap-1" size="sm">
-                <BadgeCheck className="w-5 h-5 text-green-700" /> Accuracy
-                verified Jan 2026 by M. Reyes
+              <Paragraph className="flex items-center gap-1.5" size="sm">
+                {reviewer?.photo_url ? (
+                  <Avatar size="sm" className="shrink-0">
+                    <AvatarImage src={reviewer.photo_url} alt="" />
+                  </Avatar>
+                ) : (
+                  <BadgeCheck className="w-5 h-5 text-green-700" />
+                )}
+                {reviewer
+                  ? `Accuracy verified ${formatVerifiedMonth(reviewer.verified_at)} by ${reviewer.name}`
+                  : "Expert-reviewed by our editorial team"}
               </Paragraph>
             </div>
           </div>

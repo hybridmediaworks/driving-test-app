@@ -13,6 +13,9 @@ class EmailSubscriber extends Model
         'email',
         'state',
         'source',
+        'unsubscribe_token',
+        'vehicle_type',
+        'last_sent_at',
         'unsubscribed_at',
     ];
 
@@ -20,6 +23,7 @@ class EmailSubscriber extends Model
     {
         return [
             'unsubscribed_at' => 'datetime',
+            'last_sent_at' => 'datetime',
         ];
     }
 }

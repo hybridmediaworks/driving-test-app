@@ -11,9 +11,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CheatSheetController extends Controller
 {
@@ -86,8 +87,12 @@ class CheatSheetController extends Controller
      *
      * Requires the caller to be able to read the full sheet — same gate as the `sections` field
      * on `show`. The PDF is rendered on first request and cached; see `GenerateCheatSheetPdf`.
+     *
+     * Streamed off the media's own disk rather than a local path — in production the PDFs live
+     * on the S3/R2 media disk, where `getPath()` is a bucket-relative key that `response()
+     * ->download()` (a local-filesystem helper) can't read.
      */
-    public function download(Request $request, CheatSheet $cheatSheet): BinaryFileResponse
+    public function download(Request $request, CheatSheet $cheatSheet): StreamedResponse
     {
         // A valid temporary signature (minted by downloadLink() for an already-entitled caller)
         // authorizes the download on its own, so the link can be opened in a plain browser with no
@@ -99,7 +104,11 @@ class CheatSheetController extends Controller
 
         $media = ($this->generatePdf)($cheatSheet);
 
-        return response()->download($media->getPath(), Str::slug($cheatSheet->title).'.pdf');
+        return Storage::disk($media->disk)->download(
+            $media->getPathRelativeToRoot(),
+            Str::slug($cheatSheet->title).'.pdf',
+            ['Content-Type' => 'application/pdf'],
+        );
     }
 
     /**

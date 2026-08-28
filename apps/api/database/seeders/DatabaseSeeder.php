@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             FlashcardSeeder::class,
             CheatSheetSeeder::class,
             PlanSeeder::class,
+            ReviewerProfileSeeder::class,
         ]);
     }
 }

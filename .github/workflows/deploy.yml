@@ -29,6 +29,17 @@ jobs:
           script: |
             set -e
             cd /home/ec2-user/driving-test-app
+
+            # Reclaim disk BEFORE building. Old images, stopped containers and the
+            # BuildKit layer cache (including junk left by previously failed builds)
+            # pile up on the EBS volume and eventually make `pnpm install` fail with
+            # ENOSPC. Pruning first lets a wedged box recover on the next push.
+            df -h /
+            sudo docker container prune -f
+            sudo docker image prune -af
+            sudo docker builder prune -af
+            df -h /
+
             sudo docker build -t driving-test-app:latest .
             sudo docker stop driving-test-app || true
             sudo docker rm driving-test-app || true

@@ -10,8 +10,13 @@ export type StateStats = {
   students_practiced_30d: number;
   questions_answered_total: number;
   avg_session_seconds: number | null;
+  combined_practice_seconds: number;
   peak_hour: number | null;
+  peak_weekday: string | null;
   pass_rate: number | null;
+  daily_students_practiced: number[];
+  daily_questions_answered: number[];
+  daily_combined_practice_seconds: number[];
 };
 
 const vehicleSlugs: Record<string, string> = {
