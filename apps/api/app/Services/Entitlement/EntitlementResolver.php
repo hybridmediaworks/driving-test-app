@@ -63,6 +63,19 @@ class EntitlementResolver
             }
         }
 
+        // Premium bought through the mobile stores (Apple/Google), synced from RevenueCat's webhook
+        // into `revenuecat_premium_until`. Any paid tier unlocks every feature (hasFeature ===
+        // isPremium), so a store subscription is granted the same access as a Stripe one.
+        if ($user->revenuecat_premium_until !== null && $user->revenuecat_premium_until->isFuture()) {
+            return new Entitlement(
+                tier: EntitlementTier::MonthlySubscriber,
+                status: EntitlementStatus::Active,
+                accessUntil: $user->revenuecat_premium_until,
+                familyGroupId: null,
+                isAdmin: $isAdmin,
+            );
+        }
+
         return new Entitlement(
             tier: EntitlementTier::Free,
             status: EntitlementStatus::Expired,

@@ -5,6 +5,7 @@ import { useIsDark } from "@/hooks/use-is-dark";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useEffect, useRef } from "react";
 import {
+  Alert,
   Animated,
   Keyboard,
   Modal,
@@ -21,6 +22,8 @@ import { Heading } from "../ui/heading";
 type Props = {
   visible: boolean;
   onClose: () => void;
+  quizId?: number | string;
+  questionId?: number;
   questionText?: string;
   explanation?: string;
 };
@@ -30,7 +33,7 @@ const QUICK_ACTIONS = [
   { label: "Help me understand this", key: "explain" },
 ];
 
-export function AiChatSheet({ visible, onClose, explanation }: Props) {
+export function AiChatSheet({ visible, onClose, quizId, questionId, explanation }: Props) {
   const isDark = useIsDark();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(800)).current;
@@ -41,11 +44,12 @@ export function AiChatSheet({ visible, onClose, explanation }: Props) {
     messages,
     input,
     setInput,
+    pending,
     scrollRef,
     handleSend,
     handleQuickAction,
     handleClear,
-  } = useAiChat(explanation);
+  } = useAiChat({ quizId, questionId, explanation });
 
   useEffect(() => {
     Animated.parallel([
@@ -64,21 +68,23 @@ export function AiChatSheet({ visible, onClose, explanation }: Props) {
   }, [visible]);
 
   useEffect(() => {
-    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    // iOS Modals don't resize for the keyboard, so we lift the sheet manually. On Android the Modal
+    // window already resizes for the keyboard (adjustResize + edge-to-edge), so adding our own offset
+    // would double-count and squash the sheet — leave keyboardAnim at 0 there.
+    if (Platform.OS !== "ios") return;
 
-    const onShow = Keyboard.addListener(showEvent, (e) => {
+    const onShow = Keyboard.addListener("keyboardWillShow", (e) => {
       Animated.timing(keyboardAnim, {
         toValue: e.endCoordinates.height,
-        duration: Platform.OS === "ios" ? e.duration : 200,
+        duration: e.duration,
         useNativeDriver: false,
       }).start();
     });
 
-    const onHide = Keyboard.addListener(hideEvent, (e) => {
+    const onHide = Keyboard.addListener("keyboardWillHide", (e) => {
       Animated.timing(keyboardAnim, {
         toValue: 0,
-        duration: Platform.OS === "ios" ? e.duration : 200,
+        duration: e.duration,
         useNativeDriver: false,
       }).start();
     });
@@ -170,7 +176,8 @@ export function AiChatSheet({ visible, onClose, explanation }: Props) {
                 key={key}
                 onPress={() => handleQuickAction(key)}
                 activeOpacity={0.75}
-                className="border border-primary-300 rounded-full px-4 py-2"
+                disabled={pending}
+                className={`border border-primary-300 rounded-full px-4 py-2 ${pending ? "opacity-40" : ""}`}
               >
                 <Text className="text-sm font-semibold text-primary">
                   {label}
@@ -190,11 +197,11 @@ export function AiChatSheet({ visible, onClose, explanation }: Props) {
               onSubmitEditing={handleSend}
               returnKeyType="send"
             />
-            <TouchableOpacity onPress={handleSend} activeOpacity={0.7}>
+            <TouchableOpacity onPress={handleSend} activeOpacity={0.7} disabled={pending || !input.trim()}>
               <MaterialIcons
                 name="send"
                 size={20}
-                color={input.trim() ? Primary.DEFAULT : mutedIconColor}
+                color={input.trim() && !pending ? Primary.DEFAULT : mutedIconColor}
               />
             </TouchableOpacity>
           </View>
@@ -204,7 +211,14 @@ export function AiChatSheet({ visible, onClose, explanation }: Props) {
             className="flex-row justify-center gap-5 pt-1"
             style={{ paddingBottom: insets.bottom + 8 }}
           >
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity
+              onPress={() =>
+                Alert.alert(
+                  "How the AI coach works",
+                  "Ask anything about the current question and the AI coach explains it in plain language — with hints and examples. It guides your understanding but won't just hand you the answer, so it actually sticks for the exam.",
+                )
+              }
+            >
               <Text className="text-sm font-semibold text-primary">
                 How it works
               </Text>

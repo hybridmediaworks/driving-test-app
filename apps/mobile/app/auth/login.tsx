@@ -16,8 +16,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Secondary } from "@/constants/theme";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { ApiError } from "@/lib/api";
+import { collectErrors, validateEmail, validatePasswordPresent } from "@/lib/validation";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginScreen() {
@@ -28,12 +30,13 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const { setErrors, clearError, errorFor } = useFormErrors();
 
   async function submit() {
-    const nextErrors: Record<string, string[]> = {};
-    if (!email) nextErrors.email = ["Email is required"];
-    if (!password) nextErrors.password = ["Password is required"];
+    const nextErrors = collectErrors({
+      email: validateEmail(email),
+      password: validatePasswordPresent(password),
+    });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -86,8 +89,11 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoComplete="email"
               value={email}
-              onChangeText={setEmail}
-              error={errors.email?.[0]}
+              onChangeText={(v) => {
+                setEmail(v);
+                clearError("email");
+              }}
+              error={errorFor("email")}
             />
 
             <View className="gap-2">
@@ -96,8 +102,11 @@ export default function LoginScreen() {
                 placeholder="Password"
                 autoComplete="current-password"
                 value={password}
-                onChangeText={setPassword}
-                error={errors.password?.[0]}
+                onChangeText={(v) => {
+                  setPassword(v);
+                  clearError("password");
+                }}
+                error={errorFor("password")}
               />
               <TouchableOpacity
                 onPress={() => router.push("/auth/forgot-password")}

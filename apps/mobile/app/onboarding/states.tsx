@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { toast } from "@/store/toastStore";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,6 +30,7 @@ export default function StatesScreen() {
   function handleNext() {
     setStateStore(selected!);
     if (from === "settings") {
+      toast.success("State updated");
       router.back();
     } else {
       router.push("/onboarding/retake");
@@ -51,7 +53,7 @@ export default function StatesScreen() {
           Which state are you in?
         </Text>
         <Text className="text-secondary-400 text-center mt-3 text-base">
-          We'll show you the official questions for your state's DMV test.
+          We&apos;ll show you the official questions for your state&apos;s DMV test.
         </Text>
 
         <View className="mt-5">
@@ -75,7 +77,7 @@ export default function StatesScreen() {
           <Text className="text-center text-red-500 mt-10">{error}</Text>
         ) : filtered.length === 0 ? (
           <Text className="text-center text-secondary-400 mt-6">
-            No state found for "{query}"
+            No state found for &quot;{query}&quot;
           </Text>
         ) : (
           filtered.map((state) => (

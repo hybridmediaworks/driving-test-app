@@ -1,4 +1,4 @@
-import { ActivityIndicator, Animated, View } from "react-native";
+import { Alert, Animated, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Header from "@/components/header";
@@ -8,19 +8,24 @@ import { HeroCard } from "@/components/today/hero-card";
 import { PromoCard } from "@/components/today/promo-card";
 import { TestsRow } from "@/components/today/tests-row";
 import { TheorySection } from "@/components/today/theory-section";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { Heading } from "@/components/ui/heading";
-import { Primary } from "@/constants/theme";
+import { LoadingState } from "@/components/ui/loading-state";
+import { useAsync } from "@/hooks/use-async";
+import { requestAppRating } from "@/lib/appRating";
+import { openCheatSheetPdf } from "@/lib/cheatSheets";
+import { reportAnIssue } from "@/lib/support";
 import {
   fetchTodayData,
   pickHeroTest,
   TodayData,
   TodayTestCard,
 } from "@/services/api/todayService";
-import { getQuestionsByTestId } from "@/services/testService";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { router } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 
 const EMPTY_DATA: TodayData = {
   testRows: [],
@@ -33,24 +38,12 @@ export default function TodayScreen() {
   const stateCode = useUserStore((s) => s.state) ?? "CA";
   const { testResults } = useProgressStore();
 
-  const [data, setData] = useState<TodayData>(EMPTY_DATA);
-  const [loading, setLoading] = useState(true);
+  const { status, data, refetch } = useAsync(
+    () => fetchTodayData(vehicleType, stateCode),
+    [vehicleType, stateCode],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetchTodayData(vehicleType, stateCode).then((result) => {
-      if (!cancelled) {
-        setData(result);
-        setLoading(false);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [vehicleType, stateCode]);
-
-  const { testRows, theoryItems, examCard } = data;
+  const { testRows, theoryItems, examCard } = data ?? EMPTY_DATA;
 
   const allCards: Record<string, TodayTestCard> = {};
   testRows.forEach((row) => row.tests.forEach((t) => {
@@ -83,27 +76,37 @@ export default function TodayScreen() {
       router.push("/premium");
       return;
     }
-    if (testResults[id]) {
-      const questions = getQuestionsByTestId(id);
-      const total = questions.length;
-      const r = testResults[id];
-      const correct = Math.round((r.score / 100) * total);
-      router.push({
-        pathname: "/test/results/[id]",
-        params: { id, correct: String(correct), total: String(total), missedIds: r.missedIds ?? "" },
-      });
-      return;
-    }
     router.push(`/test/quiz/${id}`);
   };
 
-  if (loading) {
+  if (status === "loading") {
     return (
-      <SafeAreaView
-        className="flex-1 bg-white dark:bg-secondary-900 items-center justify-center"
-        edges={["top"]}
-      >
-        <ActivityIndicator size="large" color={Primary.DEFAULT} />
+      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900" edges={["top"]}>
+        <LoadingState />
+      </SafeAreaView>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900" edges={["top"]}>
+        <ErrorState onRetry={refetch} />
+      </SafeAreaView>
+    );
+  }
+
+  // Loaded successfully, but there's genuinely nothing to show for this vehicle/state.
+  if (testRows.length === 0 && !examCard && theoryItems.length === 0) {
+    return (
+      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900" edges={["top"]}>
+        <Header title="Today" subtitle="DMV Genie" scrollY={scrollY} avatar whiteBackground />
+        <EmptyState
+          icon="fact-check"
+          title="Nothing here yet"
+          message="We couldn't find any tests for your vehicle and state yet. Check back soon or refresh."
+          actionLabel="Refresh"
+          onAction={refetch}
+        />
       </SafeAreaView>
     );
   }
@@ -194,7 +197,11 @@ export default function TodayScreen() {
               onSeeAll={() => router.push("/theory/see-all")}
               onItemPress={(id) => {
                 const item = theoryItems.find((t) => t.id === id);
-                if (item?.action === "unlock") router.push("/premium");
+                if (item?.action === "unlock") {
+                  router.push("/premium");
+                } else {
+                  openCheatSheetPdf(id);
+                }
               }}
             />
           </>
@@ -224,8 +231,26 @@ export default function TodayScreen() {
         {/* Feedback */}
         <FeedbackCard
           question="Enjoying DMV Genie?"
-          onYes={() => {}}
-          onNo={() => {}}
+          onYes={() =>
+            Alert.alert(
+              "Awesome!",
+              "Could you please leave a Google Play review? It really helps a lot.",
+              [
+                { text: "No", style: "cancel" },
+                { text: "Yes", onPress: () => requestAppRating() },
+              ],
+            )
+          }
+          onNo={() =>
+            Alert.alert(
+              "Oh no!",
+              "Could you email us to let us know what you don't like, or if you are having a problem? We love feedback and would love to help.",
+              [
+                { text: "No", style: "cancel" },
+                { text: "Yes", onPress: () => reportAnIssue() },
+              ],
+            )
+          }
         />
       </Animated.ScrollView>
     </SafeAreaView>

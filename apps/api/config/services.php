@@ -72,4 +72,10 @@ return [
         'remix_sign_image_weight' => (int) env('IDEOGRAM_REMIX_SIGN_IMAGE_WEIGHT', 95),
     ],
 
+    // Mobile store subscriptions (Apple / Google) are processed by RevenueCat; its server webhook
+    // authenticates with this shared secret (set the same value in the RevenueCat dashboard).
+    'revenuecat' => [
+        'webhook_auth' => env('REVENUECAT_WEBHOOK_AUTH'),
+    ],
+
 ];

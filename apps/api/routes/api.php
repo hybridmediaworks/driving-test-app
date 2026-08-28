@@ -38,7 +38,9 @@ use App\Http\Controllers\Api\V1\Public\StateController;
 use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
 use App\Http\Controllers\Api\V1\Public\VideoController as PublicVideoController;
 use App\Http\Controllers\Api\V1\QuizAttemptController;
+use App\Http\Controllers\Api\V1\ChallengeBankController;
 use App\Http\Controllers\Api\V1\StatsController;
+use App\Http\Controllers\Api\V1\RevenueCatWebhookController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -84,7 +86,8 @@ Route::prefix('v1')->group(function (): void {
     // by CheatSheetPolicy::readFull, same locked-teaser shape as flashcards.
     Route::get('cheat-sheets', [PublicCheatSheetController::class, 'index']);
     Route::get('cheat-sheets/{cheatSheet}', [PublicCheatSheetController::class, 'show']);
-    Route::get('cheat-sheets/{cheatSheet}/download', [PublicCheatSheetController::class, 'download']);
+    Route::get('cheat-sheets/{cheatSheet}/download', [PublicCheatSheetController::class, 'download'])->name('cheat-sheets.download');
+    Route::get('cheat-sheets/{cheatSheet}/download-link', [PublicCheatSheetController::class, 'downloadLink']);
 
     // Public video browsing — same locked-teaser shape as cheat sheets, gated by VideoPolicy.
     Route::get('videos', [PublicVideoController::class, 'index']);
@@ -114,6 +117,7 @@ Route::prefix('v1')->group(function (): void {
     // No auth:sanctum — Cashier's own VerifyWebhookSignature middleware (applied in the base
     // controller's constructor) is the real guard here, driven by STRIPE_WEBHOOK_SECRET.
     Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+    Route::post('revenuecat/webhook', [RevenueCatWebhookController::class, 'handle']);
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -126,7 +130,12 @@ Route::prefix('v1')->group(function (): void {
         Route::put('/password', [ProfileController::class, 'updatePassword']);
 
         Route::get('/attempts', [QuizAttemptController::class, 'index']);
+        Route::delete('/attempts', [QuizAttemptController::class, 'destroyAll']);
         Route::get('/me/stats', [StatsController::class, 'index']);
+
+        Route::get('challenge-bank', [ChallengeBankController::class, 'index']);
+        Route::post('challenge-bank', [ChallengeBankController::class, 'store']);
+        Route::delete('challenge-bank/{question}', [ChallengeBankController::class, 'destroy']);
 
         Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
             ->middleware('throttle:60,1');

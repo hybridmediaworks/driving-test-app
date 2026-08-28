@@ -148,6 +148,13 @@ export type PublicQuiz = {
   is_premium: boolean;
   locked: boolean;
   pass_rate: number | null;
+  // Whether the current user has already completed this quiz — present on the public /quizzes list
+  // endpoint (false for guests / on the single-quiz show response). Drives the "finish one to
+  // unlock the next" ladder and the Progress tab's completed counts.
+  attempted?: boolean;
+  // The current user's pass/fail outcome against the pass line: true = passed, false = failed,
+  // null = not attempted (also for guests / on the show response).
+  user_passed?: boolean | null;
   cover_image_url: string | null;
   // A representative question image for listing cards — only present on the public /quizzes list
   // endpoint (where the relation is eager-loaded), absent from the single-quiz show response.

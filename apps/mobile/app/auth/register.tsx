@@ -15,8 +15,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Secondary } from "@/constants/theme";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { ApiError } from "@/lib/api";
+import {
+  collectErrors,
+  validateEmail,
+  validateMatch,
+  validateNewPassword,
+  validateRequired,
+} from "@/lib/validation";
 import { useAuthStore } from "@/store/authStore";
 
 export default function RegisterScreen() {
@@ -28,16 +36,15 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const { setErrors, clearError, errorFor } = useFormErrors();
 
   async function submit() {
-    const nextErrors: Record<string, string[]> = {};
-    if (!name) nextErrors.name = ["Name is required"];
-    if (!email) nextErrors.email = ["Email is required"];
-    if (!password) nextErrors.password = ["Password is required"];
-    if (passwordConfirmation !== password) {
-      nextErrors.password_confirmation = ["Passwords do not match"];
-    }
+    const nextErrors = collectErrors({
+      name: validateRequired(name, "Name"),
+      email: validateEmail(email),
+      password: validateNewPassword(password),
+      password_confirmation: validateMatch(passwordConfirmation, password),
+    });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -90,8 +97,11 @@ export default function RegisterScreen() {
               autoCapitalize="words"
               autoComplete="name"
               value={name}
-              onChangeText={setName}
-              error={errors.name?.[0]}
+              onChangeText={(v) => {
+                setName(v);
+                clearError("name");
+              }}
+              error={errorFor("name")}
             />
 
             <Input
@@ -101,8 +111,11 @@ export default function RegisterScreen() {
               autoCapitalize="none"
               autoComplete="email"
               value={email}
-              onChangeText={setEmail}
-              error={errors.email?.[0]}
+              onChangeText={(v) => {
+                setEmail(v);
+                clearError("email");
+              }}
+              error={errorFor("email")}
             />
 
             <PasswordInput
@@ -110,8 +123,11 @@ export default function RegisterScreen() {
               placeholder="Password"
               autoComplete="new-password"
               value={password}
-              onChangeText={setPassword}
-              error={errors.password?.[0]}
+              onChangeText={(v) => {
+                setPassword(v);
+                clearError("password");
+              }}
+              error={errorFor("password")}
             />
 
             <PasswordInput
@@ -119,8 +135,11 @@ export default function RegisterScreen() {
               placeholder="Confirm password"
               autoComplete="new-password"
               value={passwordConfirmation}
-              onChangeText={setPasswordConfirmation}
-              error={errors.password_confirmation?.[0]}
+              onChangeText={(v) => {
+                setPasswordConfirmation(v);
+                clearError("password_confirmation");
+              }}
+              error={errorFor("password_confirmation")}
             />
           </View>
         </ScrollView>

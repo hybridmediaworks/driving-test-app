@@ -14,23 +14,23 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Secondary } from "@/constants/theme";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { api, ApiError } from "@/lib/api";
+import { collectErrors, validateEmail } from "@/lib/validation";
 
 export default function ForgotPasswordScreen() {
   const isDark = useIsDark();
   const iconColor = isDark ? Secondary[100] : Secondary[700];
   const [email, setEmail] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const { setErrors, clearError, errorFor } = useFormErrors();
   const [sent, setSent] = useState(false);
 
   async function submit() {
-    if (!email) {
-      setErrors({ email: ["Email is required"] });
-      return;
-    }
-    setErrors({});
+    const nextErrors = collectErrors({ email: validateEmail(email) });
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     setProcessing(true);
     try {
@@ -87,8 +87,11 @@ export default function ForgotPasswordScreen() {
               autoCapitalize="none"
               autoComplete="email"
               value={email}
-              onChangeText={setEmail}
-              error={errors.email?.[0]}
+              onChangeText={(v) => {
+                setEmail(v);
+                clearError("email");
+              }}
+              error={errorFor("email")}
             />
           </View>
 

@@ -14,22 +14,22 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Secondary } from "@/constants/theme";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { api, ApiError } from "@/lib/api";
+import { collectErrors, validatePasswordPresent } from "@/lib/validation";
 
 export default function ConfirmPasswordScreen() {
   const isDark = useIsDark();
   const iconColor = isDark ? Secondary[100] : Secondary[700];
   const [password, setPassword] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const { setErrors, clearError, errorFor } = useFormErrors();
 
   async function submit() {
-    if (!password) {
-      setErrors({ password: ["Password is required"] });
-      return;
-    }
-    setErrors({});
+    const nextErrors = collectErrors({ password: validatePasswordPresent(password) });
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     setProcessing(true);
     try {
@@ -79,8 +79,11 @@ export default function ConfirmPasswordScreen() {
               placeholder="Password"
               autoComplete="current-password"
               value={password}
-              onChangeText={setPassword}
-              error={errors.password?.[0]}
+              onChangeText={(v) => {
+                setPassword(v);
+                clearError("password");
+              }}
+              error={errorFor("password")}
             />
           </View>
         </ScrollView>

@@ -19,6 +19,7 @@ use App\Http\Requests\Api\V1\Public\StoreQuizQuestionReportRequest;
 use App\Http\Resources\Api\V1\Public\QuizQuestionResource;
 use App\Http\Resources\Api\V1\Public\QuizResource;
 use App\Http\Resources\Api\V1\QuizAttemptResource;
+use App\Models\ChallengeBankItem;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionReport;
@@ -285,6 +286,23 @@ class QuizController extends Controller
 
         $question->load('answers');
         $graded = ($this->gradeSingleAnswer)($question, $request->integer('answer_id'));
+
+        // Keep the Challenge Bank live as the learner answers (signed-in users only): a wrong pick
+        // files the question for re-practice immediately — no need to finish the whole test — and a
+        // correct one clears it.
+        $user = $request->user('sanctum');
+        if ($user !== null) {
+            if ($graded['is_correct']) {
+                $user->challengeBankItems()->where('quiz_question_id', $question->id)->delete();
+            } else {
+                ChallengeBankItem::query()->insertOrIgnore([
+                    'user_id' => $user->id,
+                    'quiz_question_id' => $question->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
         $explanation = $question->explanation;
         $requestedLocale = $request->filled('language') ? $request->string('language')->toString() : null;

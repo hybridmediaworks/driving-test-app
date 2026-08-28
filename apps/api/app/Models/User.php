@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'revenuecat_premium_until' => 'datetime',
         ];
     }
 
@@ -49,6 +50,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function flashcardReviews(): HasMany
     {
         return $this->hasMany(FlashcardReview::class);
+    }
+
+    /**
+     * The learner's Challenge Bank — questions they got wrong and should re-practice.
+     *
+     * @return HasMany<ChallengeBankItem, $this>
+     */
+    public function challengeBankItems(): HasMany
+    {
+        return $this->hasMany(ChallengeBankItem::class);
     }
 
     /**

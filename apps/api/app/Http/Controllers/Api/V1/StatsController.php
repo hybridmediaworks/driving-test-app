@@ -19,12 +19,28 @@ class StatsController extends Controller
      * attempts and flashcard review progress, plus the current size of the study library. There is
      * no per-user cheat-sheet progress to report yet (no read/viewed tracking exists for cheat
      * sheets), so that block is library-size only, same as the flashcard "total" figure.
+     *
+     * Optional `state` (state code, e.g. `CA`) and `vehicle_type` (name, e.g. `car`) query params
+     * scope every attempt-derived figure to quizzes in that state / vehicle type — same filter
+     * semantics as `GET /quizzes` — so a client showing per-state readiness (the mobile Progress
+     * tab) gets an average/pass count that matches its state-scoped test counts. Omitted → global.
      */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $attempts = $user->quizAttempts();
+
+        if ($request->filled('state') || $request->filled('vehicle_type')) {
+            $attempts->whereHas('quiz', function ($query) use ($request) {
+                if ($request->filled('state')) {
+                    $query->whereHas('state', fn ($q) => $q->where('code', $request->string('state')));
+                }
+                if ($request->filled('vehicle_type')) {
+                    $query->whereHas('vehicleType', fn ($q) => $q->where('name', $request->string('vehicle_type')));
+                }
+            });
+        }
         $completedAttempts = (clone $attempts)->where('status', AttemptStatus::Completed);
         $averageScore = (clone $completedAttempts)->avg('score');
 

@@ -14,10 +14,13 @@ interface ProgressState {
   completedTestIds: string[];
   streakDays: number;
   lastStudyDate: string | null;
+  /** "I've read the manual" confirmation on the Progress tab — a local toggle (no backend). */
+  manualRead: boolean;
 
   // Actions
   recordTestResult: (testId: string, score: number, missedIds: string) => void;
   updateStreak: () => void;
+  setManualRead: (value: boolean) => void;
   resetProgress: () => void;
 }
 
@@ -38,6 +41,7 @@ export const useProgressStore = create<ProgressState>()(
       completedTestIds: [],
       streakDays: 0,
       lastStudyDate: null,
+      manualRead: false,
 
       recordTestResult: (testId, score, missedIds) => {
         const result: TestResult = {
@@ -69,12 +73,15 @@ export const useProgressStore = create<ProgressState>()(
         }
       },
 
+      setManualRead: (manualRead) => set({ manualRead }),
+
       resetProgress: () =>
         set({
           testResults: {},
           completedTestIds: [],
           streakDays: 0,
           lastStudyDate: null,
+          manualRead: false,
         }),
     }),
     {
