@@ -1,6 +1,9 @@
 import type { Expert } from "@driving-test-app/shared";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
+// Server-side code runs inside the same container as Laravel, so it always talks to it directly
+// on localhost — NEXT_PUBLIC_API_URL is a relative path ("/api/v1") meant for the browser to hit
+// through nginx, and is invalid as a URL for Node's server-side fetch.
+const API_URL = "http://127.0.0.1:8001/api/v1";
 
 /**
  * Server-side fetch of a single public expert profile for /experts/{slug} (metadata + page body).
