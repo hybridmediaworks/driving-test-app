@@ -9,9 +9,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser as PdfParser;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HandbookController extends Controller
 {
@@ -63,13 +64,21 @@ class HandbookController extends Controller
      * Public — no authentication required, same as show(). Returns the real, DMV-published PDF
      * file with a Content-Disposition that forces a save-to-disk rather than the browser's
      * inline PDF viewer (which is what a bare link to the media URL triggers).
+     *
+     * Streamed off the media's own disk rather than a local path — in production the PDFs live
+     * on the S3/R2 media disk, where `getPath()` is a bucket-relative key that `response()
+     * ->download()` (a local-filesystem helper) can't read.
      */
-    public function download(Handbook $handbook): BinaryFileResponse
+    public function download(Handbook $handbook): StreamedResponse
     {
         $media = $handbook->getFirstMedia(Handbook::MEDIA_COLLECTION_PDF);
         abort_if($media === null, 404);
 
-        return response()->download($media->getPath(), Str::slug($handbook->title).'.pdf');
+        return Storage::disk($media->disk)->download(
+            $media->getPathRelativeToRoot(),
+            Str::slug($handbook->title).'.pdf',
+            ['Content-Type' => 'application/pdf'],
+        );
     }
 
     /**
@@ -89,7 +98,12 @@ class HandbookController extends Controller
         abort_if($media === null, 404);
 
         $data = Cache::rememberForever("handbook-parsed:{$media->id}", function () use ($media) {
-            $pdf = (new PdfParser())->parseFile($media->getPath());
+            // Read the bytes through the media's own disk — in production the PDF lives on the
+            // S3/R2 media disk, where `getPath()` is a bucket-relative key that `parseFile()`
+            // (a bare `file_get_contents()`) can't open.
+            $pdf = (new PdfParser())->parseContent(
+                Storage::disk($media->disk)->get($media->getPathRelativeToRoot())
+            );
 
             // Extract each page's text exactly once — getText() re-walks every page under the
             // hood, and calling it again per-page for chapter detection measured at roughly

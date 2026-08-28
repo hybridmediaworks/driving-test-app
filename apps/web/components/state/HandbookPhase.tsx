@@ -100,7 +100,7 @@ export default function HandbookPhase({ phaseNumber }: { phaseNumber: number }) 
           <div className="relative p-6 bg-white rounded-2xl flex flex-col lg:flex-row justify-between items-center xl:gap-4 gap-6 border">
             <div className="min-h-40 lg:min-h-53 shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)] bg-[linear-gradient(157deg,#1E3A8A_0%,var(--color-blue-1000)_100%)] w-full max-w-55 rounded-lg overflow-hidden flex items-stretch">
               <div className="bg-black/25 min-w-2.5" />
-              <div className="pt-6 ps-2.5 pb-5 flex flex-col justify-between gap-5">
+              <div className="pt-6 ps-2.5 pb-5 flex flex-col gap-5">
                 <div className="space-y-2">
                   <Paragraph size="sm" className="text-blue-200!">
                     {selectedState}
@@ -109,11 +109,6 @@ export default function HandbookPhase({ phaseNumber }: { phaseNumber: number }) 
                     {handbook.title}
                   </Paragraph>
                 </div>
-                {handbook.total_words && (
-                  <Paragraph size="xs" color="white">
-                    {handbook.total_words.toLocaleString()} words
-                  </Paragraph>
-                )}
               </div>
             </div>
             <div className="flex-1 w-full grid md:grid-cols-3 grid-cols-1 gap-4">
