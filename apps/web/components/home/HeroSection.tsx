@@ -87,7 +87,7 @@ export default function HeroSection() {
         {/* Heading + subtitle + CTA — centered, matches Figma node 1659:7496 */}
         <div className="flex flex-col items-center gap-8">
           <div className="flex max-w-[733px] flex-col items-center gap-4 text-center">
-            <Heading as="h1" className="leading-tight! lg:leading-[80px]!">
+            <Heading as="h1" className="leading-tight! lg:leading-[72px]!">
               Ace your{" "}
               <span className="relative inline-block whitespace-nowrap">
                 {displayState}
@@ -122,6 +122,46 @@ export default function HeroSection() {
               {ctaContent}
             </button>
           )}
+        </div>
+
+        {/* Social proof — stars, avatar stack, stat line — sits directly UNDER the CTA
+            and ABOVE the deck, matching the Figma hero order (node 1897:1800). */}
+        <div className="mt-8 flex flex-col items-center gap-4">
+          <div className="flex items-center gap-1">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star
+                key={i}
+                className="size-6 fill-[#FACC15] text-[#FACC15]"
+                strokeWidth={0}
+              />
+            ))}
+          </div>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center">
+              {AVATARS.map((src, i) => (
+                <span
+                  key={src}
+                  className={`relative size-10 overflow-hidden rounded-full border-2 border-white ${
+                    i > 0 ? "-ml-4" : ""
+                  }`}
+                >
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                </span>
+              ))}
+            </div>
+            <p className="text-center text-base leading-6">
+              <span className="font-bold text-neutral-900">4.8M+ drivers</span>
+              <span className="text-neutral-700"> prepared · </span>
+              <span className="font-bold text-neutral-900">97%</span>
+              <span className="text-neutral-700"> pass first try</span>
+            </p>
+          </div>
         </div>
 
         {/* Fanned portrait deck (Figma node 1659:7443) — see GALLERY_CARDS note.
@@ -172,45 +212,6 @@ export default function HeroSection() {
                 />
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Social proof — stars, avatar stack, stat line (Figma node 1659:7486) */}
-        <div className="mt-2 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className="size-6 fill-[#FACC15] text-[#FACC15]"
-                strokeWidth={0}
-              />
-            ))}
-          </div>
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center">
-              {AVATARS.map((src, i) => (
-                <span
-                  key={src}
-                  className={`relative size-10 overflow-hidden rounded-full border-2 border-white ${
-                    i > 0 ? "-ml-[7px]" : ""
-                  }`}
-                >
-                  <Image
-                    src={src}
-                    alt=""
-                    fill
-                    sizes="40px"
-                    className="object-cover"
-                  />
-                </span>
-              ))}
-            </div>
-            <p className="text-center text-base leading-6">
-              <span className="font-bold text-neutral-900">4.8M+ drivers</span>
-              <span className="text-neutral-700"> prepared · </span>
-              <span className="font-bold text-neutral-900">97%</span>
-              <span className="text-neutral-700"> pass first try</span>
-            </p>
           </div>
         </div>
 

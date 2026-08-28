@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import BestAppSection from "@/components/home/BestAppSection";
 import CTASection from "@/components/home/CTASection";
 import FAQSection from "@/components/home/FAQSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import HeroSection from "@/components/home/HeroSection";
 import JourneySection from "@/components/home/JourneySection";
+import LearnSection from "@/components/home/LearnSection";
 import MapSection from "@/components/home/MapSection";
 import SuccessStories from "@/components/home/SuccessStories";
 import ToolkitSection from "@/components/home/ToolkitSection";
@@ -36,12 +38,16 @@ export default function Home() {
       <div className="flex min-h-screen flex-col bg-background">
         <Header variant="home" />
         <main className="flex-1">
+          {/* Order matches Figma "Final Design" (file QOJ34F4OPHkJ5LFrJt9eCA,
+              node 1897:1799), top to bottom. */}
           <HeroSection />
           <WhyChooseSection />
+          <BestAppSection />
           <FeaturesSection />
           <MapSection />
-          <SuccessStories />
           <ToolkitSection />
+          <LearnSection />
+          <SuccessStories />
           <JourneySection />
           <FAQSection />
           <CTASection />

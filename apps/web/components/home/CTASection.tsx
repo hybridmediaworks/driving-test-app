@@ -106,7 +106,7 @@ export default function CTASection({ href }: { href?: string } = {}) {
 
             <Paragraph
               size="xl"
-              className="mt-3 mx-auto max-w-[530px] text-neutral-300!"
+              className="mt-3 max-w-[530px] text-neutral-300!"
             >
               Join 4.8 million drivers who prepared smarter, not harder. Your
               first practice test is completely free.
