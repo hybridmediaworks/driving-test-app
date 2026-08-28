@@ -1,15 +1,16 @@
 import TestIntroHeader from "@/components/intro-header";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { Heading } from "@/components/ui/heading";
+import { LoadingState } from "@/components/ui/loading-state";
 import { Primary } from "@/constants/theme";
 import { fetchTestDetail, TodayTestDetail } from "@/services/api/todayService";
-import { getTestById } from "@/services/testService";
 import { useUserStore } from "@/store/userStore";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Image,
   Share,
@@ -19,10 +20,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 const DESCRIPTION_LINE_LIMIT = 4;
-
-// Cards sourced from the live API carry a numeric id (e.g. "452"); the older mock test bank
-// (still used by pages not yet migrated, like "see all") uses string ids like "car-e1".
-const isApiId = (value: string) => /^\d+$/.test(value);
 
 export default function TestIntroScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,17 +31,22 @@ export default function TestIntroScreen() {
     totalLines !== null && totalLines > DESCRIPTION_LINE_LIMIT;
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const mockTest = isApiId(id) ? undefined : getTestById(id);
   const [apiTest, setApiTest] = useState<TodayTestDetail | undefined>(undefined);
-  const [loading, setLoading] = useState(isApiId(id));
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [reloadNonce, setReloadNonce] = useState(0);
 
   useEffect(() => {
-    if (!isApiId(id)) return;
     let cancelled = false;
     setLoading(true);
+    setFailed(false);
     fetchTestDetail(id)
       .then((detail) => {
         if (!cancelled) setApiTest(detail);
+      })
+      .catch(() => {
+        // Network / server failure — distinct from "the id doesn't exist" so we can offer a retry.
+        if (!cancelled) setFailed(true);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -52,22 +54,36 @@ export default function TestIntroScreen() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadNonce]);
 
-  const test = mockTest ?? apiTest;
+  const test = apiTest;
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900 items-center justify-center">
-        <ActivityIndicator size="large" color={Primary.DEFAULT} />
+      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900">
+        <LoadingState />
+      </SafeAreaView>
+    );
+  }
+
+  if (failed) {
+    return (
+      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900">
+        <ErrorState onRetry={() => setReloadNonce((n) => n + 1)} />
       </SafeAreaView>
     );
   }
 
   if (!test) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900 items-center justify-center">
-        <Text className="text-secondary-500">Test not found.</Text>
+      <SafeAreaView className="flex-1 bg-white dark:bg-secondary-900">
+        <EmptyState
+          icon="search-off"
+          title="Test not found"
+          message="We couldn't find this test. It may have been removed or is no longer available."
+          actionLabel="Go back"
+          onAction={() => router.back()}
+        />
       </SafeAreaView>
     );
   }

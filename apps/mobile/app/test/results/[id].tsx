@@ -3,18 +3,12 @@ import { DonutChart } from "@/components/ui/donut-chart";
 import { Secondary } from "@/constants/theme";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { fetchNextTest, fetchTestDetail } from "@/services/api/todayService";
-import { getNextTest, getTestById } from "@/services/testService";
-import { useChallengeBankStore } from "@/store/challengeBankStore";
 import { useProgressStore } from "@/store/progressStore";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// Cards sourced from the live API carry a numeric id; the older mock test bank (Progress tab,
-// Challenge Bank) uses string ids like "car-e1", or "challenge-bank".
-const isApiId = (value: string) => /^\d+$/.test(value);
 
 export default function ResultsScreen() {
   const { id, correct, total, missedIds, fromQuiz, passed: passedParam } = useLocalSearchParams<{
@@ -28,20 +22,14 @@ export default function ResultsScreen() {
   const router = useRouter();
   const isDark = useIsDark();
   const recordTestResult = useProgressStore((s) => s.recordTestResult);
-  const addMissedQuestions = useChallengeBankStore((s) => s.addMissedQuestions);
 
-  const isApi = isApiId(id);
-  const mockTest = isApi ? undefined : getTestById(id);
-  const mockNextTest = isApi ? undefined : getNextTest(id);
-
-  // Only needed for an API id revisited without a fresh `passed`/next-test hand-off (e.g. tapping
-  // an already-completed card from Today/see-all rather than just finishing the quiz) — a fresh
-  // submission already carries `passed` as a route param and doesn't need either fetch.
+  // Only needed for a quiz revisited without a fresh `passed`/next-test hand-off (e.g. tapping an
+  // already-completed card rather than just finishing the quiz) — a fresh submission already
+  // carries `passed` as a route param and doesn't need either fetch.
   const [apiPassingScore, setApiPassingScore] = useState<number | undefined>(undefined);
   const [apiNextTestId, setApiNextTestId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!isApi) return;
     let cancelled = false;
     if (passedParam === undefined) {
       fetchTestDetail(id).then((d) => {
@@ -54,7 +42,7 @@ export default function ResultsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [id, isApi, passedParam]);
+  }, [id, passedParam]);
 
   const correctCount = Number(correct ?? 0);
   const totalCount = Number(total ?? 0);
@@ -64,19 +52,15 @@ export default function ResultsScreen() {
   const passed =
     passedParam !== undefined
       ? passedParam === "true"
-      : mockTest
-        ? percentage >= mockTest.passingScore
-        : percentage >= (apiPassingScore ?? 80);
-  const nextTestId = isApi ? apiNextTestId : mockNextTest?.id;
+      : percentage >= (apiPassingScore ?? 80);
+  const nextTestId = apiNextTestId;
   const iconColor = isDark ? Secondary[100] : Secondary[700];
 
   useEffect(() => {
     if (fromQuiz !== "true") return;
     recordTestResult(id, percentage, missedIds ?? "");
-    if (missedIds) {
-      const ids = missedIds.split(",").filter(Boolean);
-      if (ids.length > 0) addMissedQuestions(ids);
-    }
+    // Wrong answers are filed into the Challenge Bank server-side by the grader (see
+    // GradeQuizAttempt) when the attempt is submitted — no client-side add needed here.
   }, []);
 
   return (

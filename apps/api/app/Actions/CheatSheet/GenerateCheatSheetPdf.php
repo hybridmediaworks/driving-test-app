@@ -4,6 +4,7 @@ namespace App\Actions\CheatSheet;
 
 use App\Models\CheatSheet;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\CommonMark\CommonMarkConverter;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -21,8 +22,12 @@ class GenerateCheatSheetPdf
      */
     public function __invoke(CheatSheet $cheatSheet): Media
     {
+        // A cached row can outlive its file — e.g. local storage was cleared, or the row was seeded
+        // without the binary (which otherwise 500s the download on a missing file). Trust the cache
+        // only when the file is actually present on its disk; otherwise fall through and re-render.
+        // The PDF collection is singleFile, so re-rendering replaces the dangling row automatically.
         $cached = $cheatSheet->cachedPdfMedia();
-        if ($cached !== null) {
+        if ($cached !== null && Storage::disk($cached->disk)->exists($cached->getPathRelativeToRoot())) {
             return $cached;
         }
 

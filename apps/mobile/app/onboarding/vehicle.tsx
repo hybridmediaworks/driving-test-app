@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { toast } from "@/store/toastStore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -41,6 +42,7 @@ export default function VehicleScreen() {
   function handleNext() {
     setVehicleType(selected as VehicleType);
     if (from === "settings") {
+      toast.success("Vehicle type updated");
       router.back();
     } else {
       router.push("/onboarding/states");
@@ -60,7 +62,7 @@ export default function VehicleScreen() {
           Which vehicle will you drive?
         </Text>
         <Text className="text-secondary-400 text-center mt-3 text-base">
-          We'll customize your practice for your vehicle type
+          We&apos;ll customize your practice for your vehicle type
         </Text>
 
         {loading && vehicleTypes.length === 0 ? (

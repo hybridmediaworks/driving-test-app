@@ -28,8 +28,14 @@ export function ProgressItem({
 }: ProgressItemProps) {
   return (
     <TouchableOpacity
-      activeOpacity={type === "nav" ? 0.7 : 1}
-      onPress={type === "nav" ? onPress : undefined}
+      activeOpacity={type === "manual" ? 1 : 0.7}
+      onPress={
+        type === "nav"
+          ? onPress
+          : type === "manual"
+            ? () => onCheckChange?.(!checked)
+            : undefined
+      }
       className={`flex-row items-center py-4 border-t border-secondary-200 dark:border-secondary-800 ${
         !isLast ? "border-t border-secondary-200 dark:border-secondary-800" : ""
       }`}

@@ -1,7 +1,9 @@
 import { Primary, Secondary, White } from "@/constants/theme";
 import { Switch } from "@/components/ui/switch";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { requestAppRating } from "@/lib/appRating";
 import { useThemeStore } from "@/store/themeStore";
+import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import {
   Alert,
@@ -17,6 +19,12 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   onRestart: () => void;
+  // Opens the "Report a mistake" form. Only wired for live-API quizzes (mock questions have no DB
+  // row to report against); when omitted, the menu falls back to a simple acknowledgement.
+  onReport?: () => void;
+  // Adds the current question to the Challenge Bank. Only wired for live-API quizzes (mock
+  // questions have no DB row); when omitted, the menu falls back to a simple acknowledgement.
+  onAddToChallengeBank?: () => void;
 };
 
 type MenuItem =
@@ -35,7 +43,7 @@ type MenuItem =
       onToggle: (v: boolean) => void;
     };
 
-export function QuizMenuSheet({ visible, onClose, onRestart }: Props) {
+export function QuizMenuSheet({ visible, onClose, onRestart, onReport, onAddToChallengeBank }: Props) {
   const isDark = useIsDark();
   const { preference, setPreference } = useThemeStore();
   const handleNightModeToggle = (value: boolean) => {
@@ -90,10 +98,14 @@ export function QuizMenuSheet({ visible, onClose, onRestart }: Props) {
       label: "Report a Problem",
       onPress: () => {
         onClose();
-        Alert.alert(
-          "Report a Problem",
-          "Thank you — your report has been received.",
-        );
+        if (onReport) {
+          onReport();
+        } else {
+          Alert.alert(
+            "Report a Problem",
+            "Thank you — your report has been received.",
+          );
+        }
       },
     },
     {
@@ -101,7 +113,7 @@ export function QuizMenuSheet({ visible, onClose, onRestart }: Props) {
       label: "Enjoying DMV Genie?",
       onPress: () => {
         onClose();
-        Alert.alert("Rate Us", "Please rate us on the App Store!");
+        requestAppRating();
       },
     },
     {
@@ -112,26 +124,29 @@ export function QuizMenuSheet({ visible, onClose, onRestart }: Props) {
       rightColor: Primary.DEFAULT,
       onPress: () => {
         onClose();
-        Alert.alert("Premium", "Upgrade to unlock all features.");
+        router.push("/premium");
       },
     },
-    {
-      kind: "action",
-      label: "Add to Challenge Bank™",
-      onPress: () => {
-        onClose();
-        Alert.alert("Challenge Bank", "Question added to your Challenge Bank.");
-      },
-    },
+    // Only shown when the screen can actually save the question (live-API quizzes). Mock-bank
+    // questions have no DB row to reference, so the option is hidden there rather than faking it.
+    ...(onAddToChallengeBank
+      ? [
+          {
+            kind: "action" as const,
+            label: "Add to Challenge Bank™",
+            onPress: () => {
+              onClose();
+              onAddToChallengeBank();
+            },
+          },
+        ]
+      : []),
     {
       kind: "action",
       label: "PDF Cheat Sheets",
       onPress: () => {
         onClose();
-        Alert.alert(
-          "PDF Cheat Sheets",
-          "Download cheat sheets from the Theory section.",
-        );
+        router.push("/theory/see-all");
       },
     },
     {

@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -88,11 +89,36 @@ class CheatSheetController extends Controller
      */
     public function download(Request $request, CheatSheet $cheatSheet): BinaryFileResponse
     {
-        // Same reason as show() above — no auth:sanctum middleware on this route.
-        Gate::forUser($request->user('sanctum'))->authorize('readFull', $cheatSheet);
+        // A valid temporary signature (minted by downloadLink() for an already-entitled caller)
+        // authorizes the download on its own, so the link can be opened in a plain browser with no
+        // bearer token. Without one, fall back to the normal entitlement gate. (No auth:sanctum
+        // middleware on this route — same reason as show() above.)
+        if (! $request->hasValidSignature()) {
+            Gate::forUser($request->user('sanctum'))->authorize('readFull', $cheatSheet);
+        }
 
         $media = ($this->generatePdf)($cheatSheet);
 
         return response()->download($media->getPath(), Str::slug($cheatSheet->title).'.pdf');
+    }
+
+    /**
+     * Short-lived signed download link
+     *
+     * A mobile app can't attach its bearer token when it hands a URL off to the system browser, so
+     * this checks entitlement once (with the caller's token) and returns a temporary *signed* URL to
+     * `download` that authorizes itself for the next few minutes — no token needed to open it.
+     */
+    public function downloadLink(Request $request, CheatSheet $cheatSheet): JsonResponse
+    {
+        Gate::forUser($request->user('sanctum'))->authorize('readFull', $cheatSheet);
+
+        $url = URL::temporarySignedRoute(
+            'cheat-sheets.download',
+            now()->addMinutes(15),
+            ['cheatSheet' => $cheatSheet->id],
+        );
+
+        return response()->json(['url' => $url]);
     }
 }

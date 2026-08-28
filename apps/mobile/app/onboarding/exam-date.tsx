@@ -1,6 +1,7 @@
 import { View, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
+import { toast } from "@/store/toastStore";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export default function ExamDateScreen() {
   function handleNext() {
     setExamDateRange(selected as ExamDateRange);
     if (from === "settings") {
+      toast.success("Exam date updated");
       router.back();
     } else {
       router.push("/onboarding/reminders");
@@ -43,7 +45,7 @@ export default function ExamDateScreen() {
           When is your exam?
         </Text>
         <Text className="text-secondary-400 text-center mt-3 text-base">
-          Select how many days are left before your DMV exam, and we'll build your study plan.
+          Select how many days are left before your DMV exam, and we&apos;ll build your study plan.
         </Text>
 
         <View className="mt-8 gap-3">

@@ -4,6 +4,7 @@ import type {
   PublicCheatSheet,
   PublicQuiz,
   QuizAnswerCheckResponse,
+  QuizAssistResponse,
   QuizAttempt,
   QuizCategory,
   QuizShowResponse,
@@ -35,8 +36,14 @@ export async function fetchQuizzes(params: {
   return res.data;
 }
 
-export async function fetchQuiz(id: number | string): Promise<QuizShowResponse> {
-  return api.get<QuizShowResponse>(`/quizzes/${id}`);
+export async function fetchQuiz(
+  id: number | string,
+  language?: string,
+): Promise<QuizShowResponse> {
+  // Only send `language` for a non-English choice; the backend treats its absence as the English
+  // source and translates on demand for anything else (see SUPPORTED_LOCALES).
+  const qs = buildQuery({ language: language && language !== "en" ? language : undefined });
+  return api.get<QuizShowResponse>(`/quizzes/${id}${qs}`);
 }
 
 export async function fetchQuizCategories(): Promise<QuizCategory[]> {
@@ -66,10 +73,56 @@ export async function checkAnswer(
   quizId: number | string,
   questionId: number,
   answerId: number,
+  language?: string,
 ): Promise<QuizAnswerCheckResponse> {
   return api.post<QuizAnswerCheckResponse>(`/quizzes/${quizId}/questions/${questionId}/check`, {
     answer_id: answerId,
+    // Translates the returned explanation to match the questions the learner is reading.
+    ...(language && language !== "en" ? { language } : {}),
   });
+}
+
+export type QuestionReportPayload = {
+  comment: string;
+  flagged: {
+    question: boolean;
+    image: boolean;
+    hint: boolean;
+    answers: number[];
+  };
+  reporter_name: string | null;
+  reporter_email: string | null;
+};
+
+/**
+ * Report a mistake/typo in a question (wrong question text, bad image, misleading hint, or a
+ * specific answer). Mirrors the web "Report a mistake" dialog. `comment` is required.
+ */
+export async function reportQuestion(
+  quizId: number | string,
+  questionId: number,
+  payload: QuestionReportPayload,
+): Promise<void> {
+  await api.post(`/quizzes/${quizId}/questions/${questionId}/report`, payload);
+}
+
+/**
+ * "Ask DMV Genie AI" — RAG-grounded tutor for the current question. `hint` mode returns one short
+ * nudge (no message needed); `ask` mode answers the learner's follow-up `message` about the
+ * question. The backend never reveals which option is correct. Throws ApiError(503) when the AI
+ * tutor isn't configured, and ApiError(429) when the per-minute rate limit is hit.
+ */
+export async function askQuestionAssist(
+  quizId: number | string,
+  questionId: number,
+  mode: "hint" | "ask",
+  message?: string,
+): Promise<string> {
+  const res = await api.post<QuizAssistResponse>(
+    `/quizzes/${quizId}/questions/${questionId}/assist`,
+    { mode, message },
+  );
+  return res.reply;
 }
 
 /**

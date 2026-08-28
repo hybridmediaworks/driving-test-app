@@ -1,14 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Primary } from "@/constants/theme";
+import * as Purchases from "@/services/purchases";
 import { usePlanStore } from "@/store/planStore";
+import { toast } from "@/store/toastStore";
 import { FontAwesome5, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   Modal,
   Text,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -39,6 +42,50 @@ export function TrialSheet({ visible, onClose }: Props) {
   const plansLoading = usePlanStore((s) => s.loading);
   const plansError = usePlanStore((s) => s.error);
   const fetchPlans = usePlanStore((s) => s.fetchPlans);
+
+  const [busy, setBusy] = useState(false);
+
+  const handleSubscribe = async () => {
+    // Expo Go / missing keys: real store purchases need a dev/prod build configured with RevenueCat.
+    if (!Purchases.isAvailable()) {
+      toast.info("Subscriptions open in the full app build — coming soon here.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { cancelled, isPremium } = await Purchases.purchase();
+      if (cancelled) return;
+      if (isPremium) {
+        onClose();
+        toast.success("You're Premium — enjoy full access! 🎉");
+      } else {
+        toast.error("Purchase didn't complete — please try again.");
+      }
+    } catch {
+      toast.error("Couldn't complete the purchase. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!Purchases.isAvailable()) {
+      toast.info("Restore is available in the full app build.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { isPremium } = await Purchases.restore();
+      onClose();
+      toast[isPremium ? "success" : "info"](
+        isPremium ? "Premium restored — welcome back! 🎉" : "No previous purchase found to restore.",
+      );
+    } catch {
+      toast.error("Couldn't restore purchases. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     fetchPlans();
@@ -220,11 +267,12 @@ export function TrialSheet({ visible, onClose }: Props) {
             <Button
               variant="primary"
               size="lg"
-              showArrow
+              showArrow={!busy}
+              disabled={busy}
               className="w-full mt-3"
-              onPress={() => console.log("start trial", trialPlan.key)}
+              onPress={handleSubscribe}
             >
-              Try for $0.00
+              {busy ? "Please wait…" : "Try for $0.00"}
             </Button>
 
             <View className="flex-row justify-center items-center gap-1.5 mt-3">
@@ -238,9 +286,11 @@ export function TrialSheet({ visible, onClose }: Props) {
               <Text style={{ color: MUTED }} className="text-xs">
                 Terms &amp; Privacy
               </Text>
-              <Text style={{ color: MUTED }} className="text-xs">
-                Restore
-              </Text>
+              <TouchableOpacity onPress={handleRestore} disabled={busy}>
+                <Text style={{ color: MUTED }} className="text-xs">
+                  Restore
+                </Text>
+              </TouchableOpacity>
               <Text style={{ color: MUTED }} className="text-xs">
                 Pass Guarantee
               </Text>

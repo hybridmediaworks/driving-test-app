@@ -4,12 +4,16 @@ import { Heading } from "@/components/ui/heading";
 import { Primary, Secondary } from "@/constants/theme";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { requestAppRating } from "@/lib/appRating";
+import { reportAnIssue } from "@/lib/support";
 import { useAuthStore } from "@/store/authStore";
+import { resetAllResults } from "@/services/api/progressService";
 import { useProgressStore } from "@/store/progressStore";
 import { useChallengeBankStore } from "@/store/challengeBankStore";
 import { useReferenceDataStore } from "@/store/referenceDataStore";
 import { useThemeStore } from "@/store/themeStore";
-import { useUserStore } from "@/store/userStore";
+import { toast } from "@/store/toastStore";
+import { useUserStore, type TestLanguage } from "@/store/userStore";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -141,7 +145,8 @@ const EXAM_DATE_LABELS: Record<string, string> = {
 
 export default function SettingsScreen() {
   const { preference, setPreference } = useThemeStore();
-  const { vehicleType, state, examDateRange } = useUserStore();
+  const { vehicleType, state, examDateRange, testLanguage, setTestLanguage } =
+    useUserStore();
   const { resetProgress } = useProgressStore();
   const { clearAll: clearChallengeBank } = useChallengeBankStore();
   const { user, logout } = useAuthStore();
@@ -158,7 +163,6 @@ export default function SettingsScreen() {
   const isDark = preference === "dark";
   const [pushEnabled, setPushEnabled] = useState(false);
   const [resetModalVisible, setResetModalVisible] = useState(false);
-  const [language, setLanguage] = useState<"en" | "es">("en");
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
@@ -166,6 +170,7 @@ export default function SettingsScreen() {
     setLoggingOut(true);
     try {
       await logout();
+      toast.success("Logged out");
     } finally {
       setLoggingOut(false);
     }
@@ -188,6 +193,16 @@ export default function SettingsScreen() {
   };
 
   const handleReset = () => setResetModalVisible(true);
+
+  const handleTestLanguageChange = (language: TestLanguage) => {
+    if (language === testLanguage) return; // already selected — no toast, no reload churn
+    setTestLanguage(language);
+    toast.success(
+      language === "es"
+        ? "Test language changed to Spanish"
+        : "Test language changed to English",
+    );
+  };
   const scrollY = useRef(new Animated.Value(0)).current;
 
   return (
@@ -257,7 +272,7 @@ export default function SettingsScreen() {
             label="Premium Subscription"
             right={
               <TouchableOpacity
-                onPress={() => {}}
+                onPress={() => router.push("/premium")}
                 className="flex-row items-center"
                 style={{ gap: 2 }}
               >
@@ -291,7 +306,15 @@ export default function SettingsScreen() {
             label="Push notification"
             isLast
             right={
-              <Switch value={pushEnabled} onValueChange={setPushEnabled} />
+              <Switch
+                value={pushEnabled}
+                onValueChange={(value) => {
+                  setPushEnabled(value);
+                  toast.success(
+                    value ? "Push notifications on" : "Push notifications off",
+                  );
+                }}
+              />
             }
           />
         </View>
@@ -318,7 +341,10 @@ export default function SettingsScreen() {
             right={
               <Switch
                 value={isDark}
-                onValueChange={(val) => setPreference(val ? "dark" : "light")}
+                onValueChange={(val) => {
+                  setPreference(val ? "dark" : "light");
+                  toast.success(val ? "Night mode on" : "Night mode off");
+                }}
               />
             }
           />
@@ -328,14 +354,14 @@ export default function SettingsScreen() {
             right={
               <View className="flex-row items-center" style={{ gap: 14 }}>
                 <RadioButton
-                  selected={language === "en"}
-                  onPress={() => setLanguage("en")}
+                  selected={testLanguage === "en"}
+                  onPress={() => handleTestLanguageChange("en")}
                   label="En"
                   isDark={isDark}
                 />
                 <RadioButton
-                  selected={language === "es"}
-                  onPress={() => setLanguage("es")}
+                  selected={testLanguage === "es"}
+                  onPress={() => handleTestLanguageChange("es")}
                   label="Es"
                   isDark={isDark}
                 />
@@ -366,12 +392,12 @@ export default function SettingsScreen() {
           <ActionRow
             label="Leave a Review"
             icon="star-border"
-            onPress={() => {}}
+            onPress={() => requestAppRating()}
           />
           <ActionRow
             label="Report an Issue"
             icon="error-outline"
-            onPress={() => {}}
+            onPress={() => reportAnIssue()}
             isLast
           />
         </View>
@@ -383,10 +409,19 @@ export default function SettingsScreen() {
         description="Are you sure you want to reset all your test results? This cannot be undone."
         confirmText="Reset"
         destructive
-        onConfirm={() => {
+        onConfirm={async () => {
+          setResetModalVisible(false);
+          try {
+            // Wipe the real progress on the server (attempts + Challenge Bank) — the Progress bar
+            // and pass counts are derived from these, so local-only clears left them unchanged.
+            await resetAllResults();
+          } catch {
+            toast.error("Couldn't reset results — please try again");
+            return;
+          }
           resetProgress();
           clearChallengeBank();
-          setResetModalVisible(false);
+          toast.success("All results have been reset");
         }}
         onCancel={() => setResetModalVisible(false)}
       />

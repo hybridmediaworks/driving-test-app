@@ -15,8 +15,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Secondary } from "@/constants/theme";
+import { useFormErrors } from "@/hooks/use-form-errors";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { api, ApiError } from "@/lib/api";
+import {
+  collectErrors,
+  validateEmail,
+  validateMatch,
+  validateNewPassword,
+  validateRequired,
+} from "@/lib/validation";
 
 export default function ResetPasswordScreen() {
   const isDark = useIsDark();
@@ -26,16 +34,15 @@ export default function ResetPasswordScreen() {
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const { setErrors, clearError, errorFor } = useFormErrors();
 
   async function submit() {
-    const nextErrors: Record<string, string[]> = {};
-    if (!token) nextErrors.token = ["Reset code is required"];
-    if (!email) nextErrors.email = ["Email is required"];
-    if (!password) nextErrors.password = ["Password is required"];
-    if (passwordConfirmation !== password) {
-      nextErrors.password_confirmation = ["Passwords do not match"];
-    }
+    const nextErrors = collectErrors({
+      token: validateRequired(token, "Reset code"),
+      email: validateEmail(email),
+      password: validateNewPassword(password),
+      password_confirmation: validateMatch(passwordConfirmation, password),
+    });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -91,8 +98,11 @@ export default function ResetPasswordScreen() {
               placeholder="Paste the code from your email"
               autoCapitalize="none"
               value={token}
-              onChangeText={setToken}
-              error={errors.token?.[0]}
+              onChangeText={(v) => {
+                setToken(v);
+                clearError("token");
+              }}
+              error={errorFor("token")}
             />
 
             <Input
@@ -102,8 +112,11 @@ export default function ResetPasswordScreen() {
               autoCapitalize="none"
               autoComplete="email"
               value={email}
-              onChangeText={setEmail}
-              error={errors.email?.[0]}
+              onChangeText={(v) => {
+                setEmail(v);
+                clearError("email");
+              }}
+              error={errorFor("email")}
             />
 
             <PasswordInput
@@ -111,8 +124,11 @@ export default function ResetPasswordScreen() {
               placeholder="Password"
               autoComplete="new-password"
               value={password}
-              onChangeText={setPassword}
-              error={errors.password?.[0]}
+              onChangeText={(v) => {
+                setPassword(v);
+                clearError("password");
+              }}
+              error={errorFor("password")}
             />
 
             <PasswordInput
@@ -120,8 +136,11 @@ export default function ResetPasswordScreen() {
               placeholder="Confirm password"
               autoComplete="new-password"
               value={passwordConfirmation}
-              onChangeText={setPasswordConfirmation}
-              error={errors.password_confirmation?.[0]}
+              onChangeText={(v) => {
+                setPasswordConfirmation(v);
+                clearError("password_confirmation");
+              }}
+              error={errorFor("password_confirmation")}
             />
           </View>
         </ScrollView>

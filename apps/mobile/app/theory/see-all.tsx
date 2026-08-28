@@ -1,12 +1,16 @@
 import IntroHeader from "@/components/intro-header";
 import { TheoryCard } from "@/components/today/theory-card";
 import { Button } from "@/components/ui/button";
-import { Primary } from "@/constants/theme";
-import { fetchTheoryList, TheoryListItem } from "@/services/api/todayService";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingState } from "@/components/ui/loading-state";
+import { useAsync } from "@/hooks/use-async";
+import { openCheatSheetPdf } from "@/lib/cheatSheets";
+import { fetchTheoryList } from "@/services/api/todayService";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Text, View } from "react-native";
+import { useRef } from "react";
+import { Animated, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const SUBTITLE =
@@ -16,28 +20,52 @@ export default function TheorySeeAllScreen() {
   const router = useRouter();
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
   const stateCode = useUserStore((s) => s.state) ?? "CA";
-  const [items, setItems] = useState<TheoryListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { status, data, refetch } = useAsync(
+    () => fetchTheoryList(vehicleType, stateCode),
+    [vehicleType, stateCode],
+  );
+  const items = data ?? [];
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetchTheoryList(vehicleType, stateCode).then((result) => {
-      if (!cancelled) {
-        setItems(result);
-        setLoading(false);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [vehicleType, stateCode]);
-
-  if (loading) {
+  if (status === "loading") {
     return (
-      <SafeAreaView className="flex-1 bg-white-off dark:bg-secondary-900 items-center justify-center">
-        <ActivityIndicator size="large" color={Primary.DEFAULT} />
+      <SafeAreaView
+        className="flex-1 bg-white-off dark:bg-secondary-900"
+        edges={["top", "bottom"]}
+      >
+        <LoadingState />
+      </SafeAreaView>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <SafeAreaView
+        className="flex-1 bg-white-off dark:bg-secondary-900"
+        edges={["top", "bottom"]}
+      >
+        <ErrorState onRetry={refetch} />
+      </SafeAreaView>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <SafeAreaView
+        className="flex-1 bg-white-off dark:bg-secondary-900"
+        edges={["top", "bottom"]}
+      >
+        <IntroHeader
+          backUrl={() => router.back()}
+          title="Theory"
+          description="0 PDFs"
+          scrollY={scrollY}
+        />
+        <EmptyState
+          icon="picture-as-pdf"
+          title="No cheat sheets yet"
+          message="There are no theory PDFs for your vehicle and state yet. Check back soon."
+        />
       </SafeAreaView>
     );
   }
@@ -80,7 +108,9 @@ export default function TheorySeeAllScreen() {
             title={item.title}
             description={item.description}
             locked={item.locked}
-            onPress={() => (item.locked ? router.push("/premium") : undefined)}
+            onPress={() =>
+              item.locked ? router.push("/premium") : openCheatSheetPdf(item.id)
+            }
           />
         ))}
       </Animated.ScrollView>

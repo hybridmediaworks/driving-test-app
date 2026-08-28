@@ -11,6 +11,9 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import 'react-native-reanimated';
 
+import { ErrorBoundary } from '@/components/error-boundary';
+import { Toast } from '@/components/ui/toast';
+import * as Purchases from '@/services/purchases';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 
@@ -42,6 +45,17 @@ export default function RootLayout() {
     hydrate();
   }, []);
 
+  // Tie RevenueCat purchases to the backend user id (its webhook maps back via `app_user_id`).
+  // No-ops in Expo Go / when keys aren't configured.
+  const user = useAuthStore((s) => s.user);
+  useEffect(() => {
+    if (user?.id != null) {
+      Purchases.configure(String(user.id));
+    } else {
+      Purchases.logOut();
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
@@ -55,21 +69,25 @@ export default function RootLayout() {
   return (
     <View className="flex-1">
       <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="test/see-all" options={{ headerShown: false }} />
-          <Stack.Screen name="theory/see-all" options={{ headerShown: false }} />
-          <Stack.Screen name="test/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="test/quiz/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="test/results/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="test/review/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          <Stack.Screen name="premium" options={{ presentation: 'modal', headerShown: false }} />
-          <Stack.Screen name="challange-bank/review" options={{ headerShown: false }} />
-        </Stack>
+        <ErrorBoundary>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+            <Stack.Screen name="auth" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="test/see-all" options={{ headerShown: false }} />
+            <Stack.Screen name="theory/see-all" options={{ headerShown: false }} />
+            <Stack.Screen name="test/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="test/quiz/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="test/results/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="test/review/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            <Stack.Screen name="premium" options={{ presentation: 'modal', headerShown: false }} />
+            <Stack.Screen name="challange-bank/review" options={{ headerShown: false }} />
+            <Stack.Screen name="challange-bank/quiz" options={{ headerShown: false }} />
+          </Stack>
+        </ErrorBoundary>
+        <Toast />
         <StatusBar style={isDark ? 'light' : 'dark'} />
       </ThemeProvider>
     </View>

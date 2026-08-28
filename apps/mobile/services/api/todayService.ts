@@ -50,7 +50,7 @@ export interface TodayData {
 }
 
 // Pexels stock photos, same source used by the previous mock data — used only when a quiz has
-// no cover_image_url so cards never render blank.
+// neither a per-quiz preview image nor a cover image, so cards never render blank.
 function fallbackImage(vehicle: VehicleType): ImageSourcePropType {
   const photoId: Record<VehicleType, number> = {
     car: 1545743,
@@ -62,12 +62,24 @@ function fallbackImage(vehicle: VehicleType): ImageSourcePropType {
   };
 }
 
+// Each quiz's own image, matching the web state-page ladder (apps/web/lib/phaseLadder.ts):
+// prefer `preview_image_url` (derived from the quiz's first question, so it's unique per quiz),
+// then the admin-set `cover_image_url`, and only then the per-vehicle stock fallback. Using just
+// `cover_image_url` (usually null) made every card fall back to the same vehicle photo.
+function quizImage(
+  quiz: Pick<PublicQuiz, "preview_image_url" | "cover_image_url">,
+  vehicle: VehicleType,
+): ImageSourcePropType {
+  const url = quiz.preview_image_url ?? quiz.cover_image_url;
+  return url ? { uri: url } : fallbackImage(vehicle);
+}
+
 function toCard(quiz: PublicQuiz, vehicle: VehicleType): TodayTestCard {
   return {
     id: String(quiz.id),
     title: quiz.title,
     subtitle: `${quiz.total_questions} Questions`,
-    image: quiz.cover_image_url ? { uri: quiz.cover_image_url } : fallbackImage(vehicle),
+    image: quizImage(quiz, vehicle),
     locked: quiz.locked,
     passingScore: quiz.passing_score_percent ?? 80,
   };
@@ -88,9 +100,11 @@ function toTheoryItem(sheet: PublicCheatSheet): TodayTheoryItem {
 const EXTRA_SUPPORT_TITLE = "The extra support";
 
 /**
- * Fetches everything the Today (home) tab needs in one go. Any individual request that fails
- * (network hiccup, or a vehicle/state combo with no seeded data yet) resolves to an empty list
- * rather than rejecting, so one bad section never blanks out the whole page.
+ * Fetches everything the Today (home) tab needs in one go. The quizzes list is the primary request:
+ * if it rejects (no network, API down) the whole call rejects so the screen can show its error +
+ * retry state, rather than silently rendering a blank page. The secondary requests (categories,
+ * cheat sheets) still degrade to an empty list on failure, so one bad section never blanks the page
+ * when the core data did load.
  *
  * The "Tests" rows mirror the web app's actual (live) state-page ladder logic in
  * apps/web/lib/phaseLadder.ts: walk every category from GET /quiz-categories in the backend's own
@@ -104,7 +118,9 @@ const EXTRA_SUPPORT_TITLE = "The extra support";
  */
 export async function fetchTodayData(vehicle: VehicleType, state: string): Promise<TodayData> {
   const [allQuizzes, categories, cheatSheetsRaw] = await Promise.all([
-    fetchQuizzes({ vehicleType: vehicle, state, testTrack: "permit_test", perPage: 100 }).catch(() => []),
+    // Primary — let this reject so a total load failure surfaces as an error state (with retry).
+    fetchQuizzes({ vehicleType: vehicle, state, testTrack: "permit_test", perPage: 100 }),
+    // Secondary — degrade to empty so a hiccup here doesn't take down the whole page.
     fetchQuizCategories().catch(() => []),
     fetchCheatSheets({ vehicleType: vehicle, state }).catch(() => []),
   ]);
@@ -154,9 +170,7 @@ export async function fetchTodayData(vehicle: VehicleType, state: string): Promi
         id: String(examQuiz.id),
         title: examQuiz.title,
         subtitle: `${examQuiz.total_questions} Questions`,
-        image: examQuiz.cover_image_url
-          ? { uri: examQuiz.cover_image_url }
-          : fallbackImage(vehicle),
+        image: quizImage(examQuiz, vehicle),
         totalQuestions: examQuiz.total_questions,
         locked: examQuiz.locked,
       }
@@ -240,9 +254,7 @@ export async function fetchTestDetail(id: string): Promise<TodayTestDetail> {
   return {
     id: String(quiz.id),
     title: quiz.title,
-    image: quiz.cover_image_url
-      ? { uri: quiz.cover_image_url }
-      : fallbackImage(toVehicleType(quiz.vehicle_type?.name)),
+    image: quizImage(quiz, toVehicleType(quiz.vehicle_type?.name)),
     description,
     questionsCount: quiz.total_questions,
     passingScore: quiz.passing_score_percent ?? 80,
@@ -259,13 +271,15 @@ export async function fetchTestsByCategory(
   state: string,
   category: string,
 ): Promise<TodayTestCard[]> {
+  // No catch here: this is the See-all screen's only data source, so a failure should reach the
+  // screen as an error state (with retry) rather than showing a permanently empty list.
   const quizzes = await fetchQuizzes({
     vehicleType: vehicle,
     state,
     category,
     testTrack: "permit_test",
     perPage: 100,
-  }).catch(() => []);
+  });
   return quizzes.filter((q) => q.quiz_type?.name !== "final").map((q) => toCard(q, vehicle));
 }
 
@@ -278,11 +292,12 @@ export async function fetchNextTest(quizId: string): Promise<TodayTestCard | nul
   const { quiz } = await fetchQuiz(quizId).catch(() => ({ quiz: null }) as { quiz: null });
   if (!quiz || !quiz.category || !quiz.vehicle_type || !quiz.state) return null;
 
+  // "Next test" is optional enrichment on the results screen — never fail the screen over it.
   const siblings = await fetchTestsByCategory(
     toVehicleType(quiz.vehicle_type.name),
     quiz.state.code,
     quiz.category.name,
-  );
+  ).catch(() => [] as TodayTestCard[]);
   const index = siblings.findIndex((t) => t.id === String(quiz.id));
   if (index === -1) return null;
   return siblings[index + 1] ?? null;
@@ -300,7 +315,8 @@ export interface TheoryListItem {
  * the Today tab's teaser row, just uncapped (the teaser only asks for/shows the first few).
  */
 export async function fetchTheoryList(vehicle: VehicleType, state: string): Promise<TheoryListItem[]> {
-  const sheets = await fetchCheatSheets({ vehicleType: vehicle, state, perPage: 50 }).catch(() => []);
+  // No catch: the Theory See-all screen surfaces a failure as an error state (with retry).
+  const sheets = await fetchCheatSheets({ vehicleType: vehicle, state, perPage: 50 });
   return sheets.map((sheet) => ({
     id: String(sheet.id),
     title: sheet.title,

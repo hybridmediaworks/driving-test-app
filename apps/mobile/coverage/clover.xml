@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1787915065679" clover="3.2.0">
+  <project timestamp="1787915065679" name="All files">
+    <metrics statements="148" coveredstatements="128" conditionals="161" coveredconditionals="115" methods="77" coveredmethods="67" elements="386" coveredelements="310" complexity="0" loc="148" ncloc="148" packages="5" files="9" classes="9"/>
+    <package name="components">
+      <metrics statements="8" coveredstatements="8" conditionals="6" coveredconditionals="4" methods="4" coveredmethods="4"/>
+      <file name="error-boundary.tsx" path="/Users/hasnain/Herd/driving-test/apps/mobile/components/error-boundary.tsx">
+        <metrics statements="8" coveredstatements="8" conditionals="6" coveredconditionals="4" methods="4" coveredmethods="4"/>
+        <line num="26" count="3" type="stmt"/>
+        <line num="29" count="2" type="stmt"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="38" count="3" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="43" count="6" type="stmt"/>
+        <line num="44" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="46" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.ui">
+      <metrics statements="4" coveredstatements="4" conditionals="23" coveredconditionals="21" methods="3" coveredmethods="3"/>
+      <file name="empty-state.tsx" path="/Users/hasnain/Herd/driving-test/apps/mobile/components/ui/empty-state.tsx">
+        <metrics statements="2" coveredstatements="2" conditionals="11" coveredconditionals="10" methods="1" coveredmethods="1"/>
+        <line num="33" count="3" type="stmt"/>
+        <line num="35" count="3" type="stmt"/>
+      </file>
+      <file name="error-state.tsx" path="/Users/hasnain/Herd/driving-test/apps/mobile/components/ui/error-state.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="8" coveredconditionals="8" methods="1" coveredmethods="1"/>
+        <line num="32" count="5" type="stmt"/>
+      </file>
+      <file name="loading-state.tsx" path="/Users/hasnain/Herd/driving-test/apps/mobile/components/ui/loading-state.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="4" coveredconditionals="3" methods="1" coveredmethods="1"/>
+        <line num="17" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="hooks">
+      <metrics statements="33" coveredstatements="32" conditionals="18" coveredconditionals="14" methods="15" coveredmethods="15"/>
+      <file name="use-async.ts" path="/Users/hasnain/Herd/driving-test/apps/mobile/hooks/use-async.ts">
+        <metrics statements="24" coveredstatements="23" conditionals="15" coveredconditionals="11" methods="11" coveredmethods="11"/>
+        <line num="36" count="20" type="cond" truecount="2" falsecount="0"/>
+        <line num="38" count="20" type="stmt"/>
+        <line num="45" count="20" type="stmt"/>
+        <line num="49" count="20" type="stmt"/>
+        <line num="50" count="20" type="stmt"/>
+        <line num="52" count="20" type="stmt"/>
+        <line num="53" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="54" count="1" type="stmt"/>
+        <line num="55" count="1" type="stmt"/>
+        <line num="57" count="6" type="stmt"/>
+        <line num="58" count="6" type="stmt"/>
+        <line num="59" count="6" type="stmt"/>
+        <line num="61" count="5" type="cond" truecount="1" falsecount="1"/>
+        <line num="64" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="67" count="6" type="stmt"/>
+        <line num="68" count="6" type="stmt"/>
+        <line num="74" count="20" type="stmt"/>
+        <line num="75" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="76" count="7" type="stmt"/>
+        <line num="80" count="20" type="stmt"/>
+        <line num="82" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="83" count="0" type="stmt"/>
+        <line num="87" count="20" type="stmt"/>
+        <line num="89" count="20" type="stmt"/>
+      </file>
+      <file name="use-form-errors.ts" path="/Users/hasnain/Herd/driving-test/apps/mobile/hooks/use-form-errors.ts">
+        <metrics statements="9" coveredstatements="9" conditionals="3" coveredconditionals="3" methods="4" coveredmethods="4"/>
+        <line num="13" count="9" type="stmt"/>
+        <line num="15" count="9" type="stmt"/>
+        <line num="16" count="2" type="stmt"/>
+        <line num="17" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="25" count="9" type="stmt"/>
+        <line num="27" count="9" type="stmt"/>
+      </file>
+    </package>
+    <package name="lib">
+      <metrics statements="20" coveredstatements="20" conditionals="17" coveredconditionals="17" methods="6" coveredmethods="6"/>
+      <file name="validation.ts" path="/Users/hasnain/Herd/driving-test/apps/mobile/lib/validation.ts">
+        <metrics statements="20" coveredstatements="20" conditionals="17" coveredconditionals="17" methods="6" coveredmethods="6"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="15" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="2" type="stmt"/>
+        <line num="20" count="11" type="stmt"/>
+        <line num="21" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="4" type="stmt"/>
+        <line num="28" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="3" type="stmt"/>
+        <line num="34" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="46" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="58" count="2" type="stmt"/>
+        <line num="59" count="2" type="stmt"/>
+        <line num="60" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="62" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="services.api">
+      <metrics statements="83" coveredstatements="64" conditionals="97" coveredconditionals="59" methods="49" coveredmethods="39"/>
+      <file name="progressService.ts" path="/Users/hasnain/Herd/driving-test/apps/mobile/services/api/progressService.ts">
+        <metrics statements="22" coveredstatements="22" conditionals="30" coveredconditionals="25" methods="18" coveredmethods="18"/>
+        <line num="33" count="10" type="cond" truecount="1" falsecount="1"/>
+        <line num="47" count="4" type="stmt"/>
+        <line num="48" count="4" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
+        <line num="54" count="1" type="stmt"/>
+        <line num="57" count="6" type="stmt"/>
+        <line num="58" count="6" type="stmt"/>
+        <line num="61" count="5" type="stmt"/>
+        <line num="62" count="5" type="stmt"/>
+        <line num="64" count="3" type="stmt"/>
+        <line num="65" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="68" count="4" type="cond" truecount="4" falsecount="2"/>
+        <line num="69" count="1" type="stmt"/>
+        <line num="73" count="3" type="cond" truecount="5" falsecount="1"/>
+        <line num="74" count="1" type="stmt"/>
+        <line num="77" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="82" count="4" type="stmt"/>
+        <line num="83" count="4" type="stmt"/>
+        <line num="85" count="1" type="stmt"/>
+        <line num="88" count="1" type="stmt"/>
+        <line num="89" count="1" type="stmt"/>
+      </file>
+      <file name="todayService.ts" path="/Users/hasnain/Herd/driving-test/apps/mobile/services/api/todayService.ts">
+        <metrics statements="61" coveredstatements="42" conditionals="67" coveredconditionals="34" methods="31" coveredmethods="21"/>
+        <line num="55" count="6" type="stmt"/>
+        <line num="60" count="6" type="stmt"/>
+        <line num="73" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="74" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="78" count="4" type="stmt"/>
+        <line num="89" count="3" type="stmt"/>
+        <line num="100" count="1" type="stmt"/>
+        <line num="120" count="3" type="stmt"/>
+        <line num="124" count="1" type="stmt"/>
+        <line num="125" count="0" type="stmt"/>
+        <line num="130" count="5" type="stmt"/>
+        <line num="131" count="5" type="stmt"/>
+        <line num="133" count="2" type="stmt"/>
+        <line num="134" count="2" type="stmt"/>
+        <line num="135" count="3" type="stmt"/>
+        <line num="136" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="137" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="138" count="3" type="stmt"/>
+        <line num="141" count="2" type="stmt"/>
+        <line num="142" count="2" type="stmt"/>
+        <line num="143" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="144" count="2" type="stmt"/>
+        <line num="145" count="2" type="cond" truecount="3" falsecount="1"/>
+        <line num="146" count="2" type="stmt"/>
+        <line num="149" count="2" type="stmt"/>
+        <line num="152" count="3" type="stmt"/>
+        <line num="153" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="154" count="2" type="cond" truecount="5" falsecount="0"/>
+        <line num="155" count="1" type="stmt"/>
+        <line num="158" count="1" type="stmt"/>
+        <line num="162" count="3" type="stmt"/>
+        <line num="167" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="168" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="179" count="2" type="stmt"/>
+        <line num="195" count="3" type="stmt"/>
+        <line num="197" count="5" type="cond" truecount="6" falsecount="0"/>
+        <line num="198" count="2" type="stmt"/>
+        <line num="202" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="224" count="1" type="stmt"/>
+        <line num="226" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="227" count="0" type="stmt"/>
+        <line num="229" count="0" type="stmt"/>
+        <line num="233" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="234" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="235" count="0" type="stmt"/>
+        <line num="244" count="0" type="stmt"/>
+        <line num="245" count="0" type="stmt"/>
+        <line num="246" count="0" type="stmt"/>
+        <line num="249" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="254" count="0" type="stmt"/>
+        <line num="276" count="2" type="stmt"/>
+        <line num="283" count="2" type="stmt"/>
+        <line num="292" count="0" type="stmt"/>
+        <line num="293" count="0" type="cond" truecount="0" falsecount="6"/>
+        <line num="296" count="0" type="stmt"/>
+        <line num="300" count="0" type="stmt"/>
+        <line num="301" count="0" type="stmt"/>
+        <line num="302" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="303" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="319" count="2" type="stmt"/>
+        <line num="320" count="2" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

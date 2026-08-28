@@ -4,8 +4,8 @@ import { Secondary } from "@/constants/theme";
 import { useChallengeBankStore } from "@/store/challengeBankStore";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ImageBackground } from "expo-image";
-import { router } from "expo-router";
-import { useRef } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,14 +15,22 @@ const CARD_IMAGE = {
 
 export default function ChallangeBankScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
-  const { missedQuestionIds } = useChallengeBankStore();
+  const questions = useChallengeBankStore((s) => s.questions);
+  const refresh = useChallengeBankStore((s) => s.refresh);
 
-  const missedCount = missedQuestionIds.length;
+  // Pull the latest bank every time the tab is focused (a just-finished test may have added to it).
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
+  const missedCount = questions.length;
   const hasQuestions = missedCount > 0;
 
   const handleStart = () => {
     if (!hasQuestions) return;
-    router.push("/test/quiz/challenge-bank");
+    router.push("/challange-bank/quiz");
   };
 
   const handleSeeAll = () => {

@@ -2,6 +2,7 @@ import { TrialSheet } from "@/components/premium/trial-sheet";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Primary, Warning, White } from "@/constants/theme";
+import { usePlanStore } from "@/store/planStore";
 import { useReferenceDataStore } from "@/store/referenceDataStore";
 import { useUserStore } from "@/store/userStore";
 import { FontAwesome5, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -121,13 +122,19 @@ export default function PremiumScreen() {
   const stateCode = useUserStore((s) => s.state);
   const states = useReferenceDataStore((s) => s.states);
   const fetchStates = useReferenceDataStore((s) => s.fetchStates);
+  const plans = usePlanStore((s) => s.plans);
+  const fetchPlans = usePlanStore((s) => s.fetchPlans);
 
   useEffect(() => {
     fetchStates();
-  }, [fetchStates]);
+    fetchPlans();
+  }, [fetchStates, fetchPlans]);
 
   const stateName =
     states.find((s) => s.code === stateCode)?.name ?? "your state";
+  // Trial length is read from the live plan that offers a trial, not hardcoded — keeps the paywall
+  // in sync with whatever pricing/trial the backend serves.
+  const trialDays = plans.find((p) => p.trial_days != null)?.trial_days ?? 3;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: NAVY_BG }} edges={["top", "bottom"]}>
@@ -164,7 +171,7 @@ export default function PremiumScreen() {
           style={{ backgroundColor: CARD_BG, borderWidth: 1, borderColor: BORDER }}
         >
           <Text className="text-center text-xl font-bold">
-            <Text style={{ color: GREEN }}>3-day free trial</Text>
+            <Text style={{ color: GREEN }}>{trialDays}-day free trial</Text>
             <Text className="text-white"> includes everything</Text>
           </Text>
           <Text style={{ color: MUTED }} className="text-center text-sm mt-1">
@@ -211,7 +218,7 @@ export default function PremiumScreen() {
                 end={{ x: 1, y: 0 }}
                 style={{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}
               >
-                <Text className="text-white text-xs font-bold uppercase">3-Day Trial</Text>
+                <Text className="text-white text-xs font-bold uppercase">{trialDays}-Day Trial</Text>
               </LinearGradient>
             </View>
           </View>
@@ -253,16 +260,16 @@ export default function PremiumScreen() {
         {/* Pull-quote */}
         <View className="px-6 mt-10">
           <Text className="text-white text-2xl font-semibold text-center italic leading-8">
-            "These questions were identical to my real test"
+            &quot;These questions were identical to my real test&quot;
           </Text>
           <View className="items-center mt-4">
             <Stars />
           </View>
           <Text style={{ color: MUTED }} className="text-center mt-4 leading-6">
-            The #1 worry we hear: "Real questions will look different." Our
+            The #1 worry we hear: &quot;Real questions will look different.&quot; Our
             questions mirror your state wording and tricky edge cases, so the
             real exam feels familiar. Our users are saying the same thing:
-            "It felt like I'd seen every question before."
+            &quot;It felt like I&apos;d seen every question before.&quot;
           </Text>
         </View>
 
@@ -324,7 +331,7 @@ export default function PremiumScreen() {
             }}
           >
             <Text style={{ color: MUTED }} className="text-sm">
-              Skip, I don't want free trial
+              Skip, I don&apos;t want free trial
             </Text>
           </TouchableOpacity>
         </View>

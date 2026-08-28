@@ -21,6 +21,7 @@ use App\Http\Requests\Api\V1\Public\StoreQuizQuestionReportRequest;
 use App\Http\Resources\Api\V1\Public\QuizQuestionResource;
 use App\Http\Resources\Api\V1\Public\QuizResource;
 use App\Http\Resources\Api\V1\QuizAttemptResource;
+use App\Models\ChallengeBankItem;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
@@ -429,6 +430,25 @@ class QuizController extends Controller
         $question->load('answers');
         $graded = ($this->gradeSingleAnswer)($question, $request->integer('answer_id'));
 
+        $user = $request->user('sanctum');
+
+        // Keep the Challenge Bank live as the learner answers (signed-in users only): a wrong pick
+        // files the question for re-practice immediately — no need to finish the whole test — and a
+        // correct one clears it.
+        if ($user !== null) {
+            if ($graded['is_correct']) {
+                $user->challengeBankItems()->where('quiz_question_id', $question->id)->delete();
+            } else {
+                ChallengeBankItem::query()->insertOrIgnore([
+                    'user_id' => $user->id,
+                    'quiz_question_id' => $question->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // Persist the answer against the in-progress attempt so the player can resume ("Continue").
         $attemptId = $request->integer('attempt_id') ?: null;
         if ($attemptId !== null) {
             $attempt = $this->startOrResumeAttempt->findOwned(
