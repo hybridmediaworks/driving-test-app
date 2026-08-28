@@ -11,8 +11,15 @@ import { CheckCircle2, Mail, Sparkles } from "lucide-react";
 
 type Status = "idle" | "loading" | "success" | "error";
 
+/** Matches vehicle_types.name — same mapping used by lib/useResolvedQuiz.ts. */
+const vehicleSlugs: Record<string, string> = {
+  Car: "car",
+  Motorcycle: "motorcycle",
+  CDL: "cdl",
+};
+
 export default function EmailCaptureSection() {
-  const { selectedState } = useWebLayout();
+  const { selectedState, selectedVehicle } = useWebLayout();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -28,6 +35,7 @@ export default function EmailCaptureSection() {
       const res = await api.post<{ message: string }>("/newsletter/subscribe", {
         email,
         state: selectedState || undefined,
+        vehicle_type: vehicleSlugs[selectedVehicle] ?? "car",
         source: "home_hero",
       });
       setStatus("success");

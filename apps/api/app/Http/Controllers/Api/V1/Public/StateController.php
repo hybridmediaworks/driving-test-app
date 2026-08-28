@@ -64,8 +64,13 @@ class StateController extends Controller
                 'students_practiced_30d' => $this->distinctParticipants(clone $completed30d),
                 'questions_answered_total' => (int) (clone $completed30d)->sum('total_questions'),
                 'avg_session_seconds' => $this->nullableRound((clone $completed30d)->avg('duration_seconds')),
+                'combined_practice_seconds' => (int) (clone $completed30d)->sum('duration_seconds'),
                 'peak_hour' => $this->peakHour(clone $completed30d),
+                'peak_weekday' => $this->peakWeekday(clone $completed30d),
                 'pass_rate' => $this->passRate(clone $base),
+                'daily_students_practiced' => $this->dailyDistinctParticipants(clone $completed30d),
+                'daily_questions_answered' => $this->dailySum(clone $completed30d, 'total_questions'),
+                'daily_combined_practice_seconds' => $this->dailySum(clone $completed30d, 'duration_seconds'),
             ],
         ]);
     }
@@ -114,6 +119,22 @@ class StateController extends Controller
     }
 
     /**
+     * Most common weekday name among a scoped set of attempts — same "single mode of a small
+     * grouped set, computed in PHP for MySQL/SQLite portability" approach as {@see peakHour()}.
+     *
+     * @param  Builder<QuizAttempt>  $query
+     */
+    private function peakWeekday($query): ?string
+    {
+        return $query->get(['started_at'])
+            ->map(fn (QuizAttempt $attempt) => $attempt->started_at->format('l'))
+            ->countBy()
+            ->sortDesc()
+            ->keys()
+            ->first();
+    }
+
+    /**
      * Distinct participants (logged-in users + guests) in a scoped attempt query — a guest who
      * took 5 attempts today counts once, same as a logged-in user would.
      *
@@ -125,6 +146,53 @@ class StateController extends Controller
         $guestCount = (clone $query)->whereNull('user_id')->whereNotNull('guest_token')->distinct('guest_token')->count('guest_token');
 
         return $userCount + $guestCount;
+    }
+
+    /**
+     * Distinct participants per calendar day for the last 7 days (oldest first), zero-filled —
+     * powers a public-facing sparkline. One pair of count queries per day rather than a single
+     * grouped query, since "distinct" here means de-duped across the user_id/guest_token split
+     * (see {@see distinctParticipants()}), which a single GROUP BY day can't express. This is a
+     * low-traffic public endpoint, not a hot path — same tradeoff already made in peakHour().
+     *
+     * @param  Builder<QuizAttempt>  $query
+     * @return list<int>
+     */
+    private function dailyDistinctParticipants($query): array
+    {
+        return collect(range(6, 0))
+            ->map(function (int $daysAgo) use ($query) {
+                $day = now()->subDays($daysAgo);
+
+                return $this->distinctParticipants(
+                    (clone $query)->whereBetween('started_at', [$day->copy()->startOfDay(), $day->copy()->endOfDay()])
+                );
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Sum of `$column` per calendar day for the last 7 days (oldest first), zero-filled — same
+     * shape as `Admin\StatsController::dailyCounts()` but SUM(column) instead of COUNT(*), and
+     * keyed off `started_at` (this controller's convention) rather than `created_at`.
+     *
+     * @param  Builder<QuizAttempt>  $query
+     * @return list<int>
+     */
+    private function dailySum($query, string $column): array
+    {
+        $sums = $query
+            ->where('started_at', '>=', now()->subDays(6)->startOfDay())
+            ->selectRaw("DATE(started_at) as day, SUM({$column}) as total")
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
+        return collect(range(6, 0))
+            ->map(fn (int $daysAgo) => now()->subDays($daysAgo)->toDateString())
+            ->map(fn (string $day) => (int) ($sums[$day] ?? 0))
+            ->values()
+            ->all();
     }
 
     private function nullableRound(mixed $value): ?float

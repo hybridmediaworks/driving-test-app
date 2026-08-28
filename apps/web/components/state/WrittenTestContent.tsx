@@ -13,6 +13,7 @@ import { stateAbbreviations, stateToSlug, usStates } from "@/lib/usStates";
 import { otherStateLinks } from "@/lib/otherStateLinks";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { api } from "@/lib/api";
+import { useReviewerProfile, formatVerifiedMonth } from "@/lib/useReviewerProfile";
 
 function slugToStateName(slug: string): string {
   return slug
@@ -41,6 +42,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
 
   const { selectedVehicle } = useWebLayout();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
+  const reviewer = useReviewerProfile();
 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const [stateInfo, setStateInfo] = useState<State | null>(null);
@@ -118,7 +120,9 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                 </span>
                 <span className="text-sm leading-none whitespace-nowrap text-[#cbd5e1] max-md:hidden">•</span>
                 <span className="text-sm leading-none whitespace-nowrap text-[#475569] max-md:text-[13px]">
-                  Expert-reviewed by our editorial team
+                  {reviewer
+                    ? `Verified ${formatVerifiedMonth(reviewer.verified_at)} by ${reviewer.name}`
+                    : "Expert-reviewed by our editorial team"}
                 </span>
               </div>
 

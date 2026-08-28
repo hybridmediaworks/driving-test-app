@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\Admin\QuizCategoryController;
 use App\Http\Controllers\Api\V1\Admin\QuizController as AdminQuizController;
 use App\Http\Controllers\Api\V1\Admin\QuizQuestionController;
 use App\Http\Controllers\Api\V1\Admin\QuizTypeController as AdminQuizTypeController;
+use App\Http\Controllers\Api\V1\Admin\ReviewerProfileController as AdminReviewerProfileController;
 use App\Http\Controllers\Api\V1\Admin\StateController as AdminStateController;
 use App\Http\Controllers\Api\V1\Admin\StatsController as AdminStatsController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Api\V1\Public\PlanController;
 use App\Http\Controllers\Api\V1\Public\QuizCategoryController as PublicQuizCategoryController;
 use App\Http\Controllers\Api\V1\Public\QuizController as PublicQuizController;
 use App\Http\Controllers\Api\V1\Public\QuizQuestionAssetController;
+use App\Http\Controllers\Api\V1\Public\ReviewerProfileController;
 use App\Http\Controllers\Api\V1\Public\StateController;
 use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
 use App\Http\Controllers\Api\V1\Public\VideoController as PublicVideoController;
@@ -98,6 +100,8 @@ Route::prefix('v1')->group(function (): void {
     // always included.
     Route::get('handbooks', [PublicHandbookController::class, 'index']);
     Route::get('handbooks/{handbook}', [PublicHandbookController::class, 'show']);
+    Route::get('handbooks/{handbook}/download', [PublicHandbookController::class, 'download']);
+    Route::get('handbooks/{handbook}/text', [PublicHandbookController::class, 'text']);
 
     // Public read-only reference data — the valid values for the filters above.
     Route::get('states', [StateController::class, 'index']);
@@ -110,10 +114,18 @@ Route::prefix('v1')->group(function (): void {
 
     Route::get('plans', [PlanController::class, 'index']);
 
+    // Site-wide "accuracy verified by" trust badge shown on state/quiz pages — admin-managed.
+    Route::get('reviewer-profile', [ReviewerProfileController::class, 'show']);
+
     // Public marketing signup — captures an email for the daily-question newsletter from the home
     // page hero. Throttled since it's unauthenticated and writes.
     Route::post('newsletter/subscribe', [EmailSubscriberController::class, 'store'])
         ->middleware('throttle:10,1');
+
+    // One-click unsubscribe from a daily-question email. Custom-key route-model binding means an
+    // invalid/unknown token 404s automatically rather than needing a manual lookup.
+    Route::post('newsletter/unsubscribe/{emailSubscriber:unsubscribe_token}', [EmailSubscriberController::class, 'unsubscribe'])
+        ->middleware('throttle:20,1');
 
     // No auth:sanctum — Cashier's own VerifyWebhookSignature middleware (applied in the base
     // controller's constructor) is the real guard here, driven by STRIPE_WEBHOOK_SECRET.
@@ -205,6 +217,10 @@ Route::prefix('v1')->group(function (): void {
 
             Route::apiResource('plans', AdminPlanController::class)->except(['show']);
             Route::get('plans/{plan}', [AdminPlanController::class, 'show']);
+
+            // Singleton — no id, there's only ever one reviewer profile.
+            Route::get('reviewer-profile', [AdminReviewerProfileController::class, 'show']);
+            Route::put('reviewer-profile', [AdminReviewerProfileController::class, 'update']);
 
             Route::get('attempts', [AdminAttemptController::class, 'index']);
 

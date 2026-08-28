@@ -27,6 +27,60 @@ class EmailSubscriberTest extends TestCase
         ]);
     }
 
+    public function test_subscribe_stores_vehicle_type(): void
+    {
+        $this->postJson('/api/v1/newsletter/subscribe', [
+            'email' => 'rider@example.com',
+            'state' => 'Alabama',
+            'vehicle_type' => 'motorcycle',
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('email_subscribers', [
+            'email' => 'rider@example.com',
+            'vehicle_type' => 'motorcycle',
+        ]);
+    }
+
+    public function test_subscribe_generates_an_unsubscribe_token(): void
+    {
+        $this->postJson('/api/v1/newsletter/subscribe', ['email' => 'learner@example.com'])
+            ->assertCreated();
+
+        $subscriber = EmailSubscriber::query()->where('email', 'learner@example.com')->firstOrFail();
+        $this->assertNotNull($subscriber->unsubscribe_token);
+    }
+
+    public function test_resubscribing_does_not_rotate_the_unsubscribe_token(): void
+    {
+        $existing = EmailSubscriber::factory()->create([
+            'email' => 'learner@example.com',
+            'unsubscribed_at' => now(),
+        ]);
+        $originalToken = $existing->unsubscribe_token;
+
+        $this->postJson('/api/v1/newsletter/subscribe', ['email' => 'learner@example.com'])
+            ->assertOk();
+
+        $existing->refresh();
+        $this->assertSame($originalToken, $existing->unsubscribe_token);
+    }
+
+    public function test_guest_can_unsubscribe_with_a_valid_token(): void
+    {
+        $subscriber = EmailSubscriber::factory()->create(['unsubscribed_at' => null]);
+
+        $this->postJson("/api/v1/newsletter/unsubscribe/{$subscriber->unsubscribe_token}")
+            ->assertOk();
+
+        $this->assertNotNull($subscriber->fresh()->unsubscribed_at);
+    }
+
+    public function test_unsubscribe_with_an_invalid_token_returns_404(): void
+    {
+        $this->postJson('/api/v1/newsletter/unsubscribe/not-a-real-token')
+            ->assertNotFound();
+    }
+
     public function test_subscribing_requires_a_valid_email(): void
     {
         $this->postJson('/api/v1/newsletter/subscribe', ['email' => 'not-an-email'])
