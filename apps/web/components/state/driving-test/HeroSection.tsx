@@ -4,7 +4,8 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
-import { stateAbbreviations } from "@/lib/usStates";
+import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
+import { useNextQuizSlug } from "@/lib/usePhaseCompletion";
 import { ArrowRight, BadgeCheck, Play } from "lucide-react";
 
 const vehicleSlugs: Record<string, string> = {
@@ -16,9 +17,12 @@ const vehicleSlugs: Record<string, string> = {
 export default function HeroSection() {
   const { selectedState, selectedVehicle } = useWebLayout();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
+  const nextQuizSlug = useNextQuizSlug("driving_test");
+  // Same "jump straight to the right test" logic as the permit-test Hero — see its comment.
   const quizzesHref = selectedState
     ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=${vehicleType}&test_track=driving_test`
     : `/quizzes?vehicle_type=${vehicleType}&test_track=driving_test`;
+  const quizHref = selectedState && nextQuizSlug ? `/${stateToSlug(selectedState)}/${nextQuizSlug}` : quizzesHref;
 
   return (
     <section className="py-15 lg:py-30 px-5">
@@ -31,7 +35,7 @@ export default function HeroSection() {
           </Paragraph>
           <Button
             className="w-full md:w-fit"
-            href={quizzesHref}
+            href={quizHref}
           >
             Start Driving Test Practice <ArrowRight />
           </Button>

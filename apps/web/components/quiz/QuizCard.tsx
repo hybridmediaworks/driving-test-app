@@ -22,6 +22,11 @@ export default function QuizCard({ quiz }: { quiz: PublicQuiz }) {
           {isExam && (
             <span className="inline-flex rounded-full bg-blue-500/15 px-2 py-0.5 text-xs text-blue-800">Exam simulation</span>
           )}
+          {quiz.in_progress && !quiz.locked && (
+            <span className="inline-flex rounded-full bg-green-500/15 px-2 py-0.5 text-xs text-green-800">
+              Continue {quiz.in_progress.answered}/{quiz.in_progress.total}
+            </span>
+          )}
         </div>
       </div>
       <p className="text-sm text-neutral-500">

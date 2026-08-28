@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { stateAbbreviations } from "@/lib/usStates";
-import { fetchPhaseLadder, type PhaseLadderPhase } from "@/lib/phaseLadder";
+import { fetchPhaseLadder, resolveNextQuizSlug, type PhaseLadderPhase } from "@/lib/phaseLadder";
 
 export type PhaseCompletionState = {
   phase: PhaseLadderPhase | null;
@@ -89,4 +89,36 @@ export function usePhaseNumbers(): number[] {
   }, [stateCode, vehicleType, selectedTestType]);
 
   return phases?.map((p) => p.phase) ?? [];
+}
+
+/**
+ * The slug of the quiz the learner should start/continue with for the current state+vehicle and
+ * the given test track — what the state-page Hero's "Start" button should link to instead of the
+ * generic browse-all-tests page. Null until resolved (or if the ladder has no real steps at all);
+ * callers should fall back to their own safe default href in that case. Shares fetchPhaseLadder's
+ * cache with the rest of the ladder (usePhaseCompletion/usePhaseNumbers), so this costs no extra
+ * request when rendered on the same page as PhaseLadderSection.
+ */
+export function useNextQuizSlug(testTrack: "permit_test" | "driving_test"): string | null {
+  const { selectedState, selectedVehicle } = useWebLayout();
+  const [slug, setSlug] = useState<string | null>(null);
+
+  const stateCode = stateAbbreviations[selectedState];
+  const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
+
+  useEffect(() => {
+    if (!stateCode) return;
+
+    let cancelled = false;
+
+    resolveNextQuizSlug(stateCode, vehicleType, testTrack).then((result) => {
+      if (!cancelled) setSlug(result);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [stateCode, vehicleType, testTrack]);
+
+  return slug;
 }

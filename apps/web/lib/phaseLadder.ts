@@ -21,6 +21,9 @@ export type PhaseLadderStep = {
   /** The current user's result on a completed quiz — "passed" shows a green tick, "failed" a red
    *  mark. Undefined when the quiz hasn't been completed yet. */
   outcome?: "passed" | "failed";
+  /** Present when the current user has a resumable in-progress attempt on this quiz (from the
+   *  API's `in_progress`) — lets the step card offer "Continue" instead of "Start". */
+  inProgress?: { answered: number; total: number };
   image?: string;
   status?: "next";
   style?: "large";
@@ -118,6 +121,25 @@ export function fetchPhaseLadder(stateCode: string, vehicleType: string, testTra
   return promise;
 }
 
+/**
+ * The slug of the single quiz a learner should start/continue with for this state/vehicle/track —
+ * the server-resolved "next" step (see ResolveQuizProgression) if one exists, otherwise the very
+ * first real step (e.g. everything in this ladder is already completed — start over rather than
+ * link nowhere). Null only when the ladder has no real steps at all for this combination.
+ *
+ * Shares fetchPhaseLadder's cache, so calling this alongside usePhaseCompletion/usePhaseNumbers on
+ * the same page (see usePhaseCompletion.ts) costs no extra request.
+ */
+export async function resolveNextQuizSlug(
+  stateCode: string,
+  vehicleType: string,
+  testTrack: string,
+): Promise<string | null> {
+  const phases = await fetchPhaseLadder(stateCode, vehicleType, testTrack);
+  const steps = phases.flatMap((p) => p.steps).filter((s) => !s.placeholder && s.slug);
+  return steps.find((s) => s.status === "next")?.slug ?? steps[0]?.slug ?? null;
+}
+
 async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack: string): Promise<PhaseLadderPhase[]> {
   const [categories, quizzesResponse] = await Promise.all([
     fetchOrderedCategories(),
@@ -173,6 +195,7 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
         // static progress on load, not a live just-finished animation.
         completed: quiz.attempted ?? false,
         outcome: outcomeOf(quiz),
+        inProgress: quiz.in_progress ?? undefined,
         status: quiz.is_next ? "next" : undefined,
         image: quiz.preview_image_url ?? quiz.cover_image_url ?? "/driving-tests.jpg",
       })),
@@ -209,6 +232,7 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
               attempted: quiz.attempted ?? false,
               completed: quiz.attempted ?? false,
               outcome: outcomeOf(quiz),
+              inProgress: quiz.in_progress ?? undefined,
               status: quiz.is_next ? ("next" as const) : undefined,
               image: quiz.preview_image_url ?? quiz.cover_image_url ?? "/driving-tests.jpg",
             }))

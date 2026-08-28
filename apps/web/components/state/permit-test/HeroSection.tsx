@@ -4,8 +4,9 @@ import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useWebLayout } from "@/lib/web-layout-context";
-import { stateAbbreviations } from "@/lib/usStates";
+import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
 import { useStateStats } from "@/lib/useStateStats";
+import { useNextQuizSlug } from "@/lib/usePhaseCompletion";
 import { ArrowRight, BadgeCheck } from "lucide-react";
 
 const vehicleSlugs: Record<string, string> = {
@@ -18,9 +19,15 @@ export default function HeroSection() {
   const { selectedState, selectedVehicle } = useWebLayout();
   const stats = useStateStats();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
+  const nextQuizSlug = useNextQuizSlug("permit_test");
+  // Jump straight to the test the learner should take now (first one if nothing's been taken yet,
+  // otherwise wherever their progression left off) instead of a generic free+premium browse list.
+  // Falls back to the old browse-all href until that's resolved (near-instant — it shares its
+  // request with the phase-ladder section further down this same page) or if it comes back empty.
   const quizzesHref = selectedState
     ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=${vehicleType}&test_track=permit_test`
     : `/quizzes?vehicle_type=${vehicleType}&test_track=permit_test`;
+  const quizHref = selectedState && nextQuizSlug ? `/${stateToSlug(selectedState)}/${nextQuizSlug}` : quizzesHref;
 
   return (
     <>
@@ -57,7 +64,7 @@ export default function HeroSection() {
             </Paragraph>
             <Button
               className="w-full md:w-fit"
-              href={quizzesHref}
+              href={quizHref}
             >
               Start Free Practice Test <ArrowRight />
             </Button>

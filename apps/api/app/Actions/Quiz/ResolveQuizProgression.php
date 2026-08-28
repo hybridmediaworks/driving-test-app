@@ -36,7 +36,7 @@ class ResolveQuizProgression
     /**
      * @return array<int, array{lock_reason: 'premium'|'progress'|null, is_next: bool}>
      */
-    public function __invoke(string $stateCode, string $vehicleType, string $testTrack, ?User $user): array
+    public function __invoke(string $stateCode, string $vehicleType, string $testTrack, ?User $user, ?string $guestToken = null): array
     {
         $isEntitled = $this->entitlement->resolve($user)->hasFeature(Feature::PremiumQuiz);
 
@@ -45,10 +45,14 @@ class ResolveQuizProgression
             ->forState($stateCode)
             ->forVehicleType($vehicleType)
             ->where('test_track', $testTrack)
-            ->when($user !== null, fn ($q) => $q->withMax([
+            ->when($user !== null || $guestToken !== null, fn ($q) => $q->withMax([
                 'attempts as best_score' => fn ($a) => $a
-                    ->where('user_id', $user->id)
-                    ->where('status', AttemptStatus::Completed),
+                    ->where('status', AttemptStatus::Completed)
+                    ->when(
+                        $user !== null,
+                        fn ($aq) => $aq->where('user_id', $user->id),
+                        fn ($aq) => $aq->where('guest_token', $guestToken),
+                    ),
             ], 'score'))
             ->orderBy('is_premium')
             ->orderBy('order_no')

@@ -16,7 +16,24 @@ export function setToken(token: string | null): void {
   }
 }
 
-export const api = createApiClient({ baseUrl: API_URL, getToken });
+// Persistent anonymous identity, generated once per browser and reused for every request — lets a
+// guest's in-progress quiz attempt be found again after closing the tab, without requiring signup.
+function getGuestToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const existing = localStorage.getItem("guest_token");
+    if (existing) return existing;
+    const generated = crypto.randomUUID();
+    localStorage.setItem("guest_token", generated);
+    return generated;
+  } catch {
+    // Private-mode / storage-disabled — the request just goes out without a guest identity, same
+    // as before this feature existed.
+    return null;
+  }
+}
+
+export const api = createApiClient({ baseUrl: API_URL, getToken, getGuestToken });
 
 export { ApiError };
 

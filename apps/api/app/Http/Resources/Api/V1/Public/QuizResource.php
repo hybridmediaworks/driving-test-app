@@ -42,6 +42,16 @@ class QuizResource extends JsonResource
             'user_passed' => $this->best_score === null
                 ? null
                 : (int) $this->best_score >= ($this->passing_score_percent ?? 80),
+            // Set by QuizController::attachInProgressSummaries when this caller (user or guest
+            // token) has a resumable in-progress attempt on this quiz — drives the "Continue
+            // (x/y)" CTA instead of the default "Start" one. Null otherwise, including for callers
+            // with no identity at all to check against.
+            'in_progress' => array_key_exists('in_progress_answered', $this->resource->getAttributes())
+                ? [
+                    'answered' => $this->resource->getAttribute('in_progress_answered'),
+                    'total' => $this->resource->getAttribute('in_progress_total'),
+                ]
+                : null,
             // Progressive ladder state, resolved server-side on a full ladder request (see
             // ResolveQuizProgression) so every client renders the same chain:
             //  - lock_reason: null = open, "premium" = not entitled (route to pricing), "progress" =

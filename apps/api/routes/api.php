@@ -57,6 +57,10 @@ Route::prefix('v1')->group(function (): void {
     Route::get('quizzes/{quiz}', [PublicQuizController::class, 'show']);
     Route::post('quizzes/{quiz}/attempts', [PublicQuizController::class, 'storeAttempt'])
         ->middleware('throttle:20,1');
+    // Start (or resume) an in-progress attempt — called when the quiz player opens, before any
+    // answer is submitted.
+    Route::post('quizzes/{quiz}/attempts/start', [PublicQuizController::class, 'startAttempt'])
+        ->middleware('throttle:20,1');
     // Instant per-question feedback (practice mode) — reveals correctness + explanation for the
     // one answer just submitted.
     Route::post('quizzes/{quiz}/questions/{question}/check', [PublicQuizController::class, 'checkAnswer'])

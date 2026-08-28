@@ -24,6 +24,10 @@ class StoreQuizAttemptRequest extends FormRequest
             'answers.*.answer_id' => ['nullable', 'integer'],
             'duration_seconds' => ['nullable', 'integer', 'min:0', 'max:86400'],
             'guest_token' => ['nullable', 'string', 'max:64'],
+            // Optional — when it resolves to the caller's own in-progress attempt on this quiz, that
+            // row is closed out instead of a new one being created. Omitted, this behaves exactly as
+            // before (e.g. the mobile app).
+            'attempt_id' => ['nullable', 'integer', 'exists:quiz_attempts,id'],
         ];
     }
 
