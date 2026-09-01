@@ -15,9 +15,9 @@ const PASSERS = [
 ];
 
 const LEGEND = [
-  { label: "High", color: "bg-green-400" },
-  { label: "Medium", color: "bg-yellow-300" },
-  { label: "Low", color: "bg-red-300" },
+  { label: "High", color: "bg-green-300" },
+  { label: "Medium", color: "bg-yellow-200" },
+  { label: "Low", color: "bg-red-200" },
 ];
 
 export default function MapSection() {

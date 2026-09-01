@@ -83,10 +83,10 @@ function HorizontalCard({
 }) {
   return (
     <figure className={cn(CARD, "flex items-stretch gap-5 overflow-hidden")}>
-      <div className="relative w-[44%] shrink-0 overflow-hidden rounded-[16px]">
-        <Image src={image} alt="" fill sizes="220px" className="object-cover" />
+      <div className="relative flex-1 overflow-hidden rounded-[16px]">
+        <Image src={image} alt="" fill sizes="260px" className="object-cover" />
       </div>
-      <div className="flex flex-col gap-4 py-5 pr-5">
+      <div className="flex w-[215px] shrink-0 flex-col gap-4 py-5 pr-5">
         <blockquote className="text-base leading-[1.5] text-[#232527]">
           {quote}
         </blockquote>
@@ -131,7 +131,9 @@ export default function SuccessStories({
   className?: string;
 }) {
   return (
-    <section className={cn("bg-background px-5 py-16 lg:py-[120px]", className)}>
+    <section
+      className={cn("bg-background px-5 py-16 lg:pt-[120px] lg:pb-[96px]", className)}
+    >
       <div className="mx-auto flex max-w-container flex-col items-center gap-[50px]">
         {/* Header — centered */}
         <div className="flex max-w-[546px] flex-col items-center gap-6 text-center">
@@ -144,10 +146,13 @@ export default function SuccessStories({
           </Heading>
         </div>
 
-        {/* Masonry — four columns */}
-        <div className="flex w-full flex-col justify-center gap-5 lg:flex-row lg:items-start">
+        {/* Masonry — four columns. On desktop the grid is clipped to a fixed
+            height so the bottom cards are cut off (the "peek" effect from Figma),
+            and the CTA floats over the clip line. */}
+        <div className="relative flex w-full flex-col items-center gap-6 lg:block">
+          <div className="flex w-full flex-col justify-center gap-5 lg:h-[545px] lg:flex-row lg:items-start lg:overflow-hidden">
           {/* Column 1 */}
-          <div className="flex flex-col gap-5 lg:w-[260px]">
+          <div className="flex flex-col gap-4 lg:w-[260px]">
             <PhotoCard
               image="/hero/deck-8c.jpg"
               quote="Passed my written test on the first try. The practice questions were almost identical to the real DMV exam — I walked in completely calm."
@@ -163,7 +168,7 @@ export default function SuccessStories({
           </div>
 
           {/* Column 2 (wide) */}
-          <div className="flex flex-col gap-5 lg:w-[496px]">
+          <div className="flex flex-col gap-[17px] lg:w-[496px]">
             <HorizontalCard
               image="/hero/deck-7c.jpg"
               quote="The mock exams feel exactly like the real thing. By test day nothing surprised me at all."
@@ -172,20 +177,20 @@ export default function SuccessStories({
             />
             <AvatarCard
               avatar="/Avatar2.png"
-              quote="I studied on my commute using voice mode and aced the road-signs section without ever opening the booklet. Exactly the prep I needed."
+              quote="I studied on my commute with voice mode and aced the road-signs section — exactly the prep I needed."
               name="Ahmed Saimoon"
               role={ROLE}
             />
             <AvatarCard
               avatar="/Avatar3.png"
-              quote="Clear explanations on every wrong answer — that's what finally made the rules stick for me after months of struggling."
+              quote="Clear explanations on every wrong answer finally made the rules stick for me."
               name="Sakib Mo"
               role={ROLE}
             />
           </div>
 
           {/* Column 3 */}
-          <div className="flex flex-col gap-5 lg:w-[284px]">
+          <div className="flex flex-col gap-[15px] lg:w-[284px]">
             <AvatarCard
               avatar="/Avatar4.png"
               quote="Went from guessing to confident in a week. The readiness score told me exactly when I was ready to book the test."
@@ -201,7 +206,7 @@ export default function SuccessStories({
           </div>
 
           {/* Column 4 */}
-          <div className="flex flex-col gap-5 lg:w-[260px]">
+          <div className="flex flex-col gap-4 lg:w-[260px]">
             <AvatarCard
               avatar="/Avatar6.png"
               quote="Simple, fast, and it actually works. Passed first attempt and told all my friends."
@@ -215,16 +220,17 @@ export default function SuccessStories({
               role={ROLE}
             />
           </div>
-        </div>
+          </div>
 
-        {/* View all — centered */}
-        <button
-          type="button"
-          className="group inline-flex items-center gap-2 rounded-full border border-white/50 bg-linear-to-r from-[#3b82f6] to-[#1e40af] px-5 py-4 text-base leading-6 font-semibold text-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]"
-        >
-          <span className="whitespace-nowrap">View all success stories</span>
-          <ArrowRight className="size-5 transition-transform group-hover:translate-x-0.5" />
-        </button>
+          {/* View all — centred under the grid on mobile; floats over the clip line on desktop */}
+          <button
+            type="button"
+            className="group inline-flex items-center gap-2 rounded-full border border-white/50 bg-linear-to-r from-[#3b82f6] to-[#1e40af] px-5 py-4 text-base leading-6 font-semibold text-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] lg:absolute lg:bottom-[-16px] lg:left-1/2 lg:-translate-x-1/2"
+          >
+            <span className="whitespace-nowrap">View all success stories</span>
+            <ArrowRight className="size-5 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </div>
       </div>
     </section>
   );

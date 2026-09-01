@@ -35,9 +35,9 @@ const ROWS: Row[] = [
     ],
     cta: "See how it works",
     href: "/features-overview",
-    image: "/toolkit/row1-essentials.png",
-    imageW: 760,
-    imageH: 676,
+    image: "/toolkit/row1-essentials-s.png",
+    imageW: 724,
+    imageH: 640,
     imageLeft: false,
   },
   {
@@ -51,9 +51,9 @@ const ROWS: Row[] = [
     ],
     cta: "Start your streak",
     href: "/features-overview",
-    image: "/toolkit/row2-streak.png",
-    imageW: 760,
-    imageH: 653,
+    image: "/toolkit/row2-streak-s.png",
+    imageW: 724,
+    imageH: 616,
     imageLeft: true,
   },
   {
@@ -67,9 +67,9 @@ const ROWS: Row[] = [
     ],
     cta: "Try a mock exam",
     href: "/features-overview",
-    image: "/toolkit/row3-quiz.png",
-    imageW: 768,
-    imageH: 677,
+    image: "/toolkit/row3-quiz-s.png",
+    imageW: 732,
+    imageH: 640,
     imageLeft: false,
   },
   {
@@ -83,9 +83,9 @@ const ROWS: Row[] = [
     ],
     cta: "Download a sample",
     href: "/features-overview",
-    image: "/toolkit/row4-street.png",
-    imageW: 768,
-    imageH: 677,
+    image: "/toolkit/row4-street-s.png",
+    imageW: 732,
+    imageH: 640,
     imageLeft: true,
   },
 ];
@@ -116,11 +116,7 @@ export default function ToolkitSection() {
           {ROWS.map((row) => (
             <div
               key={row.title}
-              className={`grid grid-cols-1 items-center gap-10 lg:gap-24 ${
-                row.imageLeft
-                  ? "lg:grid-cols-[1.1fr_1fr]"
-                  : "lg:grid-cols-[1fr_1.1fr]"
-              }`}
+              className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-24"
             >
               {/* Text */}
               <div className={row.imageLeft ? "lg:order-2" : "lg:order-1"}>
@@ -155,16 +151,22 @@ export default function ToolkitSection() {
                 </Link>
               </div>
 
-              {/* Image */}
-              <div className={row.imageLeft ? "lg:order-1" : "lg:order-2"}>
+              {/* Image — displayed at ~its natural width so the card matches the
+                  Figma size; the soft shadow overflows the equal-width column (the
+                  section shares the image's #FAFAF7 background so it blends). */}
+              <div
+                className={`flex justify-center ${
+                  row.imageLeft ? "lg:order-1" : "lg:order-2"
+                }`}
+              >
                 <Image
                   src={row.image}
                   alt=""
                   width={row.imageW}
                   height={row.imageH}
                   quality={92}
-                  sizes="(max-width: 1024px) 100vw, 640px"
-                  className="h-auto w-full"
+                  sizes="(max-width: 1024px) 100vw, 724px"
+                  className="h-auto w-full lg:w-[724px] lg:max-w-none"
                 />
               </div>
             </div>

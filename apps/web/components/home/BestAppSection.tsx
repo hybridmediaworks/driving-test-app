@@ -25,7 +25,7 @@ const UNDERLINE_PATH =
 
 function Stat({ value, color }: { value: string; color: string }) {
   return (
-    <span className="relative inline-block whitespace-nowrap">
+    <span className="relative mr-1.5 inline-block whitespace-nowrap">
       {value}
       <svg
         aria-hidden="true"
@@ -42,18 +42,28 @@ function Stat({ value, color }: { value: string; color: string }) {
 
 export default function BestAppSection() {
   return (
-    <section className="bg-background px-5 pb-16 lg:pb-[120px]">
+    <section
+      className="px-5 pb-16 lg:pb-0"
+      style={{
+        // Split backdrop: the tan (section-above) colour on top and the lighter
+        // section colour below, with the hard boundary falling behind the iPad's
+        // middle — matching the Figma composition where the device straddles it.
+        backgroundImage:
+          "linear-gradient(to bottom, #f2f1ec 0px, #f2f1ec 385px, #fafaf7 385px)",
+      }}
+    >
       <div className="mx-auto max-w-container">
-        {/* iPad quiz mockup */}
-        <div className="flex justify-center">
+        {/* iPad quiz mockup — pulled up so it straddles the section boundary and
+            bleeds into the section above, matching the Figma composition. */}
+        <div className="-mt-4 flex justify-center lg:-mt-14">
           <Image
-            src="/bestapp/ipad.png"
+            src="/bestapp/ipad-cut.png"
             alt="A DriveLane practice question shown on an iPad"
             width={1003}
             height={791}
             quality={92}
-            sizes="(max-width: 1024px) 100vw, 820px"
-            className="h-auto w-full max-w-[820px]"
+            sizes="(max-width: 1024px) 100vw, 980px"
+            className="h-auto w-full max-w-[980px]"
           />
         </div>
 
@@ -67,10 +77,26 @@ export default function BestAppSection() {
           </Paragraph>
         </div>
 
-        {/* Comparison — pros / driver / cons */}
-        <div className="mt-12 grid grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_320px_1fr] lg:gap-8">
+        {/* Comparison — on desktop the driver is absolutely centred and BLEEDS
+            over/behind the two text columns (Figma composition, node 1980:9392 at
+            527×559, bottom edge = the next section's top). The columns sit at their
+            Figma vertical offsets. On mobile everything stacks. */}
+        <div className="relative mt-10 flex flex-col items-center gap-10 lg:mt-8 lg:block lg:h-[560px]">
+          {/* Driver — absolute centre (desktop) / in-flow (mobile) */}
+          <div className="order-2 lg:pointer-events-none lg:absolute lg:bottom-0 lg:left-1/2 lg:z-0 lg:-translate-x-1/2">
+            <Image
+              src="/bestapp/driver-node.png"
+              alt="A DriveLane student holding their new driver license"
+              width={527}
+              height={559}
+              quality={92}
+              sizes="527px"
+              className="h-auto w-[360px] sm:w-[440px] lg:w-[527px]"
+            />
+          </div>
+
           {/* Left — Drivelane pros */}
-          <div className="lg:pr-4">
+          <div className="order-1 lg:absolute lg:bottom-[120px] lg:left-0 lg:z-10 lg:w-[460px]">
             <h3 className="font-sora text-[30px] leading-[1.15] font-semibold tracking-[-0.96px] text-neutral-900 sm:text-[36px] lg:text-[40px]">
               <Stat value="96.6%" color="#22C55E" /> pass rate of Drivelane&rsquo;s
               students
@@ -94,21 +120,8 @@ export default function BestAppSection() {
             </ul>
           </div>
 
-          {/* Center — driver photo */}
-          <div className="justify-self-center">
-            <Image
-              src="/bestapp/driver.png"
-              alt="A DriveLane student holding their new driver license"
-              width={372}
-              height={528}
-              quality={92}
-              sizes="320px"
-              className="h-auto w-[260px] sm:w-[300px] lg:w-[320px]"
-            />
-          </div>
-
           {/* Right — traditional-course cons */}
-          <div className="lg:pl-4">
+          <div className="order-3 lg:absolute lg:right-0 lg:bottom-[120px] lg:z-10 lg:w-[400px]">
             <h3 className="font-sora text-[30px] leading-[1.15] font-semibold tracking-[-0.96px] text-neutral-900 sm:text-[36px] lg:text-[40px]">
               <Stat value="32.8%" color="#EF4444" /> Failure rate of traditional
               courses

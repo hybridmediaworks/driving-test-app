@@ -135,7 +135,7 @@ function TopCard({
 }) {
   return (
     <div
-      className="flex flex-col items-center gap-3 rounded-[24px] border border-blue-200 p-12 text-center shadow-[0px_30px_64px_-28px_rgba(16,24,40,0.3),0px_8px_18px_0px_rgba(16,24,40,0.07)]"
+      className="flex flex-col items-center gap-3 rounded-[24px] border border-blue-200 p-10 text-center shadow-[0px_30px_64px_-28px_rgba(16,24,40,0.3),0px_8px_18px_0px_rgba(16,24,40,0.07)]"
       style={{
         backgroundImage:
           "radial-gradient(130% 130% at 0% 0%, #dbeafe 0%, #ffffff 46%)",
