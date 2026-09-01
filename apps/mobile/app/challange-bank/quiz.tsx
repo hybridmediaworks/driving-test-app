@@ -1,3 +1,4 @@
+import { QuizImage } from "@/components/quiz/quiz-image";
 import { QuizOption, type QuizOptionVariant } from "@/components/quiz/quiz-option";
 import { Secondary } from "@/constants/theme";
 import { useIsDark } from "@/hooks/use-is-dark";
@@ -10,7 +11,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
-  Image,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -150,15 +150,7 @@ export default function ChallengeBankQuizScreen() {
           {current.question_text}
         </Text>
 
-        {currentImage && (
-          <View className="mb-6 overflow-hidden rounded-2xl border border-secondary-100 dark:border-secondary-800">
-            <Image
-              source={{ uri: currentImage }}
-              style={{ width: "100%", height: 220 }}
-              resizeMode="cover"
-            />
-          </View>
-        )}
+        {currentImage && <QuizImage uri={currentImage} />}
 
         <View className="gap-3">
           {current.answers.map((answer, index) => {

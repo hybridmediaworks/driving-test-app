@@ -492,6 +492,8 @@ class QuizController extends Controller
      * AI tutor — hint or free-form question about a quiz question
      *
      * `mode=hint` nudges without revealing the answer; `mode=ask` answers the learner's `message`.
+     * The full explanation is only unlocked once `answered=true` — before the learner has answered,
+     * both modes stay non-revealing so the tutor can't be used to skip straight to the answer.
      * Same entitlement gate as attempts. Returns 503 when no LLM key is configured so the
      * feature degrades gracefully rather than 500-ing.
      */
@@ -510,6 +512,8 @@ class QuizController extends Controller
                 $question,
                 $request->string('mode')->toString(),
                 $request->input('message'),
+                $request->boolean('answered'),
+                $request->filled('selected_answer_id') ? (int) $request->input('selected_answer_id') : null,
             );
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 503);

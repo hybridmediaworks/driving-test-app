@@ -8,7 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -67,7 +67,7 @@ export default function RootLayout() {
   }
 
   return (
-    <View className="flex-1">
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
         <ErrorBoundary>
           <Stack>
@@ -90,6 +90,6 @@ export default function RootLayout() {
         <Toast />
         <StatusBar style={isDark ? 'light' : 'dark'} />
       </ThemeProvider>
-    </View>
+    </GestureHandlerRootView>
   );
 }

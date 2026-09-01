@@ -109,18 +109,23 @@ export async function reportQuestion(
 /**
  * "Ask DMV Genie AI" — RAG-grounded tutor for the current question. `hint` mode returns one short
  * nudge (no message needed); `ask` mode answers the learner's follow-up `message` about the
- * question. The backend never reveals which option is correct. Throws ApiError(503) when the AI
- * tutor isn't configured, and ApiError(429) when the per-minute rate limit is hit.
+ * question. `answered` gates the reveal: until the learner has answered, the backend keeps every
+ * reply non-revealing; once answered, `ask` mode may give the full explanation. `selectedAnswerId`
+ * (only honoured once answered) tells the tutor which option the learner picked so it can explain
+ * why that specific choice is wrong. Throws ApiError(503) when the AI tutor isn't configured, and
+ * ApiError(429) when the per-minute rate limit is hit.
  */
 export async function askQuestionAssist(
   quizId: number | string,
   questionId: number,
   mode: "hint" | "ask",
   message?: string,
+  answered = false,
+  selectedAnswerId?: number,
 ): Promise<string> {
   const res = await api.post<QuizAssistResponse>(
     `/quizzes/${quizId}/questions/${questionId}/assist`,
-    { mode, message },
+    { mode, message, answered, selected_answer_id: selectedAnswerId },
   );
   return res.reply;
 }

@@ -26,13 +26,36 @@ type Options = {
   quizId?: number | string;
   questionId?: number;
   explanation?: string;
+  // Whether the learner has already answered this question. Gates the reveal: the tutor only gives
+  // the full explanation once this is true — before that every reply stays a non-revealing nudge.
+  answered?: boolean;
+  // The option the learner picked, so the tutor can explain why that specific choice is wrong.
+  selectedAnswerId?: number;
+  // Whether this question was answered incorrectly — enables the "Why is my answer wrong?" action.
+  isWrong?: boolean;
+  // Whether the sheet is open. Used to auto-fire `autoAsk` exactly once when it opens.
+  visible?: boolean;
+  // When the sheet is opened straight into a specific question (e.g. from the "why is this wrong?"
+  // prompt after a wrong answer), fire it automatically on open.
+  autoAsk?: "why-wrong" | null;
 };
 
-export function useAiChat({ quizId, questionId, explanation }: Options) {
+export function useAiChat({
+  quizId,
+  questionId,
+  explanation,
+  answered = false,
+  selectedAnswerId,
+  isWrong = false,
+  visible = false,
+  autoAsk = null,
+}: Options) {
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  // Guards the auto-ask so it fires at most once per opened question, not on every re-render.
+  const autoFiredRef = useRef(false);
 
   const isLive = quizId !== undefined && questionId !== undefined;
 
@@ -42,6 +65,7 @@ export function useAiChat({ quizId, questionId, explanation }: Options) {
     setMessages([WELCOME]);
     setInput("");
     setPending(false);
+    autoFiredRef.current = false;
   }, [quizId, questionId]);
 
   const scrollToEnd = () =>
@@ -77,7 +101,14 @@ export function useAiChat({ quizId, questionId, explanation }: Options) {
     }
 
     try {
-      const reply = await askQuestionAssist(quizId!, questionId!, mode, message);
+      const reply = await askQuestionAssist(
+        quizId!,
+        questionId!,
+        mode,
+        message,
+        answered,
+        selectedAnswerId,
+      );
       setMessages((prev) =>
         prev.map((m) => (m.id === typingId ? { ...m, text: reply, pending: false } : m)),
       );
@@ -105,16 +136,39 @@ export function useAiChat({ quizId, questionId, explanation }: Options) {
   const handleQuickAction = (key: string) => {
     if (key === "hint") {
       runAssist("Give me a hint", "hint");
+    } else if (key === "why-wrong") {
+      const text = "Why is my answer wrong?";
+      runAssist(text, "ask", text);
     } else {
       const text = "Help me understand this";
       runAssist(text, "ask", text);
     }
   };
 
+  // When the sheet is opened straight into the "why is my answer wrong?" flow, ask it automatically
+  // once so the learner lands on the explanation without an extra tap.
+  useEffect(() => {
+    if (visible && autoAsk === "why-wrong" && isLive && !autoFiredRef.current) {
+      autoFiredRef.current = true;
+      handleQuickAction("why-wrong");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, autoAsk, quizId, questionId]);
+
   const handleClear = () => {
     setMessages([WELCOME]);
     setPending(false);
   };
 
-  return { messages, input, setInput, pending, scrollRef, handleSend, handleQuickAction, handleClear };
+  return {
+    messages,
+    input,
+    setInput,
+    pending,
+    scrollRef,
+    handleSend,
+    handleQuickAction,
+    handleClear,
+    isWrong,
+  };
 }

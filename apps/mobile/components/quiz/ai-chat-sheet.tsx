@@ -26,14 +26,27 @@ type Props = {
   questionId?: number;
   questionText?: string;
   explanation?: string;
+  // Whether the learner has already answered — gates the tutor's reveal (see useAiChat).
+  answered?: boolean;
+  // The option the learner picked, so the tutor can explain why that specific choice is wrong.
+  selectedAnswerId?: number;
+  // Whether this question was answered incorrectly — surfaces the "Why is my answer wrong?" action.
+  isWrong?: boolean;
+  // Fires the "why is my answer wrong?" question automatically when the sheet opens.
+  autoAsk?: "why-wrong" | null;
 };
 
-const QUICK_ACTIONS = [
-  { label: "Give me a hint", key: "hint" },
-  { label: "Help me understand this", key: "explain" },
-];
-
-export function AiChatSheet({ visible, onClose, quizId, questionId, explanation }: Props) {
+export function AiChatSheet({
+  visible,
+  onClose,
+  quizId,
+  questionId,
+  explanation,
+  answered,
+  selectedAnswerId,
+  isWrong,
+  autoAsk,
+}: Props) {
   const isDark = useIsDark();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(800)).current;
@@ -49,7 +62,23 @@ export function AiChatSheet({ visible, onClose, quizId, questionId, explanation 
     handleSend,
     handleQuickAction,
     handleClear,
-  } = useAiChat({ quizId, questionId, explanation });
+  } = useAiChat({
+    quizId,
+    questionId,
+    explanation,
+    answered,
+    selectedAnswerId,
+    isWrong,
+    visible,
+    autoAsk,
+  });
+
+  // "Why is my answer wrong?" leads only after a wrong answer; the standard prompts always follow.
+  const quickActions = [
+    ...(isWrong ? [{ label: "Why is my answer wrong?", key: "why-wrong" }] : []),
+    { label: "Give me a hint", key: "hint" },
+    { label: "Help me understand this", key: "explain" },
+  ];
 
   useEffect(() => {
     Animated.parallel([
@@ -171,7 +200,7 @@ export function AiChatSheet({ visible, onClose, quizId, questionId, explanation 
 
           {/* Quick actions */}
           <View className="flex-row flex-wrap gap-2 px-4 pb-3">
-            {QUICK_ACTIONS.map(({ label, key }) => (
+            {quickActions.map(({ label, key }) => (
               <TouchableOpacity
                 key={key}
                 onPress={() => handleQuickAction(key)}
@@ -215,7 +244,7 @@ export function AiChatSheet({ visible, onClose, quizId, questionId, explanation 
               onPress={() =>
                 Alert.alert(
                   "How the AI coach works",
-                  "Ask anything about the current question and the AI coach explains it in plain language — with hints and examples. It guides your understanding but won't just hand you the answer, so it actually sticks for the exam.",
+                  "Ask anything about the current question and the AI coach explains it in plain language — with hints and examples. Before you answer it gives nudges without revealing the answer, so it actually sticks; once you've answered, it unlocks the full explanation.",
                 )
               }
             >

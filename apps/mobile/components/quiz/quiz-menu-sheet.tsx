@@ -208,10 +208,8 @@ export function QuizMenuSheet({ visible, onClose, onRestart, onReport, onAddToCh
                 className="flex-row items-center justify-between px-5 py-4"
               >
                 <Text
-                  className={`text-base ${
-                    item.bold
-                      ? "font-bold text-secondary-900 dark:text-secondary-50"
-                      : "font-normal text-secondary-500 dark:text-secondary-400"
+                  className={`text-base text-secondary-900 dark:text-secondary-50 ${
+                    item.bold ? "font-bold" : "font-normal"
                   }`}
                 >
                   {item.label}
@@ -228,7 +226,7 @@ export function QuizMenuSheet({ visible, onClose, onRestart, onReport, onAddToCh
               </TouchableOpacity>
             ) : (
               <View className="flex-row items-center justify-between px-5 py-3">
-                <Text className="text-base text-secondary-500 dark:text-secondary-400">
+                <Text className="text-base text-secondary-900 dark:text-secondary-50">
                   {item.label}
                 </Text>
                 <Switch

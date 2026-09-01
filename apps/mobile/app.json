@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -40,7 +40,15 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -49,8 +57,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7ce76e32-4b71-410c-8c2f-4641216f74da"
+        "projectId": "79501b21-32db-4de8-aa03-d550c296502e"
       }
-    }
+    },
+    "owner": "hasnain8540"
   }
 }

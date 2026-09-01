@@ -1,4 +1,5 @@
 import { AiChatSheet } from "@/components/quiz/ai-chat-sheet";
+import { QuizImage } from "@/components/quiz/quiz-image";
 import { QuizMenuSheet } from "@/components/quiz/quiz-menu-sheet";
 import { QuizOption, type QuizOptionVariant } from "@/components/quiz/quiz-option";
 import { ReportProblemSheet } from "@/components/quiz/report-problem-sheet";
@@ -17,7 +18,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -54,6 +54,8 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [aiChatVisible, setAiChatVisible] = useState(false);
+  // Set when the sheet is opened via the "why is my answer wrong?" prompt so it auto-asks on open.
+  const [aiAutoAsk, setAiAutoAsk] = useState<"why-wrong" | null>(null);
   const [reportVisible, setReportVisible] = useState(false);
   const startedAt = useRef(Date.now());
 
@@ -108,6 +110,7 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
   const current = questions[currentIndex];
   const checked = checkedAnswers[current.id];
   const isAnswered = !!checked;
+  const isWrong = isAnswered && !checked.isCorrect;
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === questions.length - 1;
   const progress = (currentIndex + 1) / questions.length;
@@ -182,7 +185,16 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
     if (!isFirst) setCurrentIndex((i) => i - 1);
   };
 
-  const handleHint = () => setAiChatVisible(true);
+  const handleHint = () => {
+    setAiAutoAsk(null);
+    setAiChatVisible(true);
+  };
+
+  // Opens the AI coach straight into "why is my answer wrong?" — offered after a wrong answer.
+  const handleWhyWrong = () => {
+    setAiAutoAsk("why-wrong");
+    setAiChatVisible(true);
+  };
 
   const handleRestart = () => {
     setCurrentIndex(0);
@@ -245,15 +257,7 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
           {current.question_text}
         </Text>
 
-        {currentImage && (
-          <View className="mb-6 overflow-hidden rounded-2xl border border-secondary-100 dark:border-secondary-800">
-            <Image
-              source={{ uri: currentImage }}
-              style={{ width: "100%", height: 220 }}
-              resizeMode="cover"
-            />
-          </View>
-        )}
+        {currentImage && <QuizImage uri={currentImage} />}
 
         <View className="gap-3">
           {current.answers.map((answer, index) => {
@@ -276,6 +280,27 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
             );
           })}
         </View>
+
+        {isWrong && (
+          <TouchableOpacity
+            onPress={handleWhyWrong}
+            activeOpacity={0.85}
+            className="mt-4 flex-row items-center gap-3 rounded-2xl border border-primary-200 bg-primary-50 dark:border-primary-800 dark:bg-primary-900/20 px-4 py-3.5"
+          >
+            <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+              <MaterialIcons name="auto-awesome" size={20} color={Primary.DEFAULT} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-secondary-900 dark:text-secondary-50">
+                See why your answer is wrong
+              </Text>
+              <Text className="text-xs text-secondary-500 dark:text-secondary-400">
+                Ask DMV Genie AI to break it down
+              </Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={22} color={mutedIconColor} />
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       <AiChatSheet
@@ -285,6 +310,10 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
         questionId={current.id}
         questionText={current.question_text}
         explanation={checked?.explanation ?? undefined}
+        answered={isAnswered}
+        selectedAnswerId={checked?.selectedAnswerId}
+        isWrong={isWrong}
+        autoAsk={aiAutoAsk}
       />
 
       <QuizMenuSheet
