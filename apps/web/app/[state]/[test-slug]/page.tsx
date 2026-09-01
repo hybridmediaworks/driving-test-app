@@ -22,7 +22,10 @@ async function resolveQuizForMetadata(stateCode: string, testSlug: string): Prom
   if (!stateCode) return null;
 
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
+    // Server-side code runs inside the same container as Laravel, so it always talks to it
+    // directly on localhost — NEXT_PUBLIC_API_URL is a relative path ("/api/v1") meant for the
+    // browser to hit through nginx, and is invalid as a URL for Node's server-side fetch.
+    const apiUrl = "http://127.0.0.1:8001/api/v1";
     const res = await fetch(`${apiUrl}/quizzes?state=${stateCode}&slug=${testSlug}`, { next: { revalidate: 3600 } });
     if (!res.ok) return null;
     const json = await res.json();

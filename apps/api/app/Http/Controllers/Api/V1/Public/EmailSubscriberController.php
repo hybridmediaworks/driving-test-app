@@ -15,13 +15,20 @@ class EmailSubscriberController extends Controller
      *
      * Public, no auth. Captures an email (plus the site's selected state) from the home page
      * signup. Upserts on `email` so a repeat submission — or a previously unsubscribed address —
-     * reactivates the same row rather than failing the unique constraint. `state`/`source`/
-     * `vehicle_type` are only overwritten when actually provided, so a bare re-subscribe never
-     * wipes them.
+     * reactivates the same row rather than failing the unique constraint (never creates a
+     * duplicate). `state`/`source`/`vehicle_type` are only overwritten when actually provided, so
+     * a bare re-subscribe never wipes them. The response message distinguishes a brand-new
+     * signup, a reactivation, and a no-op repeat submission by an already-active subscriber —
+     * without this, all three looked identical to the caller.
      */
     public function store(SubscribeRequest $request): JsonResponse
     {
         $data = $request->validated();
+
+        $wasAlreadyActive = EmailSubscriber::query()
+            ->where('email', $data['email'])
+            ->whereNull('unsubscribed_at')
+            ->exists();
 
         $attributes = array_filter(
             [
@@ -43,9 +50,13 @@ class EmailSubscriberController extends Controller
             $subscriber->update(['unsubscribe_token' => Str::random(40)]);
         }
 
-        return response()->json([
-            'message' => __("You're subscribed! Look out for a question in your inbox each morning."),
-        ], $subscriber->wasRecentlyCreated ? 201 : 200);
+        $message = match (true) {
+            $subscriber->wasRecentlyCreated => __("You're subscribed! Look out for a question in your inbox each morning."),
+            $wasAlreadyActive => __("You're already subscribed — look out for a question in your inbox each morning."),
+            default => __('Welcome back! You\'re subscribed again.'),
+        };
+
+        return response()->json(['message' => $message], $subscriber->wasRecentlyCreated ? 201 : 200);
     }
 
     /**

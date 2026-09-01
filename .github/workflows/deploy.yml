@@ -10,6 +10,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # scp-action only adds/overwrites files — it never deletes ones removed from the repo,
+      # so a file deleted in git (e.g. a renamed page) would otherwise sit stale on the server
+      # forever and still get picked up by Docker's `COPY . .`. Wiping first guarantees the
+      # server always exactly mirrors the pushed commit. production.env lives outside this
+      # directory (/home/ec2-user/production.env) specifically so this is safe to nuke.
+      - name: Clean target directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            rm -rf /home/ec2-user/driving-test-app
+            mkdir -p /home/ec2-user/driving-test-app
+
       - name: Copy repo to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -44,5 +59,5 @@ jobs:
             sudo docker stop driving-test-app || true
             sudo docker rm driving-test-app || true
             sudo docker run -d --name driving-test-app --restart unless-stopped \
-              -p 80:10000 --env-file production.env driving-test-app:latest
+              -p 80:10000 --env-file /home/ec2-user/production.env driving-test-app:latest
             sudo docker image prune -f

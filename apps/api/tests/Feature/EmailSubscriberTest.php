@@ -108,6 +108,33 @@ class EmailSubscriberTest extends TestCase
         $this->assertSame('Alabama', $existing->state);
     }
 
+    public function test_resubscribing_while_still_active_says_already_subscribed(): void
+    {
+        EmailSubscriber::factory()->create([
+            'email' => 'learner@example.com',
+            'unsubscribed_at' => null,
+        ]);
+
+        $response = $this->postJson('/api/v1/newsletter/subscribe', ['email' => 'learner@example.com']);
+
+        $response->assertOk();
+        $this->assertStringContainsString('already subscribed', $response->json('message'));
+        $this->assertSame(1, EmailSubscriber::query()->count());
+    }
+
+    public function test_resubscribing_after_unsubscribing_says_welcome_back(): void
+    {
+        EmailSubscriber::factory()->create([
+            'email' => 'learner@example.com',
+            'unsubscribed_at' => now(),
+        ]);
+
+        $response = $this->postJson('/api/v1/newsletter/subscribe', ['email' => 'learner@example.com']);
+
+        $response->assertOk();
+        $this->assertStringContainsString('Welcome back', $response->json('message'));
+    }
+
     public function test_guest_cannot_list_subscribers(): void
     {
         $this->getJson('/api/v1/admin/email-subscribers')->assertUnauthorized();

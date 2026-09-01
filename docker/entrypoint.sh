@@ -9,8 +9,12 @@ cd /var/www/apps/api
 # DB_DATABASE points at the mounted persistent disk in production (render.yaml); falls back to
 # the ephemeral in-container path for local/docker-compose use where no disk is mounted.
 DB_PATH="${DB_DATABASE:-database/database.sqlite}"
-mkdir -p "$(dirname "$DB_PATH")" storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+mkdir -p "$(dirname "$DB_PATH")" storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/app/public
 [ -f "$DB_PATH" ] || touch "$DB_PATH"
+
+# public/storage -> storage/app/public, so media on the "public" disk (reviewer photo, etc.) is
+# reachable at APP_URL/storage/... . --force because the build may already ship a stale/broken link.
+php artisan storage:link --force
 
 php artisan config:clear
 php artisan migrate --force
