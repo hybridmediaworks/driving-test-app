@@ -1,13 +1,9 @@
 import { createApiClient, ApiError } from "@driving-test-app/shared";
 
-const REMOTE_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
-
-// The API's CORS policy only allows its own origin, so a browser request straight to
-// REMOTE_API_URL from the app's origin is blocked. In the browser we call a same-origin path that
-// next.config.ts rewrites to the real API (proxied server-side, where CORS doesn't apply). On the
-// server we hit the API directly — there's no origin to proxy through, and a relative URL has
-// nothing to resolve against.
-const API_URL = typeof window === "undefined" ? REMOTE_API_URL : "/backend-api";
+// The browser and the server both call the API directly at NEXT_PUBLIC_API_URL. In production the
+// web app and the API share an origin, so browser calls are same-origin (no CORS). NEXT_PUBLIC_ is
+// inlined at build time, so it must be set to the public API URL the browser can reach.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
