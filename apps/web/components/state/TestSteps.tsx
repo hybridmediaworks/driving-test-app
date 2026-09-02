@@ -125,7 +125,7 @@ export default function TestSteps({
     isDesktop && step.style === "large" ? 2 : 1;
 
   return (
-    <div className="relative md:space-y-0 space-y-4">
+    <div className="relative md:space-y-0 space-y-4 w-[calc(100%-116px)] mr-0 ml-auto">
       {rows.map((row, rowIndex) => {
         const rowSpan = row.reduce((total, step) => total + stepSpan(step), 0);
         // Blue "you're here" progress across this row: covers the completed cards plus the current
@@ -191,11 +191,13 @@ export default function TestSteps({
                     : afterRowTriggers
                       ? "connector-fill border-white"
                       : "border-white"
-                } ${shrinkConnectorBelow ? "left-15" : "w-full"}`}
+                } ${shrinkConnectorBelow ? "left-0" : "w-full"}`}
                 style={{
                   ...(shrinkConnectorBelow
                     ? {
-                        width: `calc(${rowWidth(effectiveColumns, rowSpan)} - 20px)`,
+                        // `left-15` (3.75rem) is added back into the width so the shrunk connector
+                        // still reaches the same right edge instead of ending 3.75rem short.
+                        width: `calc(${rowWidth(effectiveColumns, rowSpan)} - 20px + 3.75rem)`,
                       }
                     : undefined),
                   ...(afterRowTriggers

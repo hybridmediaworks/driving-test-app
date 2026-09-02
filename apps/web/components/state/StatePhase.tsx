@@ -50,7 +50,7 @@ export default function StatePhase({
         <div className="relative">
           {previousConnector && (
             <div
-              className={`md:w-15 w-8.5 ms-auto md:border-l-14 border-l-8 md:border-t-14 md:rounded-tl-[28px] h-12 -mt-11.75 ${
+              className={`md:w-18 w-8.5 ms-auto -me-4.5 md:border-l-14 border-l-8 md:border-t-14 md:rounded-tl-[28px] h-12 -mt-11.75 ${
                 previousPhaseFullyCompleted
                   ? "border-blue-500"
                   : animateCircleIn
@@ -85,7 +85,7 @@ export default function StatePhase({
             <span className="relative">{phaseData.phase}</span>
           </Heading>
           <div
-            className={`md:w-15 w-8.5 ms-auto md:border-l-14 border-l-8 md:border-b-14 border-b-8 rounded-bl-[28px] h-full ${
+            className={`md:w-18 w-8.5 ms-auto -me-4.5 md:border-l-14 border-l-8 md:border-b-14 border-b-8 rounded-bl-[28px] h-[calc(100%+14px)] ${
               isActive && !animateCircleIn
                 ? "border-blue-500"
                 : animateCircleIn

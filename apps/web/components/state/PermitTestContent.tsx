@@ -9,9 +9,10 @@ export default function PermitTestContent() {
   return (
     <>
       <HeroSection />
-      <LiveDataSection />
       {/* Handbook + "end of theory" milestone now render as the final rung inside the ladder. */}
-      <PhaseLadderSection />
+      <div className="relative pt-52.5 bg-background2">
+        <PhaseLadderSection />
+      </div>
       <GoFurtherSection />
     </>
   );
