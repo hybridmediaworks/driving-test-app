@@ -13,12 +13,17 @@ const nextConfig: NextConfig = {
   // same-origin path instead (see lib/api.ts), and Next proxies them to the real API from the
   // server, where CORS doesn't apply.
   async rewrites() {
-    return [
-      {
-        source: "/backend-api/:path*",
-        destination: `${API_URL}/:path*`,
-      },
-    ];
+    // MUST be `beforeFiles`: the app has a top-level `[state]/[test-slug]` dynamic route that would
+    // otherwise match `/backend-api/<path>` first and 404 it, since default rewrites run *after*
+    // filesystem routes. `beforeFiles` proxies the API call before any page route can swallow it.
+    return {
+      beforeFiles: [
+        {
+          source: "/backend-api/:path*",
+          destination: `${API_URL}/:path*`,
+        },
+      ],
+    };
   },
 };
 
