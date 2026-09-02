@@ -1,10 +1,7 @@
 "use client";
 
-import { CalendarClock, Clock, Flame, TrendingUp, Users } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import Subheading from "@/components/ui/Subheading";
-import Sparkline from "@/components/dashboard/Sparkline";
 import { useStateStats } from "@/lib/useStateStats";
 import { useWebLayout } from "@/lib/web-layout-context";
 
@@ -48,73 +45,46 @@ export default function LiveDataSection() {
   const sessionLength = formatSessionLength(stats?.avg_session_seconds ?? null);
 
   return (
-    <section className="px-5 pt-15 pb-15 lg:pt-30 lg:pb-15">
-      <div className="mx-auto max-w-container space-y-5.5">
-        <div className="max-w-170 space-y-4">
-          <Subheading text="Live Data" />
-          <Heading as="h2">
-            How {selectedState} {personLabel} are practicing
-          </Heading>
-          <Paragraph>
-            A live snapshot of {selectedState} learners on DriveLane over the last 30 days.
+    <div className="z-10 relative md:p-15 p-5 text-center space-y-12 bg-[linear-gradient(180deg,#fff_0%,#F0FDF4_100%)] shadow-hover max-w-container mx-auto rounded-4xl">
+      <Heading as="h3" className="max-w-162 mx-auto">
+        How {selectedState} students are practicing
+      </Heading>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+          <Paragraph size="lg" color="muted" className="leading-4!">
+            {personLabel.charAt(0).toUpperCase() + personLabel.slice(1)}{" "}
+            practiced
           </Paragraph>
+          <Heading as="h3" className="text-blue-500!">
+            {stats ? stats.students_practiced_30d.toLocaleString() : "—"}
+          </Heading>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="bg-white p-6 border rounded-xl space-y-3">
-            <Paragraph className="font-medium flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-neutral-400" />
-              {personLabel.charAt(0).toUpperCase() + personLabel.slice(1)} practiced
-            </Paragraph>
-            <Heading size="lg">{stats ? stats.students_practiced_30d.toLocaleString() : "—"}</Heading>
-            <Paragraph size="sm" color="muted">
-              Active today: {stats ? stats.active_today.toLocaleString() : "—"}
-            </Paragraph>
-            <Sparkline data={stats ? stats.daily_students_practiced : []} className="h-[24px] w-full" />
-          </div>
-          <div className="bg-white p-6 border rounded-xl space-y-3">
-            <Paragraph className="font-medium flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-neutral-400" />
-              Questions answered
-            </Paragraph>
-            <Heading size="lg">{stats ? stats.questions_answered_total.toLocaleString() : "—"}</Heading>
-            <Paragraph size="sm" color="muted">
-              Last 30 days
-            </Paragraph>
-            <Sparkline data={stats ? stats.daily_questions_answered : []} className="h-[24px] w-full" />
-          </div>
-          <div className="bg-white p-6 border rounded-xl space-y-3">
-            <Paragraph className="font-medium flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-neutral-400" />
-              Avg. session length
-            </Paragraph>
-            <Heading size="lg">{sessionLength ?? "—"}</Heading>
-            <Paragraph size="sm" color="muted">
-              Last 30 days
-            </Paragraph>
-          </div>
-          <div className="bg-white p-6 border rounded-xl space-y-3">
-            <Paragraph className="font-medium flex items-center gap-1.5">
-              <Flame className="w-4 h-4 text-neutral-400" />
-              Combined practice time
-            </Paragraph>
-            <Heading size="lg">{stats ? formatCombinedPractice(stats.combined_practice_seconds) : "—"}</Heading>
-            <Paragraph size="sm" color="muted">
-              Last 30 days
-            </Paragraph>
-            <Sparkline data={stats ? stats.daily_combined_practice_seconds : []} className="h-[24px] w-full" />
-          </div>
-          <div className="bg-white p-6 border rounded-xl space-y-3">
-            <Paragraph className="font-medium flex items-center gap-1.5">
-              <CalendarClock className="w-4 h-4 text-neutral-400" />
-              Peak practice time
-            </Paragraph>
-            <Heading size="lg">{stats ? formatPeakTime(stats.peak_hour, stats.peak_weekday) : "—"}</Heading>
-            <Paragraph size="sm" color="muted">
-              Most active time, last 30 days
-            </Paragraph>
-          </div>
+        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+          <Paragraph size="lg" color="muted" className="leading-4!">
+            Questions answered
+          </Paragraph>
+          <Heading as="h3" className="text-red-500!">
+            {stats ? stats.questions_answered_total.toLocaleString() : "—"}
+          </Heading>
+        </div>
+        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+          <Paragraph size="lg" color="muted" className="leading-4!">
+            Average study session
+          </Paragraph>
+          <Heading as="h3" className="text-yellow-500!">
+            {sessionLength ?? "—"}
+          </Heading>
+        </div>
+
+        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+          <Paragraph size="lg" color="muted" className="leading-4!">
+            Pass rate with premium
+          </Paragraph>
+          <Heading as="h3" className="text-green-500!">
+            95.6%
+          </Heading>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

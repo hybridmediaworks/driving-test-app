@@ -59,7 +59,8 @@ export default function StepCard({
           <BookMarked className="w-4.5 h-4.5" />
         </div>
         <Paragraph color="muted" size="sm">
-          Downloadable study guides for this section are being prepared — check back soon.
+          Downloadable study guides for this section are being prepared — check
+          back soon.
         </Paragraph>
       </div>
     );
@@ -67,9 +68,9 @@ export default function StepCard({
 
   const content = (
     <div
-      className={`group flex md:flex-col items-center md:items-start cursor-pointer rounded transition-all duration-300 hover:-translate-y-0.75 ${
+      className={`group border rounded-2xl p-1 flex md:flex-col items-center md:items-start cursor-pointer transition-all duration-300 hover:-translate-y-0.75 ${
         step.style === "large" ? "lg:col-span-2" : ""
-      }`}
+      } ${step.status === "next" ? "border-blue-50 bg-[linear-gradient(90deg,#EFF6FF_0%,#DBEAFE_100%)] shadow-[0_4px_32px_0_rgba(59,130,246,0.32)]" : "border-background3 bg-white shadow-card"}`}
     >
       {connector && (
         <div
@@ -93,9 +94,7 @@ export default function StepCard({
         step.type === "free" ||
         step.type === "premium") && (
         <div
-          className={`relative overflow-hidden md:rounded-xl rounded-md md:max-w-full w-full max-w-35 ${
-            step.status === "next" ? "next-glow" : ""
-          }`}
+          className={`relative overflow-hidden md:rounded-xl rounded-md md:max-w-full w-full max-w-35 `}
         >
           {step.image && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -115,27 +114,31 @@ export default function StepCard({
                   : ""
               }`}
             >
-              {step.locked && step.status !== "next" && step.lockMode === "progress" && (
-                // Paid learner who hasn't finished the previous test yet — a blue circle badge with a
-                // white lock, no upsell, and (see the wrapper below) the card doesn't navigate on click.
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 shadow-md">
-                  <Lock className="h-5 w-5 text-white" />
-                </div>
-              )}
-              {step.locked && step.status !== "next" && step.lockMode !== "progress" && (
-                // Not entitled — the whole card links to /pricing (see the wrapper below), so the
-                // hover CTA is a plain span here rather than a nested link.
-                <>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
-                    <Gem className="text-blue-600 w-8 h-8 " />
+              {step.locked &&
+                step.status !== "next" &&
+                step.lockMode === "progress" && (
+                  // Paid learner who hasn't finished the previous test yet — a blue circle badge with a
+                  // white lock, no upsell, and (see the wrapper below) the card doesn't navigate on click.
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 shadow-md">
+                    <Lock className="h-5 w-5 text-white" />
                   </div>
-                  <div className="hidden group-hover:flex px-2">
-                    <span className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-yellow-500 bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-black md:w-fit">
-                      <Gem className="h-4 w-4" /> Upgrade to Premium
-                    </span>
-                  </div>
-                </>
-              )}
+                )}
+              {step.locked &&
+                step.status !== "next" &&
+                step.lockMode !== "progress" && (
+                  // Not entitled — the whole card links to /pricing (see the wrapper below), so the
+                  // hover CTA is a plain span here rather than a nested link.
+                  <>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
+                      <Gem className="text-blue-600 w-8 h-8 " />
+                    </div>
+                    <div className="hidden group-hover:flex px-2">
+                      <span className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-yellow-500 bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-black md:w-fit">
+                        <Gem className="h-4 w-4" /> Upgrade to Premium
+                      </span>
+                    </div>
+                  </>
+                )}
               {step.status === "next" && (
                 <Paragraph
                   size="sm"
@@ -169,12 +172,17 @@ export default function StepCard({
               green tick, failed → red exclamation. Shown once the learner has taken the quiz. */}
           {step.outcome === "passed" && (
             <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-green-500 ring-2 ring-white">
-              <Check className="md:h-4 h-3 md:w-4 w-3 text-white" strokeWidth={3} />
+              <Check
+                className="md:h-4 h-3 md:w-4 w-3 text-white"
+                strokeWidth={3}
+              />
             </div>
           )}
           {step.outcome === "failed" && (
             <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white">
-              <span className="md:text-sm text-xs font-bold leading-none text-white">!</span>
+              <span className="md:text-sm text-xs font-bold leading-none text-white">
+                !
+              </span>
             </div>
           )}
         </div>
@@ -188,7 +196,10 @@ export default function StepCard({
         step.totalTime) && (
         <div className="md:p-4 px-3 md:space-y-2">
           {step.title && (
-            <Paragraph color="dark" className="font-semibold">
+            <Paragraph
+              color={`${step.status === "next" ? "primary" : "dark"}`}
+              className="font-semibold"
+            >
               {step.title}
             </Paragraph>
           )}
@@ -202,7 +213,7 @@ export default function StepCard({
             step.duration ||
             step.totalQuestions ||
             step.totalTime) && (
-            <Paragraph color="primary" size="sm" className="font-semibold">
+            <Paragraph size="sm" className="font-semibold text-blue-500!">
               {step.questions !== undefined && `${step.questions} questions`}
               {step.total && `${step.total}${cardType ? ` ${cardType}` : ""}`}
               {step.duration && step.duration}

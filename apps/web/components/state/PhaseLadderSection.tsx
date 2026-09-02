@@ -3,7 +3,6 @@
 import { Fragment } from "react";
 import StatePhase from "@/components/state/StatePhase";
 import HandbookPhase from "@/components/state/HandbookPhase";
-import PremiumCTA from "@/components/state/permit-test/PremiumCTA";
 import { usePhaseNumbers } from "@/lib/usePhaseCompletion";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { stateToSlug } from "@/lib/usStates";
@@ -40,7 +39,7 @@ export default function PhaseLadderSection() {
                 /* The handbook rung always follows the last phase, so every phase connects downward. */
                 nextConnector
               />
-              {showCtaAfter && <PremiumCTA previousConnector nextConnector afterPhase={phase} />}
+              {showCtaAfter}
             </Fragment>
           );
         })}

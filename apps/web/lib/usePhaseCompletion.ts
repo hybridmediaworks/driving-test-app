@@ -39,10 +39,13 @@ export function usePhaseCompletion(phaseNumber: number): PhaseCompletionState {
 
     let cancelled = false;
 
-    fetchPhaseLadder(stateCode, vehicleType, selectedTestType).then((data) => {
-      if (cancelled) return;
-      setPhases(data);
-    });
+    fetchPhaseLadder(stateCode, vehicleType, selectedTestType)
+      .then((data) => {
+        if (!cancelled) setPhases(data);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Failed to load phase ladder", err);
+      });
 
     return () => {
       cancelled = true;
@@ -78,10 +81,13 @@ export function usePhaseNumbers(): number[] {
 
     let cancelled = false;
 
-    fetchPhaseLadder(stateCode, vehicleType, selectedTestType).then((data) => {
-      if (cancelled) return;
-      setPhases(data);
-    });
+    fetchPhaseLadder(stateCode, vehicleType, selectedTestType)
+      .then((data) => {
+        if (!cancelled) setPhases(data);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Failed to load phase ladder", err);
+      });
 
     return () => {
       cancelled = true;
@@ -111,9 +117,13 @@ export function useNextQuizSlug(testTrack: "permit_test" | "driving_test"): stri
 
     let cancelled = false;
 
-    resolveNextQuizSlug(stateCode, vehicleType, testTrack).then((result) => {
-      if (!cancelled) setSlug(result);
-    });
+    resolveNextQuizSlug(stateCode, vehicleType, testTrack)
+      .then((result) => {
+        if (!cancelled) setSlug(result);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Failed to resolve next quiz slug", err);
+      });
 
     return () => {
       cancelled = true;
