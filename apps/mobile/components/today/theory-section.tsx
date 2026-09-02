@@ -15,6 +15,8 @@ type TheorySectionProps = {
   items: TheoryItemData[];
   onSeeAll?: () => void;
   onItemPress?: (id: string) => void;
+  /** Id of the item whose cheat sheet is currently downloading (shows a spinner on its button). */
+  loadingId?: string;
 };
 
 export function TheorySection({
@@ -23,6 +25,7 @@ export function TheorySection({
   items,
   onSeeAll,
   onItemPress,
+  loadingId,
 }: TheorySectionProps) {
   return (
     <View className="mb-6">
@@ -34,6 +37,7 @@ export function TheorySection({
             title={item.title}
             icon={item.icon}
             action={item.action}
+            loading={loadingId === item.id}
             onPress={() => onItemPress?.(item.id)}
           />
         ))}

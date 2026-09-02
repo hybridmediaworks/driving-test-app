@@ -4,6 +4,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
+  ActivityIndicator,
   Text,
   TouchableOpacity,
   View,
@@ -23,6 +24,8 @@ type ButtonProps = TouchableOpacityProps & {
   variant?: Variant;
   size?: Size;
   disabled?: boolean;
+  /** Shows a spinner in place of the label and blocks presses while an action is in flight. */
+  loading?: boolean;
   showArrow?: boolean;
   children: React.ReactNode;
 };
@@ -99,6 +102,7 @@ export function Button({
   variant = "primary",
   size = "md",
   disabled = false,
+  loading = false,
   showArrow = false,
   onPress,
   className,
@@ -106,6 +110,16 @@ export function Button({
 }: ButtonProps) {
   const isDark = useIsDark();
   const isDisabled = disabled;
+  // While loading the button keeps its active look (not the greyed-out disabled style) but shows a
+  // spinner and can't be pressed.
+  const spinnerColor = variant === "primary" ? White.DEFAULT : currentIconColorForSpinner();
+  function currentIconColorForSpinner() {
+    return variant === "secondary-outline"
+      ? isDark
+        ? Secondary[300]
+        : Secondary[600]
+      : iconColor[variant];
+  }
   const isGradientPrimary = variant === "primary" && !isDisabled;
   const baseStyle = isDisabled
     ? `${disabledContainer} ${containerPadding[size]}`
@@ -123,7 +137,9 @@ export function Button({
         : Secondary[600]
       : iconColor[variant];
 
-  const content = (
+  const content = loading ? (
+    <ActivityIndicator color={spinnerColor} />
+  ) : (
     <>
       <View className="flex-row items-center gap-2">
         {React.Children.map(children, (child) =>
@@ -155,9 +171,9 @@ export function Button({
 
   return (
     <TouchableOpacity
-      activeOpacity={isDisabled ? 1 : 0.85}
-      disabled={isDisabled}
-      onPress={isDisabled ? undefined : onPress}
+      activeOpacity={isDisabled || loading ? 1 : 0.85}
+      disabled={isDisabled || loading}
+      onPress={isDisabled || loading ? undefined : onPress}
       className={
         isGradientPrimary
           ? className

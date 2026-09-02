@@ -5,6 +5,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAsync } from "@/hooks/use-async";
 import { fetchTestsByCategory } from "@/services/api/todayService";
+import { useAuthStore } from "@/store/authStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -21,10 +22,14 @@ export default function SeeAllScreen() {
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
   const stateCode = useUserStore((s) => s.state) ?? "CA";
   const { testResults } = useProgressStore();
+  // Re-fetch when auth identity / premium status changes so lock icons reflect the current user
+  // (see the Today screen for the same fix).
+  const authKey = useAuthStore((s) => s.user?.id);
+  const isPremium = useAuthStore((s) => s.user?.entitlement?.is_premium);
 
   const { status, data, refetch } = useAsync(
     () => fetchTestsByCategory(vehicleType, stateCode, category),
-    [vehicleType, stateCode, category],
+    [vehicleType, stateCode, category, authKey, isPremium],
   );
   const tests = data ?? [];
 

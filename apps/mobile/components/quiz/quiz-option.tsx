@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { CorrectConfetti, CorrectGlow } from "./correct-confetti";
 
 /**
@@ -31,6 +31,7 @@ export function QuizOption({
   yourLabel = "Your answer",
   onPress,
   disabled,
+  loading = false,
   burstKey,
 }: {
   index: number;
@@ -43,6 +44,8 @@ export function QuizOption({
   yourLabel?: string;
   onPress: () => void;
   disabled?: boolean;
+  /** Shows a spinner on this row while its answer is being graded (server round-trip). */
+  loading?: boolean;
   /** Changes per question so the confetti/glow remount and replay each time. */
   burstKey?: string | number;
 }) {
@@ -87,6 +90,10 @@ export function QuizOption({
             {text}
           </Text>
         </View>
+
+        {loading && variant !== "correct" && variant !== "wrong" && (
+          <ActivityIndicator size="small" color="#2563eb" className="pt-0.5" />
+        )}
 
         {(variant === "correct" || variant === "wrong") && (
           <View className="flex-row shrink-0 items-center gap-2 pt-0.5">

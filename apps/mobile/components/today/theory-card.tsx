@@ -1,7 +1,7 @@
 import { Primary, Secondary } from "@/constants/theme";
 import { useIsDark } from "@/hooks/use-is-dark";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 type TheoryCardProps = {
   title: string;
@@ -9,6 +9,8 @@ type TheoryCardProps = {
   fileInfo?: string;
   locked?: boolean;
   onPress?: () => void;
+  /** Shows a spinner on the "Get it" button while the cheat sheet is downloading. */
+  loading?: boolean;
 };
 
 export function TheoryCard({
@@ -17,13 +19,15 @@ export function TheoryCard({
   fileInfo,
   locked = false,
   onPress,
+  loading = false,
 }: TheoryCardProps) {
   const isDark = useIsDark();
 
   return (
     <TouchableOpacity
       activeOpacity={0.75}
-      onPress={onPress}
+      onPress={loading ? undefined : onPress}
+      disabled={loading}
       className="bg-secondary-100 dark:bg-secondary-800 rounded-2xl p-4"
     >
       <View className="flex-row items-start justify-between mb-2">
@@ -49,11 +53,16 @@ export function TheoryCard({
         {!locked && (
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={onPress}
-            className="px-4 py-1.5 rounded-full"
-            style={{ backgroundColor: Primary.DEFAULT }}
+            onPress={loading ? undefined : onPress}
+            disabled={loading}
+            className="px-4 py-1.5 rounded-full items-center justify-center"
+            style={{ backgroundColor: Primary.DEFAULT, minWidth: 64 }}
           >
-            <Text className="text-white text-sm font-semibold">Get it</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text className="text-white text-sm font-semibold">Get it</Text>
+            )}
           </TouchableOpacity>
         )}
         {fileInfo && (

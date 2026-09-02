@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -68,6 +69,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
       <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
         <ErrorBoundary>
           <Stack>
@@ -90,6 +92,7 @@ export default function RootLayout() {
         <Toast />
         <StatusBar style={isDark ? 'light' : 'dark'} />
       </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

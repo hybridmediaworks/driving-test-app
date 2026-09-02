@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -9,6 +10,9 @@ import { useIsDark } from "@/hooks/use-is-dark";
 export default function TabLayout() {
   const isDark = useIsDark();
   const theme = isDark ? "dark" : "light";
+  // Add the bottom safe-area inset so the tab bar clears the Android 3-button nav bar / iOS home
+  // indicator instead of being cut off by it (the app runs edge-to-edge on Android).
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -17,7 +21,9 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          height: 80,
+          height: 64 + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: 6,
           backgroundColor: Colors[theme].tabBackground,
           borderTopColor: Colors[theme].tabBorder,
         },

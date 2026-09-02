@@ -11,6 +11,8 @@ type TheoryItemProps = {
   icon: "cloud-download" | "lock";
   action: ActionType;
   onPress?: () => void;
+  /** Shows a spinner on the "Get it" button while the cheat sheet is downloading. */
+  loading?: boolean;
 };
 
 const iconMap: Record<
@@ -21,13 +23,14 @@ const iconMap: Record<
   lock: "lock",
 };
 
-export function TheoryItem({ title, icon, action, onPress }: TheoryItemProps) {
+export function TheoryItem({ title, icon, action, onPress, loading = false }: TheoryItemProps) {
   const isDark = useIsDark();
 
   return (
     <TouchableOpacity
       activeOpacity={0.75}
-      onPress={onPress}
+      onPress={loading ? undefined : onPress}
+      disabled={loading}
       className="flex-row items-center px-4 py-4 border-b border-secondary-100 dark:border-secondary-700"
     >
       {/* Icon */}
@@ -52,7 +55,7 @@ export function TheoryItem({ title, icon, action, onPress }: TheoryItemProps) {
 
       {/* Action */}
       {action === "get" ? (
-        <Button variant="primary" size="sm" onPress={onPress}>
+        <Button variant="primary" size="sm" loading={loading} onPress={onPress}>
           Get it
         </Button>
       ) : (

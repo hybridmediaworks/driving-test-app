@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Heading } from "@/components/ui/heading";
 import { Secondary } from "@/constants/theme";
@@ -13,6 +14,11 @@ export type ProgressItemProps = {
   checked?: boolean;
   onCheckChange?: (val: boolean) => void;
   onPress?: () => void;
+  // Manual only — the "Get it" CTA that opens the driver's handbook, and its loading state.
+  onGet?: () => void;
+  getLoading?: boolean;
+  // Premium/locked nav row — shows a lock icon instead of the chevron.
+  locked?: boolean;
   isLast?: boolean;
 };
 
@@ -24,6 +30,9 @@ export function ProgressItem({
   checked,
   onCheckChange,
   onPress,
+  onGet,
+  getLoading,
+  locked = false,
   isLast,
 }: ProgressItemProps) {
   return (
@@ -52,15 +61,19 @@ export function ProgressItem({
           {subtitle}
         </Text>
         {type === "manual" && (
-          <View className="items-start ">
-            <Text className="px-4 py-1 rounded-full bg-primary text-white">
+          <View className="items-start">
+            <Button variant="primary" size="sm" loading={getLoading} onPress={onGet}>
               Get it
-            </Text>
+            </Button>
           </View>
         )}
       </View>
       {type === "nav" && (
-        <MaterialIcons name="chevron-right" size={24} color={Secondary[400]} />
+        <MaterialIcons
+          name={locked ? "lock" : "chevron-right"}
+          size={locked ? 20 : 24}
+          color={Secondary[400]}
+        />
       )}
       {type === "manual" && (
         <Checkbox

@@ -5,52 +5,48 @@ import { ErrorState } from "@/components/ui/error-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { PROGRESS_ITEMS } from "@/data/progressItems";
 import { useAsync } from "@/hooks/use-async";
+import { openManual } from "@/lib/handbook";
 import { fetchProgressSummary } from "@/services/api/progressService";
 import { useAuthStore } from "@/store/authStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { router } from "expo-router";
-import { useRef } from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { useRef, useState } from "react";
+import { Animated, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProgressScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const user = useAuthStore((s) => s.user);
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
   const stateCode = useUserStore((s) => s.state) ?? "CA";
+  // Marathon + Exam are premium features — non-premium (incl. signed-out) users are routed to the
+  // paywall instead of into the quiz.
+  const isPremium = useAuthStore((s) => s.user?.entitlement?.is_premium) ?? false;
 
   const manualRead = useProgressStore((s) => s.manualRead);
   const setManualRead = useProgressStore((s) => s.setManualRead);
+  const testResults = useProgressStore((s) => s.testResults);
+  const [openingManual, setOpeningManual] = useState(false);
 
-  // Refetch every time the tab regains focus, so numbers update right after taking a test. Gated on
-  // auth (progress is per-user), and surfaces a retryable error state if the load fails.
+  const handleOpenManual = async () => {
+    if (openingManual) return;
+    setOpeningManual(true);
+    try {
+      await openManual(vehicleType, stateCode);
+    } finally {
+      setOpeningManual(false);
+    }
+  };
+
+  // Works signed-in or out: server per-user data (when a token is attached) is merged with locally
+  // recorded results, so a guest still sees the tests they've taken. Refetches on focus so numbers
+  // update right after taking a test; surfaces a retryable error state if the load fails.
   const { status, data: summary, refetch } = useAsync(
-    () => fetchProgressSummary(vehicleType, stateCode),
+    () => fetchProgressSummary(vehicleType, stateCode, testResults),
     [vehicleType, stateCode],
-    { enabled: !!user, refetchOnFocus: true },
+    { refetchOnFocus: true },
   );
-
-  // ── Not signed in: progress is per-user, so gate on auth ──
-  if (!user) {
-    return (
-      <SafeAreaView className="flex-1 bg-white-off dark:bg-secondary-900" edges={["top"]}>
-        <Header title="Your Progress" scrollY={scrollY} />
-        <View className="flex-1 items-center justify-center px-8">
-          <Text className="mb-4 text-center text-base text-secondary-500 dark:text-secondary-400">
-            Sign in to track your progress and see your chances of passing.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            className="rounded-full bg-primary px-6 py-3"
-          >
-            <Text className="font-semibold text-white">Log in</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   const subtitleFor = (id: string): string => {
     switch (id) {
@@ -80,12 +76,16 @@ export default function ProgressScreen() {
           ? () => router.push(`/test/quiz/${summary.nextPracticeQuizId}`)
           : undefined;
       case "marathon":
+        // Premium feature — send non-premium users to the paywall.
+        if (!isPremium) return () => router.push("/premium");
         return summary?.marathonQuizId
           ? () => router.push(`/test/quiz/${summary.marathonQuizId}`)
           : undefined;
       case "challenge":
         return () => router.push("/(tabs)/challange-bank");
       case "exam":
+        // Premium feature — send non-premium users to the paywall.
+        if (!isPremium) return () => router.push("/premium");
         return summary?.examQuizId
           ? () =>
               router.push(
@@ -97,21 +97,20 @@ export default function ProgressScreen() {
     }
   };
 
-  // Overall completion — every step below is one "unit": reading the manual (1), each practice
-  // test passed, each marathon completed, and the exam passed, over the total available. The bar
-  // starts near empty and fills as the learner actually finishes things (checking Manual moves it
-  // too), rather than reflecting the average-score pass-chance.
-  const totalUnits =
-    1 +
+  // Overall completion. Reading the manual is a fixed 15% of readiness (checking it alone fills the
+  // bar to 15%); the remaining 85% fills as the other units — each practice test passed, each
+  // marathon completed, and the exam passed — are finished, over the total available.
+  const MANUAL_WEIGHT = 15;
+  const otherTotal =
     (summary?.practiceTotal ?? 0) +
     (summary?.marathonTotal ?? 0) +
     (summary?.examTotal ?? 0);
-  const doneUnits =
-    (manualRead ? 1 : 0) +
+  const otherDone =
     (summary?.practicePassed ?? 0) +
     (summary?.marathonCompleted ?? 0) +
     (summary?.examPassed ?? 0);
-  const completionPercent = totalUnits > 0 ? Math.round((doneUnits / totalUnits) * 100) : 0;
+  const otherPercent = otherTotal > 0 ? (otherDone / otherTotal) * (100 - MANUAL_WEIGHT) : 0;
+  const completionPercent = Math.round((manualRead ? MANUAL_WEIGHT : 0) + otherPercent);
 
   return (
     <SafeAreaView className="flex-1 bg-white-off dark:bg-secondary-900" edges={["top"]}>
@@ -152,6 +151,9 @@ export default function ProgressScreen() {
                 type={item.type}
                 checked={item.id === "manual" ? manualRead : undefined}
                 onCheckChange={item.id === "manual" ? setManualRead : undefined}
+                onGet={item.id === "manual" ? handleOpenManual : undefined}
+                getLoading={item.id === "manual" ? openingManual : undefined}
+                locked={(item.id === "marathon" || item.id === "exam") && !isPremium}
                 onPress={onPressFor(item.id)}
                 isLast={index === PROGRESS_ITEMS.length - 1}
               />

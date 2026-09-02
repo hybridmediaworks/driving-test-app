@@ -50,7 +50,7 @@ export const PROGRESS_ITEMS: ProgressItemData[] = [
     title: "Exam Simulator",
     subtitle: "0 of 3 exam passed",
     image:
-      "https://images.pexels.com/photos/1178449/pexels-photo-1178449.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop",
+      "https://images.pexels.com/photos/210182/pexels-photo-210182.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop",
     type: "nav",
     href: "/test/see-all?difficulty=hardest",
   },

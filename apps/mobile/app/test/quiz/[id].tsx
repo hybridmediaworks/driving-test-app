@@ -5,10 +5,12 @@ import { QuizOption, type QuizOptionVariant } from "@/components/quiz/quiz-optio
 import { ReportProblemSheet } from "@/components/quiz/report-problem-sheet";
 import { Primary, Secondary } from "@/constants/theme";
 import * as Haptics from "expo-haptics";
+import { ApiError } from "@/lib/api";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { addToChallengeBank } from "@/services/api/challengeBankApi";
 import { checkAnswer, fetchQuiz, submitAttempt } from "@/services/api/quizApi";
 import { toast } from "@/store/toastStore";
+import { useAuthStore } from "@/store/authStore";
 import { useLastAttemptStore } from "@/store/lastAttemptStore";
 import { useUserStore } from "@/store/userStore";
 import type { PublicQuizQuestion } from "@driving-test-app/shared";
@@ -37,6 +39,40 @@ type CheckedAnswer = {
   explanation: string | null;
 };
 
+// Fisher–Yates shuffle (returns a new array; does not mutate the input).
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Randomize the question ORDER only — answer options are left in their original order. Used every
+// time a test starts, restarts, or is retaken so no two runs present the questions in the same order.
+const shuffleQuiz = (questions: PublicQuizQuestion[]): PublicQuizQuestion[] => shuffle(questions);
+
+// Re-order freshly fetched questions (e.g. after a test-language switch) to match the order the
+// learner is already seeing, by question id, so switching language mid-test keeps the same shuffled
+// sequence instead of reshuffling under them. Answer order is server-provided and left untouched.
+function reorderLike(
+  fetched: PublicQuizQuestion[],
+  prev: PublicQuizQuestion[],
+): PublicQuizQuestion[] {
+  const byId = new Map(fetched.map((q) => [q.id, q]));
+  const result: PublicQuizQuestion[] = [];
+  for (const pq of prev) {
+    const fq = byId.get(pq.id);
+    if (!fq) continue;
+    byId.delete(pq.id);
+    result.push(fq);
+  }
+  // Anything new that wasn't shown before (shouldn't happen for the same quiz) is appended.
+  for (const fq of byId.values()) result.push(fq);
+  return result;
+}
+
 function ApiQuizScreen({ quizId }: { quizId: string }) {
   const router = useRouter();
   const isDark = useIsDark();
@@ -51,13 +87,25 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [checkedAnswers, setCheckedAnswers] = useState<Record<number, CheckedAnswer>>({});
   const [checking, setChecking] = useState(false);
+  // The option currently being graded — highlighted instantly (blue + spinner) so the tap feels
+  // responsive while the server round-trip is in flight.
+  const [pendingAnswerId, setPendingAnswerId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [aiChatVisible, setAiChatVisible] = useState(false);
   // Set when the sheet is opened via the "why is my answer wrong?" prompt so it auto-asks on open.
   const [aiAutoAsk, setAiAutoAsk] = useState<"why-wrong" | null>(null);
   const [reportVisible, setReportVisible] = useState(false);
+  // Questions the learner has manually saved to the Challenge Bank this session (for the bookmark
+  // toggle's filled/outline state).
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<number>>(new Set());
+  // Manually saving to the Challenge Bank is a premium feature; non-premium users are routed to the
+  // paywall instead. A logged-out user is treated as non-premium.
+  const isPremium = useAuthStore((s) => s.user?.entitlement?.is_premium) ?? false;
   const startedAt = useRef(Date.now());
+  // Tracks which quiz the current shuffled order belongs to, so a test-language change re-fetches
+  // without reshuffling the sequence (only a new quiz / mount reshuffles).
+  const prevQuizIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +115,14 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
     fetchQuiz(quizId, testLanguage).then((res) => {
       if (cancelled) return;
       setLocked(res.locked);
-      setQuestions(res.questions ?? []);
+      const fetched = res.questions ?? [];
+      // Only the language changed for the same quiz → keep the existing shuffled order; otherwise
+      // (first load / new quiz) shuffle the question order fresh.
+      const isLanguageSwitch = prevQuizIdRef.current === quizId;
+      prevQuizIdRef.current = quizId;
+      setQuestions((prev) =>
+        isLanguageSwitch && prev.length > 0 ? reorderLike(fetched, prev) : shuffleQuiz(fetched),
+      );
       setLoading(false);
     });
     return () => {
@@ -119,6 +174,7 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
   const handleSelect = async (answerId: number) => {
     if (isAnswered || checking) return;
     setChecking(true);
+    setPendingAnswerId(answerId);
     try {
       const result = await checkAnswer(quizId, current.id, answerId, testLanguage);
       Haptics.notificationAsync(
@@ -139,15 +195,15 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
       Alert.alert("Something went wrong", "Couldn't check that answer. Please try again.");
     } finally {
       setChecking(false);
+      setPendingAnswerId(null);
     }
   };
 
-  const handleNext = async () => {
-    if (!isLast) {
-      setCurrentIndex((i) => i + 1);
-      return;
-    }
-
+  // Grades and submits the whole attempt, then routes to results. Kept separate so a failed submit
+  // can be retried in place (the API client already auto-retries transient network/5xx errors; this
+  // is the last-resort manual retry when the network is down longer than that).
+  const submitFinal = async () => {
+    if (submitting) return;
     setSubmitting(true);
     try {
       const durationSeconds = Math.round((Date.now() - startedAt.current) / 1000);
@@ -174,11 +230,29 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
           fromQuiz: "true",
         },
       });
-    } catch {
-      Alert.alert("Something went wrong", "Couldn't submit your answers. Please try again.");
+    } catch (err) {
+      const rateLimited = err instanceof ApiError && err.status === 429;
+      Alert.alert(
+        rateLimited ? "Just a moment" : "Couldn't submit",
+        rateLimited
+          ? "You're submitting a bit fast. Please wait a minute, then tap Retry — your answers are saved."
+          : "We couldn't submit your answers. Please check your connection and try again — your answers are saved.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Retry", onPress: () => submitFinal() },
+        ],
+      );
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleNext = () => {
+    if (!isLast) {
+      setCurrentIndex((i) => i + 1);
+      return;
+    }
+    submitFinal();
   };
 
   const handlePrev = () => {
@@ -197,21 +271,40 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
   };
 
   const handleRestart = () => {
+    setQuestions((prev) => shuffleQuiz(prev));
     setCurrentIndex(0);
     setCheckedAnswers({});
+    startedAt.current = Date.now();
   };
 
   const handleAddToChallengeBank = async () => {
+    // Premium gate: send non-premium users to the paywall. `/premium` is a modal, so returning from
+    // it drops the learner back on this exact question.
+    if (!isPremium) {
+      router.push("/premium");
+      return;
+    }
+    if (bookmarkedIds.has(current.id)) return; // already saved this session
+
+    const questionId = current.id;
+    setBookmarkedIds((prev) => new Set(prev).add(questionId));
     try {
-      await addToChallengeBank([current.id]);
+      await addToChallengeBank([questionId]);
       toast.success("Added to Challenge Bank");
     } catch {
-      toast.error("Couldn't add — sign in and try again");
+      // Roll back the optimistic bookmark on failure.
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(questionId);
+        return next;
+      });
+      toast.error("Couldn't add — please try again");
     }
   };
 
   const variantForAnswer = (answerId: number): QuizOptionVariant => {
-    if (!isAnswered) return "idle";
+    // Not graded yet: instantly show the tapped option as "selected" so it feels responsive.
+    if (!isAnswered) return answerId === pendingAnswerId ? "selected" : "idle";
     if (answerId === checked.correctAnswerId) return "correct";
     if (answerId === checked.selectedAnswerId) return "wrong";
     return "idle";
@@ -229,9 +322,26 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
           <MaterialIcons name="chevron-left" size={28} color={iconColor} />
         </TouchableOpacity>
 
+        {/* Spacer keeps the counter centered against the two right-hand actions. */}
+        <View className="w-9 h-9" />
+
         <Text className="flex-1 text-center text-base font-semibold text-secondary-900 dark:text-secondary-50">
           {currentIndex + 1}/{questions.length}
         </Text>
+
+        {/* Save to Challenge Bank (premium). Filled when saved this session. */}
+        <TouchableOpacity
+          onPress={handleAddToChallengeBank}
+          activeOpacity={0.7}
+          className="w-9 h-9 items-center justify-center"
+          accessibilityLabel="Save to Challenge Bank"
+        >
+          <MaterialIcons
+            name={bookmarkedIds.has(current.id) ? "bookmark" : "bookmark-border"}
+            size={24}
+            color={bookmarkedIds.has(current.id) ? Primary.DEFAULT : iconColor}
+          />
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => setMenuVisible(true)}
@@ -275,6 +385,7 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
                 explanation={showExplanation}
                 onPress={() => handleSelect(answer.id)}
                 disabled={isAnswered || checking}
+                loading={pendingAnswerId === answer.id}
                 burstKey={current.id}
               />
             );
@@ -348,8 +459,10 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
         <TouchableOpacity
           onPress={handleNext}
           activeOpacity={0.85}
-          disabled={submitting}
-          className="flex-1 bg-primary rounded-full py-4 items-center justify-center"
+          disabled={submitting || !isAnswered}
+          className={`flex-1 bg-primary rounded-full py-4 items-center justify-center ${
+            isAnswered ? "" : "opacity-40"
+          }`}
         >
           {submitting ? (
             <ActivityIndicator color="white" />

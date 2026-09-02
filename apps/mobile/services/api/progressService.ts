@@ -48,7 +48,14 @@ const isMarathon = (title: string | undefined) => /marathon/i.test(title ?? "");
  * the Progress screen can show its error + retry state; the pass-chance stats degrade to null on
  * failure, so a stats hiccup alone never blanks the page.
  */
-export async function fetchProgressSummary(vehicle: VehicleType, state: string): Promise<ProgressSummary> {
+export async function fetchProgressSummary(
+  vehicle: VehicleType,
+  state: string,
+  // Locally-recorded results (useProgressStore), keyed by quiz id. Lets the Progress tab reflect
+  // tests the learner has taken even when signed out (guest attempts aren't tied to a server user),
+  // and reconciles with server data for signed-in users (a quiz counts if either source has it).
+  localResults?: Record<string, { score: number }>,
+): Promise<ProgressSummary> {
   // Scope /me/stats to the same state + vehicle as the counts below, so the pass-chance (average
   // score) reflects the learner's readiness for *this* exam rather than a global average across
   // every state they've ever touched — keeping the whole page internally consistent.
@@ -69,16 +76,25 @@ export async function fetchProgressSummary(vehicle: VehicleType, state: string):
   const marathons = nonFinal.filter((q) => isMarathon(q.title));
   const practice = nonFinal.filter((q) => !isMarathon(q.title));
 
-  const attemptedMarathons = marathons.filter((q) => q.attempted);
+  // Merge server per-user flags with locally-recorded results so the page works signed-out too.
+  type Q = (typeof quizzes)[number];
+  const attemptedAny = (q: Q) => q.attempted === true || localResults?.[String(q.id)] != null;
+  const passedAny = (q: Q) => {
+    if (q.user_passed === true) return true;
+    const r = localResults?.[String(q.id)];
+    return r != null && r.score >= (q.passing_score_percent ?? 80);
+  };
+
+  const attemptedMarathons = marathons.filter(attemptedAny);
   const average = stats?.attempts.average_score ?? null;
 
   const nextPractice =
-    practice.find((q) => !q.attempted && !q.locked) ??
+    practice.find((q) => !attemptedAny(q) && !q.locked) ??
     practice.find((q) => !q.locked) ??
     practice[0] ??
     null;
   const nextMarathon =
-    marathons.find((q) => !q.attempted && !q.locked) ??
+    marathons.find((q) => !attemptedAny(q) && !q.locked) ??
     marathons.find((q) => !q.locked) ??
     marathons[0] ??
     null;
@@ -86,11 +102,12 @@ export async function fetchProgressSummary(vehicle: VehicleType, state: string):
 
   return {
     passChancePercent: average === null ? 0 : Math.round(average),
-    hasCompletedAttempts: (stats?.attempts.completed ?? 0) > 0,
-    practiceCompleted: practice.filter((q) => q.attempted).length,
-    practicePassed: practice.filter((q) => q.user_passed === true).length,
+    hasCompletedAttempts:
+      (stats?.attempts.completed ?? 0) > 0 || Object.keys(localResults ?? {}).length > 0,
+    practiceCompleted: practice.filter(attemptedAny).length,
+    practicePassed: practice.filter(passedAny).length,
     practiceTotal: practice.length,
-    examPassed: exams.filter((q) => q.user_passed === true).length,
+    examPassed: exams.filter(passedAny).length,
     examTotal: exams.length,
     challengeBankCount: challengeBank.length,
     marathonQuestionsAnswered: attemptedMarathons.reduce((sum, q) => sum + q.total_questions, 0),

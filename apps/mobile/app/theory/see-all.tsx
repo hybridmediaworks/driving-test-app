@@ -7,9 +7,10 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useAsync } from "@/hooks/use-async";
 import { openCheatSheetPdf } from "@/lib/cheatSheets";
 import { fetchTheoryList } from "@/services/api/todayService";
+import { useAuthStore } from "@/store/authStore";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "expo-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,9 +21,14 @@ export default function TheorySeeAllScreen() {
   const router = useRouter();
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
   const stateCode = useUserStore((s) => s.state) ?? "CA";
+  // The cheat sheet currently downloading — drives the spinner on its "Get it" button.
+  const [loadingSheetId, setLoadingSheetId] = useState<string | null>(null);
+  // Re-fetch when auth identity / premium status changes so locked PDFs reflect the current user.
+  const authKey = useAuthStore((s) => s.user?.id);
+  const isPremium = useAuthStore((s) => s.user?.entitlement?.is_premium);
   const { status, data, refetch } = useAsync(
     () => fetchTheoryList(vehicleType, stateCode),
-    [vehicleType, stateCode],
+    [vehicleType, stateCode, authKey, isPremium],
   );
   const items = data ?? [];
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -108,9 +114,20 @@ export default function TheorySeeAllScreen() {
             title={item.title}
             description={item.description}
             locked={item.locked}
-            onPress={() =>
-              item.locked ? router.push("/premium") : openCheatSheetPdf(item.id)
-            }
+            loading={loadingSheetId === item.id}
+            onPress={async () => {
+              if (item.locked) {
+                router.push("/premium");
+                return;
+              }
+              if (loadingSheetId) return;
+              setLoadingSheetId(item.id);
+              try {
+                await openCheatSheetPdf(item.id);
+              } finally {
+                setLoadingSheetId(null);
+              }
+            }}
           />
         ))}
       </Animated.ScrollView>

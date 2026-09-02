@@ -22,10 +22,11 @@ import {
   TodayData,
   TodayTestCard,
 } from "@/services/api/todayService";
+import { useAuthStore } from "@/store/authStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useUserStore } from "@/store/userStore";
 import { router } from "expo-router";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 
 const EMPTY_DATA: TodayData = {
   testRows: [],
@@ -37,10 +38,15 @@ export default function TodayScreen() {
   const vehicleType = useUserStore((s) => s.vehicleType) ?? "car";
   const stateCode = useUserStore((s) => s.state) ?? "CA";
   const { testResults } = useProgressStore();
+  // Per-test `locked` comes from the backend based on the signed-in user's entitlement. Re-fetch
+  // whenever the auth identity or premium status changes (login/logout/account switch/upgrade) so a
+  // freshly logged-in premium user doesn't keep seeing stale lock icons until an app restart.
+  const authKey = useAuthStore((s) => s.user?.id);
+  const isPremium = useAuthStore((s) => s.user?.entitlement?.is_premium);
 
   const { status, data, refetch } = useAsync(
     () => fetchTodayData(vehicleType, stateCode),
-    [vehicleType, stateCode],
+    [vehicleType, stateCode, authKey, isPremium],
   );
 
   const { testRows, theoryItems, examCard } = data ?? EMPTY_DATA;
@@ -70,6 +76,8 @@ export default function TodayScreen() {
     });
   };
   const scrollY = useRef(new Animated.Value(0)).current;
+  // The cheat sheet currently downloading — drives the spinner on its "Get it" button.
+  const [loadingSheetId, setLoadingSheetId] = useState<string | null>(null);
 
   const handleTestPress = (id: string) => {
     if (allCards[id]?.locked) {
@@ -171,7 +179,7 @@ export default function TodayScreen() {
                   }
                   onTestPress={handleTestPress}
                 />
-                {index === 0 && (
+                {index === 0 && !isPremium && (
                   <PromoCard
                     title="Pass the first time"
                     subtitle="Unlock all exam-like questions"
@@ -195,12 +203,19 @@ export default function TodayScreen() {
               badge={`${theoryItems.length} PDF`}
               items={theoryItems.slice(0, 3)}
               onSeeAll={() => router.push("/theory/see-all")}
-              onItemPress={(id) => {
+              loadingId={loadingSheetId ?? undefined}
+              onItemPress={async (id) => {
                 const item = theoryItems.find((t) => t.id === id);
                 if (item?.action === "unlock") {
                   router.push("/premium");
-                } else {
-                  openCheatSheetPdf(id);
+                  return;
+                }
+                if (loadingSheetId) return; // a download is already in progress
+                setLoadingSheetId(id);
+                try {
+                  await openCheatSheetPdf(id);
+                } finally {
+                  setLoadingSheetId(null);
                 }
               }}
             />

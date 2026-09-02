@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
+use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -38,6 +39,8 @@ class AuthController extends Controller
 
         $user->sendEmailVerificationNotification();
 
+        $this->claimGuestData($request, $user);
+
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json(['user' => new UserResource($user), 'token' => $token], 201);
@@ -64,9 +67,33 @@ class AuthController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
+
+        $this->claimGuestData($request, $user);
+
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json(['user' => new UserResource($user), 'token' => $token]);
+    }
+
+    /**
+     * Link a guest's quiz history to the account they just signed in to / registered.
+     *
+     * While signed out, the app tags attempts with a per-install `X-Guest-Token`. On auth we
+     * re-assign those still-anonymous attempts to this user (and clear the guest token) so their
+     * history, stats, and pass-chance carry over. Harmless when there's no token or no guest
+     * attempts. Runs for web and mobile alike (both send the header).
+     */
+    private function claimGuestData(Request $request, User $user): void
+    {
+        $guestToken = $request->header('X-Guest-Token') ?: $request->input('guest_token');
+        if (! is_string($guestToken) || $guestToken === '') {
+            return;
+        }
+
+        QuizAttempt::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->update(['user_id' => $user->id, 'guest_token' => null]);
     }
 
     /**
