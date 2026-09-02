@@ -50,7 +50,7 @@ export default function StatePhase({
         <div className="relative">
           {previousConnector && (
             <div
-              className={`md:w-15 w-8.5 ms-auto md:border-l-14 border-l-8 md:border-t-14 md:rounded-tl-[28px] h-12 -mt-11.75 ${
+              className={`md:w-18 w-8.5 ms-auto -me-4.5 md:border-l-14 border-l-8 md:border-t-14 md:rounded-tl-[28px] h-12 -mt-11.75 ${
                 previousPhaseFullyCompleted
                   ? "border-blue-500"
                   : animateCircleIn

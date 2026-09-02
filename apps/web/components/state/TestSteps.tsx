@@ -191,11 +191,13 @@ export default function TestSteps({
                     : afterRowTriggers
                       ? "connector-fill border-white"
                       : "border-white"
-                } ${shrinkConnectorBelow ? "left-15" : "w-full"}`}
+                } ${shrinkConnectorBelow ? "left-0" : "w-full"}`}
                 style={{
                   ...(shrinkConnectorBelow
                     ? {
-                        width: `calc(${rowWidth(effectiveColumns, rowSpan)} - 20px)`,
+                        // `left-15` (3.75rem) is added back into the width so the shrunk connector
+                        // still reaches the same right edge instead of ending 3.75rem short.
+                        width: `calc(${rowWidth(effectiveColumns, rowSpan)} - 20px + 3.75rem)`,
                       }
                     : undefined),
                   ...(afterRowTriggers
