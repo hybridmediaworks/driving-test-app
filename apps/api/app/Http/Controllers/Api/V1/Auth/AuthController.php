@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\ChallengeBankItem;
+use App\Models\HazardSimulatorAttempt;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
@@ -92,6 +93,11 @@ class AuthController extends Controller
         }
 
         QuizAttempt::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->update(['user_id' => $user->id, 'guest_token' => null]);
+
+        HazardSimulatorAttempt::query()
             ->where('guest_token', $guestToken)
             ->whereNull('user_id')
             ->update(['user_id' => $user->id, 'guest_token' => null]);

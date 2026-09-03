@@ -40,6 +40,10 @@ export type PublicVideo = {
   test_track: "permit_test" | "driving_test" | null;
   section: string | null;
   subsection: string | null;
+  // Present (eager-loaded) when this video carries the interactive hazard-perception layer — the
+  // client routes its card to /hazard-simulator/{simulator_slug} instead of the watch dialog.
+  has_simulator?: boolean;
+  simulator_slug?: string | null;
   category?: { id: number; name: string; title: string } | null;
   state?: { id: number; code: string; name: string } | null;
   vehicle_type?: { id: number; name: string; title: string } | null;

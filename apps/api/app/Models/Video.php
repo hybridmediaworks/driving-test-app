@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -65,6 +66,17 @@ class Video extends Model implements HasMedia
     public function category(): BelongsTo
     {
         return $this->belongsTo(QuizCategory::class, 'quiz_category_id');
+    }
+
+    /**
+     * The interactive hazard-perception layer, when this video is a hazard simulator (section
+     * "Defensive Driving Hazard Simulators"). Null for every other video.
+     *
+     * @return HasOne<HazardSimulator, $this>
+     */
+    public function hazardSimulator(): HasOne
+    {
+        return $this->hasOne(HazardSimulator::class);
     }
 
     /**

@@ -39,14 +39,16 @@ class QuizAttemptController extends Controller
     /**
      * Reset my results ("Reset All Results" in the app).
      *
-     * Requires authentication. Wipes the current user's quiz attempts — the per-question answer
-     * rows cascade away via the FK — and empties their Challenge Bank, so every progress figure
-     * derived from them (pass counts, average score, completion) goes back to zero. Irreversible.
+     * Requires authentication. Wipes the current user's quiz attempts and hazard-simulator
+     * attempts — the per-question answer rows and per-click event rows cascade away via their FKs —
+     * and empties their Challenge Bank, so every progress figure derived from them (pass counts,
+     * average score, completion) goes back to zero. Irreversible.
      */
     public function destroyAll(Request $request): JsonResponse
     {
         $user = $request->user();
         $user->quizAttempts()->delete();
+        $user->hazardSimulatorAttempts()->delete();
         $user->challengeBankItems()->delete();
 
         return response()->json(['message' => 'All results have been reset.']);

@@ -26,7 +26,7 @@ class VideoController extends Controller
 
         $query = Video::query()
             ->where('is_active', true)
-            ->with(['category', 'state', 'vehicleType'])
+            ->with(['category', 'state', 'vehicleType', 'hazardSimulator'])
             ->orderBy('order_no')
             ->orderBy('title');
 
@@ -63,7 +63,7 @@ class VideoController extends Controller
     {
         $this->authorize('view', $video);
 
-        $video->load(['category', 'state', 'vehicleType']);
+        $video->load(['category', 'state', 'vehicleType', 'hazardSimulator']);
         // No auth:sanctum middleware on this route (guests may browse) — resolve explicitly.
         $unlocked = Gate::forUser($request->user('sanctum'))->allows('watch', $video);
 

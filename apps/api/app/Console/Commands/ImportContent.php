@@ -29,7 +29,11 @@ class ImportContent extends Command
         {--state= : Comma-separated state folder names to import (default: all found)}
         {--vehicle-type=car,motorcycle : Comma-separated vehicle types to import}
         {--only= : Comma-separated content types to import (questions,handbook,extra-support,videos,simulators — default: all)}
+        {--skip-hazards : With simulators, import only the flat video and leave the interactive hazard layer untouched}
         {--dry-run : Report what would be imported without writing anything}';
+
+    /** Set once from --skip-hazards; read in importTestTrack when handing off to the simulator importer. */
+    private bool $skipHazards = false;
 
     protected $description = 'Import the real crawled state/vehicle/test-track content dataset.';
 
@@ -69,6 +73,7 @@ class ImportContent extends Command
         }
 
         $dryRun = (bool) $this->option('dry-run');
+        $this->skipHazards = (bool) $this->option('skip-hazards');
         $only = $this->csvOption('only');
         $wantedStates = $this->csvOption('state');
         $vehicleSlugs = $this->csvOption('vehicle-type') ?: ['car', 'motorcycle'];
@@ -246,7 +251,7 @@ class ImportContent extends Command
                 $simulatorsPath = $testTrackFolder.DIRECTORY_SEPARATOR.'simulators.json';
                 if (File::exists($simulatorsPath) && ($data = $this->readJson($simulatorsPath, $summary))) {
                     $this->line("     simulators.json ({$label})");
-                    $importSimulators($data, $state, $vehicleType, $testTrack, $summary, $dryRun);
+                    $importSimulators($data, $state, $vehicleType, $testTrack, $summary, $dryRun, $this->skipHazards);
                 }
             }
         }

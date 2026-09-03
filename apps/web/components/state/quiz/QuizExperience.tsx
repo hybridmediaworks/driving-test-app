@@ -135,6 +135,14 @@ export default function QuizExperience({
             <Paragraph color="muted">{loadError ?? t("testUnavailable")}</Paragraph>
             <Button href={notFoundHref}>{notFoundLabel}</Button>
           </div>
+        ) : data === null ? (
+          // The quiz metadata resolved but its questions haven't yet — the state-page flow fetches
+          // the quiz list first, then the full show response in a second request. Keep showing the
+          // loading state here instead of falling through to the "no questions" empty state below,
+          // which would flash for that window on every quiz start.
+          <Paragraph className="py-20 text-center" color="muted">
+            {t("loadingTest")}
+          </Paragraph>
         ) : locked ? (
           <div className="py-20 text-center space-y-4">
             <Paragraph color="muted">
@@ -144,7 +152,7 @@ export default function QuizExperience({
               <Gem className="w-5" /> {t("upgradeToPremium")}
             </Button>
           </div>
-        ) : !data?.questions || data.questions.length === 0 ? (
+        ) : !data.questions || data.questions.length === 0 ? (
           <Paragraph className="py-20 text-center" color="muted">
             {t("testHasNoQuestions")}
           </Paragraph>
@@ -679,6 +687,10 @@ function QuizTaker({
         force_new: true,
       });
       setAttemptId(res.attempt.id);
+      // A brand-new attempt replaces whatever in-progress one the caches were built around —
+      // refresh them so the detail page / ladder reflect this attempt's state on the way back.
+      invalidateResolvedQuiz();
+      invalidatePhaseLadder();
       setLoadedQuestions(applyLanguageToOrder(orderQuestionsById(res.attempt.question_order, questions), language));
     } catch {
       setAttemptId(null);
@@ -767,6 +779,14 @@ function QuizTaker({
         const resumeIndex = Math.min(Object.keys(checked).length, ordered.length - 1);
 
         setAttemptId(res.attempt.id);
+        // There's now an in-progress attempt to resume. The detail page and phase ladder each
+        // cache their `/quizzes` response (see useResolvedQuiz / phaseLadder), and that cache was
+        // populated on the way in — before this attempt existed — so navigating back via Exit or
+        // the browser would keep showing "Start" until a manual refresh. Drop both caches now so
+        // the "Continue (x/y)" CTA shows immediately on return. (submitAttempt invalidates again
+        // once the attempt is finished.)
+        invalidateResolvedQuiz();
+        invalidatePhaseLadder();
         setLoadedQuestions(applyLanguageToOrder(ordered, language));
         setCheckedByQuestionId(checked);
         setAnswers(restoredAnswers);

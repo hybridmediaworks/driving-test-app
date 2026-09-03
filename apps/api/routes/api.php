@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\V1\Admin\EmailSubscriberController as AdminEmailSub
 use App\Http\Controllers\Api\V1\Admin\ExpertController as AdminExpertController;
 use App\Http\Controllers\Api\V1\Admin\FlashcardController as AdminFlashcardController;
 use App\Http\Controllers\Api\V1\Admin\HandbookController as AdminHandbookController;
+use App\Http\Controllers\Api\V1\Admin\HazardController as AdminHazardController;
+use App\Http\Controllers\Api\V1\Admin\HazardSimulatorAttemptController as AdminHazardSimulatorAttemptController;
+use App\Http\Controllers\Api\V1\Admin\HazardSimulatorController as AdminHazardSimulatorController;
 use App\Http\Controllers\Api\V1\Admin\ImageApprovalController;
 use App\Http\Controllers\Api\V1\Admin\PassGuaranteeClaimController as AdminPassGuaranteeClaimController;
 use App\Http\Controllers\Api\V1\Admin\PlanController as AdminPlanController;
@@ -26,6 +29,7 @@ use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\ChallengeBankController;
 use App\Http\Controllers\Api\V1\FamilyController;
 use App\Http\Controllers\Api\V1\FlashcardReviewController;
+use App\Http\Controllers\Api\V1\HazardAttemptController;
 use App\Http\Controllers\Api\V1\PassGuaranteeClaimController;
 use App\Http\Controllers\Api\V1\Public\AmbientTrackController;
 use App\Http\Controllers\Api\V1\Public\CheatSheetController as PublicCheatSheetController;
@@ -33,6 +37,7 @@ use App\Http\Controllers\Api\V1\Public\EmailSubscriberController;
 use App\Http\Controllers\Api\V1\Public\ExpertController;
 use App\Http\Controllers\Api\V1\Public\FlashcardController as PublicFlashcardController;
 use App\Http\Controllers\Api\V1\Public\HandbookController as PublicHandbookController;
+use App\Http\Controllers\Api\V1\Public\HazardSimulatorController as PublicHazardSimulatorController;
 use App\Http\Controllers\Api\V1\Public\PlanController;
 use App\Http\Controllers\Api\V1\Public\QuizCategoryController as PublicQuizCategoryController;
 use App\Http\Controllers\Api\V1\Public\QuizController as PublicQuizController;
@@ -99,6 +104,19 @@ Route::prefix('v1')->group(function (): void {
     Route::get('videos', [PublicVideoController::class, 'index']);
     Route::get('videos/{video}', [PublicVideoController::class, 'show']);
 
+    // Public hazard-perception simulators — interactive layer on the "Defensive Driving Hazard
+    // Simulators" videos. Same locked-teaser shape (gated by HazardSimulatorPolicy); guests may
+    // browse and run one, claimed on register. Bound by slug.
+    Route::get('hazard-simulators', [PublicHazardSimulatorController::class, 'index']);
+    Route::get('hazard-simulators/{hazardSimulator:slug}', [PublicHazardSimulatorController::class, 'show']);
+    Route::post('hazard-simulators/{hazardSimulator:slug}/attempts/start', [PublicHazardSimulatorController::class, 'startAttempt'])
+        ->middleware('throttle:60,1');
+    // Live hit/miss feedback — fires once per click during the scored phase, so a higher ceiling.
+    Route::post('hazard-simulators/{hazardSimulator:slug}/attempts/{attempt}/mark', [PublicHazardSimulatorController::class, 'mark'])
+        ->middleware('throttle:300,1');
+    Route::post('hazard-simulators/{hazardSimulator:slug}/attempts/{attempt}', [PublicHazardSimulatorController::class, 'storeAttempt'])
+        ->middleware('throttle:60,1');
+
     // Public handbook browsing — not premium-gated (see HandbookResource), full chapters/sections
     // always included.
     Route::get('handbooks', [PublicHandbookController::class, 'index']);
@@ -160,6 +178,7 @@ Route::prefix('v1')->group(function (): void {
 
             Route::get('/attempts', [QuizAttemptController::class, 'index']);
             Route::delete('/attempts', [QuizAttemptController::class, 'destroyAll']);
+            Route::get('/hazard-attempts', [HazardAttemptController::class, 'index']);
             Route::get('/me/stats', [StatsController::class, 'index']);
 
             Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
@@ -208,6 +227,21 @@ Route::prefix('v1')->group(function (): void {
 
             Route::apiResource('videos', AdminVideoController::class)->except(['show']);
             Route::get('videos/{video}', [AdminVideoController::class, 'show']);
+
+            // Hazard simulators — hand-written (not apiResource) because HazardSimulator's route key
+            // is `slug` for the public routes, but admin binds by id. `reorder` sits BEFORE the
+            // `{hazard}` wildcards so it isn't swallowed as `hazard="reorder"`.
+            Route::get('hazard-simulators', [AdminHazardSimulatorController::class, 'index']);
+            Route::get('hazard-simulators/{hazardSimulator:id}', [AdminHazardSimulatorController::class, 'show']);
+            Route::match(['put', 'post'], 'hazard-simulators/{hazardSimulator:id}', [AdminHazardSimulatorController::class, 'update']);
+            Route::get('hazard-simulators/{hazardSimulator:id}/hazards', [AdminHazardController::class, 'index']);
+            Route::post('hazard-simulators/{hazardSimulator:id}/hazards', [AdminHazardController::class, 'store']);
+            Route::post('hazard-simulators/{hazardSimulator:id}/hazards/reorder', [AdminHazardController::class, 'reorder']);
+            Route::get('hazard-simulators/{hazardSimulator:id}/hazards/{hazard}', [AdminHazardController::class, 'show']);
+            Route::match(['put', 'post'], 'hazard-simulators/{hazardSimulator:id}/hazards/{hazard}', [AdminHazardController::class, 'update']);
+            Route::delete('hazard-simulators/{hazardSimulator:id}/hazards/{hazard}', [AdminHazardController::class, 'destroy']);
+            Route::post('hazard-simulators/{hazardSimulator:id}/hazards/{hazard}/move', [AdminHazardController::class, 'move']);
+            Route::get('hazard-simulator-attempts', [AdminHazardSimulatorAttemptController::class, 'index']);
 
             Route::apiResource('ambient-tracks', AdminAmbientTrackController::class)->except(['show']);
             Route::get('ambient-tracks/{ambientTrack}', [AdminAmbientTrackController::class, 'show']);
