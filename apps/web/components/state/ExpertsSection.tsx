@@ -102,6 +102,10 @@ function ReviewerPhoto({
   return (
     <div
       aria-hidden
+      // Carries the src that failed (when there was one) so the placeholder is still inspectable —
+      // the <img> is unmounted on error, so there's otherwise nothing in the DOM to check.
+      data-photo-src={reviewer.photo ?? undefined}
+      data-photo-state={reviewer.photo ? "failed" : "missing"}
       className={`${className} flex items-center justify-center bg-background2 font-sora text-5xl font-semibold text-neutral-500`}
     >
       {initialsOf(reviewer.name)}
