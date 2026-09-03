@@ -68,7 +68,13 @@ function toReviewer(expert: Expert): Reviewer {
   };
 }
 
-/** Photo when there is one, initials when there isn't — never a stock face under a real name. */
+/**
+ * Photo when there is one, initials when there isn't — never a stock face under a real name.
+ * Also falls back to initials when the photo fails to load: a reviewer's media can be stored on a
+ * disk the app isn't serving (an upload that landed on the local disk while the rest of the
+ * library is on S3, say), and a broken-image glyph under someone's name reads far worse than
+ * their initials.
+ */
 function ReviewerPhoto({
   reviewer,
   className,
@@ -76,12 +82,18 @@ function ReviewerPhoto({
   reviewer: Reviewer;
   className: string;
 }) {
-  if (reviewer.photo) {
+  // Keyed by src, not a bare boolean, so swapping in a different reviewer's photo (the design
+  // fallback giving way to the real roster) gets its own chance to load.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  if (reviewer.photo && failedSrc !== reviewer.photo) {
+    const src = reviewer.photo;
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={reviewer.photo}
+        src={src}
         alt={reviewer.name}
+        onError={() => setFailedSrc(src)}
         className={`${className} object-cover`}
       />
     );

@@ -76,7 +76,7 @@ export default function HeroSection() {
               alt=""
               className="r w-full relative rounded-xl md:rounded-[24px] shadow-[0_12px_40.793px_-21.212px_rgba(23,37,84,0.12),0_3.263px_4.895px_-1.632px_rgba(0,0,0,0.03),0_9.79px_13.054px_-3.263px_rgba(0,0,0,0.08)]"
             />
-            <div className="p-6 bg-white rounded-[24px] absolute -bottom-7 -left-6 shadow-hover">
+            <div className="p-4 md:p-6 bg-white rounded-[24px] absolute -bottom-5 md:-bottom-7 left-2 md:-left-6 shadow-hover">
               <Heading className="text-blue-500!" size="sm">
                 97%
               </Heading>

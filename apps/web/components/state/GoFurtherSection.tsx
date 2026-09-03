@@ -130,15 +130,15 @@ export default function GoFurtherSection() {
         {/* Figma's 500 / 324 / 501 masonry — two cards per outer column, two equal cards in the
             narrow middle one. Stacks to a single column below lg. */}
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-[minmax(0,500fr)_minmax(0,324fr)_minmax(0,501fr)]">
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 max-lg:contents">
             <Card card={cards[0]} />
             <Card card={cards[1]} className="flex-1" />
           </div>
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 max-lg:contents">
             <Card card={cards[2]} className="flex-1" />
             <Card card={cards[3]} className="flex-1" />
           </div>
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 max-lg:contents">
             <Card card={cards[4]} />
             <Card card={cards[5]} className="flex-1" />
           </div>

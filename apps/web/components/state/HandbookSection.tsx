@@ -324,7 +324,7 @@ export default function HandbookSection() {
             aria-label="Next handbook option"
             aria-hidden={!canScrollNext}
             tabIndex={canScrollNext ? 0 : -1}
-            className={`absolute top-1/2 right-0 hidden size-12 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.12)] transition-opacity duration-200 lg:flex ${
+            className={`absolute top-1/2 right-0 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.12)] transition-opacity duration-200 lg:flex ${
               canScrollNext ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >

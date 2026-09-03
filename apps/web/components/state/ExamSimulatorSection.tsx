@@ -76,7 +76,7 @@ export default function ExamSimulatorSection() {
 
         <div className="relative mt-10 lg:mt-15">
           {/* Device — the exam screen behind a frosted upsell overlay */}
-          <div className="relative mx-auto aspect-[918/688] w-full max-w-[918px] overflow-hidden rounded-3xl border border-blue-100 bg-blue-50 lg:rounded-[48px]">
+          <div className="relative mx-auto aspect-[918/688] w-full max-w-[918px] min-h-[420px] overflow-hidden rounded-3xl border border-blue-100 bg-blue-50 sm:min-h-0 lg:rounded-[48px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/state-hub/exam-screen.png"
