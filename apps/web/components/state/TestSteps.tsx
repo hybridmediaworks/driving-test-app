@@ -160,14 +160,21 @@ export default function TestSteps({
         return (
           <div
             key={rowIndex}
-            className={`relative grid grid-cols-[repeat(var(--ts-cols),minmax(0,1fr))] gap-5 ${showConnectorBelow ? "md:mb-16" : ""}`}
+            className={`relative isolate grid grid-cols-[repeat(var(--ts-cols),minmax(0,1fr))] gap-5 ${showConnectorBelow ? "md:mb-16" : ""}`}
             style={{ "--ts-cols": effectiveColumns } as React.CSSProperties}
           >
             <div
-              className={`before_row pointer-events-none absolute -top-11.75 h-30.5 w-20 border-solid max-md:hidden ${
+              className={`before_row pointer-events-none absolute -z-10 -top-11.75 h-30.5 border-solid max-md:hidden ${
                 isFirstRow
-                  ? "left-0 border-b"
-                  : "-left-10 rounded-l-[28px] border-14 border-r-0"
+                  ? "left-0 w-20 border-b"
+                  : // Left edge (-17.5 = 70px out) lands on the same x as the phase rail that
+                    // runs down from the numbered badge: this container is inset 116px (see the
+                    // wrapper's w-[calc(100%-116px)]) and that rail sits 46px in from the same
+                    // origin, so 116 - 46 = 70. The width has to grow by that same 30px
+                    // (20 -> 27.5, i.e. 80px -> 110px) so the right end still meets the previous
+                    // row's after_row, which starts 40px in — otherwise the snake breaks open
+                    // with a 30px gap at every wrap.
+                    "-left-17.5 w-27.5 rounded-l-[28px] border-14 border-r-0"
               } ${
                 beforeRowFilled
                   ? "border-blue-500"
@@ -185,7 +192,7 @@ export default function TestSteps({
             />
             {showConnectorBelow && (
               <div
-                className={`after_row pointer-events-none absolute top-15.25 h-[calc(100%-30px)] -right-10 rounded-r-[28px] border-14 border-solid border-l-0 max-md:hidden ${
+                className={`after_row pointer-events-none absolute -z-10 top-15.25 h-[calc(100%-30px)] -right-10 rounded-r-[28px] border-14 border-solid border-l-0 max-md:hidden ${
                   afterRowFilled
                     ? "border-blue-500"
                     : afterRowTriggers
@@ -209,7 +216,7 @@ export default function TestSteps({
             {rowReached > 0 && (
               // Blue overlay on top of the white horizontal connector, filled up to the current task.
               <div
-                className="pointer-events-none absolute top-15.25 left-0 h-3.5 rounded-full bg-blue-500 max-md:hidden"
+                className="pointer-events-none absolute -z-10 top-15.25 left-0 h-3.5 rounded-full bg-blue-500 max-md:hidden"
                 style={{ width: rowWidth(effectiveColumns, rowReached) }}
               />
             )}
