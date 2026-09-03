@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useEntitlement } from "@/lib/auth-context";
 
 type PremiumInfo = {
   title: string;
@@ -9,7 +12,11 @@ type PremiumInfo = {
   rating?: { star: string; students: string; passingRate?: string };
 };
 
+/** Rendered by the (server) CDL state page — hidden for premium subscribers, who already have what it's selling. */
 export default function PremiumBanner({ premiumInfo }: { premiumInfo: PremiumInfo }) {
+  const { isPremium } = useEntitlement();
+  if (isPremium) return null;
+
   return (
     <div className="premium-cta relative flex items-center justify-between overflow-hidden rounded-2xl p-8 text-white shadow-xl">
       <div className="space-y-3">
