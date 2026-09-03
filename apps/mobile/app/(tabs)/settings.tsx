@@ -4,8 +4,10 @@ import { Heading } from "@/components/ui/heading";
 import { Primary, Secondary } from "@/constants/theme";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { ApiError } from "@/lib/api";
 import { requestAppRating } from "@/lib/appRating";
 import { reportAnIssue } from "@/lib/support";
+import { cancelSubscription, getBillingPortalUrl } from "@/services/api/billingApi";
 import { useAuthStore } from "@/store/authStore";
 import { resetAllResults } from "@/services/api/progressService";
 import { useProgressStore } from "@/store/progressStore";
@@ -16,8 +18,9 @@ import { toast } from "@/store/toastStore";
 import { useUserStore, type TestLanguage } from "@/store/userStore";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Share, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Animated, Share, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type SettingsRowProps = {
@@ -150,6 +153,9 @@ export default function SettingsScreen() {
   const { resetProgress } = useProgressStore();
   const { clearAll: clearChallengeBank } = useChallengeBankStore();
   const { user, logout } = useAuthStore();
+  // Backend-owned entitlement is the source of truth (RevenueCat's webhook feeds it) — same check the
+  // rest of the app uses to gate premium features.
+  const isPremium = useAuthStore((s) => s.user?.entitlement?.is_premium) ?? false;
   const states = useReferenceDataStore((s) => s.states);
   const vehicleTypes = useReferenceDataStore((s) => s.vehicleTypes);
   const fetchStates = useReferenceDataStore((s) => s.fetchStates);
@@ -164,6 +170,7 @@ export default function SettingsScreen() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   async function handleLogout() {
     if (loggingOut) return;
@@ -193,6 +200,55 @@ export default function SettingsScreen() {
   };
 
   const handleReset = () => setResetModalVisible(true);
+
+  // "Change Plan" — open the Stripe self-service billing portal (change plan / payment / cancel).
+  const handleChangePlan = async () => {
+    try {
+      const url = await getBillingPortalUrl();
+      await WebBrowser.openBrowserAsync(url);
+    } catch (err) {
+      // Surface the server's own reason for 4xx (e.g. "no active subscription", "email not
+      // verified"); keep a generic line for 5xx / network trouble.
+      toast.error(
+        err instanceof ApiError && err.status < 500 && err.message
+          ? err.message
+          : "Couldn't open the billing page. Please try again.",
+      );
+    }
+  };
+
+  // "Cancel Subscription" — cancel in-app via the backend. Access stays until the billing period
+  // ends; refresh the user afterwards so the subscription/entitlement state is up to date.
+  const handleCancelSubscription = () => {
+    Alert.alert(
+      "Cancel Subscription",
+      "Your Premium access stays active until the end of the current billing period. Cancel your subscription?",
+      [
+        { text: "Keep Premium", style: "cancel" },
+        {
+          text: "Cancel Subscription",
+          style: "destructive",
+          onPress: async () => {
+            if (cancelling) return;
+            setCancelling(true);
+            try {
+              const message = await cancelSubscription();
+              toast.success(message);
+              await useAuthStore.getState().hydrate();
+            } catch (err) {
+              toast.error(
+                err instanceof ApiError && err.status < 500 && err.message
+                  ? err.message
+                  : "Couldn't cancel your subscription. Please try again.",
+              );
+            } finally {
+              setCancelling(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const handleTestLanguageChange = (language: TestLanguage) => {
     if (language === testLanguage) return; // already selected — no toast, no reload churn
@@ -269,25 +325,6 @@ export default function SettingsScreen() {
 
         <View className="rounded-2xl overflow-hidden bg-white dark:bg-secondary-800 mb-6">
           <SettingsRow
-            label="Premium Subscription"
-            right={
-              <TouchableOpacity
-                onPress={() => router.push("/premium")}
-                className="flex-row items-center"
-                style={{ gap: 2 }}
-              >
-                <Text className="text-base text-primary dark:text-primary-400">
-                  Manage
-                </Text>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={18}
-                  color={isDark ? Primary[400] : Primary.DEFAULT}
-                />
-              </TouchableOpacity>
-            }
-          />
-          <SettingsRow
             label="Change State"
             value={stateLabel}
             onPress={() => router.push("/onboarding/states?from=settings")}
@@ -326,16 +363,39 @@ export default function SettingsScreen() {
           </Heading>
         </View>
         <View className="rounded-2xl overflow-hidden bg-white dark:bg-secondary-800 mb-6">
-          <SettingsRow
-            label="DMV Genie Premium"
-            right={
-              <TouchableOpacity onPress={() => router.push("/premium")}>
-                <Text className="text-base font-semibold text-primary dark:text-primary-400">
-                  Get it
-                </Text>
-              </TouchableOpacity>
-            }
-          />
+          {isPremium ? (
+            <>
+              {/* Active subscriber — let them switch plan or cancel (both via the store). */}
+              <SettingsRow
+                label="Change Plan"
+                onPress={handleChangePlan}
+                right={
+                  <MaterialIcons name="chevron-right" size={18} color={Secondary[400]} />
+                }
+              />
+              <SettingsRow
+                label="Cancel Subscription"
+                onPress={handleCancelSubscription}
+                right={
+                  <Text className="text-base font-semibold text-red-500">
+                    Cancel
+                  </Text>
+                }
+              />
+            </>
+          ) : (
+            /* Not premium (incl. signed out) — keep the paywall entry point. */
+            <SettingsRow
+              label="DMV Genie Premium"
+              right={
+                <TouchableOpacity onPress={() => router.push("/premium")}>
+                  <Text className="text-base font-semibold text-primary dark:text-primary-400">
+                    Get it
+                  </Text>
+                </TouchableOpacity>
+              }
+            />
+          )}
           <SettingsRow
             label="Night Mode"
             right={

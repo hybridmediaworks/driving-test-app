@@ -24,7 +24,7 @@ export const useToastStore = create<ToastState>((set, get) => ({
 
 /**
  * Fire-and-forget toast helper usable from anywhere (no hook needed):
- *   toast.success("Added to Challenge Bank")
+ *   toast.success("Added to Quiz Vault")
  */
 export const toast = {
   success: (message: string) => useToastStore.getState().show(message, "success"),

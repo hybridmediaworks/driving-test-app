@@ -29,7 +29,7 @@ export const PROGRESS_ITEMS: ProgressItemData[] = [
   },
   {
     id: "challenge",
-    title: "Challenge Bank™",
+    title: "Quiz Vault™",
     subtitle: "2 questions left",
     image:
       "https://images.pexels.com/photos/1004409/pexels-photo-1004409.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop",

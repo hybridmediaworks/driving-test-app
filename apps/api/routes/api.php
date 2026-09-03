@@ -117,6 +117,14 @@ Route::prefix('v1')->group(function (): void {
 
     Route::get('plans', [PlanController::class, 'index']);
 
+    // Challenge Bank ("Quiz Vault") — the learner's missed questions, re-practiced until mastered.
+    // Public so signed-out guests get one too: it's scoped by the same `X-Guest-Token` attempts use
+    // (and claimed into their account on login/register), while a Bearer token scopes it to the
+    // account instead. Identity is resolved inside ChallengeBankController.
+    Route::get('challenge-bank', [ChallengeBankController::class, 'index'])->middleware('throttle:120,1');
+    Route::post('challenge-bank', [ChallengeBankController::class, 'store'])->middleware('throttle:60,1');
+    Route::delete('challenge-bank/{question}', [ChallengeBankController::class, 'destroy'])->middleware('throttle:120,1');
+
     // "Verified by" reviewer roster shown on state/quiz trust badges, each with a public
     // /experts/{slug} profile page. Admin-managed.
     Route::get('experts', [ExpertController::class, 'index']);
@@ -153,10 +161,6 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/attempts', [QuizAttemptController::class, 'index']);
             Route::delete('/attempts', [QuizAttemptController::class, 'destroyAll']);
             Route::get('/me/stats', [StatsController::class, 'index']);
-
-            Route::get('challenge-bank', [ChallengeBankController::class, 'index']);
-            Route::post('challenge-bank', [ChallengeBankController::class, 'store']);
-            Route::delete('challenge-bank/{question}', [ChallengeBankController::class, 'destroy']);
 
             Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
                 ->middleware('throttle:60,1');

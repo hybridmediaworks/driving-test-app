@@ -42,7 +42,7 @@ export default function ChallangeBankScreen() {
       className="flex-1 bg-white dark:bg-secondary-900"
       edges={["top"]}
     >
-      <Header title="Challenge Bank™" scrollY={scrollY} whiteBackground />
+      <Header title="Quiz Vault™" scrollY={scrollY} whiteBackground />
 
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}

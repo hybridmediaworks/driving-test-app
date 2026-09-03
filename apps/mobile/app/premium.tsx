@@ -73,7 +73,7 @@ const TRIAL_HIGHLIGHTS = [
 const COMPARE_ROWS: { feature: string; limited: boolean }[] = [
   { feature: "Exam-like questions", limited: true },
   { feature: "AI Driving Coach", limited: true },
-  { feature: "Challenge Bank™", limited: true },
+  { feature: "Quiz Vault™", limited: true },
   { feature: "2 PDF Cheat Sheets", limited: false },
   { feature: "Exam Simulator", limited: false },
   { feature: "Marathons", limited: false },

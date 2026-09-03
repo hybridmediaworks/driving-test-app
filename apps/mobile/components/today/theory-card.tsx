@@ -9,7 +9,7 @@ type TheoryCardProps = {
   fileInfo?: string;
   locked?: boolean;
   onPress?: () => void;
-  /** Shows a spinner on the "Get it" button while the cheat sheet is downloading. */
+  /** Shows a spinner on the "Read" button while the cheat sheet PDF is opening. */
   loading?: boolean;
 };
 
@@ -61,7 +61,7 @@ export function TheoryCard({
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text className="text-white text-sm font-semibold">Get it</Text>
+              <Text className="text-white text-sm font-semibold">Read</Text>
             )}
           </TouchableOpacity>
         )}

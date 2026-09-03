@@ -9,6 +9,7 @@ class ChallengeBankItem extends Model
 {
     protected $fillable = [
         'user_id',
+        'guest_token',
         'quiz_question_id',
     ];
 

@@ -22,13 +22,16 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarStyle: {
           height: 64 + insets.bottom,
-          paddingBottom: insets.bottom,
-          paddingTop: 6,
+          // Equal breathing room above the icons and below the labels. The safe-area inset (Android
+          // nav bar / iOS home indicator) is added on top of the same 8px used at the top, so the
+          // icons/labels sit symmetrically inside the bar rather than hugging the bottom.
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 8,
           backgroundColor: Colors[theme].tabBackground,
           borderTopColor: Colors[theme].tabBorder,
         },
         tabBarItemStyle: {
-          paddingVertical: 5,
+          paddingVertical: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -57,7 +60,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="challange-bank"
         options={{
-          title: "Challange Bank",
+          title: "Quiz Vault",
           tabBarIcon: ({ color }) => (
             <IconSymbol
               size={28}

@@ -11,7 +11,7 @@ type TheoryItemProps = {
   icon: "cloud-download" | "lock";
   action: ActionType;
   onPress?: () => void;
-  /** Shows a spinner on the "Get it" button while the cheat sheet is downloading. */
+  /** Shows a spinner on the "Read" button while the cheat sheet PDF is opening. */
   loading?: boolean;
 };
 
@@ -56,7 +56,7 @@ export function TheoryItem({ title, icon, action, onPress, loading = false }: Th
       {/* Action */}
       {action === "get" ? (
         <Button variant="primary" size="sm" loading={loading} onPress={onPress}>
-          Get it
+          Read
         </Button>
       ) : (
         <View className="flex-row items-center">

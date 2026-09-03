@@ -25,7 +25,7 @@ export default function ChallengeBankReviewScreen() {
 
   const handleRemove = (questionId: number) => {
     remove(questionId); // optimistic locally + DELETE on the server
-    toast.success("Removed from Challenge Bank");
+    toast.success("Removed from Quiz Vault");
   };
 
   const description = `${questions.length} question${questions.length !== 1 ? "s" : ""}`;
@@ -92,7 +92,7 @@ export default function ChallengeBankReviewScreen() {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Remove this question from the Challenge Bank */}
+                {/* Remove this question from the Quiz Vault */}
                 <TouchableOpacity
                   activeOpacity={0.6}
                   onPress={() => handleRemove(q.id)}

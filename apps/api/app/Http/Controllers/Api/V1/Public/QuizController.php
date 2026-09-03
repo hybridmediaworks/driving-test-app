@@ -432,15 +432,22 @@ class QuizController extends Controller
 
         $user = $request->user('sanctum');
 
-        // Keep the Challenge Bank live as the learner answers (signed-in users only): a wrong pick
-        // files the question for re-practice immediately — no need to finish the whole test — and a
-        // correct one clears it.
-        if ($user !== null) {
+        // Keep the Challenge Bank live as the learner answers — for signed-in users (by user_id) and
+        // signed-out guests alike (by guest_token): a wrong pick files the question for re-practice
+        // immediately — no need to finish the whole test — and a correct one clears it.
+        $bankOwner = $user !== null
+            ? ['user_id' => $user->id]
+            : (($guestToken = $this->resolveGuestToken($request)) !== null ? ['guest_token' => $guestToken] : null);
+
+        if ($bankOwner !== null) {
             if ($graded['is_correct']) {
-                $user->challengeBankItems()->where('quiz_question_id', $question->id)->delete();
+                ChallengeBankItem::query()
+                    ->where($bankOwner)
+                    ->where('quiz_question_id', $question->id)
+                    ->delete();
             } else {
                 ChallengeBankItem::query()->insertOrIgnore([
-                    'user_id' => $user->id,
+                    ...$bankOwner,
                     'quiz_question_id' => $question->id,
                     'created_at' => now(),
                     'updated_at' => now(),

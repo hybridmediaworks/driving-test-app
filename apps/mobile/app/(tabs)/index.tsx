@@ -7,7 +7,7 @@ import { FeedbackCard } from "@/components/today/feedback-card";
 import { HeroCard } from "@/components/today/hero-card";
 import { PromoCard } from "@/components/today/promo-card";
 import { TestsRow } from "@/components/today/tests-row";
-import { TheorySection } from "@/components/today/theory-section";
+import { TheorySection, type TheoryItemData } from "@/components/today/theory-section";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Heading } from "@/components/ui/heading";
@@ -15,6 +15,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { useAsync } from "@/hooks/use-async";
 import { requestAppRating } from "@/lib/appRating";
 import { openCheatSheetPdf } from "@/lib/cheatSheets";
+import { openManual } from "@/lib/handbook";
 import { reportAnIssue } from "@/lib/support";
 import {
   fetchTodayData,
@@ -32,6 +33,16 @@ const EMPTY_DATA: TodayData = {
   testRows: [],
   theoryItems: [],
   examCard: null,
+};
+
+// The driver's manual sits at the top of the Theory list — the same PDF the Progress tab's "Read"
+// button opens (see openManual). It's always available, so it isn't part of the fetched cheat-sheet
+// list; we prepend it here.
+const MANUAL_THEORY_ITEM: TheoryItemData = {
+  id: "manual",
+  title: "Manual",
+  icon: "cloud-download",
+  action: "get",
 };
 
 export default function TodayScreen() {
@@ -76,7 +87,7 @@ export default function TodayScreen() {
     });
   };
   const scrollY = useRef(new Animated.Value(0)).current;
-  // The cheat sheet currently downloading — drives the spinner on its "Get it" button.
+  // The cheat sheet currently opening — drives the spinner on its "Read" button.
   const [loadingSheetId, setLoadingSheetId] = useState<string | null>(null);
 
   const handleTestPress = (id: string) => {
@@ -192,35 +203,45 @@ export default function TodayScreen() {
           </>
         )}
 
-        {/* Theory */}
-        {theoryItems.length > 0 && (
-          <>
-            <View className="px-4 mb-3">
-              <Heading level="h2">Theory</Heading>
-            </View>
-            <TheorySection
-              title="Cheat sheet"
-              badge={`${theoryItems.length} PDF`}
-              items={theoryItems.slice(0, 3)}
-              onSeeAll={() => router.push("/theory/see-all")}
-              loadingId={loadingSheetId ?? undefined}
-              onItemPress={async (id) => {
-                const item = theoryItems.find((t) => t.id === id);
-                if (item?.action === "unlock") {
-                  router.push("/premium");
-                  return;
-                }
-                if (loadingSheetId) return; // a download is already in progress
-                setLoadingSheetId(id);
+        {/* Theory — the driver's manual is always the first row (like the Progress tab), followed
+            by the fetched cheat sheets. */}
+        <>
+          <View className="px-4 mb-3">
+            <Heading level="h2">Theory</Heading>
+          </View>
+          <TheorySection
+            title="Cheat sheet"
+            // +1 for the Manual row, which is a PDF too — keeps the badge in step with the rows shown.
+            badge={`${theoryItems.length + 1} PDF`}
+            items={[MANUAL_THEORY_ITEM, ...theoryItems.slice(0, 3)]}
+            onSeeAll={() => router.push("/theory/see-all")}
+            loadingId={loadingSheetId ?? undefined}
+            onItemPress={async (id) => {
+              if (loadingSheetId) return; // an open is already in progress
+              // Manual → open the handbook PDF directly (same as the Progress tab's "Read").
+              if (id === "manual") {
+                setLoadingSheetId("manual");
                 try {
-                  await openCheatSheetPdf(id);
+                  await openManual(vehicleType, stateCode);
                 } finally {
                   setLoadingSheetId(null);
                 }
-              }}
-            />
-          </>
-        )}
+                return;
+              }
+              const item = theoryItems.find((t) => t.id === id);
+              if (item?.action === "unlock") {
+                router.push("/premium");
+                return;
+              }
+              setLoadingSheetId(id);
+              try {
+                await openCheatSheetPdf(id);
+              } finally {
+                setLoadingSheetId(null);
+              }
+            }}
+          />
+        </>
 
         {/* Exam */}
         {examCard && (

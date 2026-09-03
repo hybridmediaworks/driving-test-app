@@ -13,14 +13,24 @@ use Illuminate\Validation\Rule;
 class ChallengeBankController extends Controller
 {
     /**
-     * List the current user's Challenge Bank questions (newest first), with answers + assets so the
+     * List the caller's Challenge Bank questions (newest first), with answers + assets so the
      * client can re-practice them right away. Explanation is withheld until an answer is checked,
      * same as a normal quiz. Each question carries its `quiz_id` so the client can grade answers
      * against the existing `POST /quizzes/{quiz}/questions/{question}/check` endpoint.
+     *
+     * Works for signed-in users (scoped by user_id via the Bearer token) and signed-out guests
+     * alike (scoped by the `X-Guest-Token` this install has been sending) — a caller with neither
+     * identity just gets an empty bank.
      */
     public function index(Request $request): JsonResponse
     {
-        $questions = $request->user()->challengeBankItems()
+        $owner = $this->owner($request);
+        if ($owner === null) {
+            return response()->json(['data' => []]);
+        }
+
+        $questions = ChallengeBankItem::query()
+            ->where($owner)
             ->with(['question.answers', 'question.assets'])
             ->latest()
             ->get()
@@ -45,20 +55,25 @@ class ChallengeBankController extends Controller
             'question_ids.*' => ['integer', Rule::exists('quiz_questions', 'id')],
         ]);
 
-        $userId = $request->user()->id;
+        $owner = $this->owner($request);
+        if ($owner === null) {
+            return response()->json(['message' => 'No caller identity — sign in or send an X-Guest-Token.'], 422);
+        }
+
         $now = now();
         $rows = collect($validated['question_ids'])->unique()->map(fn ($id) => [
-            'user_id' => $userId,
+            ...$owner,
             'quiz_question_id' => $id,
             'created_at' => $now,
             'updated_at' => $now,
         ])->all();
 
-        // insertOrIgnore relies on the unique(user_id, quiz_question_id) index to skip duplicates.
+        // insertOrIgnore relies on the unique(user_id|guest_token, quiz_question_id) index to skip
+        // duplicates.
         ChallengeBankItem::query()->insertOrIgnore($rows);
 
         return response()->json([
-            'count' => $request->user()->challengeBankItems()->count(),
+            'count' => ChallengeBankItem::query()->where($owner)->count(),
         ], 201);
     }
 
@@ -68,12 +83,35 @@ class ChallengeBankController extends Controller
      */
     public function destroy(Request $request, QuizQuestion $question): JsonResponse
     {
-        $request->user()->challengeBankItems()
-            ->where('quiz_question_id', $question->id)
-            ->delete();
+        $owner = $this->owner($request);
+        if ($owner !== null) {
+            ChallengeBankItem::query()
+                ->where($owner)
+                ->where('quiz_question_id', $question->id)
+                ->delete();
+        }
 
         return response()->json([
-            'count' => $request->user()->challengeBankItems()->count(),
+            'count' => $owner !== null ? ChallengeBankItem::query()->where($owner)->count() : 0,
         ]);
+    }
+
+    /**
+     * The caller's Challenge Bank ownership scope: keyed by user_id for a signed-in learner (Bearer
+     * token), or guest_token for a guest (`X-Guest-Token` header, or the legacy `guest_token` body
+     * field). Doubles as the where()/insert column pair. Null when the caller has neither identity.
+     *
+     * @return array{user_id: int}|array{guest_token: string}|null
+     */
+    private function owner(Request $request): ?array
+    {
+        $user = $request->user('sanctum');
+        if ($user !== null) {
+            return ['user_id' => $user->id];
+        }
+
+        $token = $request->header('X-Guest-Token') ?: $request->input('guest_token');
+
+        return is_string($token) && $token !== '' ? ['guest_token' => $token] : null;
     }
 }

@@ -14,7 +14,7 @@ export type ProgressItemProps = {
   checked?: boolean;
   onCheckChange?: (val: boolean) => void;
   onPress?: () => void;
-  // Manual only — the "Get it" CTA that opens the driver's handbook, and its loading state.
+  // Manual only — the "Read" CTA that opens the driver's handbook, and its loading state.
   onGet?: () => void;
   getLoading?: boolean;
   // Premium/locked nav row — shows a lock icon instead of the chevron.
@@ -63,7 +63,7 @@ export function ProgressItem({
         {type === "manual" && (
           <View className="items-start">
             <Button variant="primary" size="sm" loading={getLoading} onPress={onGet}>
-              Get it
+              Read
             </Button>
           </View>
         )}

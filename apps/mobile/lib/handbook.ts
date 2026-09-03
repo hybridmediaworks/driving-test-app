@@ -1,7 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 
 import { api } from "@/lib/api";
-import { downloadPdfInApp } from "@/lib/pdf";
 import { toast } from "@/store/toastStore";
 
 type Handbook = {
@@ -12,10 +11,10 @@ type Handbook = {
 };
 
 /**
- * Opens the official driver's handbook for the given state/vehicle — the "Get it" CTA on the
- * Progress tab's Manual row. Handbooks aren't premium-gated. Prefers an in-app PDF download +
- * native viewer (stays in the app); falls back to the browser only when the PDF can't be fetched
- * in-app, or when there's only a source web page. Toasts when no handbook exists for the state yet.
+ * Opens the official driver's handbook for the given state/vehicle — the "Read" CTA on the
+ * Progress tab's Manual row. Handbooks aren't premium-gated. Opens the PDF directly in the in-app
+ * browser (no share sheet); falls back to the source web page when there's no direct PDF. Toasts
+ * when no handbook exists for the state yet.
  */
 export async function openManual(vehicle: string, state: string): Promise<void> {
   try {
@@ -27,10 +26,8 @@ export async function openManual(vehicle: string, state: string): Promise<void> 
     const source = handbook?.source_url;
 
     if (pdf) {
-      // In-app download + native viewer; browser only if the native download isn't available.
-      if (!(await downloadPdfInApp(pdf, `manual-${state}-${vehicle}`, handbook?.title ?? "Manual"))) {
-        await WebBrowser.openBrowserAsync(pdf);
-      }
+      // Open the PDF directly in the in-app browser — no share sheet.
+      await WebBrowser.openBrowserAsync(pdf);
       return;
     }
     if (source) {

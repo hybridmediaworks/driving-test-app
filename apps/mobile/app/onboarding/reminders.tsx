@@ -10,7 +10,7 @@ import { useUserStore } from "@/store/userStore";
 
 const reminderOptions = [
   { id: "new-questions", label: "Practice new questions" },
-  { id: "mistakes", label: "Practice mistakes (Challenge Bank!\u2122)" },
+  { id: "mistakes", label: "Practice mistakes (Quiz Vault!\u2122)" },
   { id: "simulator", label: "Practice Exam Simulator" },
 ];
 
@@ -27,9 +27,24 @@ export default function RemindersScreen() {
     );
   }
 
-  function finish() {
+  // Persist the reminder choices and mark onboarding complete — both paths do this.
+  function saveAndComplete() {
     setReminderPreferences(checked);
     completeOnboarding();
+  }
+
+  // "Yes, I'm ready" — continue the onboarding flow to the Premium paywall. Land on the Today tab
+  // first, then present Premium over it (Premium is a modal), so dismissing the paywall leaves the
+  // user on Today rather than back on this onboarding screen.
+  function handleReady() {
+    saveAndComplete();
+    router.replace("/(tabs)");
+    router.push("/premium");
+  }
+
+  // "No, maybe later" — skip the paywall and go straight into the app.
+  function handleLater() {
+    saveAndComplete();
     router.replace("/(tabs)");
   }
 
@@ -60,9 +75,9 @@ export default function RemindersScreen() {
       </ScrollView>
 
       <View className="px-5 pb-4 gap-3">
-        <Button showArrow onPress={finish}>Yes, I'm ready</Button>
+        <Button showArrow onPress={handleReady}>Yes, I'm ready</Button>
 
-        <TouchableOpacity onPress={finish} activeOpacity={0.7} className="items-center py-2">
+        <TouchableOpacity onPress={handleLater} activeOpacity={0.7} className="items-center py-2">
           <Text className="text-primary text-base font-semibold">
             No, maybe later
           </Text>

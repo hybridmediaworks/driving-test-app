@@ -290,7 +290,7 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
     setBookmarkedIds((prev) => new Set(prev).add(questionId));
     try {
       await addToChallengeBank([questionId]);
-      toast.success("Added to Challenge Bank");
+      toast.success("Added to Quiz Vault");
     } catch {
       // Roll back the optimistic bookmark on failure.
       setBookmarkedIds((prev) => {
@@ -329,12 +329,12 @@ function ApiQuizScreen({ quizId }: { quizId: string }) {
           {currentIndex + 1}/{questions.length}
         </Text>
 
-        {/* Save to Challenge Bank (premium). Filled when saved this session. */}
+        {/* Save to Quiz Vault (premium). Filled when saved this session. */}
         <TouchableOpacity
           onPress={handleAddToChallengeBank}
           activeOpacity={0.7}
           className="w-9 h-9 items-center justify-center"
-          accessibilityLabel="Save to Challenge Bank"
+          accessibilityLabel="Save to Quiz Vault"
         >
           <MaterialIcons
             name={bookmarkedIds.has(current.id) ? "bookmark" : "bookmark-border"}

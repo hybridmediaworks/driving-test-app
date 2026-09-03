@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
+use App\Models\ChallengeBankItem;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
@@ -91,6 +92,24 @@ class AuthController extends Controller
         }
 
         QuizAttempt::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->update(['user_id' => $user->id, 'guest_token' => null]);
+
+        // Carry the guest's Challenge Bank over too. Drop any guest row for a question the account
+        // already banked first — otherwise re-assigning it would collide with the account's own
+        // unique(user_id, quiz_question_id) row.
+        $alreadyBanked = ChallengeBankItem::query()
+            ->where('user_id', $user->id)
+            ->pluck('quiz_question_id');
+
+        ChallengeBankItem::query()
+            ->where('guest_token', $guestToken)
+            ->whereNull('user_id')
+            ->whereIn('quiz_question_id', $alreadyBanked)
+            ->delete();
+
+        ChallengeBankItem::query()
             ->where('guest_token', $guestToken)
             ->whereNull('user_id')
             ->update(['user_id' => $user->id, 'guest_token' => null]);

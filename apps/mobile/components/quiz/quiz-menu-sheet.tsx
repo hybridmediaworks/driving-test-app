@@ -133,7 +133,7 @@ export function QuizMenuSheet({ visible, onClose, onRestart, onReport, onAddToCh
       ? [
           {
             kind: "action" as const,
-            label: "Add to Challenge Bank™",
+            label: "Add to Quiz Vault™",
             onPress: () => {
               onClose();
               onAddToChallengeBank();

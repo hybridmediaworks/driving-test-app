@@ -74,13 +74,16 @@ class GradeQuizAttempt
                 );
             }
 
-            // Keep the learner's Challenge Bank in sync (signed-in users only): every question they
-            // got wrong is filed for re-practice, and any they finally got right leaves the bank.
-            if ($userId !== null) {
+            // Keep the learner's Challenge Bank in sync — for signed-in users (scoped by user_id)
+            // and signed-out guests alike (scoped by guest_token, later claimed into their account
+            // on login): every question they got wrong is filed for re-practice, and any they
+            // finally got right leaves the bank.
+            $owner = $this->challengeBankOwner($userId, $guestToken);
+            if ($owner !== null) {
                 if ($wrongQuestionIds !== []) {
                     $now = now();
                     ChallengeBankItem::query()->insertOrIgnore(array_map(fn ($qid) => [
-                        'user_id' => $userId,
+                        ...$owner,
                         'quiz_question_id' => $qid,
                         'created_at' => $now,
                         'updated_at' => $now,
@@ -89,7 +92,7 @@ class GradeQuizAttempt
 
                 if ($correctQuestionIds !== []) {
                     ChallengeBankItem::query()
-                        ->where('user_id', $userId)
+                        ->where($owner)
                         ->whereIn('quiz_question_id', $correctQuestionIds)
                         ->delete();
                 }
@@ -117,5 +120,25 @@ class GradeQuizAttempt
 
             return $attempt->load(['answers.question.answers', 'answers.answer']);
         });
+    }
+
+    /**
+     * The Challenge Bank ownership scope for this caller — keyed by user_id for a signed-in learner,
+     * or guest_token for a guest. Doubles as the column/value pair to insert. Null when neither is
+     * known, meaning nothing is filed.
+     *
+     * @return array{user_id: int}|array{guest_token: string}|null
+     */
+    private function challengeBankOwner(?int $userId, ?string $guestToken): ?array
+    {
+        if ($userId !== null) {
+            return ['user_id' => $userId];
+        }
+
+        if ($guestToken !== null && $guestToken !== '') {
+            return ['guest_token' => $guestToken];
+        }
+
+        return null;
     }
 }
