@@ -127,12 +127,12 @@ function TrackControl({
  * PDF viewer. The crawl never captured real handbook text (only a marketing blurb about the
  * source site's download page, plus the genuine PDF file itself), so rendering the PDF directly
  * is the only way to show the real, authentic document rather than the wrong scraped copy.
- * Exists specifically so "Read online" on HandbookPhase doesn't have to send users to the
- * driving-tests.org page we crawled it from; we have the real PDF ourselves.
+ * Exists specifically so "Read online" on the state hub's handbook section doesn't have to
+ * send users to the driving-tests.org page we crawled it from; we have the real PDF ourselves.
  */
 function HandbookReaderPageInner({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  // "Listen to handbook" on HandbookPhase links here with ?listen=1 so clicking it starts
+  // The state hub's "Listen" handbook card links here with ?listen=1 so clicking it starts
   // playback immediately instead of landing on the reader and requiring a second click.
   const autoListen = useSearchParams().get("listen") === "1";
   const [handbook, setHandbook] = useState<PublicHandbook | null>(null);

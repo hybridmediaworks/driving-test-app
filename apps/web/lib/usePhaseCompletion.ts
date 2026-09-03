@@ -70,6 +70,16 @@ export function usePhaseCompletion(phaseNumber: number): PhaseCompletionState {
  * count. Shares the same request cache as usePhaseCompletion (same fetchPhaseLadder call).
  */
 export function usePhaseNumbers(): number[] {
+  return useLadderPhases().map((p) => p.phase);
+}
+
+/**
+ * The whole resolved ladder for the current state/vehicle/test-track. `usePhaseNumbers` is the
+ * common case; callers that need a phase's title or steps without knowing its number up front
+ * (the state hub renders "The exam simulator" and "The extra support" as their own designed
+ * sections rather than as ladder rungs) read this instead. Shares the same request cache.
+ */
+export function useLadderPhases(): PhaseLadderPhase[] {
   const { selectedState, selectedVehicle, selectedTestType } = useWebLayout();
   const [phases, setPhases] = useState<PhaseLadderPhase[] | null>(null);
 
@@ -94,7 +104,7 @@ export function usePhaseNumbers(): number[] {
     };
   }, [stateCode, vehicleType, selectedTestType]);
 
-  return phases?.map((p) => p.phase) ?? [];
+  return phases ?? [];
 }
 
 /**

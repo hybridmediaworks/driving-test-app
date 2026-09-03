@@ -92,8 +92,13 @@ export default function LearnSection() {
           </div>
         </div>
 
-        {/* Device mockup — mobile: in flow below the text */}
-        <div className="mt-12 w-full max-w-[560px] lg:hidden">{device}</div>
+        {/* Device mockup — below lg: in flow under the text. The asset is cropped for the desktop
+            composition (the laptop is cut off at its right edge so it can bleed past the viewport),
+            so it's right-aligned and pulled through the section's gutter here too. Centred in the
+            column it just reads as a chopped-off laptop. */}
+        <div className="mt-12 -mr-5 -mb-16 ml-auto w-full max-w-[560px] lg:hidden">
+          {device}
+        </div>
       </div>
     </section>
   );

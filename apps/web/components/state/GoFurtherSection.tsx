@@ -1,10 +1,17 @@
 "use client";
 
-import { ArrowRight, BookMarked, Layers, ListChecks } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Link from "next/link";
+import {
+  BookMarked,
+  BookOpen,
+  Compass,
+  Layers,
+  ListChecks,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import Subheading from "@/components/ui/Subheading";
 import { stateAbbreviations } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
@@ -14,13 +21,45 @@ const vehicleSlugs: Record<string, string> = {
   CDL: "cdl",
 };
 
+type ResourceCard = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  linkText: string;
+  href: string;
+};
+
+function Card({ card, className = "" }: { card: ResourceCard; className?: string }) {
+  const { icon: Icon, title, description, linkText, href } = card;
+
+  return (
+    <Link
+      href={href}
+      className={`flex flex-col items-start gap-4 rounded-3xl border border-background2 bg-white p-8 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] transition-transform duration-300 hover:-translate-y-1 ${className}`}
+    >
+      <span className="flex size-12.5 items-center justify-center rounded-[11px] bg-blue-500/10 text-blue-600">
+        <Icon className="size-6" />
+      </span>
+      <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900 lg:text-[30px] lg:leading-[38px]">
+        {title}
+      </h3>
+      <Paragraph size="sm" color="muted" className="flex-1">
+        {description}
+      </Paragraph>
+      <span className="inline-flex items-center gap-1.5 text-sm leading-6 font-semibold text-blue-700">
+        {linkText} <span aria-hidden>&rarr;</span>
+      </span>
+    </Link>
+  );
+}
+
 /**
- * Real replacement for the old car/motorcycle GoFurtherSection.tsx pair — both hardcoded "WV"
- * regardless of the selected state (the same bug class this whole effort exists to fix), claimed
- * a fake audio handbook, and had zero working links on any of their 5 resource cards. Only links
- * to content confirmed to actually exist for every state/vehicle combination: cheat sheets (2 per
- * combo, real), the universal road-sign flashcard deck (6 real cards, federally standardized so
- * genuinely state-agnostic), and the real quizzes browse page.
+ * "Helpful resources" — the three-column masonry from Figma node 4147:8486, rebuilt over the
+ * resources that actually exist for every state/vehicle combination. The design's two
+ * "[VIDEO] checklist walkthrough" tiles are placeholders for footage this app doesn't have, so
+ * those slots render as regular resource cards rather than play buttons that play nothing; the
+ * duplicated "Locations, hours, and what to bring…" body copy is likewise placeholder text and is
+ * replaced per card with what that destination really offers.
  */
 export default function GoFurtherSection() {
   const { selectedState, selectedVehicle, selectedTestType } = useWebLayout();
@@ -28,59 +67,81 @@ export default function GoFurtherSection() {
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
   const query = `state=${stateCode}&vehicle_type=${vehicleType}`;
 
-  const resourceCards = [
+  const cards: ResourceCard[] = [
     {
       icon: BookMarked,
-      title: "Cheat Sheets",
+      title: "Cheat sheets",
       description: `Condensed study guides for the ${selectedState} test — download and keep for quick reference.`,
-      buttonText: "Browse cheat sheets",
+      linkText: "Browse cheat sheets",
       href: `/cheat-sheets?${query}`,
     },
     {
+      icon: ShieldCheck,
+      title: "Pass guarantee",
+      description:
+        "Pass your written test on the first attempt or get your money back — here are the terms.",
+      linkText: "See the guarantee",
+      href: "/pass-guarantee",
+    },
+    {
       icon: Layers,
-      title: "Road Sign Flashcards",
-      description: "Quick-recall practice for the road signs you'll see on the test.",
-      buttonText: "Study flashcards",
+      title: "Road sign flashcards",
+      description:
+        "Quick-recall practice for the road signs you'll see on the test.",
+      linkText: "Study flashcards",
       href: `/flashcards?${query}`,
     },
     {
       icon: ListChecks,
-      title: "More Practice Tests",
+      title: "More practice tests",
       description: `Browse every ${selectedState} practice test in one place.`,
-      buttonText: "Browse tests",
+      linkText: "Browse tests",
       href: `/quizzes?${query}&test_track=${selectedTestType}`,
+    },
+    {
+      icon: BookOpen,
+      title: "The exam simulator",
+      description:
+        "A full-length timed run under the same conditions as the real exam.",
+      linkText: "Open the simulator",
+      href: "/exam-simulator",
+    },
+    {
+      icon: Compass,
+      title: "How DriveLane works",
+      description:
+        "The whole study path, from your first practice test to license in hand.",
+      linkText: "See the path",
+      href: "/how-it-works",
     },
   ];
 
   return (
-    <section className="px-5 pt-15 pb-15 lg:pt-30 lg:pb-15">
-      <div className="mx-auto max-w-container space-y-12">
-        <div className="space-y-4">
-          <Subheading text="Go further" />
+    <section className="px-5 py-15 lg:py-30">
+      <div className="mx-auto max-w-container space-y-11">
+        <div className="max-w-[760px] space-y-4">
           <Heading as="h2">Helpful resources</Heading>
-          <Paragraph size="xl" color="muted">
-            Small tools that clear the path from &quot;thinking about it&quot; to &quot;license in hand.&quot;
+          <Paragraph size="xl">
+            Small tools that clear the path from &quot;thinking about it&quot;
+            to &quot;license in hand.&quot;
           </Paragraph>
         </div>
-        <div className="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4">
-          {resourceCards.map(({ icon: Icon, title, description, buttonText, href }) => (
-            <div key={title} className="p-6 bg-neutral-50 border rounded-lg flex flex-col justify-between gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-center bg-blue-100 rounded-[11px] w-12.5 h-12.5 text-blue-700">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <Paragraph size="lg" className="font-semibold" color="dark">
-                  {title}
-                </Paragraph>
-                <Paragraph color="muted" size="sm">
-                  {description}
-                </Paragraph>
-              </div>
-              <Button variant="ghost" className="p-0! max-w-fit" size="sm" href={href}>
-                {buttonText} <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+
+        {/* Figma's 500 / 324 / 501 masonry — two cards per outer column, two equal cards in the
+            narrow middle one. Stacks to a single column below lg. */}
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-[minmax(0,500fr)_minmax(0,324fr)_minmax(0,501fr)]">
+          <div className="flex flex-col gap-5 max-lg:contents">
+            <Card card={cards[0]} />
+            <Card card={cards[1]} className="flex-1" />
+          </div>
+          <div className="flex flex-col gap-5 max-lg:contents">
+            <Card card={cards[2]} className="flex-1" />
+            <Card card={cards[3]} className="flex-1" />
+          </div>
+          <div className="flex flex-col gap-5 max-lg:contents">
+            <Card card={cards[4]} />
+            <Card card={cards[5]} className="flex-1" />
+          </div>
         </div>
       </div>
     </section>
