@@ -14,8 +14,23 @@ type Reviewer = {
   /** One or more paragraphs of the reviewer's write-up. */
   quote: string[];
   photo: string | null;
+  /** Bundled stand-in used when `photo` is absent or fails to load. */
+  fallbackPhoto?: string;
   /** Profile link — only real roster entries have one. */
   href?: string;
+};
+
+/**
+ * Stand-in portraits, keyed by reviewer slug, for while the real photos are missing from media
+ * storage. These are the design's stock portraits, not photographs of the named reviewers — a
+ * deliberate, temporary placeholder. They are only ever reached when the API has no working photo
+ * for that person, so publishing a real photo in /admin/experts replaces them with no code change.
+ * Keyed by slug rather than by card position so a stock face can never silently attach itself to
+ * a reviewer added later.
+ */
+const PLACEHOLDER_PHOTOS: Record<string, string> = {
+  "marcus-reyes": "/state-hub/expert-instructor.jpg",
+  "dana-whitfield": "/state-hub/expert-examiner.jpg",
 };
 
 /**
@@ -64,6 +79,7 @@ function toReviewer(expert: Expert): Reviewer {
       .filter(Boolean)
       .slice(0, 2),
     photo: expert.photo_url,
+    fallbackPhoto: PLACEHOLDER_PHOTOS[expert.slug],
     href: `/experts/${expert.slug}`,
   };
 }
@@ -82,18 +98,22 @@ function ReviewerPhoto({
   reviewer: Reviewer;
   className: string;
 }) {
-  // Keyed by src, not a bare boolean, so swapping in a different reviewer's photo (the design
-  // fallback giving way to the real roster) gets its own chance to load.
-  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  // The reviewer's own photo first, then the bundled stand-in, then initials. Failures are tracked
+  // by src rather than as a bare flag so a later swap (the design fallback giving way to the real
+  // roster, or a real photo finally being published) gets its own chance to load.
+  const [failed, setFailed] = useState<string[]>([]);
+  const candidates = [reviewer.photo, reviewer.fallbackPhoto].filter(
+    (src): src is string => Boolean(src),
+  );
+  const src = candidates.find((candidate) => !failed.includes(candidate));
 
-  if (reviewer.photo && failedSrc !== reviewer.photo) {
-    const src = reviewer.photo;
+  if (src) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={reviewer.name}
-        onError={() => setFailedSrc(src)}
+        onError={() => setFailed((prev) => [...prev, src])}
         className={`${className} object-cover`}
       />
     );
@@ -102,10 +122,10 @@ function ReviewerPhoto({
   return (
     <div
       aria-hidden
-      // Carries the src that failed (when there was one) so the placeholder is still inspectable —
-      // the <img> is unmounted on error, so there's otherwise nothing in the DOM to check.
+      // Carries whatever was tried so the placeholder stays inspectable — the <img> is unmounted
+      // on error, so there is otherwise nothing in the DOM to check.
       data-photo-src={reviewer.photo ?? undefined}
-      data-photo-state={reviewer.photo ? "failed" : "missing"}
+      data-photo-state={candidates.length > 0 ? "failed" : "missing"}
       className={`${className} flex items-center justify-center bg-background2 font-sora text-5xl font-semibold text-neutral-500`}
     >
       {initialsOf(reviewer.name)}

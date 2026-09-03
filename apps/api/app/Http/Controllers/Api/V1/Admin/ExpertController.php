@@ -118,7 +118,17 @@ class ExpertController extends Controller
         $newPhoto = $request->file('photo');
 
         if ($newPhoto !== null && $newPhoto->isValid()) {
-            $expert->addMedia($newPhoto)->toMediaCollection(Expert::MEDIA_COLLECTION_PHOTO);
+            // Store under a short, predictable name rather than whatever the uploader's file was
+            // called. A real upload arrived named "Alt-text-is-required" repeated twelve times
+            // (231 characters, from an image saved off a page whose alt text was a CMS
+            // placeholder), which then had "-display.jpg" appended for the conversion — long
+            // enough to be brittle as a path and as an S3 key, and unreadable in any URL.
+            $extension = strtolower($newPhoto->getClientOriginalExtension() ?: 'jpg');
+
+            $expert->addMedia($newPhoto)
+                ->usingName('photo')
+                ->usingFileName("photo.{$extension}")
+                ->toMediaCollection(Expert::MEDIA_COLLECTION_PHOTO);
         } elseif ($request->boolean('remove_photo')) {
             $expert->clearMediaCollection(Expert::MEDIA_COLLECTION_PHOTO);
         }
