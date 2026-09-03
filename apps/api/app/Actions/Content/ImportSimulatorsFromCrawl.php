@@ -21,11 +21,20 @@ use Illuminate\Support\Facades\Http;
  *   3. Scored sequence    → `timeline[]`: the subset that actually counts, in play order.
  *
  * This action imports all three: the Video as before, then the HazardSimulator + its full hazard
- * pool + which hazards are scored (`in_timeline` / `sort_order`). Idempotent — keyed by `sim_id`
- * (fallback `video_id`) for the simulator and `(simulator, source_hazard_id)` for each hazard, so
- * a re-run updates in place and never touches attempt history. Source data-quality quirks are
- * logged via ImportSummary::warn and never fail the run. Pass `$skipHazards` (`--skip-hazards`)
- * to import only the flat Video and leave the interactive layer untouched.
+ * pool + which hazards are scored (`in_timeline` / `sort_order`). Idempotent — keyed by `video_id`
+ * for the simulator and `(simulator, source_hazard_id)` for each hazard, so a re-run updates in
+ * place and never touches attempt history. Source data-quality quirks are logged via
+ * ImportSummary::warn and never fail the run. Pass `$skipHazards` (`--skip-hazards`) to import only
+ * the flat Video and leave the interactive layer untouched.
+ *
+ * `sim_id` is NOT a safe dedup key across the catalog: the source reuses a small pool of generic
+ * hazard-perception clips (~13 of them) across every state AND both vehicle types — e.g. sim_id
+ * 2858 is "AL Defensive Driving Hazard Simulator 1" in the Alabama car crawl and also "AK …
+ * Simulator 1" in Alaska, and again under Motorcycle for both. Matching on `sim_id` would collapse
+ * every state's simulator onto one shared HazardSimulator row and repoint it to whichever
+ * state/vehicle was imported last (see git history around 2026-09-03 for the incident). Each
+ * state+vehicle combination gets its own Video (already deduped by state/vehicle/track/title) and
+ * therefore its own HazardSimulator — `sim_id` is kept only for traceability back to the source.
  */
 class ImportSimulatorsFromCrawl
 {
@@ -94,13 +103,9 @@ class ImportSimulatorsFromCrawl
         $label = "\"{$video->title}\"";
         $simId = isset($row['sim_id']) ? (int) $row['sim_id'] : null;
 
-        $simulator = HazardSimulator::query()
-            ->when(
-                $simId !== null,
-                fn ($q) => $q->where('sim_id', $simId),
-                fn ($q) => $q->where('video_id', $video->id),
-            )
-            ->first();
+        // video_id, not sim_id — see the class docblock. Video is already the correctly-deduped
+        // per-state/vehicle catalog entity; hazard_simulators.video_id is 1:1 and unique on it.
+        $simulator = HazardSimulator::query()->where('video_id', $video->id)->first();
 
         // Staff have taken over this simulator's hazard layer — the crawl leaves it completely
         // alone (fields, hazard rows, is_active, scoring_profile all stay as edited in admin), and

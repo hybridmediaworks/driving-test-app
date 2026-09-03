@@ -209,4 +209,48 @@ class HazardSimulatorImportTest extends TestCase
 
         $this->assertDatabaseHas('hazards', ['id' => $staffHazard->id, 'comment' => 'staff added']);
     }
+
+    /**
+     * Regression for the 2026-09-03 incident: the source reuses the same small pool of `sim_id`s
+     * across every state and both vehicle types (generic hazard-perception footage, not
+     * state-specific content). Matching on `sim_id` alone let importing a second state/vehicle
+     * steal the first's HazardSimulator row and repoint it. The dedup key must be `video_id`.
+     */
+    public function test_the_same_sim_id_imported_for_a_different_state_and_vehicle_creates_an_independent_simulator(): void
+    {
+        $this->import($this->simOneFixture(), new ImportSummary);
+        $alCar = HazardSimulator::query()->where('sim_id', 2858)->firstOrFail();
+        $alCar->hazards()->where('source_hazard_id', 21)->update(['comment' => 'AL car specific text']);
+
+        $texas = State::factory()->create(['code' => 'TX', 'name' => 'Texas']);
+        $motorcycle = VehicleType::factory()->create(['name' => 'motorcycle', 'title' => 'Motorcycle']);
+
+        // Same sim_id/vimeo_id/hazard ids as the AL car fixture — only the state/vehicle differ,
+        // mirroring the real crawl where the same clip is filed under many state+vehicle pages.
+        $txMotoData = $this->simOneFixture();
+        $txMotoData['simulators'][0]['title'] = 'TX Defensive Driving Hazard Simulator 1';
+
+        $summary = new ImportSummary;
+        app(ImportSimulatorsFromCrawl::class)($txMotoData, $texas, $motorcycle, 'driving_test', $summary, false);
+
+        // Two separate rows, not one stolen from the other.
+        $this->assertDatabaseCount('hazard_simulators', 2);
+        $this->assertDatabaseCount('videos', 2);
+
+        $alCar->refresh();
+        $txMoto = HazardSimulator::query()->where('id', '!=', $alCar->id)->where('sim_id', 2858)->firstOrFail();
+
+        $this->assertNotSame($alCar->video_id, $txMoto->video_id);
+        $this->assertSame('AL car specific text', $alCar->hazards()->where('source_hazard_id', 21)->firstOrFail()->comment);
+        // The TX/motorcycle copy got its own hazard rows from the crawl, untouched by AL's edit.
+        $this->assertNotSame(
+            'AL car specific text',
+            $txMoto->hazards()->where('source_hazard_id', 21)->firstOrFail()->comment,
+        );
+
+        // AL's video is still linked — it was NOT repointed to the TX/motorcycle video.
+        $this->assertSame($alCar->video->id, $alCar->fresh()->video_id);
+        $this->assertTrue($alCar->video->hazardSimulator()->exists());
+        $this->assertTrue($txMoto->video->hazardSimulator()->exists());
+    }
 }
