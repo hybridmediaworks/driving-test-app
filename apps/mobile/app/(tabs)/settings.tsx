@@ -1,4 +1,5 @@
 import Header from "@/components/header";
+import { ChangePlanSheet } from "@/components/premium/change-plan-sheet";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Primary, Secondary } from "@/constants/theme";
@@ -7,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { ApiError } from "@/lib/api";
 import { requestAppRating } from "@/lib/appRating";
 import { reportAnIssue } from "@/lib/support";
-import { cancelSubscription, getBillingPortalUrl } from "@/services/api/billingApi";
+import { cancelSubscription } from "@/services/api/billingApi";
 import { useAuthStore } from "@/store/authStore";
 import { resetAllResults } from "@/services/api/progressService";
 import { useProgressStore } from "@/store/progressStore";
@@ -18,9 +19,15 @@ import { toast } from "@/store/toastStore";
 import { useUserStore, type TestLanguage } from "@/store/userStore";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Animated, Share, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Animated,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type SettingsRowProps = {
@@ -155,7 +162,8 @@ export default function SettingsScreen() {
   const { user, logout } = useAuthStore();
   // Backend-owned entitlement is the source of truth (RevenueCat's webhook feeds it) — same check the
   // rest of the app uses to gate premium features.
-  const isPremium = useAuthStore((s) => s.user?.entitlement?.is_premium) ?? false;
+  const isPremium =
+    useAuthStore((s) => s.user?.entitlement?.is_premium) ?? false;
   const states = useReferenceDataStore((s) => s.states);
   const vehicleTypes = useReferenceDataStore((s) => s.vehicleTypes);
   const fetchStates = useReferenceDataStore((s) => s.fetchStates);
@@ -171,6 +179,7 @@ export default function SettingsScreen() {
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showChangePlanSheet, setShowChangePlanSheet] = useState(false);
 
   async function handleLogout() {
     if (loggingOut) return;
@@ -201,21 +210,8 @@ export default function SettingsScreen() {
 
   const handleReset = () => setResetModalVisible(true);
 
-  // "Change Plan" — open the Stripe self-service billing portal (change plan / payment / cancel).
-  const handleChangePlan = async () => {
-    try {
-      const url = await getBillingPortalUrl();
-      await WebBrowser.openBrowserAsync(url);
-    } catch (err) {
-      // Surface the server's own reason for 4xx (e.g. "no active subscription", "email not
-      // verified"); keep a generic line for 5xx / network trouble.
-      toast.error(
-        err instanceof ApiError && err.status < 500 && err.message
-          ? err.message
-          : "Couldn't open the billing page. Please try again.",
-      );
-    }
-  };
+  // "Change Plan" — open the sheet that lists the available plans (same set as the web pricing page).
+  const handleChangePlan = () => setShowChangePlanSheet(true);
 
   // "Cancel Subscription" — cancel in-app via the backend. Access stays until the billing period
   // ends; refresh the user afterwards so the subscription/entitlement state is up to date.
@@ -365,21 +361,17 @@ export default function SettingsScreen() {
         <View className="rounded-2xl overflow-hidden bg-white dark:bg-secondary-800 mb-6">
           {isPremium ? (
             <>
-              {/* Active subscriber — let them switch plan or cancel (both via the store). */}
+              {/* Active subscriber — switch plan here; "Cancel Subscription" is the danger button
+                  at the bottom of the page. */}
               <SettingsRow
-                label="Change Plan"
+                label="Update Plan"
                 onPress={handleChangePlan}
                 right={
-                  <MaterialIcons name="chevron-right" size={18} color={Secondary[400]} />
-                }
-              />
-              <SettingsRow
-                label="Cancel Subscription"
-                onPress={handleCancelSubscription}
-                right={
-                  <Text className="text-base font-semibold text-red-500">
-                    Cancel
-                  </Text>
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={18}
+                    color={Secondary[400]}
+                  />
                 }
               />
             </>
@@ -461,6 +453,20 @@ export default function SettingsScreen() {
             isLast
           />
         </View>
+
+        {/* Danger zone — destructive, so it sits apart at the very bottom. */}
+        {isPremium && (
+          <TouchableOpacity
+            onPress={handleCancelSubscription}
+            disabled={cancelling}
+            activeOpacity={0.85}
+            className="mb-4 items-center justify-center rounded-full bg-red-500 py-4"
+          >
+            <Text className="text-base font-semibold text-white">
+              {cancelling ? "Cancelling…" : "Cancel Subscription"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </Animated.ScrollView>
 
       <AlertDialog
@@ -484,6 +490,11 @@ export default function SettingsScreen() {
           toast.success("All results have been reset");
         }}
         onCancel={() => setResetModalVisible(false)}
+      />
+
+      <ChangePlanSheet
+        visible={showChangePlanSheet}
+        onClose={() => setShowChangePlanSheet(false)}
       />
     </SafeAreaView>
   );

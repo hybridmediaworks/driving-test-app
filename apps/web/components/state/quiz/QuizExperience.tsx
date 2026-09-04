@@ -25,10 +25,12 @@ import StreakBadge from "@/components/state/quiz/StreakBadge";
 import ReportMistakeDialog from "@/components/state/quiz/ReportMistakeDialog";
 import Toast, { type ToastVariant } from "@/components/state/quiz/Toast";
 import QuizResults from "@/components/state/quiz/QuizResults";
+import PremiumDialog from "@/components/billing/PremiumDialog";
+import SignInDialog from "@/components/auth/SignInDialog";
 import { api, ApiError } from "@/lib/api";
 import { invalidatePhaseLadder } from "@/lib/phaseLadder";
 import { invalidateResolvedQuiz } from "@/lib/useResolvedQuiz";
-import { useEntitlement } from "@/lib/auth-context";
+import { useAuth, useEntitlement } from "@/lib/auth-context";
 import { translate, type QuizLanguage, type TFunction } from "@/lib/i18n/quiz";
 
 const allowedToFail = 4;
@@ -135,6 +137,14 @@ export default function QuizExperience({
             <Paragraph color="muted">{loadError ?? t("testUnavailable")}</Paragraph>
             <Button href={notFoundHref}>{notFoundLabel}</Button>
           </div>
+        ) : data === null ? (
+          // The quiz metadata resolved but its questions haven't yet — the state-page flow fetches
+          // the quiz list first, then the full show response in a second request. Keep showing the
+          // loading state here instead of falling through to the "no questions" empty state below,
+          // which would flash for that window on every quiz start.
+          <Paragraph className="py-20 text-center" color="muted">
+            {t("loadingTest")}
+          </Paragraph>
         ) : locked ? (
           <div className="py-20 text-center space-y-4">
             <Paragraph color="muted">
@@ -144,7 +154,7 @@ export default function QuizExperience({
               <Gem className="w-5" /> {t("upgradeToPremium")}
             </Button>
           </div>
-        ) : !data?.questions || data.questions.length === 0 ? (
+        ) : !data.questions || data.questions.length === 0 ? (
           <Paragraph className="py-20 text-center" color="muted">
             {t("testHasNoQuestions")}
           </Paragraph>
@@ -185,7 +195,14 @@ function QuizTaker({
   onContinue: () => void | Promise<void>;
   initialView?: "results";
 }) {
+  const { user, loading: authLoading } = useAuth();
   const { isPremium } = useEntitlement();
+
+  // Bookmarking a question is a Premium-only action: a guest is prompted to sign in, a signed-in
+  // non-Premium learner is prompted to upgrade, and only a Premium learner actually toggles the
+  // flag (see toggleFlag below).
+  const [signInDialogOpen, setSignInDialogOpen] = useState(false);
+  const [bookmarkUpsellOpen, setBookmarkUpsellOpen] = useState(false);
 
   const [showResults, setShowResults] = useState(false);
   // When entered via "View results", we start on a loading screen while the last attempt is fetched
@@ -500,6 +517,17 @@ function QuizTaker({
 
   function toggleFlag() {
     if (!currentQuestion) return;
+    // The `/me` session check can still be in flight on a hard refresh — wait it out rather than
+    // flashing the sign-in prompt at someone who's actually already logged in.
+    if (authLoading) return;
+    if (!user) {
+      setSignInDialogOpen(true);
+      return;
+    }
+    if (!isPremium) {
+      setBookmarkUpsellOpen(true);
+      return;
+    }
     setFlaggedIds((prev) => {
       const next = new Set(prev);
       if (next.has(currentQuestion.id)) next.delete(currentQuestion.id);
@@ -679,6 +707,10 @@ function QuizTaker({
         force_new: true,
       });
       setAttemptId(res.attempt.id);
+      // A brand-new attempt replaces whatever in-progress one the caches were built around —
+      // refresh them so the detail page / ladder reflect this attempt's state on the way back.
+      invalidateResolvedQuiz();
+      invalidatePhaseLadder();
       setLoadedQuestions(applyLanguageToOrder(orderQuestionsById(res.attempt.question_order, questions), language));
     } catch {
       setAttemptId(null);
@@ -767,6 +799,14 @@ function QuizTaker({
         const resumeIndex = Math.min(Object.keys(checked).length, ordered.length - 1);
 
         setAttemptId(res.attempt.id);
+        // There's now an in-progress attempt to resume. The detail page and phase ladder each
+        // cache their `/quizzes` response (see useResolvedQuiz / phaseLadder), and that cache was
+        // populated on the way in — before this attempt existed — so navigating back via Exit or
+        // the browser would keep showing "Start" until a manual refresh. Drop both caches now so
+        // the "Continue (x/y)" CTA shows immediately on return. (submitAttempt invalidates again
+        // once the attempt is finished.)
+        invalidateResolvedQuiz();
+        invalidatePhaseLadder();
         setLoadedQuestions(applyLanguageToOrder(ordered, language));
         setCheckedByQuestionId(checked);
         setAnswers(restoredAnswers);
@@ -899,9 +939,11 @@ function QuizTaker({
               {title}
             </Paragraph>
           </div>
-          <Button href="/pricing" size="sm" variant="gold">
-            <Gem className="w-5" /> {t("upgrade")}
-          </Button>
+          {!isPremium && (
+            <Button href="/pricing" size="sm" variant="gold">
+              <Gem className="w-5" /> {t("upgrade")}
+            </Button>
+          )}
         </div>
         <div className="h-2.5 flex-1 overflow-hidden bg-background2">
           <div
@@ -1210,6 +1252,13 @@ function QuizTaker({
 
       <RestartDialog open={showRestartConfirm} onOpenChange={setShowRestartConfirm} onConfirm={restart} t={t} />
       <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} t={t} />
+      <SignInDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen} />
+      <PremiumDialog
+        open={bookmarkUpsellOpen}
+        onOpenChange={setBookmarkUpsellOpen}
+        title="Bookmarking is a Premium feature"
+        description="Saving questions for later is part of Premium. Upgrade to bookmark questions and revisit them anytime."
+      />
       {currentQuestion && (
         <ReportMistakeDialog
           key={currentQuestion.id}

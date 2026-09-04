@@ -38,6 +38,11 @@ class VideoResource extends JsonResource
             'test_track' => $this->test_track,
             'section' => $this->section,
             'subsection' => $this->subsection,
+            // Present when this video has the interactive hazard-perception layer — the client
+            // routes its card to the full-screen player at /hazard-simulator/{slug} instead of the
+            // plain watch dialog. Only meaningful when `hazardSimulator` is eager-loaded.
+            'has_simulator' => $this->whenLoaded('hazardSimulator', fn () => $this->hazardSimulator !== null && $this->hazardSimulator->is_active),
+            'simulator_slug' => $this->whenLoaded('hazardSimulator', fn () => $this->hazardSimulator?->slug),
             'category' => $this->whenLoaded('category', fn () => $this->category === null ? null : [
                 'id' => $this->category->id,
                 'name' => $this->category->name,

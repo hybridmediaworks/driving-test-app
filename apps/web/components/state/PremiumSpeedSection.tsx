@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useEntitlement } from "@/lib/auth-context";
 
 /**
  * "2x faster prep — Students with Premium finish prep faster" — the full-bleed roundabout banner
@@ -9,10 +10,15 @@ import { ArrowRight } from "lucide-react";
  * node 4147:8161). Photo backdrop at 40% black, a soft blue glow behind the copy, and the green
  * hand-drawn underline under the "2x faster prep" line.
  *
- * Renders for everyone, entitled subscribers included — the design has no signed-in variant, and
- * hiding it left a visible gap in the page between the ladder and the exam simulator.
+ * Hidden for premium subscribers — pitching a plan they already own has no upside, and the section
+ * is purely promotional (no signed-in variant of the copy/CTA), so skipping it entirely is cleaner
+ * than leaving a dead "Try for Free" link. The surrounding sections carry their own vertical
+ * padding, so removing this one doesn't leave a gap.
  */
 export default function PremiumSpeedSection() {
+  const { isPremium } = useEntitlement();
+  if (isPremium) return null;
+
   return (
     <section className="relative isolate overflow-hidden px-5 py-20 lg:py-30">
       {/* Backdrop */}

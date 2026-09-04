@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { PaginatedResponse, PublicVideo, VideoShowResponse } from "@driving-test-app/shared";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
@@ -62,9 +63,9 @@ function groupBySection(videos: PublicVideo[]): [string, PublicVideo[]][] {
 
 /**
  * Same visual card as the "Simulators"/quiz steps in the phase ladder (StepCard) — thumbnail,
- * Free/Premium badge, title, duration — just driven by a Video instead of a Quiz, and clicking
- * opens a watch dialog instead of navigating to a quiz page (no `state`/`slug` passed to StepCard,
- * so it renders its bare content div with no Link wrapper; this wrapper supplies the click).
+ * Free/Premium badge, title, duration — just driven by a Video instead of a Quiz. A video that
+ * carries the interactive hazard-perception layer (`has_simulator`) links to the full-screen
+ * player route; every other video opens the plain watch dialog via `onOpen`.
  */
 function VideoStepCard({
   video,
@@ -75,6 +76,26 @@ function VideoStepCard({
   loading: boolean;
   onOpen: (video: PublicVideo) => void;
 }) {
+  const card = (
+    <StepCard
+      step={{
+        title: video.title,
+        image: video.thumbnail_url ?? undefined,
+        type: video.is_premium ? "premium" : "free",
+        locked: video.locked,
+        duration: formatDuration(video.duration_seconds),
+      }}
+    />
+  );
+
+  if (video.has_simulator && video.simulator_slug) {
+    return (
+      <Link href={`/hazard-simulator/${video.simulator_slug}`} className="block">
+        {card}
+      </Link>
+    );
+  }
+
   return (
     <div
       role="button"
@@ -86,15 +107,7 @@ function VideoStepCard({
       }}
       className={loading ? "pointer-events-none opacity-60" : undefined}
     >
-      <StepCard
-        step={{
-          title: video.title,
-          image: video.thumbnail_url ?? undefined,
-          type: video.is_premium ? "premium" : "free",
-          locked: video.locked,
-          duration: formatDuration(video.duration_seconds),
-        }}
-      />
+      {card}
     </div>
   );
 }

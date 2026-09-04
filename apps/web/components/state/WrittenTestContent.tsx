@@ -13,6 +13,7 @@ import { stateAbbreviations, stateToSlug, usStates } from "@/lib/usStates";
 import { otherStateLinks } from "@/lib/otherStateLinks";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { api } from "@/lib/api";
+import { useEntitlement } from "@/lib/auth-context";
 import ReviewerBadge from "@/components/state/ReviewerBadge";
 
 function slugToStateName(slug: string): string {
@@ -42,6 +43,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
 
   const { selectedVehicle } = useWebLayout();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
+  const { isPremium } = useEntitlement();
 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const [stateInfo, setStateInfo] = useState<State | null>(null);
@@ -233,9 +235,11 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                             : `Start free ${stateCode} permit practice test`}
                       </span>
                     </Button>
-                    <Button id="atBtnPremium" variant="outline" size="lg" className="h-15.5 max-w-139" href="/pricing">
-                      Get Full {stateName} Exam Prep
-                    </Button>
+                    {!isPremium && (
+                      <Button id="atBtnPremium" variant="outline" size="lg" className="h-15.5 max-w-139" href="/pricing">
+                        Get Full {stateName} Exam Prep
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <div id="sideDescr" className="relative ml-[30px] flex w-[340px] flex-none flex-col max-lg:mt-5 max-lg:ml-0 max-lg:w-[250px] max-md:w-full">
