@@ -23,28 +23,20 @@ function formatExamDate(date: string): string {
  * The hero a signed-in learner gets: no pitch, just where they are and what's next. The marketing
  * hero ("Start your Free … Practice Test") stays for visitors who haven't signed up yet.
  *
+ * "Reschedule exam date" is a placeholder link for now; the date is still editable from the
+ * progress rail's pencil, which writes through the same useExamDate hook.
+ *
  * "I've taken the written exam" opens the congratulations dialog. There is nothing to record —
  * the API has no concept of an exam having been sat — so it asks for a review instead, which is
  * what that moment is actually good for.
  */
 export default function SignedInHero() {
   const { selectedState, selectedTestType } = useWebLayout();
-  const { examDate, save, saving, error } = useExamDate();
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(examDate ?? "");
+  const { examDate } = useExamDate();
   const [examTakenOpen, setExamTakenOpen] = useState(false);
 
   const isPermitTrack = selectedTestType === "permit_test";
   const examLabel = isPermitTrack ? "knowledge" : "driving";
-
-  function startEditing() {
-    setValue(examDate ?? "");
-    setEditing(true);
-  }
-
-  async function submit() {
-    if (await save(value)) setEditing(false);
-  }
 
   return (
     <section className="px-5 py-12 lg:py-16">
@@ -71,49 +63,14 @@ export default function SignedInHero() {
           </button>
         )}
 
-        {editing ? (
-          <div className="mt-2 flex flex-col items-center gap-2">
-            <div className="flex items-center gap-2">
-              <label htmlFor="hero-exam-date" className="sr-only">
-                Exam date
-              </label>
-              <input
-                id="hero-exam-date"
-                type="date"
-                value={value}
-                disabled={saving}
-                onChange={(event) => setValue(event.target.value)}
-                className="border-border rounded-lg border bg-white px-3 py-2 text-sm text-neutral-900"
-              />
-              <button
-                type="button"
-                disabled={saving}
-                onClick={submit}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-              >
-                {saving ? "Saving…" : "Save"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditing(false)}
-                className="px-2 py-2 text-sm font-medium text-neutral-500 hover:text-neutral-900"
-              >
-                Cancel
-              </button>
-            </div>
-            {error && <p className="text-destructive text-xs">{error}</p>}
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={startEditing}
-            className="text-sm font-semibold text-blue-700 hover:underline"
-          >
-            {examDate
-              ? `Reschedule exam date · ${formatExamDate(examDate)}`
-              : "Set your exam date"}
-          </button>
-        )}
+        <a
+          href="#"
+          className="text-sm font-semibold text-blue-700 hover:underline"
+        >
+          {examDate
+            ? `Reschedule exam date · ${formatExamDate(examDate)}`
+            : "Set your exam date"}
+        </a>
       </div>
 
       <ExamTakenDialog open={examTakenOpen} onOpenChange={setExamTakenOpen} />

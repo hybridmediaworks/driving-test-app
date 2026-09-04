@@ -70,7 +70,7 @@ export default function StatePhase({
 
   return (
     <div id={phaseAnchorId(phaseData.phase)} className="scroll-mt-6 space-y-10">
-      <div className="flex gap-4">
+      <div className="flex gap-4 max-w-3xl">
         <div className="relative">
           {previousConnector && (
             <div
@@ -124,19 +124,15 @@ export default function StatePhase({
           />
         </div>
 
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex items-baseline justify-between gap-6">
-            <Heading as="h2" className="max-w-3xl">
-              {phaseData.header.headerTitle}
-            </Heading>
-            {summary && (
-              <span className="hidden shrink-0 text-sm text-neutral-500 sm:block">
-                {summary}
-              </span>
-            )}
-          </div>
+        <div className="max-w-3xl space-y-2">
+          {summary && (
+            <Paragraph color="primary" className="font-semibold">
+              {summary}
+            </Paragraph>
+          )}
+          <Heading as="h2">{phaseData.header.headerTitle}</Heading>
           {phaseData.header.headerDesc && (
-            <Paragraph color="muted" className="max-w-3xl pt-1">
+            <Paragraph color="muted" className="pt-1">
               {phaseData.header.headerDesc}
             </Paragraph>
           )}
