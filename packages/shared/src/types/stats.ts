@@ -23,3 +23,22 @@ export type UserStats = {
     attempts_count: number;
   }[];
 };
+
+/**
+ * GET /me/progress — the learner's own study progress for one state/vehicle/track, as shown in
+ * the state hub's sidebar. Every figure is derived from recorded quiz attempts.
+ */
+export type UserProgress = {
+  /** Distinct quizzes completed at least once, over how many exist in this scope. */
+  tests: { completed: number; total: number };
+  /** Distinct questions answered at least once, over how many exist in this scope. */
+  questions: { covered: number; total: number };
+  streak: {
+    /** Consecutive days ending today or yesterday that hit `daily_target`. */
+    current: number;
+    daily_target: number;
+    answered_today: number;
+    /** The most recent few days, oldest first — one entry per streak dot. */
+    days: { date: string; answered: number; met: boolean }[];
+  };
+};

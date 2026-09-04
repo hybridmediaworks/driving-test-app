@@ -344,6 +344,7 @@ button {
     .next-glow {
       animation: none;
     }
+
   }
 }
 
@@ -397,5 +398,55 @@ button {
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* The state hub's progress rail sliding in from the right edge on load. Applies only where the
+   rail actually sits on the right (xl+) — below that it's stacked above the content, where a
+   sideways entrance would read as a layout glitch. Kept outside @layer utilities so Tailwind
+   doesn't treat it as a prunable utility. */
+@keyframes rail-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 20px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 80rem) {
+  .rail-slide-in {
+    animation: rail-slide-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-slide-in {
+    animation: none;
+  }
+}
+
+/* State hub with the progress rail: the page's sections live inside the left column, so their
+   backgrounds would stop at the column's edge. This bleeds every section out to the full viewport
+   while pushing its padding back in by the same amount, so the tinted/photographic bands run edge
+   to edge but their contents stay exactly where the column puts them.
+
+   --hub-rail-space is everything to the right of the column: the rail (20rem) + the row gap
+   (2.5rem) + the row's right padding (1.25rem). Applied unlayered so it wins over the sections'
+   own `px-*` utilities. */
+@media (min-width: 80rem) {
+  .hub-column {
+    --hub-rail-space: 23.75rem;
+  }
+
+  /* Direct children of <main> only — every top-level band, whether it's a <section> or the
+     wrapper div the phase ladder sits in. Nested sections inherit the bled parent's box and must
+     not be shifted a second time. */
+  .hub-column main > * {
+    margin-left: -1.25rem;
+    margin-right: calc(-1 * var(--hub-rail-space));
+    padding-right: calc(1.25rem + var(--hub-rail-space));
   }
 }

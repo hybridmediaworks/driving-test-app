@@ -21,26 +21,26 @@ const CALLOUTS = [
     title: "Exam Mode",
     body: "just like test day",
     // left 102.66 / top 33.44 of the 1361×688 Figma frame
-    position: "xl:left-[7.5%] xl:top-[4.9%]",
-    width: "xl:w-auto",
+    position: "@7xl:left-[7.5%] @7xl:top-[4.9%]",
+    width: "@7xl:w-auto",
   },
   {
     title: "Same number of questions",
     bodyKey: "official-exam" as const,
-    position: "xl:left-[82.8%] xl:top-[25.7%]",
-    width: "xl:w-[226px]",
+    position: "@7xl:left-[82.8%] @7xl:top-[25.7%]",
+    width: "@7xl:w-[226px]",
   },
   {
     title: "Unlimited chances",
     body: "Retry until your confidence is bulletproof",
-    position: "xl:left-[0.3%] xl:top-[50.6%]",
-    width: "xl:w-[236px]",
+    position: "@7xl:left-[0.3%] @7xl:top-[50.6%]",
+    width: "@7xl:w-[236px]",
   },
   {
     title: "AI Tutor",
     body: "Instant explanations for every answer",
-    position: "xl:left-[81.4%] xl:top-[73.9%]",
-    width: "xl:w-[189px]",
+    position: "@7xl:left-[81.4%] @7xl:top-[73.9%]",
+    width: "@7xl:w-[189px]",
   },
 ];
 
@@ -63,7 +63,7 @@ export default function ExamSimulatorSection() {
     : "/pricing";
 
   return (
-    <section className="px-5 py-15 lg:py-30">
+    <section id="exam-simulator" className="scroll-mt-6 px-5 py-15 lg:py-30">
       <div className="mx-auto max-w-container">
         <div className="mx-auto flex max-w-[556px] flex-col items-center gap-4 text-center">
           <Heading as="h2" className="text-center">
@@ -74,7 +74,7 @@ export default function ExamSimulatorSection() {
           </Paragraph>
         </div>
 
-        <div className="relative mt-10 lg:mt-15">
+        <div className="@container relative mt-10 lg:mt-15">
           {/* Device — the exam screen behind a frosted upsell overlay */}
           <div className="relative mx-auto aspect-[918/688] w-full max-w-[918px] min-h-[420px] overflow-hidden rounded-3xl border border-blue-100 bg-blue-50 sm:min-h-0 lg:rounded-[48px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -116,11 +116,11 @@ export default function ExamSimulatorSection() {
           </div>
 
           {/* Callout chips */}
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:mt-0 xl:block">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 @7xl:mt-0 @7xl:block">
             {CALLOUTS.map((callout) => (
               <div
                 key={callout.title}
-                className={`rounded-xl border-2 border-blue-300 bg-white p-4 shadow-hover xl:absolute xl:p-4 ${callout.position} ${callout.width}`}
+                className={`rounded-xl border-2 border-blue-300 bg-white p-4 shadow-hover @7xl:absolute ${callout.position} ${callout.width}`}
               >
                 <p className="text-xl leading-[30px] font-semibold text-blue-500">
                   {callout.title}

@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
 use App\Http\Controllers\Api\V1\Public\VideoController as PublicVideoController;
 use App\Http\Controllers\Api\V1\QuizAttemptController;
 use App\Http\Controllers\Api\V1\RevenueCatWebhookController;
+use App\Http\Controllers\Api\V1\ProgressController;
 use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -161,6 +162,8 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/attempts', [QuizAttemptController::class, 'index']);
             Route::delete('/attempts', [QuizAttemptController::class, 'destroyAll']);
             Route::get('/me/stats', [StatsController::class, 'index']);
+            Route::get('/me/progress', [ProgressController::class, 'index']);
+            Route::put('/me/exam-date', [ProgressController::class, 'updateExamDate']);
 
             Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
                 ->middleware('throttle:60,1');

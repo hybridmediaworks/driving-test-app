@@ -99,7 +99,7 @@ export default function ExtraSupportSection() {
   ];
 
   return (
-    <section className="bg-background2 px-5 py-15 lg:py-30">
+    <section id="extra-support" className="scroll-mt-6 bg-background2 px-5 py-15 lg:py-30">
       <div className="mx-auto max-w-container space-y-15">
         <div className="max-w-[706px] space-y-4">
           <Heading as="h2">The extra support</Heading>
