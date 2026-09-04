@@ -344,6 +344,7 @@ button {
     .next-glow {
       animation: none;
     }
+
   }
 }
 
@@ -399,3 +400,4 @@ button {
     @apply font-sans;
   }
 }
+

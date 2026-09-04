@@ -22,6 +22,8 @@ export type User = {
   email: string;
   is_admin: boolean;
   email_verified_at: string | null;
+  /** The learner's own target date for the official written exam (Y-m-d), or null if unset. */
+  exam_date: string | null;
   created_at: string;
   updated_at: string;
   entitlement: Entitlement;

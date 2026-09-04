@@ -208,7 +208,7 @@ export default function HandbookSection() {
   const chapterChips = chapters.slice(0, 6);
 
   return (
-    <section ref={sectionRef} className="px-5 py-15 lg:py-30">
+    <section ref={sectionRef} id="handbook" className="scroll-mt-6 px-5 py-15 lg:py-30">
       <div className="mx-auto grid max-w-container grid-cols-1 items-end gap-10 lg:grid-cols-[525px_minmax(0,1fr)] lg:gap-12">
         {/* Copy column */}
         <div className="space-y-8">

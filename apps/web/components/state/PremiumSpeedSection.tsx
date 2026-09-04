@@ -31,7 +31,7 @@ export default function PremiumSpeedSection() {
         />
         <div className="absolute inset-0 bg-black/40" />
         {/* Soft blue glow centred behind the headline (Figma "Ellipse 1") */}
-        <div className="absolute top-1/2 left-1/2 h-[186px] w-[409px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/40 blur-[80px]" />
+        <div className="absolute top-1/2 left-[calc(50%-var(--hub-rail-space,0px)/2)] h-[186px] w-[409px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/40 blur-[80px]" />
       </div>
 
       <div className="mx-auto flex max-w-[923px] flex-col items-center gap-4 text-center">

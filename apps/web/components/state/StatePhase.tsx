@@ -3,6 +3,7 @@
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestSteps from "@/components/state/TestSteps";
+import { phaseAnchorId } from "@/lib/stateHubSections";
 import {
   usePhaseCompletion,
   type PhaseCompletionState,
@@ -14,6 +15,7 @@ export default function StatePhase({
   previousConnector = false,
   usePhaseData = usePhaseCompletion,
   state,
+  columns = 4,
 }: {
   phase: number;
   nextConnector?: boolean;
@@ -22,6 +24,8 @@ export default function StatePhase({
   usePhaseData?: (phase: number) => PhaseCompletionState;
   /** State slug (e.g. "alabama") — forwarded to each step so its card links to the real per-test page. */
   state?: string;
+  /** Desktop step-grid columns. Drops to 3 when the progress sidebar takes a slice of the row. */
+  columns?: number;
 }) {
   const { phase: phaseData } = usePhaseData(phase);
   const {
@@ -45,7 +49,7 @@ export default function StatePhase({
   const showActiveStyle = isActive || animateCircleIn;
 
   return (
-    <div className="space-y-10">
+    <div id={phaseAnchorId(phaseData.phase)} className="scroll-mt-6 space-y-10">
       <div className="flex gap-4 max-w-3xl">
         <div className="relative">
           {previousConnector && (
@@ -133,7 +137,7 @@ export default function StatePhase({
             placeholder: step.placeholder,
           }))}
           state={state}
-          columns={4}
+          columns={columns}
           nextConnector={nextConnector}
           phaseActive={isActive}
           phaseJustActivated={animateCircleIn}
