@@ -35,6 +35,10 @@ function LoginPageInner() {
 
     try {
       await login(email, password);
+      if (redirect) {
+        router.push(redirect);
+        return;
+      }
       const storedState = localStorage.getItem("selectedState");
       router.push(
         storedState && isValidState(storedState)

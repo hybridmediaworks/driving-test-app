@@ -399,6 +399,38 @@ class QuizController extends Controller
     }
 
     /**
+     * My latest completed attempt for this quiz ("View results")
+     *
+     * Works for both guests and logged-in users, same identity rules as `storeAttempt` above —
+     * this is deliberately a public endpoint rather than the account-only `GET /attempts`, because
+     * that one can't be reached without a Bearer token and so can never resolve a guest's own
+     * results (it has no guest_token to key off). Returns `{"attempt": null}` (not a 404) when
+     * this caller has no completed attempt on this quiz yet.
+     */
+    public function latestAttempt(Request $request, Quiz $quiz): JsonResponse
+    {
+        $user = $request->user('sanctum');
+        Gate::forUser($user)->authorize('attempt', $quiz);
+        $guestToken = $user === null ? $this->resolveGuestToken($request) : null;
+
+        $attempt = $guestToken === null && $user === null
+            ? null
+            : QuizAttempt::query()
+                ->where('quiz_id', $quiz->id)
+                ->where('status', AttemptStatus::Completed)
+                ->when(
+                    $user !== null,
+                    fn ($q) => $q->where('user_id', $user->id),
+                    fn ($q) => $q->where('guest_token', $guestToken),
+                )
+                ->with('answers.question.answers')
+                ->latest('completed_at')
+                ->first();
+
+        return response()->json(['attempt' => $attempt ? new QuizAttemptResource($attempt) : null]);
+    }
+
+    /**
      * Grade a single answer for instant feedback
      *
      * Powers the practice-mode reveal: as soon as a learner picks an option, the client posts it

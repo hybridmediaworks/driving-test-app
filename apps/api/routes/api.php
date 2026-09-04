@@ -71,6 +71,9 @@ Route::prefix('v1')->group(function (): void {
     // answer is submitted.
     Route::post('quizzes/{quiz}/attempts/start', [PublicQuizController::class, 'startAttempt'])
         ->middleware('throttle:60,1');
+    // This caller's latest completed attempt — powers "View results". Deliberately not the
+    // account-only `/attempts` below: that one has no way to resolve a guest's own results.
+    Route::get('quizzes/{quiz}/attempts/latest', [PublicQuizController::class, 'latestAttempt']);
     // Instant per-question feedback (practice mode) — reveals correctness + explanation for the
     // one answer just submitted. Higher ceiling since it fires once per answered question.
     Route::post('quizzes/{quiz}/questions/{question}/check', [PublicQuizController::class, 'checkAnswer'])

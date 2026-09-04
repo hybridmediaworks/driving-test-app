@@ -19,7 +19,7 @@ export default function AuthLayout({
           <div className="flex flex-col items-center gap-4">
             <Link href="/" className="flex flex-col items-center gap-2 font-medium">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/company-logo.svg" alt="" className="w-full max-w-36.5" />
+              <img src="/driving-test-logo.png" alt="Driving Test" className="w-full max-w-36.5" />
             </Link>
             <div className="space-y-2 text-center">
               <Heading as="h1" size="sm">

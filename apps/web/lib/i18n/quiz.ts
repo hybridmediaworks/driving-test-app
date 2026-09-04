@@ -9,6 +9,7 @@ export type QuizLanguage = "en" | "es" | "ru";
 const en = {
   exit: "Exit",
   practiceBadge: "Practice",
+  login: "Login",
   upgrade: "Upgrade",
   upgradeToPremium: "Upgrade to Premium",
   premiumQuizNotice: "This test is a premium test. Upgrade to unlock it.",
@@ -136,6 +137,7 @@ const en = {
 const es: Record<keyof typeof en, string> = {
   exit: "Salir",
   practiceBadge: "Práctica",
+  login: "Iniciar sesión",
   upgrade: "Mejorar",
   upgradeToPremium: "Actualizar a Premium",
   premiumQuizNotice: "Este es un examen premium. Actualiza tu plan para desbloquearlo.",
@@ -263,6 +265,7 @@ const es: Record<keyof typeof en, string> = {
 const ru: Record<keyof typeof en, string> = {
   exit: "Выйти",
   practiceBadge: "Практика",
+  login: "Войти",
   upgrade: "Улучшить",
   upgradeToPremium: "Перейти на Premium",
   premiumQuizNotice: "Это премиум-тест. Оформите подписку, чтобы получить доступ.",
