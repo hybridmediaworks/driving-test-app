@@ -101,6 +101,25 @@ class ProgressTest extends TestCase
         $response->assertJsonPath('questions.total', 15);
     }
 
+    public function test_it_reports_questions_covered_per_quiz(): void
+    {
+        $user = $this->verifiedUser();
+        $state = State::factory()->create(['code' => 'AL']);
+        $car = VehicleType::factory()->create(['name' => 'car']);
+
+        $started = $this->quizWithQuestions(10, $state, $car);
+        $untouched = $this->quizWithQuestions(8, $state, $car);
+
+        $this->attempt($user, $started, 7);
+
+        $response = $this->actingAs($user)->getJson('/api/v1/me/progress?state=AL&vehicle_type=car');
+
+        $response->assertOk();
+        $response->assertJsonPath("questions.by_quiz.{$started->slug}", 7);
+        // A quiz never started simply isn't in the map — the client treats a missing key as zero.
+        $response->assertJsonMissingPath("questions.by_quiz.{$untouched->slug}");
+    }
+
     public function test_retaking_a_test_does_not_inflate_coverage(): void
     {
         $user = $this->verifiedUser();

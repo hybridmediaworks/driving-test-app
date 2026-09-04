@@ -4,6 +4,7 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestSteps from "@/components/state/TestSteps";
 import { phaseAnchorId } from "@/lib/stateHubSections";
+import { isMarathonStep } from "@/lib/phaseLadder";
 import {
   usePhaseCompletion,
   type PhaseCompletionState,
@@ -38,6 +39,25 @@ export default function StatePhase({
   const hasSteps = phaseData.steps.length > 0;
   const isPlaceholder = hasSteps && phaseData.steps.every((s) => s.placeholder);
 
+  // The header's own totalQuestions sums every quiz in the phase, marathon included — which
+  // double-counts, since a marathon is a re-run of the same material as the short tests it
+  // follows. Count those tests, then name the marathon alongside rather than adding it in.
+  const realSteps = phaseData.steps.filter((s) => !s.placeholder);
+  const marathons = realSteps.filter(isMarathonStep);
+  const practiceQuestions = realSteps
+    .filter((s) => !isMarathonStep(s))
+    .reduce((sum, s) => sum + Number(s.totalQuestions ?? 0), 0);
+  const summary = isPlaceholder
+    ? "Coming soon"
+    : [
+        practiceQuestions > 0 ? `${practiceQuestions} questions` : null,
+        marathons.length > 0
+          ? `+ ${marathons.length > 1 ? `${marathons.length} Marathons` : "Marathon"}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
   // A phase is "active" either because the backend says so, or because the
   // phase before it is already fully done (no live trigger — just render the
   // filled state). animateCircleIn is the one live, one-time case: the
@@ -50,7 +70,7 @@ export default function StatePhase({
 
   return (
     <div id={phaseAnchorId(phaseData.phase)} className="scroll-mt-6 space-y-10">
-      <div className="flex gap-4 max-w-3xl">
+      <div className="flex gap-4">
         <div className="relative">
           {previousConnector && (
             <div
@@ -104,15 +124,19 @@ export default function StatePhase({
           />
         </div>
 
-        <div className="space-y-2">
-          <Paragraph color="primary" className="font-semibold">
-            {isPlaceholder
-              ? "Coming soon"
-              : `${phaseData.header.totalQuestions} questions${phaseData.header.totalTime ? ` · ~${phaseData.header.totalTime} min` : ""}`}
-          </Paragraph>
-          <Heading as="h2">{phaseData.header.headerTitle}</Heading>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-baseline justify-between gap-6">
+            <Heading as="h2" className="max-w-3xl">
+              {phaseData.header.headerTitle}
+            </Heading>
+            {summary && (
+              <span className="hidden shrink-0 text-sm text-neutral-500 sm:block">
+                {summary}
+              </span>
+            )}
+          </div>
           {phaseData.header.headerDesc && (
-            <Paragraph color="muted" className="pt-1">
+            <Paragraph color="muted" className="max-w-3xl pt-1">
               {phaseData.header.headerDesc}
             </Paragraph>
           )}

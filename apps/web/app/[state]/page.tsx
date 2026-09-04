@@ -6,6 +6,7 @@ import CTASection from "@/components/home/CTASection";
 import Footer from "@/components/Footer";
 import StateTestTypeContent from "@/components/state/StateTestTypeContent";
 import StateHubLayout from "@/components/state/StateHubLayout";
+import SignedOutOnly from "@/components/state/SignedOutOnly";
 
 function resolveStateName(stateSlug: string): string {
   const name = stateSlug ? slugToStateName(stateSlug) : "";
@@ -50,7 +51,9 @@ export default async function StateDynamicPage({
           </main>
         </StateHubLayout>
 
-        <CTASection />
+        <SignedOutOnly>
+          <CTASection />
+        </SignedOutOnly>
         <Footer />
       </div>
     </WebLayoutProvider>
