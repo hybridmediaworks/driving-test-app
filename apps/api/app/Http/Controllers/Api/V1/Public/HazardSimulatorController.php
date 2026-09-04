@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Public;
 use App\Actions\Hazard\DetectHazardHit;
 use App\Actions\Hazard\GradeHazardAttempt;
 use App\Actions\Hazard\StartHazardSimulatorAttempt;
+use App\Enums\HazardAttemptStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Public\MarkHazardRequest;
 use App\Http\Requests\Api\V1\Public\StartHazardAttemptRequest;
@@ -38,11 +39,16 @@ class HazardSimulatorController extends Controller
      *
      * Public. Active simulators on an active video, newest-catalog-order first. Filters: `state`
      * (code, includes universal null-state rows), `vehicle_type` (name, includes universal),
-     * `test_level` ("Easy"/"Medium"/"Hard"). Teaser fields + `locked`.
+     * `test_level` ("Easy"/"Medium"/"Hard"). Teaser fields + `locked` + this caller's `attempted` /
+     * `best_score` / `passed` (mirrors QuizController::index's withMax so a returning learner sees
+     * which ones they've already run without opening each one).
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = min(max($request->integer('per_page', 15), 5), 100);
+
+        $userId = $request->user('sanctum')?->id;
+        $guestToken = $userId === null ? $this->resolveGuestToken($request) : null;
 
         $query = HazardSimulator::query()
             ->select('hazard_simulators.*')
@@ -50,6 +56,15 @@ class HazardSimulatorController extends Controller
             ->where('hazard_simulators.is_active', true)
             ->where('videos.is_active', true)
             ->with(['video.state', 'video.vehicleType', 'hazards'])
+            ->when($userId !== null || $guestToken !== null, fn ($q) => $q->withMax([
+                'attempts as best_score' => fn ($a) => $a
+                    ->where('status', HazardAttemptStatus::Completed)
+                    ->when(
+                        $userId !== null,
+                        fn ($aq) => $aq->where('user_id', $userId),
+                        fn ($aq) => $aq->where('guest_token', $guestToken),
+                    ),
+            ], 'score'))
             ->orderBy('videos.order_no')
             ->orderBy('videos.title');
 
@@ -80,13 +95,19 @@ class HazardSimulatorController extends Controller
      * embed url, the demo hazards IN FULL (they're taught — window, box, feedback copy, narration),
      * and for the scored hazards only a count. Scored-hazard windows/comments/boxes are the answer
      * key and stay server-side; the live `mark` endpoint reveals one at a time as it's spotted.
+     *
+     * Also carries `last_attempt` — this caller's most recently completed run on this simulator,
+     * full breakdown included, so the player page can restore the results screen after a refresh
+     * instead of dropping back to the intro (it otherwise has no way to know a completed attempt
+     * exists — see git history around the 2026-09 "nothing shows I already tried it" report).
      */
     public function show(Request $request, HazardSimulator $hazardSimulator): JsonResponse
     {
         $this->authorize('view', $hazardSimulator);
 
         $hazardSimulator->load(['video.state', 'video.vehicleType', 'hazards']);
-        $unlocked = Gate::forUser($request->user('sanctum'))->allows('attempt', $hazardSimulator);
+        $user = $request->user('sanctum');
+        $unlocked = Gate::forUser($user)->allows('attempt', $hazardSimulator);
 
         $manifest = null;
         if ($unlocked) {
@@ -112,10 +133,27 @@ class HazardSimulatorController extends Controller
             ];
         }
 
+        $lastAttempt = null;
+        $guestToken = $user === null ? $this->resolveGuestToken($request) : null;
+        if ($unlocked && ($user !== null || $guestToken !== null)) {
+            $found = $hazardSimulator->attempts()
+                ->where('status', HazardAttemptStatus::Completed)
+                ->when(
+                    $user !== null,
+                    fn ($q) => $q->where('user_id', $user->id),
+                    fn ($q) => $q->where('guest_token', $guestToken),
+                )
+                ->withReviewDetails()
+                ->latest('completed_at')
+                ->first();
+            $lastAttempt = $found ? new HazardSimulatorAttemptResource($found) : null;
+        }
+
         return response()->json([
             'simulator' => new HazardSimulatorResource($hazardSimulator),
             'locked' => ! $unlocked,
             'manifest' => $manifest,
+            'last_attempt' => $lastAttempt,
         ]);
     }
 

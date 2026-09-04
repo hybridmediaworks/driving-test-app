@@ -2,6 +2,7 @@ import type { PublicQuizQuestion, QuizAttempt } from "@driving-test-app/shared";
 import QuestionCard from "@/components/quiz/QuestionCard";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
+import PassFailBadge from "@/components/ui/PassFailBadge";
 
 export default function ExamResults({
   attempt,
@@ -23,9 +24,9 @@ export default function ExamResults({
         }`}
       >
         {passed !== null && (
-          <p className={`mb-2 text-2xl font-bold ${passed ? "text-green-700" : "text-red-600"}`}>
-            {passed ? "Passed" : "Not passed"}
-          </p>
+          <div className="mb-2">
+            <PassFailBadge passed={passed} size="lg" />
+          </div>
         )}
         <Paragraph color="primary" size="sm" className="font-semibold">Your score</Paragraph>
         <p className="my-2 text-4xl font-bold text-neutral-900">{Math.round(attempt.score)}%</p>

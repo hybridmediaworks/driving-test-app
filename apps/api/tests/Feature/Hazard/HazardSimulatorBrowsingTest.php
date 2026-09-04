@@ -3,6 +3,7 @@
 namespace Tests\Feature\Hazard;
 
 use App\Models\HazardSimulator;
+use App\Models\HazardSimulatorAttempt;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -152,5 +153,76 @@ class HazardSimulatorBrowsingTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('video.has_simulator', true);
         $response->assertJsonPath('video.simulator_slug', 'al-hazard-sim-1');
+    }
+
+    public function test_show_restores_the_callers_last_completed_attempt_so_a_refresh_shows_the_result(): void
+    {
+        $simulator = $this->makeSimulator();
+        $subscriber = $this->makeActiveSubscriber();
+
+        $noAttemptYet = $this->withUserToken($subscriber)->getJson("/api/v1/hazard-simulators/{$simulator->slug}");
+        $noAttemptYet->assertOk();
+        $noAttemptYet->assertJsonPath('last_attempt', null);
+
+        $attempt = HazardSimulatorAttempt::factory()->create([
+            'user_id' => $subscriber->id,
+            'hazard_simulator_id' => $simulator->id,
+            'score' => 78,
+        ]);
+
+        $response = $this->withUserToken($subscriber)->getJson("/api/v1/hazard-simulators/{$simulator->slug}");
+        $response->assertOk();
+        $response->assertJsonPath('last_attempt.id', $attempt->id);
+        $response->assertJsonPath('last_attempt.score', 78);
+    }
+
+    public function test_show_restores_a_guests_last_attempt_by_guest_token(): void
+    {
+        $simulator = $this->makeSimulator(['is_premium' => false]); // free, so a guest may attempt
+        $attempt = HazardSimulatorAttempt::factory()->guest('guest-xyz')->create([
+            'hazard_simulator_id' => $simulator->id,
+        ]);
+
+        $mine = $this->withHeader('X-Guest-Token', 'guest-xyz')
+            ->getJson("/api/v1/hazard-simulators/{$simulator->slug}");
+        $mine->assertJsonPath('last_attempt.id', $attempt->id);
+
+        $someoneElses = $this->withHeader('X-Guest-Token', 'a-different-guest')
+            ->getJson("/api/v1/hazard-simulators/{$simulator->slug}");
+        $someoneElses->assertJsonPath('last_attempt', null);
+    }
+
+    public function test_index_reports_this_callers_attempted_best_score_and_passed_state(): void
+    {
+        $simulator = $this->makeSimulator();
+        $simulator->update(['pass_threshold_percent' => 70]);
+        $subscriber = $this->makeActiveSubscriber();
+
+        $fresh = $this->withUserToken($subscriber)->getJson('/api/v1/hazard-simulators');
+        $mine = collect($fresh->json('data'))->firstWhere('slug', $simulator->slug);
+        $this->assertFalse($mine['attempted']);
+        $this->assertNull($mine['best_score']);
+        $this->assertNull($mine['passed']);
+
+        HazardSimulatorAttempt::factory()->create(['user_id' => $subscriber->id, 'hazard_simulator_id' => $simulator->id, 'score' => 55]);
+        HazardSimulatorAttempt::factory()->create(['user_id' => $subscriber->id, 'hazard_simulator_id' => $simulator->id, 'score' => 82]);
+
+        $after = $this->withUserToken($subscriber)->getJson('/api/v1/hazard-simulators');
+        $mine = collect($after->json('data'))->firstWhere('slug', $simulator->slug);
+        $this->assertTrue($mine['attempted']);
+        $this->assertSame(82, $mine['best_score']); // best of the two, not the latest
+        $this->assertTrue($mine['passed']); // 82 >= the 70% threshold
+    }
+
+    public function test_index_shows_no_attempt_state_for_an_anonymous_caller(): void
+    {
+        $simulator = $this->makeSimulator(['is_premium' => false]);
+        HazardSimulatorAttempt::factory()->create(['hazard_simulator_id' => $simulator->id]);
+
+        $response = $this->getJson('/api/v1/hazard-simulators');
+
+        $mine = collect($response->json('data'))->firstWhere('slug', $simulator->slug);
+        $this->assertFalse($mine['attempted']);
+        $this->assertNull($mine['best_score']);
     }
 }
