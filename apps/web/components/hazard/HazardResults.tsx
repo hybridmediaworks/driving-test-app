@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Gauge, MousePointerClick, RotateCcw, Target, X } from "lucide-react";
 import type { HazardManifest, HazardSimulatorAttempt } from "@driving-test-app/shared";
 import Button from "@/components/ui/Button";
+import PassFailBadge from "@/components/ui/PassFailBadge";
 import { useVimeoPlayer } from "./useVimeoPlayer";
 
 const BAND_LABEL: Record<string, string> = { fast: "Fast", average: "Average", slow: "Slow" };
@@ -76,8 +77,7 @@ export default function HazardResults({
       <div className="rounded-2xl border border-border bg-white p-6 text-center sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Hazard Score</p>
         <p className="my-2 text-5xl font-bold text-blue-600">{score}%</p>
-        {attempt.passed === true && <p className="text-sm font-medium text-green-600">Passed</p>}
-        {attempt.passed === false && <p className="text-sm font-medium text-red-600">Below the pass mark</p>}
+        <PassFailBadge passed={attempt.passed} failedLabel="Below the pass mark" size="sm" />
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <StatTile

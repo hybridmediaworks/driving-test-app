@@ -41,6 +41,17 @@ class HazardSimulatorResource extends JsonResource
             'hazard_count' => $this->hazard_count,
             'demo_hazard_count' => $this->demo_hazard_count,
             'pass_threshold_percent' => $this->pass_threshold_percent,
+            // best_score/attempted/passed come from index()'s withMax('attempts as best_score') —
+            // null on the single-simulator show() response (see `last_attempt` there instead) and
+            // for a caller with no identity yet (anonymous guest, no X-Guest-Token sent). `passed`
+            // is recomputed against the CURRENT pass_threshold_percent rather than trusting the
+            // graded attempt's own `passed` column, so it stays correct if staff retune the
+            // threshold later — mirrors QuizResource's `user_passed`.
+            'attempted' => $this->best_score !== null,
+            'best_score' => $this->best_score !== null ? (int) $this->best_score : null,
+            'passed' => $this->best_score === null || $this->pass_threshold_percent === null
+                ? null
+                : (int) $this->best_score >= $this->pass_threshold_percent,
             'categories' => $this->whenLoaded('hazards', fn () => $this->hazards
                 ->where('in_timeline', true)
                 ->map(fn ($h) => $h->type->value)

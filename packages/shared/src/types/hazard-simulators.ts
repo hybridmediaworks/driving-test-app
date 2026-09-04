@@ -20,6 +20,11 @@ export type PublicHazardSimulator = {
   hazard_count: number;
   demo_hazard_count: number;
   pass_threshold_percent: number | null;
+  /** This caller's state — null/false for an anonymous caller with no guest token yet, or on the
+   * single-simulator show() response (use `last_attempt` there instead). */
+  attempted: boolean;
+  best_score: number | null;
+  passed: boolean | null;
   categories?: HazardType[];
   section: string | null;
   state?: { id: number; code: string; name: string } | null;
@@ -58,6 +63,10 @@ export type HazardSimulatorShowResponse = {
   simulator: PublicHazardSimulator;
   locked: boolean;
   manifest: HazardManifest | null;
+  /** This caller's most recently completed run on this simulator (by user id, or guest token via
+   * X-Guest-Token), full breakdown included — lets the player page restore the results screen
+   * after a refresh instead of dropping back to the intro. Null if never attempted. */
+  last_attempt: HazardSimulatorAttempt | null;
 };
 
 export type StartHazardAttemptResponse = {
