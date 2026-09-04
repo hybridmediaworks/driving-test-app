@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { BookMarked, Check, Gem, Lock } from "lucide-react";
 import Paragraph from "@/components/ui/Paragraph";
+import { useEntitlement } from "@/lib/auth-context";
 
 type Step = {
   title?: string;
@@ -43,8 +46,15 @@ export default function StepCard({
   /** Shows the mobile-only progress connector line driven by step.completed/justCompleted — only meaningful in the phase-progress step list (TestSteps). */
   connector?: boolean;
 }) {
+  const { isPremium } = useEntitlement();
   const isFilled = !!step.completed && !step.justCompleted;
   const isTrigger = !!step.justCompleted;
+
+  // FREE / PREMIUM tags exist to tell a learner what they can open. Once someone has paid, the
+  // distinction is gone — every test is theirs — so the tags come off rather than labelling
+  // content they've already bought. The locks are separate: the API reports `locked: false` for an
+  // entitled viewer, so those disappear on their own.
+  const showAccessTag = !isPremium;
 
   // A non-quiz "coming soon" rung — rendered inside the step grid so it inherits the same ladder
   // connectors as a real step, but shows a guides-being-prepared message instead of a quiz card.
@@ -91,8 +101,7 @@ export default function StepCard({
       {(step.image ||
         step.locked ||
         step.status === "next" ||
-        step.type === "free" ||
-        step.type === "premium") && (
+        (showAccessTag && (step.type === "free" || step.type === "premium"))) && (
         <div
           className={`relative overflow-hidden md:rounded-xl rounded-md md:max-w-full w-full max-w-35 `}
         >
@@ -150,7 +159,7 @@ export default function StepCard({
               )}
             </div>
           )}
-          {step.type === "free" && (
+          {showAccessTag && step.type === "free" && (
             <Paragraph
               color="white"
               size="xs"
@@ -159,7 +168,7 @@ export default function StepCard({
               Free
             </Paragraph>
           )}
-          {step.type === "premium" && (
+          {showAccessTag && step.type === "premium" && (
             <Paragraph
               color="white"
               size="xs"

@@ -32,7 +32,12 @@ export type UserProgress = {
   /** Distinct quizzes completed at least once, over how many exist in this scope. */
   tests: { completed: number; total: number };
   /** Distinct questions answered at least once, over how many exist in this scope. */
-  questions: { covered: number; total: number };
+  questions: {
+    covered: number;
+    total: number;
+    /** Per-quiz coverage keyed by quiz slug. A quiz never started is absent, not zero. */
+    by_quiz: Record<string, number>;
+  };
   streak: {
     /** Consecutive days ending today or yesterday that hit `daily_target`. */
     current: number;

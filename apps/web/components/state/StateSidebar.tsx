@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, Flame, Pencil } from "lucide-react";
 import type { UserProgress } from "@driving-test-app/shared";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import ExamPrepTree from "@/components/state/ExamPrepTree";
+import { useAuth, useEntitlement } from "@/lib/auth-context";
+import { useExamDate } from "@/lib/useExamDate";
 import { useLadderPhases } from "@/lib/usePhaseCompletion";
 import {
   HANDBOOK_SECTION_ID,
@@ -44,32 +45,19 @@ function weekdayLetters(date: string): string {
 
 /** The learner's exam date, with inline editing behind the pencil. */
 function ExamDate({ onSaved }: { onSaved: () => void }) {
-  const { user, setUser } = useAuth();
+  const { examDate, save, saving, error } = useExamDate();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(user?.exam_date ?? "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [value, setValue] = useState(examDate ?? "");
 
   function startEditing() {
-    setValue(user?.exam_date ?? "");
-    setError(null);
+    setValue(examDate ?? "");
     setEditing(true);
   }
 
-  async function save(next: string) {
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await api.put<{ exam_date: string | null }>("/me/exam-date", {
-        exam_date: next || null,
-      });
-      if (user) setUser({ ...user, exam_date: res.exam_date });
+  async function submit(next: string) {
+    if (await save(next)) {
       setEditing(false);
       onSaved();
-    } catch {
-      setError("Couldn't save that date. Please try again.");
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -94,7 +82,7 @@ function ExamDate({ onSaved }: { onSaved: () => void }) {
           <button
             type="button"
             disabled={saving}
-            onClick={() => save(value)}
+            onClick={() => submit(value)}
             className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save"}
@@ -112,13 +100,13 @@ function ExamDate({ onSaved }: { onSaved: () => void }) {
           Exam date
         </p>
         <p className="text-sm font-semibold text-blue-700">
-          {user?.exam_date ? formatExamDate(user.exam_date) : "Not set yet"}
+          {examDate ? formatExamDate(examDate) : "Not set yet"}
         </p>
       </div>
       <button
         type="button"
         onClick={startEditing}
-        aria-label={user?.exam_date ? "Change exam date" : "Set exam date"}
+        aria-label={examDate ? "Change exam date" : "Set exam date"}
         className="rounded-full border border-border bg-white p-1.5 text-neutral-500 transition-colors hover:text-neutral-900"
       >
         <Pencil className="size-3.5" />
@@ -144,6 +132,7 @@ export default function StateSidebar({
   onReload: () => void;
 }) {
   const { user } = useAuth();
+  const { isPremium } = useEntitlement();
   const { selectedState } = useWebLayout();
   const phases = useLadderPhases();
 
@@ -248,6 +237,14 @@ export default function StateSidebar({
           <p className="mt-3 text-[11px] font-semibold tracking-wide text-blue-600 uppercase">
             Steps to complete
           </p>
+          {/* Paid learners get the expandable per-quiz-type breakdown; free learners the flat list,
+              which is all their progress can actually fill in. */}
+          {isPremium ? (
+            <ExamPrepTree
+              phases={phases}
+              coveredByQuiz={questions.by_quiz ?? {}}
+            />
+          ) : (
           <ol className="mt-3">
             {steps.map((step, index) => (
               <li key={step.sectionId} className="relative">
@@ -286,6 +283,7 @@ export default function StateSidebar({
               </li>
             ))}
           </ol>
+          )}
         </section>
       )}
 

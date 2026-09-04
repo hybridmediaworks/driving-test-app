@@ -24,6 +24,8 @@ export type PhaseLadderStep = {
   /** Present when the current user has a resumable in-progress attempt on this quiz (from the
    *  API's `in_progress`) — lets the step card offer "Continue" instead of "Start". */
   inProgress?: { answered: number; total: number };
+  /** The quiz's real type title, e.g. "Practice Test" / "Marathon" — the sidebar groups by it. */
+  quizType?: string;
   image?: string;
   status?: "next";
   style?: "large";
@@ -45,6 +47,16 @@ export type PhaseLadderPhase = {
   };
   steps: PhaseLadderStep[];
 };
+
+/**
+ * Whether a ladder step is a marathon — the one long, everything-in-one-sitting test a phase ends
+ * with. Detected by name because every marathon in the library is typed "Practice Test" like the
+ * short tests it summarises (the only quiz types that exist are "Practice Test" and "Final Exam
+ * Simulation"). Giving marathons their own type in /admin/quiz-types would make this exact.
+ */
+export function isMarathonStep(step: { title?: string }): boolean {
+  return /marathon/i.test(step.title ?? "");
+}
 
 const CATEGORIES_CACHE_MS = 5 * 60 * 1000;
 let categoriesCache: { at: number; data: QuizCategory[] } | null = null;
@@ -190,6 +202,7 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
         type: quiz.is_premium ? "premium" : "free",
         ...lockFromQuiz(quiz),
         attempted: quiz.attempted ?? false,
+        quizType: quiz.quiz_type?.title,
         // Drive the connector pipeline: a completed step's connectors render blue, so the line is
         // blue up to the next (first not-yet-completed) task. justCompleted stays false — this is the
         // static progress on load, not a live just-finished animation.
@@ -230,6 +243,7 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
               type: quiz.is_premium ? ("premium" as const) : ("free" as const),
               ...lockFromQuiz(quiz),
               attempted: quiz.attempted ?? false,
+        quizType: quiz.quiz_type?.title,
               completed: quiz.attempted ?? false,
               outcome: outcomeOf(quiz),
               inProgress: quiz.in_progress ?? undefined,

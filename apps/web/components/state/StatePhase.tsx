@@ -4,6 +4,7 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestSteps from "@/components/state/TestSteps";
 import { phaseAnchorId } from "@/lib/stateHubSections";
+import { isMarathonStep } from "@/lib/phaseLadder";
 import {
   usePhaseCompletion,
   type PhaseCompletionState,
@@ -37,6 +38,25 @@ export default function StatePhase({
 
   const hasSteps = phaseData.steps.length > 0;
   const isPlaceholder = hasSteps && phaseData.steps.every((s) => s.placeholder);
+
+  // The header's own totalQuestions sums every quiz in the phase, marathon included — which
+  // double-counts, since a marathon is a re-run of the same material as the short tests it
+  // follows. Count those tests, then name the marathon alongside rather than adding it in.
+  const realSteps = phaseData.steps.filter((s) => !s.placeholder);
+  const marathons = realSteps.filter(isMarathonStep);
+  const practiceQuestions = realSteps
+    .filter((s) => !isMarathonStep(s))
+    .reduce((sum, s) => sum + Number(s.totalQuestions ?? 0), 0);
+  const summary = isPlaceholder
+    ? "Coming soon"
+    : [
+        practiceQuestions > 0 ? `${practiceQuestions} questions` : null,
+        marathons.length > 0
+          ? `+ ${marathons.length > 1 ? `${marathons.length} Marathons` : "Marathon"}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
 
   // A phase is "active" either because the backend says so, or because the
   // phase before it is already fully done (no live trigger — just render the
@@ -104,12 +124,12 @@ export default function StatePhase({
           />
         </div>
 
-        <div className="space-y-2">
-          <Paragraph color="primary" className="font-semibold">
-            {isPlaceholder
-              ? "Coming soon"
-              : `${phaseData.header.totalQuestions} questions${phaseData.header.totalTime ? ` · ~${phaseData.header.totalTime} min` : ""}`}
-          </Paragraph>
+        <div className="max-w-3xl space-y-2">
+          {summary && (
+            <Paragraph color="primary" className="font-semibold">
+              {summary}
+            </Paragraph>
+          )}
           <Heading as="h2">{phaseData.header.headerTitle}</Heading>
           {phaseData.header.headerDesc && (
             <Paragraph color="muted" className="pt-1">

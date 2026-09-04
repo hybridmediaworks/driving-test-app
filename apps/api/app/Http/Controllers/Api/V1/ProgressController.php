@@ -66,6 +66,10 @@ class ProgressController extends Controller
             'questions' => [
                 'covered' => $this->questionsCovered($user, $quizIds),
                 'total' => $this->questionsAvailable($quizIds),
+                // Per-quiz breakdown, keyed by slug, for the sidebar's expandable checklist: a
+                // group holding a single quiz (a marathon, the simulator) reports questions seen
+                // rather than a tests-completed count. Only quizzes actually started appear.
+                'by_quiz' => $this->questionsCoveredByQuiz($user, $quizIds),
             ],
             'streak' => $this->streak($user),
         ]);
@@ -137,6 +141,31 @@ class ProgressController extends Controller
             ->whereIn('quiz_attempts.quiz_id', $quizIds)
             ->distinct()
             ->count('quiz_attempt_answers.quiz_question_id');
+    }
+
+    /**
+     * Distinct questions answered per quiz, keyed by quiz slug. Same counting rule as
+     * `questionsCovered`, just not collapsed across quizzes.
+     *
+     * @param  \Illuminate\Support\Collection<int, int>  $quizIds
+     * @return array<string, int>
+     */
+    private function questionsCoveredByQuiz(User $user, $quizIds): array
+    {
+        if ($quizIds->isEmpty()) {
+            return [];
+        }
+
+        return DB::table('quiz_attempt_answers')
+            ->join('quiz_attempts', 'quiz_attempts.id', '=', 'quiz_attempt_answers.quiz_attempt_id')
+            ->join('quizzes', 'quizzes.id', '=', 'quiz_attempts.quiz_id')
+            ->where('quiz_attempts.user_id', $user->id)
+            ->whereIn('quiz_attempts.quiz_id', $quizIds)
+            ->groupBy('quizzes.slug')
+            ->selectRaw('quizzes.slug as slug, COUNT(DISTINCT quiz_attempt_answers.quiz_question_id) as covered')
+            ->pluck('covered', 'slug')
+            ->map(fn ($count) => (int) $count)
+            ->all();
     }
 
     /**

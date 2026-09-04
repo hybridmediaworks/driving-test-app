@@ -9,6 +9,7 @@ import HandbookSection from "@/components/state/HandbookSection";
 import PhaseLadderSection from "@/components/state/PhaseLadderSection";
 import PremiumSpeedSection from "@/components/state/PremiumSpeedSection";
 import QuizVaultSection from "@/components/state/QuizVaultSection";
+import SignedOutOnly, { useIsSignedOut } from "@/components/state/SignedOutOnly";
 import LearnSection from "@/components/home/LearnSection";
 
 /**
@@ -19,19 +20,28 @@ import LearnSection from "@/components/home/LearnSection";
  * the page shell.
  */
 export default function PermitTestContent() {
+  // The live-stats card sits half-outside its own section (-mb-52.5) and overlaps into the ladder,
+  // which reserves the matching space with pt-52.5. Hide that section and the reservation becomes
+  // 210px of empty page, so it goes with it.
+  const signedOut = useIsSignedOut();
+
   return (
     <>
       <HeroSection />
-      <div className="relative pt-52.5 bg-background2">
+      <div className={`relative bg-background2 ${signedOut ? "pt-52.5" : ""}`}>
         <PhaseLadderSection />
       </div>
       <PremiumSpeedSection />
       <ExamSimulatorSection />
       <ExtraSupportSection />
       <QuizVaultSection />
-      <LearnSection />
+      <SignedOutOnly>
+        <LearnSection />
+      </SignedOutOnly>
       <HandbookSection />
-      <ExpertsSection />
+      <SignedOutOnly>
+        <ExpertsSection />
+      </SignedOutOnly>
       <GoFurtherSection />
     </>
   );
