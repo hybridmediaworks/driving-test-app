@@ -24,7 +24,7 @@ export default function Flashcard({
         style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
       >
         {/* Front */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-3xl border border-gray-100 bg-white p-8 text-center shadow-sm [backface-visibility:hidden]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-8 text-center shadow-sm [backface-visibility:hidden]">
           {card.is_premium && (
             <span className="absolute top-4 right-4 inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">
               Premium
@@ -34,23 +34,23 @@ export default function Flashcard({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={card.image_url} alt="" className="max-h-32 object-contain" />
           )}
-          <p className="text-lg font-semibold text-neutral-900">{card.front_text}</p>
-          <p className="text-xs text-neutral-400">Tap to flip</p>
+          <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{card.front_text}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">Tap to flip</p>
         </div>
 
         {/* Back */}
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-3xl border border-blue-100 bg-blue-50 p-8 text-center shadow-sm [backface-visibility:hidden]"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-3xl border border-blue-100 bg-blue-50 dark:bg-blue-500/10 p-8 text-center shadow-sm [backface-visibility:hidden]"
           style={{ transform: "rotateY(180deg)" }}
         >
           {card.locked ? (
             <>
               <Lock className="h-8 w-8 text-amber-600" />
-              <p className="text-sm font-semibold text-neutral-900">Premium card</p>
-              <p className="text-sm text-neutral-500">Upgrade to see the answer.</p>
+              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Premium card</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Upgrade to see the answer.</p>
             </>
           ) : (
-            <p className="text-base text-neutral-800">{card.back_text}</p>
+            <p className="text-base text-neutral-800 dark:text-neutral-100">{card.back_text}</p>
           )}
         </div>
       </div>

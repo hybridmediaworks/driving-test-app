@@ -201,12 +201,12 @@ export default function ExamPrepTree({
               <a
                 href={`#${row.sectionId}`}
                 onClick={(event) => jumpTo(event, row.sectionId)}
-                className="min-w-0 flex-1 text-sm font-semibold text-neutral-900 hover:underline"
+                className="min-w-0 flex-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100 hover:underline"
               >
                 {row.label}
               </a>
               {row.count && (
-                <span className="shrink-0 text-xs text-neutral-500">
+                <span className="shrink-0 text-xs text-neutral-500 dark:text-neutral-400">
                   {row.count}
                 </span>
               )}
@@ -216,7 +216,7 @@ export default function ExamPrepTree({
                   onClick={() => toggle(row.sectionId)}
                   aria-expanded={isOpen}
                   aria-label={`${isOpen ? "Collapse" : "Expand"} ${row.label}`}
-                  className="shrink-0 rounded p-0.5 text-neutral-400 transition-colors hover:text-neutral-700"
+                  className="shrink-0 rounded p-0.5 text-neutral-400 dark:text-neutral-500 transition-colors hover:text-neutral-700 dark:hover:text-neutral-300"
                 >
                   <ChevronDown
                     className={`size-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -241,12 +241,12 @@ export default function ExamPrepTree({
                       <a
                         href={`#${row.sectionId}`}
                         onClick={(event) => jumpTo(event, row.sectionId)}
-                        className="min-w-0 flex-1 text-sm font-medium text-neutral-700 hover:underline"
+                        className="min-w-0 flex-1 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:underline"
                       >
                         {group.label}
                       </a>
                       {progress.count && (
-                        <span className="shrink-0 text-xs text-neutral-500">
+                        <span className="shrink-0 text-xs text-neutral-500 dark:text-neutral-400">
                           {progress.count}
                         </span>
                       )}
@@ -264,7 +264,7 @@ export default function ExamPrepTree({
         <a
           href={`#${HANDBOOK_SECTION_ID}`}
           onClick={(event) => jumpTo(event, HANDBOOK_SECTION_ID)}
-          className="min-w-0 flex-1 text-sm font-semibold text-neutral-900 hover:underline"
+          className="min-w-0 flex-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100 hover:underline"
         >
           Handbook
         </a>

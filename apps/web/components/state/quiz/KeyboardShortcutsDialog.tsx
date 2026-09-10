@@ -31,7 +31,7 @@ const reviewShortcuts: Shortcut[] = [
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-border bg-neutral-100 px-1.5 text-xs font-semibold text-neutral-600 shadow-[0_1px_0_rgba(0,0,0,0.06)]">
+    <kbd className="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-border bg-neutral-100 dark:bg-neutral-700 px-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-300 shadow-[0_1px_0_rgba(0,0,0,0.06)]">
       {children}
     </kbd>
   );
@@ -55,7 +55,7 @@ function ShortcutRow({ shortcut, t }: { shortcut: Shortcut; t: TFunction }) {
 function Group({ title, shortcuts, t }: { title: string; shortcuts: Shortcut[]; t: TFunction }) {
   return (
     <div>
-      <p className="mb-1 text-sm font-semibold text-neutral-900">{title}</p>
+      <p className="mb-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">{title}</p>
       <div className="divide-y divide-border/60">
         {shortcuts.map((shortcut) => (
           <ShortcutRow key={`${shortcut.label}-${shortcut.keys.join("")}`} shortcut={shortcut} t={t} />

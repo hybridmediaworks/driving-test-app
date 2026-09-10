@@ -58,7 +58,7 @@ export default function CTASection({ href }: { href?: string } = {}) {
       className="px-5 py-8 lg:py-10"
       style={{
         backgroundImage:
-          "linear-gradient(to bottom, #fafaf7 50%, #f2f1ec 50%)",
+          "linear-gradient(to bottom, var(--background) 50%, var(--background2) 50%)",
       }}
     >
       <div className="mx-auto max-w-container">
@@ -95,7 +95,7 @@ export default function CTASection({ href }: { href?: string } = {}) {
               <span className="rounded-full bg-blue-500 px-2 py-[3px] text-xs leading-[18px] font-bold text-white">
                 Start today
               </span>
-              <span className="text-sm font-medium text-neutral-500">
+              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
                 Free, no credit card required
               </span>
             </div>

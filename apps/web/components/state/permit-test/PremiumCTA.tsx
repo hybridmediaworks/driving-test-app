@@ -34,8 +34,8 @@ export default function PremiumCTA({
             isFullyCompleted
               ? "border-blue-500"
               : isJustFinished
-                ? "connector-fill border-white"
-                : "border-white"
+                ? "connector-fill border-white dark:border-neutral-700"
+                : "border-white dark:border-neutral-700"
           }`}
           style={
             isJustFinished
@@ -88,8 +88,8 @@ export default function PremiumCTA({
             isFullyCompleted
               ? "border-blue-500"
               : isJustFinished
-                ? "connector-fill border-white"
-                : "border-white"
+                ? "connector-fill border-white dark:border-neutral-700"
+                : "border-white dark:border-neutral-700"
           }`}
           style={
             isJustFinished

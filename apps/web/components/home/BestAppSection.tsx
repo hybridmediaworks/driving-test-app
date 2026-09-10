@@ -49,7 +49,7 @@ export default function BestAppSection() {
         // section colour below, with the hard boundary falling behind the iPad's
         // middle — matching the Figma composition where the device straddles it.
         backgroundImage:
-          "linear-gradient(to bottom, #f2f1ec 0px, #f2f1ec 385px, #fafaf7 385px)",
+          "linear-gradient(to bottom, var(--background2) 0px, var(--background2) 385px, var(--background) 385px)",
       }}
     >
       <div className="mx-auto max-w-container">
@@ -97,11 +97,11 @@ export default function BestAppSection() {
 
           {/* Left — Drivelane pros */}
           <div className="order-1 lg:absolute lg:bottom-[120px] lg:left-0 lg:z-10 lg:w-[460px]">
-            <h3 className="font-sora text-[30px] leading-[1.15] font-semibold tracking-[-0.96px] text-neutral-900 sm:text-[36px] lg:text-[40px]">
+            <h3 className="font-sora text-[30px] leading-[1.15] font-semibold tracking-[-0.96px] text-neutral-900 dark:text-neutral-100 sm:text-[36px] lg:text-[40px]">
               <Stat value="96.6%" color="#22C55E" /> pass rate of Drivelane&rsquo;s
               students
             </h3>
-            <p className="mt-4 max-w-[400px] text-base leading-6 text-neutral-500">
+            <p className="mt-4 max-w-[400px] text-base leading-6 text-neutral-500 dark:text-neutral-400">
               38.3% of first-time written test-takers fail. Not because they
               didn&rsquo;t study. Because the tools they used were never built for
               learning.
@@ -112,7 +112,7 @@ export default function BestAppSection() {
                   <span className="flex size-5 shrink-0 items-center justify-center rounded bg-green-500">
                     <Check className="size-3.5 text-white" strokeWidth={3} />
                   </span>
-                  <span className="text-lg font-semibold text-neutral-900">
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     {pro}
                   </span>
                 </li>
@@ -122,7 +122,7 @@ export default function BestAppSection() {
 
           {/* Right — traditional-course cons */}
           <div className="order-3 lg:absolute lg:right-0 lg:bottom-[120px] lg:z-10 lg:w-[400px]">
-            <h3 className="font-sora text-[30px] leading-[1.15] font-semibold tracking-[-0.96px] text-neutral-900 sm:text-[36px] lg:text-[40px]">
+            <h3 className="font-sora text-[30px] leading-[1.15] font-semibold tracking-[-0.96px] text-neutral-900 dark:text-neutral-100 sm:text-[36px] lg:text-[40px]">
               <Stat value="32.8%" color="#EF4444" /> Failure rate of traditional
               courses
             </h3>
@@ -132,7 +132,7 @@ export default function BestAppSection() {
                   <span className="flex size-5 shrink-0 items-center justify-center rounded bg-red-500">
                     <X className="size-3.5 text-white" strokeWidth={3} />
                   </span>
-                  <span className="text-lg font-semibold text-neutral-900">
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     {con}
                   </span>
                 </li>

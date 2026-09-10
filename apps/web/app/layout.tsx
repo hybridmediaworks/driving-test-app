@@ -32,12 +32,15 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn("h-full", "antialiased", inter.variable, sora.variable, "font-sans")}
+      // The theme script below adds `dark` to this element before hydration, so the class list
+      // React rendered on the server never matches the one it finds on the client.
+      suppressHydrationWarning
     >
       <head>
         <script
           // Applies the saved theme before paint to avoid a flash of the wrong theme.
-          // Defaults to "light" (not "system") — components have no dark: variants,
-          // so auto-following the OS theme would produce a half-styled page.
+          // Defaults to "light" (not "system") — dark is opt-in from the account menu's
+          // Night Mode switch, so nobody gets flipped by their OS setting alone.
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var a=localStorage.getItem('appearance')||'light';var d=a==='dark'||(a==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`,
           }}

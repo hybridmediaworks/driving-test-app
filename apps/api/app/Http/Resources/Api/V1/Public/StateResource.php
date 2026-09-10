@@ -20,6 +20,12 @@ class StateResource extends JsonResource
             'name' => $this->name,
             'agency_name' => $this->agency_name,
             'dmv_website_url' => $this->dmv_website_url,
+            'permit_test_fee_cents' => $this->permit_test_fee_cents,
+            'retake_wait_days' => $this->retake_wait_days,
+            'supervised_driving_hours' => $this->supervised_driving_hours,
+            'minimum_permit_age' => $this->minimum_permit_age,
+            'test_language_count' => $this->test_language_count,
+            'online_testing_available' => $this->online_testing_available,
         ];
     }
 }

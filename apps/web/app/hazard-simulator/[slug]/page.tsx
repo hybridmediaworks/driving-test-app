@@ -80,7 +80,7 @@ function HazardSimulatorInner({ slug }: { slug: string }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-5 text-center">
         <p className="text-sm text-destructive">{loadError}</p>
-        <button onClick={() => router.push("/hazard-simulator")} className="text-sm font-medium text-blue-600">
+        <button onClick={() => router.push("/hazard-simulator")} className="text-sm font-medium text-blue-600 dark:text-blue-400">
           Back to hazard simulators
         </button>
       </div>
@@ -90,7 +90,7 @@ function HazardSimulatorInner({ slug }: { slug: string }) {
   if (!data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-neutral-500">Loading…</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading…</p>
       </div>
     );
   }
@@ -149,7 +149,7 @@ function HazardSimulatorInner({ slug }: { slug: string }) {
 
           {related.length > 0 && (
             <div className="mt-12">
-              <h2 className="mb-4 text-xl font-semibold text-neutral-900">More Defensive Driving Hazard Simulators</h2>
+              <h2 className="mb-4 text-xl font-semibold text-neutral-900 dark:text-neutral-100">More Defensive Driving Hazard Simulators</h2>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                 {related.map((s) => (
                   <SimulatorCard key={s.id} simulator={s} />

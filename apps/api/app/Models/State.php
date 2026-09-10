@@ -15,7 +15,28 @@ class State extends Model
         'name',
         'agency_name',
         'dmv_website_url',
+        'permit_test_fee_cents',
+        'retake_wait_days',
+        'supervised_driving_hours',
+        'minimum_permit_age',
+        'test_language_count',
+        'online_testing_available',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'permit_test_fee_cents' => 'integer',
+            'retake_wait_days' => 'integer',
+            'supervised_driving_hours' => 'integer',
+            'minimum_permit_age' => 'integer',
+            'test_language_count' => 'integer',
+            'online_testing_available' => 'boolean',
+        ];
+    }
 
     /**
      * @return HasMany<Quiz, $this>

@@ -54,7 +54,7 @@ export default function BillingSuccessPage() {
             {status === "confirmed" && (
               <>
                 <CheckCircle2 className="mx-auto h-10 w-10 text-green-600" />
-                <h1 className="text-2xl font-semibold text-neutral-900">You&apos;re all set</h1>
+                <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">You&apos;re all set</h1>
                 <Paragraph color="muted">Your plan is active. Enjoy full access.</Paragraph>
                 <Button href="/dashboard">Go to dashboard</Button>
               </>
@@ -62,7 +62,7 @@ export default function BillingSuccessPage() {
 
             {status === "pending" && (
               <>
-                <h1 className="text-2xl font-semibold text-neutral-900">Almost there</h1>
+                <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Almost there</h1>
                 <Paragraph color="muted">
                   Your payment is still being confirmed — this can take a minute. Check your dashboard shortly, or
                   refresh this page.

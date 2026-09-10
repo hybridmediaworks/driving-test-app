@@ -42,7 +42,7 @@ function HazardRow({
             <span className="capitalize">{hazard.type_label}</span>
             <span
               className={`inline-flex rounded-full px-2 py-0.5 text-xs ${
-                hazard.mode === "demo" ? "bg-purple-500/15 text-purple-700" : "bg-blue-500/15 text-blue-700"
+                hazard.mode === "demo" ? "bg-purple-500/15 text-purple-700" : "bg-blue-500/15 text-blue-700 dark:text-blue-300"
               }`}
             >
               {hazard.mode === "demo" ? "tutorial" : "scored"}

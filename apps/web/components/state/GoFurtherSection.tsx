@@ -35,18 +35,18 @@ function Card({ card, className = "" }: { card: ResourceCard; className?: string
   return (
     <Link
       href={href}
-      className={`flex flex-col items-start gap-4 rounded-3xl border border-background2 bg-white p-8 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] transition-transform duration-300 hover:-translate-y-1 ${className}`}
+      className={`flex flex-col items-start gap-4 rounded-3xl border border-background2 bg-white dark:bg-neutral-800 p-8 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] transition-transform duration-300 hover:-translate-y-1 ${className}`}
     >
-      <span className="flex size-12.5 items-center justify-center rounded-[11px] bg-blue-500/10 text-blue-600">
+      <span className="flex size-12.5 items-center justify-center rounded-[11px] bg-blue-500/10 text-blue-600 dark:text-blue-400">
         <Icon className="size-6" />
       </span>
-      <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900 lg:text-[30px] lg:leading-[38px]">
+      <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100 lg:text-[30px] lg:leading-[38px]">
         {title}
       </h3>
       <Paragraph size="sm" color="muted" className="flex-1">
         {description}
       </Paragraph>
-      <span className="inline-flex items-center gap-1.5 text-sm leading-6 font-semibold text-blue-700">
+      <span className="inline-flex items-center gap-1.5 text-sm leading-6 font-semibold text-blue-700 dark:text-blue-300">
         {linkText} <span aria-hidden>&rarr;</span>
       </span>
     </Link>

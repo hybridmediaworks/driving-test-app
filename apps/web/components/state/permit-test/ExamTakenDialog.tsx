@@ -43,10 +43,10 @@ export default function ExamTakenDialog({
         />
 
         <div className="flex flex-col items-center gap-3 px-6 pt-5 pb-8 text-center">
-          <DialogTitle className="font-sora text-2xl font-semibold text-neutral-900">
+          <DialogTitle className="font-sora text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
             Congratulations!
           </DialogTitle>
-          <DialogDescription className="text-base leading-6 text-neutral-700">
+          <DialogDescription className="text-base leading-6 text-neutral-700 dark:text-neutral-300">
             Your journey matters to us, and your feedback fuels our passion to
             improve and provide the best learning tools for drivers across the
             country.
@@ -64,7 +64,7 @@ export default function ExamTakenDialog({
                 <Star className="size-5 fill-white" strokeWidth={0} />
                 Trustpilot
               </a>
-              <p className="text-xs text-neutral-500">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 more than 38,000 users have already left a review
               </p>
             </>

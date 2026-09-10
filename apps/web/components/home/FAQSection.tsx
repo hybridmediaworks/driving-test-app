@@ -101,7 +101,7 @@ export default function FAQSection({ className }: { className?: string }) {
         {/* Left — heading + category tabs */}
         <div className="flex flex-col gap-8">
           <div className="flex flex-col items-start gap-8">
-            <p className="flex items-center gap-1.5 border-b border-blue-100 px-[14px] pt-[5px] pb-[6px] text-xs font-bold tracking-[1.2px] text-blue-700 uppercase">
+            <p className="flex items-center gap-1.5 border-b border-blue-100 px-[14px] pt-[5px] pb-[6px] text-xs font-bold tracking-[1.2px] text-blue-700 dark:text-blue-300 uppercase">
               <span aria-hidden="true">✦</span>
               How we help
             </p>
@@ -123,14 +123,14 @@ export default function FAQSection({ className }: { className?: string }) {
                     "flex h-[60px] items-center justify-between rounded-[24px] px-4 text-lg font-semibold transition-colors",
                     active
                       ? "bg-blue-600 text-white"
-                      : "border border-background4 bg-white text-[#0b0b0d] hover:bg-neutral-50",
+                      : "border border-background4 bg-white dark:bg-neutral-800 text-[#0b0b0d] dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-700",
                   )}
                 >
                   <span>{cat.name}</span>
                   <span
                     className={cn(
                       "text-xs font-bold",
-                      active ? "text-background2" : "text-neutral-500",
+                      active ? "text-background2" : "text-neutral-500 dark:text-neutral-400",
                     )}
                   >
                     {String(cat.items.length).padStart(2, "0")}
@@ -142,7 +142,7 @@ export default function FAQSection({ className }: { className?: string }) {
         </div>
 
         {/* Right — accordion for the active category */}
-        <div className="rounded-[24px] bg-white p-6 sm:p-10 lg:p-[60px]">
+        <div className="rounded-[24px] bg-white dark:bg-neutral-800 p-6 sm:p-10 lg:p-[60px]">
           <div className="flex flex-col gap-5">
             {items.map((faq, index) => {
               const open = index === openIndex;
@@ -167,18 +167,18 @@ export default function FAQSection({ className }: { className?: string }) {
                       onClick={() => setOpenIndex(open ? -1 : index)}
                       className="flex w-full items-center gap-3 text-left"
                     >
-                      <span className="flex-1 text-xl leading-[30px] font-semibold text-neutral-700">
+                      <span className="flex-1 text-xl leading-[30px] font-semibold text-neutral-700 dark:text-neutral-300">
                         {faq.question}
                       </span>
                       <ChevronDown
                         className={cn(
-                          "size-6 shrink-0 text-neutral-400 transition-transform",
+                          "size-6 shrink-0 text-neutral-400 dark:text-neutral-500 transition-transform",
                           open && "rotate-180",
                         )}
                       />
                     </button>
                     {open && (
-                      <Paragraph className="font-medium text-neutral-500!">
+                      <Paragraph className="font-medium text-neutral-500 dark:text-neutral-400!">
                         {faq.answer}
                       </Paragraph>
                     )}

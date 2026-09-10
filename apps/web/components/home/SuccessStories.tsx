@@ -27,15 +27,15 @@ function Stars() {
 }
 
 const CARD =
-  "rounded-[16px] border border-blue-100 bg-white shadow-[0px_4px_12px_0px_rgba(157,175,181,0.25)]";
+  "rounded-[16px] border border-blue-100 bg-white dark:bg-neutral-800 shadow-[0px_4px_12px_0px_rgba(157,175,181,0.25)]";
 
 function Person({ name, role }: { name: string; role: string }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="leading-tight">
-        <span className="text-sm font-bold text-[#293238]">{name}</span>
+        <span className="text-sm font-bold text-[#293238] dark:text-neutral-100">{name}</span>
         <br />
-        <span className="text-sm text-[#7d7a7a]">{role}</span>
+        <span className="text-sm text-[#7d7a7a] dark:text-neutral-400">{role}</span>
       </p>
       <Stars />
     </div>
@@ -59,7 +59,7 @@ function PhotoCard({
       <div className="relative aspect-[260/181] w-full overflow-hidden rounded-[16px]">
         <Image src={image} alt="" fill sizes="260px" className="object-cover" />
       </div>
-      <blockquote className="px-5 text-base leading-[1.5] text-[#232527]">
+      <blockquote className="px-5 text-base leading-[1.5] text-[#232527] dark:text-neutral-100">
         {quote}
       </blockquote>
       <figcaption className="px-5">
@@ -87,7 +87,7 @@ function HorizontalCard({
         <Image src={image} alt="" fill sizes="260px" className="object-cover" />
       </div>
       <div className="flex w-[215px] shrink-0 flex-col gap-4 py-5 pr-5">
-        <blockquote className="text-base leading-[1.5] text-[#232527]">
+        <blockquote className="text-base leading-[1.5] text-[#232527] dark:text-neutral-100">
           {quote}
         </blockquote>
         <Person name={name} role={role} />
@@ -116,7 +116,7 @@ function AvatarCard({
         </span>
         <Person name={name} role={role} />
       </div>
-      <blockquote className="p-5 text-base leading-normal text-[#293238]">
+      <blockquote className="p-5 text-base leading-normal text-[#293238] dark:text-neutral-100">
         {quote}
       </blockquote>
     </figure>
@@ -137,7 +137,7 @@ export default function SuccessStories({
       <div className="mx-auto flex max-w-container flex-col items-center gap-[50px]">
         {/* Header — centered */}
         <div className="flex max-w-[546px] flex-col items-center gap-6 text-center">
-          <p className="flex items-center gap-1.5 border-b border-blue-100 px-[14px] pt-[5px] pb-[6px] text-xs font-bold tracking-[1.2px] text-blue-700 uppercase">
+          <p className="flex items-center gap-1.5 border-b border-blue-100 px-[14px] pt-[5px] pb-[6px] text-xs font-bold tracking-[1.2px] text-blue-700 dark:text-blue-300 uppercase">
             <span aria-hidden="true">✦</span>
             Success stories
           </p>

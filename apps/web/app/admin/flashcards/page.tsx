@@ -125,7 +125,7 @@ function FlashcardsIndexInner() {
                             ) : (
                               <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Free</span>
                             )}
-                            {!c.is_active && <span className="text-xs text-neutral-500">Inactive</span>}
+                            {!c.is_active && <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>}
                           </div>
                           <p className="line-clamp-1 text-sm text-muted-foreground">{c.back_text}</p>
                           <p className="text-xs text-muted-foreground">

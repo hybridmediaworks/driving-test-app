@@ -42,7 +42,7 @@ const socialLinks = [
   },
 ];
 
-const linkClass = "text-base text-neutral-700 hover:text-neutral-900";
+const linkClass = "text-base text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100";
 
 function FooterColumn({
   title,
@@ -73,7 +73,13 @@ function LinkList({ links }: { links: { label: string; href: string }[] }) {
   );
 }
 
-export default function Footer() {
+/**
+ * `overlappedTop` reserves room at the top of the footer for a card that hangs over it — the
+ * daily-question capture on `/{state}/{test-slug}` sits half on the page and half on the footer
+ * (Figma M811hqlEYxeqrj8vxOFqnV: the footer's own content starts 427px down for exactly this
+ * reason). Every other page leaves it off and keeps the normal spacing.
+ */
+export default function Footer({ overlappedTop = false }: { overlappedTop?: boolean } = {}) {
   const { selectedState } = useWebLayout();
   const stateSlug = selectedState ? stateToSlug(selectedState) : "";
 
@@ -111,7 +117,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-background2 px-6 pt-6 pb-10 lg:pt-8 lg:pb-14">
+    <footer className={`bg-background2 px-6 pt-6 pb-10 lg:pb-14 ${overlappedTop ? "lg:pt-79" : "lg:pt-8"}`}>
       <div className="mx-auto max-w-container space-y-6 lg:space-y-8">
         <Image
           src="/driving-test-logo.png"
@@ -159,7 +165,7 @@ export default function Footer() {
                 key={social.label}
                 href={social.href}
                 aria-label={social.label}
-                className="flex size-9 items-center justify-center rounded-[14px] bg-neutral-100 text-blue-500 transition-colors hover:bg-blue-50"
+                className="flex size-9 items-center justify-center rounded-[14px] bg-neutral-100 dark:bg-neutral-700 text-blue-500 transition-colors hover:bg-blue-50 dark:hover:bg-blue-500/10"
               >
                 <svg
                   width="16"

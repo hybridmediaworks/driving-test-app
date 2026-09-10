@@ -18,11 +18,11 @@ const iconSizeClasses: Record<Size, string> = {
 
 const variantClasses: Record<Variant, string> = {
   primary: "bg-linear-to-r from-blue-500 to-blue-700 text-white shadow-xs",
-  secondary: "bg-blue-50 text-blue-700 hover:bg-blue-100",
+  secondary: "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-100",
   outline:
-    "border border-border text-neutral-900 bg-transparent hover:bg-blue-50",
+    "border border-border text-neutral-900 dark:text-neutral-100 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-500/10",
   ghost: "text-blue-500 bg-transparent",
-  gold: "bg-[#E3B23C] text-neutral-900 hover:bg-[#d6a32e]",
+  gold: "bg-[#E3B23C] text-neutral-900 dark:text-neutral-100 hover:bg-[#d6a32e]",
 };
 
 type ButtonProps = {

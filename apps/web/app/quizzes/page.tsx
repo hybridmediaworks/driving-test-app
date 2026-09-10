@@ -34,13 +34,13 @@ function QuizzesBrowseInner() {
         <main className="flex-1">
           <div className="mx-auto max-w-container space-y-6 px-5 py-10 lg:py-14">
             <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-neutral-900">Practice tests</h1>
-              <p className="text-neutral-500">Free to take — no account required. Sign up to save your results.</p>
+              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Practice tests</h1>
+              <p className="text-neutral-500 dark:text-neutral-400">Free to take — no account required. Sign up to save your results.</p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("state") ?? ""}
                 onChange={(e) => updateFilter("state", e.target.value)}
               >
@@ -50,7 +50,7 @@ function QuizzesBrowseInner() {
                 ))}
               </select>
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("vehicle_type") ?? ""}
                 onChange={(e) => updateFilter("vehicle_type", e.target.value)}
               >
@@ -60,7 +60,7 @@ function QuizzesBrowseInner() {
                 ))}
               </select>
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("test_track") ?? ""}
                 onChange={(e) => updateFilter("test_track", e.target.value)}
               >
@@ -69,7 +69,7 @@ function QuizzesBrowseInner() {
                 <option value="driving_test">Driving Test</option>
               </select>
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("category") ?? ""}
                 onChange={(e) => updateFilter("category", e.target.value)}
               >
@@ -81,7 +81,7 @@ function QuizzesBrowseInner() {
             </div>
 
             {rows.length === 0 ? (
-              <p className="py-10 text-center text-sm text-neutral-500">No quizzes match those filters.</p>
+              <p className="py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">No quizzes match those filters.</p>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((quiz) => (

@@ -11,23 +11,35 @@ import type { ReactNode } from "react";
  * Figma node 1904:3502 (file QOJ34F4OPHkJ5LFrJt9eCA). Icon glyphs are the exact
  * Figma vectors (white) on solid colour tiles.
  */
-export default function FeaturesSection() {
+export default function FeaturesSection({ variant = "home" }: { variant?: "home" | "state" }) {
+  // The state practice-hub frame reuses this exact layout but renames the bottom three cards
+  // (Figma M811hqlEYxeqrj8vxOFqnV, node 4260:11673) — same tiles, tints and footnotes, different
+  // titles, bodies and road plate. Only those vary, so it's a lookup rather than a second
+  // component: the state frame runs the dark overhead city street, the home frame the green
+  // junction.
+  const isState = variant === "state";
+  const bottom = isState ? STATE_BOTTOM_CARDS : HOME_BOTTOM_CARDS;
+
   return (
     <section className="relative overflow-hidden">
       {/* Road background + left dark gradient */}
       <div aria-hidden className="absolute inset-0 z-0">
         <Image
-          src="/features/road-bg.png"
+          src={isState ? "/test-slug/toolkit-road.webp" : "/features/road-bg.png"}
           alt=""
           fill
-          quality={90}
+          quality={92}
           sizes="100vw"
           className="object-cover object-center"
         />
         <div className="absolute inset-0 bg-linear-to-l from-transparent from-41% to-black/50" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-container px-5 py-16 lg:py-[104px]">
+      <div
+        className={`relative z-10 mx-auto max-w-container px-5 py-16 ${
+          isState ? "lg:max-w-[1400px] lg:py-30" : "lg:py-[104px]"
+        }`}
+      >
         <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
           {/* Left — headline + subtitle + CTA */}
           <div className="max-w-[460px] shrink-0">
@@ -75,10 +87,10 @@ export default function FeaturesSection() {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               <StatCard
                 icon={<ProgressRing />}
-                title="Progress Tracking"
-                body="A readiness score that tells you exactly when to book the test."
+                title={bottom.first.title}
+                body={bottom.first.body}
                 borderClass="border-green-200"
-                tint="radial-gradient(130% 130% at 50% 100%, #dcfce7 0%, #ffffff 55%)"
+                tint="radial-gradient(130% 130% at 50% 100%, var(--wash-green) 0%, var(--wash-base) 55%)"
                 dotClass="bg-green-500"
                 labelClass="text-green-500"
                 label="On track to pass"
@@ -90,10 +102,10 @@ export default function FeaturesSection() {
                     <img src="/features/waveform.svg" alt="" aria-hidden className="w-9" />
                   </span>
                 }
-                title="Voice Learning"
-                body="Study hands-free, on the move — answer aloud on your commute."
+                title={bottom.second.title}
+                body={bottom.second.body}
                 borderClass="border-background3"
-                tint="radial-gradient(130% 130% at 50% 100%, #fefce8 0%, #ffffff 55%)"
+                tint="radial-gradient(130% 130% at 50% 100%, var(--wash-yellow) 0%, var(--wash-base) 55%)"
                 dotClass="bg-yellow-500"
                 labelClass="text-yellow-500"
                 label="12 min avg session"
@@ -105,10 +117,10 @@ export default function FeaturesSection() {
                     <img src="/features/flashcards.svg" alt="" aria-hidden className="size-9" />
                   </span>
                 }
-                title="Flashcards"
-                body="Spaced repetition that locks signs and rules into long-term memory."
+                title={bottom.third.title}
+                body={bottom.third.body}
                 borderClass="border-background3"
-                tint="radial-gradient(130% 130% at 50% 100%, #fef2f2 0%, #ffffff 55%)"
+                tint="radial-gradient(130% 130% at 50% 100%, var(--wash-red) 0%, var(--wash-base) 55%)"
                 dotClass="bg-red-500"
                 labelClass="text-red-500"
                 label="240 cards mastered"
@@ -120,6 +132,36 @@ export default function FeaturesSection() {
     </section>
   );
 }
+
+const HOME_BOTTOM_CARDS = {
+  first: {
+    title: "Progress Tracking",
+    body: "A readiness score that tells you exactly when to book the test.",
+  },
+  second: {
+    title: "Voice Learning",
+    body: "Study hands-free, on the move — answer aloud on your commute.",
+  },
+  third: {
+    title: "Flashcards",
+    body: "Spaced repetition that locks signs and rules into long-term memory.",
+  },
+};
+
+const STATE_BOTTOM_CARDS = {
+  first: {
+    title: "Performance Insights",
+    body: "See which topics are costing you points, and drill those first.",
+  },
+  second: {
+    title: "Cited Explanations",
+    body: "Learn the source behind every answer, with exact chapter references.",
+  },
+  third: {
+    title: "Quiz Vault",
+    body: "Spaced repetition that locks signs and rules into long-term memory.",
+  },
+};
 
 /* Top-row card — centred icon tile + title + body, white/blue radial bg. */
 function TopCard({
@@ -138,7 +180,7 @@ function TopCard({
       className="flex flex-col items-center gap-3 rounded-[24px] border border-blue-200 p-10 text-center shadow-[0px_30px_64px_-28px_rgba(16,24,40,0.3),0px_8px_18px_0px_rgba(16,24,40,0.07)]"
       style={{
         backgroundImage:
-          "radial-gradient(130% 130% at 0% 0%, #dbeafe 0%, #ffffff 46%)",
+          "radial-gradient(130% 130% at 0% 0%, var(--wash-blue) 0%, var(--wash-base) 46%)",
       }}
     >
       <span
@@ -146,10 +188,10 @@ function TopCard({
       >
         {icon}
       </span>
-      <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900">
+      <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100">
         {title}
       </h3>
-      <p className="max-w-[292px] text-base leading-6 text-neutral-700">{body}</p>
+      <p className="max-w-[292px] text-base leading-6 text-neutral-700 dark:text-neutral-300">{body}</p>
     </div>
   );
 }
@@ -180,10 +222,10 @@ function StatCard({
       style={{ backgroundImage: tint }}
     >
       {icon}
-      <h3 className="font-sora text-2xl leading-8 font-semibold text-[#0b0b0d]">
+      <h3 className="font-sora text-2xl leading-8 font-semibold text-[#0b0b0d] dark:text-neutral-100">
         {title}
       </h3>
-      <p className="text-base leading-6 text-neutral-700">{body}</p>
+      <p className="text-base leading-6 text-neutral-700 dark:text-neutral-300">{body}</p>
       <div className="mt-auto flex items-center gap-1.5 pt-1">
         <span className={`size-3 shrink-0 rounded-full ${dotClass}`} />
         <span className={`text-base leading-6 whitespace-nowrap ${labelClass}`}>

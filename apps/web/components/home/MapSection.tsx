@@ -26,7 +26,7 @@ export default function MapSection() {
       <div className="mx-auto max-w-container">
         {/* Eyebrow + headline with hand-drawn green underline */}
         <div className="flex flex-col items-center gap-8 text-center">
-          <p className="border-b border-blue-100 px-3.5 pt-[5px] pb-1.5 text-xs font-bold leading-[18px] tracking-[0.1em] text-blue-700 uppercase">
+          <p className="border-b border-blue-100 px-3.5 pt-[5px] pb-1.5 text-xs font-bold leading-[18px] tracking-[0.1em] text-blue-700 dark:text-blue-300 uppercase">
             <span className="mr-1.5">✦</span>Helping drivers across the USA
           </p>
           <Heading as="h2">
@@ -56,12 +56,12 @@ export default function MapSection() {
             {STATS.map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-2xl border border-background3 bg-white p-4 shadow-[0px_1px_1px_rgba(14,17,22,0.06),0px_2px_3px_rgba(14,17,22,0.05)]"
+                className="rounded-2xl border border-background3 bg-white dark:bg-neutral-800 p-4 shadow-[0px_1px_1px_rgba(14,17,22,0.06),0px_2px_3px_rgba(14,17,22,0.05)]"
               >
-                <p className="font-sora text-5xl font-semibold leading-[56px] tracking-[-0.96px] text-neutral-700">
+                <p className="font-sora text-5xl font-semibold leading-[56px] tracking-[-0.96px] text-neutral-700 dark:text-neutral-300">
                   {stat.value}
                 </p>
-                <p className="mt-2 text-base text-neutral-500">{stat.label}</p>
+                <p className="mt-2 text-base text-neutral-500 dark:text-neutral-400">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -79,12 +79,12 @@ export default function MapSection() {
             {PASSERS.map((p, i) => (
               <div
                 key={`${p.name}-${p.state}-${i}`}
-                className="rounded-2xl border border-background3 bg-white p-4 shadow-[0px_1px_1px_rgba(14,17,22,0.06),0px_2px_3px_rgba(14,17,22,0.05)]"
+                className="rounded-2xl border border-background3 bg-white dark:bg-neutral-800 p-4 shadow-[0px_1px_1px_rgba(14,17,22,0.06),0px_2px_3px_rgba(14,17,22,0.05)]"
               >
-                <p className="text-xl font-semibold leading-[30px] text-neutral-700">
+                <p className="text-xl font-semibold leading-[30px] text-neutral-700 dark:text-neutral-300">
                   {p.name} - {p.state}
                 </p>
-                <p className="mt-2 flex items-center gap-2 text-base text-neutral-500">
+                <p className="mt-2 flex items-center gap-2 text-base text-neutral-500 dark:text-neutral-400">
                   <CircleCheck className="size-6 shrink-0 text-green-500" />
                   Passed 2 mins ago.
                 </p>
@@ -100,7 +100,7 @@ export default function MapSection() {
               <span
                 className={`size-5 rounded-[4px] border border-background3 ${item.color}`}
               />
-              <span className="text-base font-semibold text-neutral-500">
+              <span className="text-base font-semibold text-neutral-500 dark:text-neutral-400">
                 {item.label}
               </span>
             </span>

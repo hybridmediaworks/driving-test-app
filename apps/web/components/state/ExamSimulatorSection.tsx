@@ -76,7 +76,7 @@ export default function ExamSimulatorSection() {
 
         <div className="@container relative mt-10 lg:mt-15">
           {/* Device — the exam screen behind a frosted upsell overlay */}
-          <div className="relative mx-auto aspect-[918/688] w-full max-w-[918px] min-h-[420px] overflow-hidden rounded-3xl border border-blue-100 bg-blue-50 sm:min-h-0 lg:rounded-[48px]">
+          <div className="relative mx-auto aspect-[918/688] w-full max-w-[918px] min-h-[420px] overflow-hidden rounded-3xl border border-blue-100 bg-blue-50 dark:bg-blue-500/10 sm:min-h-0 lg:rounded-[48px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/state-hub/exam-screen.png"
@@ -95,7 +95,7 @@ export default function ExamSimulatorSection() {
               />
               <div className="flex w-full max-w-[518px] flex-col items-center gap-4 lg:gap-6">
                 <div className="flex flex-col items-center gap-3 lg:gap-4">
-                  <p className="font-sora text-[26px] leading-tight font-semibold tracking-[-0.96px] text-black sm:text-[36px] lg:text-[48px] lg:leading-14">
+                  <p className="font-sora text-[26px] leading-tight font-semibold tracking-[-0.96px] text-black dark:text-neutral-100 sm:text-[36px] lg:text-[48px] lg:leading-14">
                     {canStart ? "Your exam simulator" : "Unlock Premium Now"}
                   </p>
                   <Paragraph className="max-w-[344px] text-center">
@@ -106,7 +106,7 @@ export default function ExamSimulatorSection() {
                 </div>
                 <Link
                   href={ctaHref}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-yellow-500 px-5 py-3 text-base font-semibold text-neutral-700 shadow-xs transition-opacity hover:opacity-95"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-yellow-500 px-5 py-3 text-base font-semibold text-neutral-700 dark:text-neutral-300 shadow-xs transition-opacity hover:opacity-95"
                 >
                   <Gem aria-hidden className="size-5" />
                   {canStart ? "Start the simulator" : "Upgrade to Premium"}
@@ -120,12 +120,12 @@ export default function ExamSimulatorSection() {
             {CALLOUTS.map((callout) => (
               <div
                 key={callout.title}
-                className={`rounded-xl border-2 border-blue-300 bg-white p-4 shadow-hover @7xl:absolute ${callout.position} ${callout.width}`}
+                className={`rounded-xl border-2 border-blue-300 bg-white dark:bg-neutral-800 p-4 shadow-hover @7xl:absolute ${callout.position} ${callout.width}`}
               >
                 <p className="text-xl leading-[30px] font-semibold text-blue-500">
                   {callout.title}
                 </p>
-                <p className="text-base leading-6 text-neutral-700">
+                <p className="text-base leading-6 text-neutral-700 dark:text-neutral-300">
                   {callout.bodyKey === "official-exam"
                     ? `as the official ${stateCode || selectedState} exam`
                     : callout.body}

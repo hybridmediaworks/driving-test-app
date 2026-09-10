@@ -67,7 +67,7 @@ export default function StepsSection() {
       <div className="mx-auto max-w-container space-y-12 px-5">
         <div className="space-y-4 max-w-167">
           <Paragraph
-            className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
+            className="mb-2 border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
             size="xs"
             color="primary"
           >
@@ -84,7 +84,7 @@ export default function StepsSection() {
           {stepCards.map((step) => (
             <div
               key={step.number}
-              className="relative rounded-2xl border bg-white p-5 lg:p-8 flex flex-col justify-between gap-14 shadow-card"
+              className="relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-8 flex flex-col justify-between gap-14 shadow-card"
             >
               <div className="hidden lg:flex items-center justify-center absolute left-0 -top-10.75 w-full">
                 <svg
@@ -113,8 +113,8 @@ export default function StepsSection() {
                 </div>
                 <Heading size="sm">{step.title}</Heading>
                 <Paragraph>{step.description}</Paragraph>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5">
-                  <Clock className="h-4 w-4 text-blue-600" />
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5">
+                  <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <Paragraph
                     size="sm"
                     color="primary"
@@ -127,7 +127,7 @@ export default function StepsSection() {
                   {step.bullets.map((bullet) => (
                     <div key={bullet} className="flex items-start gap-2.5">
                       <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                        <Check className="h-3 w-3 text-blue-600" />
+                        <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       </div>
                       <Paragraph size="sm">{bullet}</Paragraph>
                     </div>
@@ -138,7 +138,7 @@ export default function StepsSection() {
                 <Paragraph
                   size="xs"
                   color="dark"
-                  className="font-semibold whitespace-nowrap bg-white rounded-full border max-w-fit px-3 py-1.5"
+                  className="font-semibold whitespace-nowrap bg-white dark:bg-neutral-800 rounded-full border max-w-fit px-3 py-1.5"
                 >
                   {step.imageLabel}
                 </Paragraph>

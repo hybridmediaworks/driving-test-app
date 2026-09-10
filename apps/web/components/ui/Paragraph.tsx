@@ -13,10 +13,10 @@ const sizeClasses: Record<Size, string> = {
 };
 
 const colorClasses: Record<Color, string> = {
-  default: "text-neutral-700",
-  dark: "text-neutral-900",
-  muted: "text-neutral-500",
-  primary: "text-blue-600",
+  default: "text-neutral-700 dark:text-neutral-300",
+  dark: "text-neutral-900 dark:text-neutral-100",
+  muted: "text-neutral-500 dark:text-neutral-400",
+  primary: "text-blue-600 dark:text-blue-400",
   white: "text-white",
 };
 

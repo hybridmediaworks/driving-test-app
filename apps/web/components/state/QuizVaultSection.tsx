@@ -44,13 +44,13 @@ export default function QuizVaultSection() {
               <Link
                 key={title}
                 href={href}
-                className="flex flex-col items-start gap-4 rounded-3xl border border-background2 bg-white p-6 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] transition-transform duration-300 hover:-translate-y-1"
+                className="flex flex-col items-start gap-4 rounded-3xl border border-background2 bg-white dark:bg-neutral-800 p-6 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] transition-transform duration-300 hover:-translate-y-1"
               >
-                <span className="flex size-15 items-center justify-center rounded-lg border border-blue-50 bg-blue-50 text-blue-700">
+                <span className="flex size-15 items-center justify-center rounded-lg border border-blue-50 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
                   <Icon className="size-8" />
                 </span>
                 <div className="space-y-2">
-                  <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900">
+                  <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100">
                     {title}
                   </h3>
                   <Paragraph>{body}</Paragraph>

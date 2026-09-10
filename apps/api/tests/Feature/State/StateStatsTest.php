@@ -33,6 +33,72 @@ class StateStatsTest extends TestCase
         $response->assertJsonPath('stats.daily_students_practiced', array_fill(0, 7, 0));
         $response->assertJsonPath('stats.daily_questions_answered', array_fill(0, 7, 0));
         $response->assertJsonPath('stats.daily_combined_practice_seconds', array_fill(0, 7, 0));
+        $response->assertJsonPath('stats.avg_first_try_score', null);
+        $response->assertJsonPath('stats.score_distribution', null);
+    }
+
+    public function test_it_buckets_graded_attempts_into_score_bands(): void
+    {
+        $state = State::factory()->create(['code' => 'CA']);
+        $quiz = Quiz::factory()->create(['state_id' => $state->id]);
+
+        foreach ([95, 84, 72, 65] as $index => $score) {
+            QuizAttempt::query()->create([
+                'user_id' => User::factory()->create()->id,
+                'quiz_id' => $quiz->id,
+                'status' => AttemptStatus::Completed,
+                'score' => $score,
+                'total_questions' => 10,
+                'duration_seconds' => 120,
+                'started_at' => now()->subDays($index + 1),
+                'completed_at' => now()->subDays($index + 1),
+            ]);
+        }
+
+        $response = $this->getJson('/api/v1/states/CA/stats');
+
+        $response->assertOk();
+        $response->assertJsonPath('stats.score_distribution.0', ['label' => '90–100', 'percent' => 25]);
+        $response->assertJsonPath('stats.score_distribution.1', ['label' => '80–89', 'percent' => 25]);
+        $response->assertJsonPath('stats.score_distribution.2', ['label' => '70–79', 'percent' => 25]);
+        $response->assertJsonPath('stats.score_distribution.3', ['label' => '60–69', 'percent' => 25]);
+        $response->assertJsonPath('stats.score_distribution.4', ['label' => '<60', 'percent' => 0]);
+        // (95 + 84 + 72 + 65) / 4 = 79.
+        $response->assertJsonPath('stats.avg_first_try_score', 79);
+    }
+
+    public function test_avg_first_try_score_ignores_retakes_of_the_same_quiz(): void
+    {
+        $state = State::factory()->create(['code' => 'CA']);
+        $quiz = Quiz::factory()->create(['state_id' => $state->id]);
+        $user = User::factory()->create();
+
+        // First try scores 40; the retake scores 100 and must not move the average.
+        QuizAttempt::query()->create([
+            'user_id' => $user->id,
+            'quiz_id' => $quiz->id,
+            'status' => AttemptStatus::Completed,
+            'score' => 40,
+            'total_questions' => 10,
+            'duration_seconds' => 120,
+            'started_at' => now()->subDays(3),
+            'completed_at' => now()->subDays(3),
+        ]);
+        QuizAttempt::query()->create([
+            'user_id' => $user->id,
+            'quiz_id' => $quiz->id,
+            'status' => AttemptStatus::Completed,
+            'score' => 100,
+            'total_questions' => 10,
+            'duration_seconds' => 120,
+            'started_at' => now()->subDay(),
+            'completed_at' => now()->subDay(),
+        ]);
+
+        $response = $this->getJson('/api/v1/states/CA/stats');
+
+        $response->assertOk();
+        $response->assertJsonPath('stats.avg_first_try_score', 40);
     }
 
     public function test_it_counts_distinct_users_and_guests_from_completed_attempts_in_the_last_30_days(): void

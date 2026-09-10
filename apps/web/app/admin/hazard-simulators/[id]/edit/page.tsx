@@ -91,7 +91,7 @@ export default function EditHazardSimulatorPage({ params }: { params: Promise<{ 
                     )}
                     <Link
                       href={`/admin/hazard-simulator-attempts?hazard_simulator_id=${data.hazard_simulator.id}`}
-                      className="text-sm text-blue-600 hover:underline"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       View all attempts
                     </Link>

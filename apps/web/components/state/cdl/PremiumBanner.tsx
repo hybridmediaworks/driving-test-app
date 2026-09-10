@@ -50,7 +50,7 @@ export default function PremiumBanner({ premiumInfo }: { premiumInfo: PremiumInf
         )}
       </div>
 
-      <Link href="/pricing" className="flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 font-semibold text-[#6c5ce7]">
+      <Link href="/pricing" className="flex items-center gap-2 rounded-lg bg-white dark:bg-neutral-800 px-7 py-3.5 font-semibold text-[#6c5ce7]">
         Get Premium
         <ArrowRight />
       </Link>

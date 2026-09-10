@@ -23,18 +23,18 @@ export default function SignInDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl! gap-0 overflow-hidden rounded-3xl p-0">
-        <div className="flex items-center justify-center bg-blue-50 py-10">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
-            <Bookmark className="h-9 w-9 text-blue-600" strokeWidth={2.25} />
+        <div className="flex items-center justify-center bg-blue-50 dark:bg-blue-500/10 py-10">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white dark:bg-neutral-800 shadow-sm">
+            <Bookmark className="h-9 w-9 text-blue-600 dark:text-blue-400" strokeWidth={2.25} />
           </div>
         </div>
 
-        <div className="space-y-5 bg-white p-10 text-center">
+        <div className="space-y-5 bg-white dark:bg-neutral-800 p-10 text-center">
           <Heading size="xs">{title}</Heading>
           <Paragraph className="text-center">{description}</Paragraph>
 
           <div className="flex items-center gap-3 pt-2">
-            <Button href="/register" variant="ghost" className="flex-1 border border-blue-300 hover:bg-blue-50">
+            <Button href="/register" variant="ghost" className="flex-1 border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
               Sign Up
             </Button>
             <Button href="/login" className="flex-1">

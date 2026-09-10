@@ -19,15 +19,15 @@ export default function ExamSimulatorPage() {
         <main className="flex-1">
           <div className="mx-auto max-w-container space-y-6 px-5 py-10 lg:py-14">
             <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-neutral-900">Exam simulator</h1>
-              <p className="text-neutral-500">
+              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Exam simulator</h1>
+              <p className="text-neutral-500 dark:text-neutral-400">
                 The real format: same question count, a strict clock, and a clear pass/fail result — no feedback until
                 you finish.
               </p>
             </div>
 
             {rows.length === 0 ? (
-              <p className="py-10 text-center text-sm text-neutral-500">No exam simulations are available yet.</p>
+              <p className="py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">No exam simulations are available yet.</p>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((quiz) => (

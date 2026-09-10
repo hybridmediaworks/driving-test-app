@@ -98,7 +98,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
 
       <main className="flex-1">
         <div id="atWrap" className="relative mx-auto block max-w-container" role="main">
-            <nav id="breadcrumbs" className="text-sm text-[#888]" data-nosnippet="">
+            <nav id="breadcrumbs" className="text-sm text-[#888] dark:text-neutral-400" data-nosnippet="">
               <div id="bcrumbs" className="mx-auto box-border py-2.5 max-md:py-0 max-md:pb-2">
                 <Paragraph className="flex items-center gap-0.5" color="muted" size="sm">
                   <Link href="/">Home</Link>
@@ -113,50 +113,50 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
             <div id="preinit">
               <div
                 id="trustbar"
-                className="flex w-full flex-wrap items-center gap-5 rounded-t-lg border-b border-[#e2e8f0] bg-[#f8fafc] px-4 py-2.5 max-md:mx-0 max-md:-ml-5 max-md:w-[110%] max-md:flex-row max-md:gap-1.5 max-md:rounded-none"
+                className="flex w-full flex-wrap items-center gap-5 rounded-t-lg border-b border-[#e2e8f0] bg-[#f8fafc] dark:bg-neutral-800 px-4 py-2.5 max-md:mx-0 max-md:-ml-5 max-md:w-[110%] max-md:flex-row max-md:gap-1.5 max-md:rounded-none"
               >
-                <span className="inline-flex cursor-pointer items-center gap-1 text-sm leading-none whitespace-nowrap text-[#475569] max-md:text-[13px]">
+                <span className="inline-flex cursor-pointer items-center gap-1 text-sm leading-none whitespace-nowrap text-[#475569] dark:text-neutral-300 max-md:text-[13px]">
                   Original questions based on the latest{" "}
-                  <strong className="font-semibold text-[#1e293b]">{stateName} Driver Handbook</strong>
+                  <strong className="font-semibold text-[#1e293b] dark:text-neutral-100">{stateName} Driver Handbook</strong>
                 </span>
                 <span className="text-sm leading-none whitespace-nowrap text-[#cbd5e1] max-md:hidden">•</span>
                 <ReviewerBadge
                   prefix="Verified"
-                  className="text-sm whitespace-nowrap text-[#475569] max-md:text-[13px]"
+                  className="text-sm whitespace-nowrap text-[#475569] dark:text-neutral-300 max-md:text-[13px]"
                 />
               </div>
 
-            <div id="wrpAtDescr" className="relative mb-20 rounded-b-[20px] bg-white p-5 pb-15 max-md:m-0 max-md:rounded-none max-md:bg-inherit max-md:p-0">
-              <div id="atDescr" className="flex flex-nowrap items-start gap-8 text-black max-lg:flex-col max-md:mt-0! max-md:flex-col-reverse">
+            <div id="wrpAtDescr" className="relative mb-20 rounded-b-[20px] bg-white dark:bg-neutral-800 p-5 pb-15 max-md:m-0 max-md:rounded-none max-md:bg-inherit max-md:p-0">
+              <div id="atDescr" className="flex flex-nowrap items-start gap-8 text-black dark:text-neutral-100 max-lg:flex-col max-md:mt-0! max-md:flex-col-reverse">
                 <div id="mainDescr" className="flex w-full flex-1 flex-col overflow-hidden pb-5 max-md:m-0 max-md:overflow-visible max-md:p-0">
                   <Heading id="pgTitle" as="h1" size="lg" className="mb-2 max-md:-order-2 max-md:mt-5">
                     {quiz?.title ?? (quiz === null ? "Test not found" : "Loading test…")}
                   </Heading>
-                  <div className="mb-2.75 flex flex-wrap items-center gap-1 text-black max-md:order-0 max-md:mb-2.5">
+                  <div className="mb-2.75 flex flex-wrap items-center gap-1 text-black dark:text-neutral-100 max-md:order-0 max-md:mb-2.5">
                     <strong className="text-[15px] font-semibold max-md:text-sm">Perfect for:</strong>
                     {isDrivingTest ? (
                       <>
-                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] dark:bg-blue-500/10 px-1.5 text-sm leading-none whitespace-nowrap text-black dark:text-neutral-100">
                           Permit holders ready for the road
                         </div>
-                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] dark:bg-blue-500/10 px-1.5 text-sm leading-none whitespace-nowrap text-black dark:text-neutral-100">
                           Behind-the-wheel practice
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] dark:bg-blue-500/10 px-1.5 text-sm leading-none whitespace-nowrap text-black dark:text-neutral-100">
                           Learner&apos;s permit applicants
                         </div>
-                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                        <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] dark:bg-blue-500/10 px-1.5 text-sm leading-none whitespace-nowrap text-black dark:text-neutral-100">
                           First-time adult applicants
                         </div>
                       </>
                     )}
                   </div>
                   <div className="relative min-h-0! overflow-hidden">
-                    <div className="overflow-visible text-[18px] leading-[1.5] font-normal text-[#4e4e59] max-md:relative max-md:m-0 max-md:text-sm max-md:leading-[1.35] max-md:text-black">
-                      <div className="block text-[15px] leading-[1.35] text-black! [&_a]:border-b [&_a]:border-transparent [&_a]:text-[#007aff] [&_a]:no-underline [&_a]:transition-colors [&_a:hover]:border-[#007aff] [&_p]:mb-4! max-md:[&_p]:mb-3! [&_strong]:font-semibold">
+                    <div className="overflow-visible text-[18px] leading-[1.5] font-normal text-[#4e4e59] dark:text-neutral-300 max-md:relative max-md:m-0 max-md:text-sm max-md:leading-[1.35] max-md:text-black dark:max-md:text-neutral-100">
+                      <div className="block text-[15px] leading-[1.35] text-black dark:text-neutral-100! [&_a]:border-b [&_a]:border-transparent [&_a]:text-[#007aff] [&_a]:no-underline [&_a]:transition-colors [&_a:hover]:border-[#007aff] [&_p]:mb-4! max-md:[&_p]:mb-3! [&_strong]:font-semibold">
                         <Paragraph size="sm" className="mb-4!">
                           {isDrivingTest ? (
                             <>
@@ -218,7 +218,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                   </div>
                   <div
                     id="btnStartWrp"
-                    className="absolute bottom-[-30px] left-1/2 flex w-[calc(100vw-80px)] max-w-[904px] -translate-x-1/2 flex-nowrap items-center justify-center gap-2 max-md:fixed max-md:static max-md:inset-x-0 max-md:bottom-0 max-md:z-[1000] max-md:m-0 max-md:w-full max-md:translate-x-0 max-md:flex-col max-md:border-0 max-md:bg-white max-md:px-4 max-md:py-[13px] max-md:shadow-none max-md:transition-all max-md:duration-300"
+                    className="absolute bottom-[-30px] left-1/2 flex w-[calc(100vw-80px)] max-w-[904px] -translate-x-1/2 flex-nowrap items-center justify-center gap-2 max-md:fixed max-md:static max-md:inset-x-0 max-md:bottom-0 max-md:z-[1000] max-md:m-0 max-md:w-full max-md:translate-x-0 max-md:flex-col max-md:border-0 max-md:bg-white dark:max-md:bg-neutral-800 max-md:px-4 max-md:py-[13px] max-md:shadow-none max-md:transition-all max-md:duration-300"
                   >
                     <Button
                       id="atBtnStart"
@@ -254,17 +254,17 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                   </div>
                   <div id="params" className="mt-[15px] flex max-w-full flex-wrap items-center justify-end gap-2 max-md:justify-start">
                     {quiz?.is_premium && (
-                      <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#fef3c7] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                      <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#fef3c7] dark:bg-amber-500/15 px-1.5 text-sm leading-none whitespace-nowrap text-black dark:text-neutral-100">
                         Premium
                       </div>
                     )}
                     {duration && (
-                      <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] px-1.5 text-sm leading-none whitespace-nowrap text-black">
+                      <div className="inline-flex h-[25px] items-center gap-1 rounded-lg bg-[#f2f7ff] dark:bg-blue-500/10 px-1.5 text-sm leading-none whitespace-nowrap text-black dark:text-neutral-100">
                         {duration}
                       </div>
                     )}
                   </div>
-                  <div id="prtnrs" className="mt-[25px] flex items-center justify-center gap-[25px] max-md:mb-5 max-md:gap-4 max-md:rounded-[20px] max-md:bg-[#f2f7ff] max-md:px-5 max-md:py-[30px]" data-nosnippet="">
+                  <div id="prtnrs" className="mt-[25px] flex items-center justify-center gap-[25px] max-md:mb-5 max-md:gap-4 max-md:rounded-[20px] max-md:bg-[#f2f7ff] dark:bg-blue-500/10 max-md:px-5 max-md:py-[30px]" data-nosnippet="">
                     {["/partner_gray_1.svg", "/partner_gray_2.svg", "/partner_gray_3.svg"].map((src) => (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img key={src} src={src} loading="lazy" className="block h-auto w-full max-w-[480px] max-md:h-[10vw]" alt="" />
@@ -317,9 +317,9 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                     placeholder="you@example.com"
                     autoComplete="email"
                     required
-                    className="box-border h-11 w-full rounded-[10px] border border-[#cbd5e1] bg-white px-3.5 text-sm text-[#111827] outline-none placeholder:text-[#94a3b8] focus:border-[#007aff] focus:shadow-[0_0_0_3px_rgba(0,122,255,0.16)] max-md:w-full"
+                    className="box-border h-11 w-full rounded-[10px] border border-[#cbd5e1] bg-white dark:bg-neutral-800 px-3.5 text-sm text-[#111827] dark:text-neutral-100 outline-none placeholder:text-[#94a3b8] focus:border-[#007aff] focus:shadow-[0_0_0_3px_rgba(0,122,255,0.16)] max-md:w-full"
                   />
-                  <Button type="submit" variant="outline" size="sm" className="h-11 w-full bg-blue-50! whitespace-nowrap max-md:w-full">
+                  <Button type="submit" variant="outline" size="sm" className="h-11 w-full bg-blue-50 dark:bg-blue-500/10! whitespace-nowrap max-md:w-full">
                     Get the daily question
                   </Button>
                   <div className="col-[1/-1] flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-[#64748b]">
@@ -337,7 +337,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                 <Paragraph size="md" color="muted" className="mb-5">
                   What&apos;s actually in this test pool.
                 </Paragraph>
-                <div className="grid grid-cols-2 overflow-hidden rounded-[20px] border border-[#e3e5eb] bg-white max-md:grid-cols-1">
+                <div className="grid grid-cols-2 overflow-hidden rounded-[20px] border border-[#e3e5eb] bg-white dark:bg-neutral-800 max-md:grid-cols-1">
                   {[
                     { label: "Questions", value: typeof totalQuestions === "number" ? `${totalQuestions} questions` : "—" },
                     {
@@ -351,14 +351,14 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                   ].map((fact) => (
                     <div key={fact.label} className="min-h-24 border-r border-b border-[#e3e5eb] p-5 px-6 max-md:min-h-0 max-md:border-r-0">
                       <div className="mb-2 text-xs font-extrabold tracking-[0.04em] text-[#848894] uppercase">{fact.label}</div>
-                      <div className="text-base leading-[1.35] font-semibold text-black">{fact.value}</div>
+                      <div className="text-base leading-[1.35] font-semibold text-black dark:text-neutral-100">{fact.value}</div>
                     </div>
                   ))}
                 </div>
               </section>
 
               <section className="mb-11 scroll-mt-24" id="carSiblingIntent">
-                <div className="rounded-[20px] border border-[#e3e5eb] bg-white px-[30px] py-7 max-md:px-[18px] max-md:py-[22px]">
+                <div className="rounded-[20px] border border-[#e3e5eb] bg-white dark:bg-neutral-800 px-[30px] py-7 max-md:px-[18px] max-md:py-[22px]">
                   <Heading as="h2" size="2xs" className="mb-2.5">
                     {isDrivingTest
                       ? `Can you practice for the ${stateName} driving test online?`
@@ -387,7 +387,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
               <Heading as="h2" size="2xs" className="m-0 mb-3">
                 Are you in another state?
               </Heading>
-              <ul className="m-0 grid grid-cols-6 gap-1 rounded-2xl bg-[#f2f7ff] p-4 text-sm max-md:grid-cols-2 [&_a]:text-[#4e4e59] [&_a]:no-underline [&_a:hover]:text-[#007aff] [&_li]:p-1">
+              <ul className="m-0 grid grid-cols-6 gap-1 rounded-2xl bg-[#f2f7ff] dark:bg-blue-500/10 p-4 text-sm max-md:grid-cols-2 [&_a]:text-[#4e4e59] [&_a]:no-underline [&_a:hover]:text-[#007aff] [&_li]:p-1">
                 {usStates.map((s) =>
                   s === stateName ? (
                     <li key={s}>
@@ -404,7 +404,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
               </ul>
             </div>
 
-            <div id="partners" className="mx-auto mb-15 flex items-center justify-between gap-4 rounded-[20px] bg-[#f2f7ff] px-6 py-5" data-nosnippet="">
+            <div id="partners" className="mx-auto mb-15 flex items-center justify-between gap-4 rounded-[20px] bg-[#f2f7ff] dark:bg-blue-500/10 px-6 py-5" data-nosnippet="">
               <div className="w-full max-w-160 flex-1">
                 <Heading as="h4" size="2xs" className="m-0 mb-2">
                   An official &amp; trusted partner in driver education
@@ -445,8 +445,8 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                     Icon: BookOpen,
                   },
                 ].map((card) => (
-                  <div key={card.title} className="space-y-5 rounded-2xl border bg-white p-5">
-                    <div className="flex h-[55px] w-[55px] items-center justify-center rounded-[20px] bg-[#f2f7ff]">
+                  <div key={card.title} className="space-y-5 rounded-2xl border bg-white dark:bg-neutral-800 p-5">
+                    <div className="flex h-[55px] w-[55px] items-center justify-center rounded-[20px] bg-[#f2f7ff] dark:bg-blue-500/10">
                       <card.Icon className="h-6 w-6 text-[#007aff]" />
                     </div>
                     <div>
@@ -468,7 +468,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                   <Heading as="h2" size="2xs" color="white" className="m-0!">
                     {isDrivingTest ? "Get a free driving test tip every morning" : "Get a free DMV question every morning"}
                   </Heading>
-                  <Paragraph size="sm" className="m-0! text-gray-400!">
+                  <Paragraph size="sm" className="m-0! text-gray-400 dark:text-neutral-500!">
                     {isDrivingTest
                       ? "One road-skills tip and plain-English explanation in your inbox. Use it as a quick daily warm-up before test day."
                       : "One DMV-style permit question, answer, and plain-English rationale in your inbox. Use it as a quick daily warm-up before the test."}
@@ -488,7 +488,7 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
                     placeholder="you@example.com"
                     autoComplete="email"
                     required
-                    className="box-border h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-[#f97316]/60 focus:bg-white/10"
+                    className="box-border h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-gray-500 dark:placeholder:text-neutral-400 focus:border-[#f97316]/60 focus:bg-white/10"
                   />
                   <Button type="submit" size="md">
                     Send me the daily question

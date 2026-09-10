@@ -66,22 +66,22 @@ export default function HazardFeedbackCard({
       aria-label={`${typeLabel} hazard feedback`}
       className="absolute inset-0 z-30 flex items-center justify-center bg-neutral-950/70 p-4 backdrop-blur-sm"
     >
-      <div className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-md space-y-4 rounded-2xl bg-white dark:bg-neutral-800 p-6 shadow-2xl">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-700">
             <Check className="h-5 w-5" strokeWidth={3} />
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
               {phase === "demo" ? "Tutorial hazard" : "Hazard spotted"}
             </p>
-            <p className="flex items-center gap-1.5 font-semibold text-neutral-900">
-              <Icon className="h-4 w-4 text-blue-600" /> {typeLabel}
+            <p className="flex items-center gap-1.5 font-semibold text-neutral-900 dark:text-neutral-100">
+              <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {typeLabel}
             </p>
           </div>
         </div>
 
-        <p className="text-neutral-700">{comment ?? "Well spotted — keep watching for the next one."}</p>
+        <p className="text-neutral-700 dark:text-neutral-300">{comment ?? "Well spotted — keep watching for the next one."}</p>
 
         <Button onClick={onContinue} className="w-full" size="md">
           Continue

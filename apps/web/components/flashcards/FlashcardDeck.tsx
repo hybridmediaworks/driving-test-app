@@ -25,14 +25,14 @@ export default function FlashcardDeck({
   const [unknownCount, setUnknownCount] = useState(0);
 
   if (cards.length === 0) {
-    return <p className="py-10 text-center text-sm text-neutral-500">{emptyMessage}</p>;
+    return <p className="py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">{emptyMessage}</p>;
   }
 
   if (index >= cards.length) {
     return (
-      <div className="space-y-4 rounded-3xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-        <h2 className="text-xl font-semibold text-neutral-900">Deck complete</h2>
-        <p className="text-neutral-500">
+      <div className="space-y-4 rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-8 text-center shadow-sm">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">Deck complete</h2>
+        <p className="text-neutral-500 dark:text-neutral-400">
           {knownCount} known · {unknownCount} still learning
         </p>
         <Button
@@ -65,13 +65,13 @@ export default function FlashcardDeck({
 
   return (
     <div className="space-y-5">
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-700">
         <div
           className="h-full rounded-full bg-blue-600 transition-all"
           style={{ width: `${(index / cards.length) * 100}%` }}
         />
       </div>
-      <p className="text-center text-sm text-neutral-500">
+      <p className="text-center text-sm text-neutral-500 dark:text-neutral-400">
         Card {index + 1} of {cards.length}
       </p>
 

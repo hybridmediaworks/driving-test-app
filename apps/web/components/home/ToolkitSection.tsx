@@ -96,7 +96,7 @@ export default function ToolkitSection() {
       <div className="mx-auto max-w-container px-5">
         {/* Header */}
         <div className="flex flex-col items-center gap-6 text-center">
-          <p className="flex items-center gap-1.5 border-b border-blue-100 px-[14px] pt-[5px] pb-[6px] text-xs font-bold tracking-[1.2px] text-blue-700 uppercase">
+          <p className="flex items-center gap-1.5 border-b border-blue-100 px-[14px] pt-[5px] pb-[6px] text-xs font-bold tracking-[1.2px] text-blue-700 dark:text-blue-300 uppercase">
             <span aria-hidden="true">✦</span>
             The toolkit
           </p>
@@ -120,11 +120,11 @@ export default function ToolkitSection() {
             >
               {/* Text */}
               <div className={row.imageLeft ? "lg:order-2" : "lg:order-1"}>
-                <p className="inline-flex items-center gap-1.5 border-b border-blue-100 pb-1.5 text-xs font-bold tracking-[1.2px] text-blue-700 uppercase">
+                <p className="inline-flex items-center gap-1.5 border-b border-blue-100 pb-1.5 text-xs font-bold tracking-[1.2px] text-blue-700 dark:text-blue-300 uppercase">
                   <span aria-hidden="true">✦</span>
                   {row.eyebrow}
                 </p>
-                <h3 className="mt-6 font-sora text-[32px] leading-[1.12] font-semibold tracking-[-0.96px] text-neutral-900 sm:text-[40px] lg:text-[48px] lg:leading-[56px]">
+                <h3 className="mt-6 font-sora text-[32px] leading-[1.12] font-semibold tracking-[-0.96px] text-neutral-900 dark:text-neutral-100 sm:text-[40px] lg:text-[48px] lg:leading-[56px]">
                   {row.title}
                 </h3>
                 <Paragraph className="mt-4 max-w-[562px]" size="md">
@@ -136,7 +136,7 @@ export default function ToolkitSection() {
                       <span className="flex size-5 shrink-0 items-center justify-center rounded bg-blue-500">
                         <Check className="size-4 text-white" strokeWidth={3} />
                       </span>
-                      <span className="text-base leading-6 text-neutral-700">
+                      <span className="text-base leading-6 text-neutral-700 dark:text-neutral-300">
                         {bullet}
                       </span>
                     </li>
@@ -144,7 +144,7 @@ export default function ToolkitSection() {
                 </ul>
                 <Link
                   href={row.href}
-                  className="group mt-6 inline-flex items-center gap-1.5 text-base font-semibold text-blue-600"
+                  className="group mt-6 inline-flex items-center gap-1.5 text-base font-semibold text-blue-600 dark:text-blue-400"
                 >
                   {row.cta}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />

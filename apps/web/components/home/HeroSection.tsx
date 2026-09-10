@@ -141,7 +141,7 @@ export default function HeroSection() {
               {AVATARS.map((src, i) => (
                 <span
                   key={src}
-                  className={`relative size-10 overflow-hidden rounded-full border-2 border-white ${
+                  className={`relative size-10 overflow-hidden rounded-full border-2 border-white dark:border-neutral-700 ${
                     i > 0 ? "-ml-4" : ""
                   }`}
                 >
@@ -156,10 +156,10 @@ export default function HeroSection() {
               ))}
             </div>
             <p className="text-center text-base leading-6">
-              <span className="font-bold text-neutral-900">4.8M+ drivers</span>
-              <span className="text-neutral-700"> prepared · </span>
-              <span className="font-bold text-neutral-900">97%</span>
-              <span className="text-neutral-700"> pass first try</span>
+              <span className="font-bold text-neutral-900 dark:text-neutral-100">4.8M+ drivers</span>
+              <span className="text-neutral-700 dark:text-neutral-300"> prepared · </span>
+              <span className="font-bold text-neutral-900 dark:text-neutral-100">97%</span>
+              <span className="text-neutral-700 dark:text-neutral-300"> pass first try</span>
             </p>
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function HeroSection() {
             {GALLERY_CARDS.map((card, i) => (
               <div
                 key={card.src}
-                className="absolute bottom-[34px] overflow-hidden rounded-[18px] border-[3px] border-white shadow-[0_0_22px_rgba(196,210,238,0.45),0_4px_10px_rgba(28,48,86,0.07),0_15px_28px_rgba(28,48,86,0.11),0_32px_52px_rgba(28,48,86,0.13)]"
+                className="absolute bottom-[34px] overflow-hidden rounded-[18px] border-[3px] border-white dark:border-neutral-700 shadow-[0_0_22px_rgba(196,210,238,0.45),0_4px_10px_rgba(28,48,86,0.07),0_15px_28px_rgba(28,48,86,0.11),0_32px_52px_rgba(28,48,86,0.13)]"
                 style={{
                   left: `${card.left}px`,
                   width: `${card.w}px`,

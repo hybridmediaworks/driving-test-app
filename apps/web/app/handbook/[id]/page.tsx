@@ -102,20 +102,20 @@ function TrackControl({
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-opacity hover:bg-blue-700 disabled:opacity-60"
       >
         {isLoading ? (
-          <span className="h-3 w-3 animate-pulse rounded-full bg-white" />
+          <span className="h-3 w-3 animate-pulse rounded-full bg-white dark:bg-neutral-800" />
         ) : isPlaying ? (
           <Pause className="h-4 w-4" />
         ) : (
           <Play className="h-4 w-4 translate-x-px" />
         )}
       </button>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-600">
         <div
           className="h-full rounded-full bg-blue-600 transition-[width] duration-200"
           style={{ width: `${isActive ? percent : 0}%` }}
         />
       </div>
-      <span className="w-16 shrink-0 text-right text-xs tabular-nums text-neutral-500">
+      <span className="w-16 shrink-0 text-right text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
         {formatDuration(isActive ? elapsedSeconds : 0)} / {formatDuration(totalSeconds)}
       </span>
     </div>
@@ -346,13 +346,13 @@ function HandbookReaderPageInner({ params }: { params: Promise<{ id: string }> }
         <main className="flex-1">
           <div className="mx-auto max-w-4xl space-y-4 px-5 py-10 lg:py-14">
             {notFoundError && <p className="text-center text-sm text-destructive">{notFoundError}</p>}
-            {!handbook && !notFoundError && <p className="text-center text-sm text-neutral-500">Loading…</p>}
+            {!handbook && !notFoundError && <p className="text-center text-sm text-neutral-500 dark:text-neutral-400">Loading…</p>}
 
             {handbook && (
               <>
-                <div className="space-y-4 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="space-y-4 rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h1 className="text-xl font-semibold text-neutral-900">{handbook.title}</h1>
+                    <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{handbook.title}</h1>
                     {handbook.pdf_url && (
                       <Button onClick={handleDownload} disabled={downloading}>
                         {downloading ? "Preparing PDF…" : "Download PDF"}
@@ -369,16 +369,16 @@ function HandbookReaderPageInner({ params }: { params: Promise<{ id: string }> }
                     />
                   )}
                   {speechSupported && documentTotalSeconds === null && (
-                    <p className="text-xs text-neutral-500">Preparing audio…</p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">Preparing audio…</p>
                   )}
                 </div>
                 {listenError && <p className="text-sm text-destructive">{listenError}</p>}
                 {downloadError && <p className="text-sm text-destructive">{downloadError}</p>}
 
                 {chapters && chapters.length > 0 && (
-                  <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="mb-3 text-sm font-semibold text-neutral-900">Chapters</h2>
-                    <ul className="divide-y divide-gray-100">
+                  <div className="rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-6 shadow-sm">
+                    <h2 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-100">Chapters</h2>
+                    <ul className="divide-y divide-gray-100 dark:divide-white/10">
                       {visibleChapters.map((chapter) => {
                         const info = trackInfo({ type: "chapter", number: chapter.number });
                         return (
@@ -386,7 +386,7 @@ function HandbookReaderPageInner({ params }: { params: Promise<{ id: string }> }
                             <button
                               type="button"
                               onClick={() => setCurrentPage(chapter.start_page)}
-                              className="block truncate text-left text-sm font-medium text-neutral-700 hover:text-blue-700"
+                              className="block truncate text-left text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-blue-700 dark:hover:text-blue-300"
                             >
                               {chapter.number}. {chapter.title}
                             </button>
@@ -407,7 +407,7 @@ function HandbookReaderPageInner({ params }: { params: Promise<{ id: string }> }
                       <button
                         type="button"
                         onClick={() => setChaptersExpanded((expanded) => !expanded)}
-                        className="mt-3 text-sm font-medium text-blue-700 hover:underline"
+                        className="mt-3 text-sm font-medium text-blue-700 dark:text-blue-300 hover:underline"
                       >
                         {chaptersExpanded ? "Show less" : `Show more (${chapters.length - CHAPTERS_COLLAPSED_COUNT})`}
                       </button>
@@ -416,7 +416,7 @@ function HandbookReaderPageInner({ params }: { params: Promise<{ id: string }> }
                 )}
 
                 {handbook.pdf_url ? (
-                  <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+                  <div className="overflow-hidden rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 shadow-sm">
                     <iframe
                       src={currentPage ? `${handbook.pdf_url}#page=${currentPage}` : handbook.pdf_url}
                       title={handbook.title}
@@ -424,7 +424,7 @@ function HandbookReaderPageInner({ params }: { params: Promise<{ id: string }> }
                     />
                   </div>
                 ) : (
-                  <p className="rounded-3xl border border-gray-100 bg-white p-8 text-center text-sm text-neutral-500 shadow-sm">
+                  <p className="rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-8 text-center text-sm text-neutral-500 dark:text-neutral-400 shadow-sm">
                     No PDF is available for this handbook yet.
                   </p>
                 )}

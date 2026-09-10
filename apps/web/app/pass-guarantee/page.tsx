@@ -62,7 +62,7 @@ export default function PassGuaranteePage() {
     <AppLayout breadcrumbs={[{ title: "Pass Guarantee", href: "/pass-guarantee" }]}>
       <div className="app-page space-y-8">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">Pass Guarantee</h1>
+          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Pass Guarantee</h1>
           <p className="text-sm text-muted-foreground">
             Complete an Exam Simulator attempt on an active plan and still don&apos;t pass your official test? Submit a
             claim below.
@@ -102,7 +102,7 @@ export default function PassGuaranteePage() {
         )}
 
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-neutral-900">Your claims</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Your claims</h2>
           {claims && claims.length === 0 && <p className="text-sm text-muted-foreground">No claims submitted yet.</p>}
           {claims?.map((claim) => (
             <div key={claim.id} className="space-y-1 rounded-xl border p-4 text-sm">

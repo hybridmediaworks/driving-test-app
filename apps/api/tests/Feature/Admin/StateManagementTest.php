@@ -53,6 +53,47 @@ class StateManagementTest extends TestCase
         $this->assertDatabaseHas('states', ['code' => 'ZZ', 'name' => 'Zzyzx']);
     }
 
+    public function test_admin_can_publish_the_permit_test_facts_for_a_state(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $state = State::factory()->create(['code' => 'WV', 'name' => 'West Virginia']);
+
+        $response = $this->actingAs($admin, 'sanctum')->putJson("/api/v1/admin/states/{$state->id}", [
+            'code' => 'WV',
+            'name' => 'West Virginia',
+            'agency_name' => 'DMV',
+            'dmv_website_url' => 'https://transportation.wv.gov/DMV',
+            'permit_test_fee_cents' => 1500,
+            'retake_wait_days' => 7,
+            'supervised_driving_hours' => 40,
+            'minimum_permit_age' => 15,
+            'test_language_count' => 2,
+            'online_testing_available' => true,
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('state.permit_test_fee_cents', 1500);
+        $response->assertJsonPath('state.retake_wait_days', 7);
+        $response->assertJsonPath('state.supervised_driving_hours', 40);
+        $response->assertJsonPath('state.minimum_permit_age', 15);
+        $response->assertJsonPath('state.test_language_count', 2);
+        $response->assertJsonPath('state.online_testing_available', true);
+    }
+
+    public function test_permit_test_facts_are_optional_and_come_back_null_when_unpublished(): void
+    {
+        $state = State::factory()->create(['code' => 'WV', 'name' => 'West Virginia']);
+
+        $response = $this->getJson('/api/v1/states');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.0.permit_test_fee_cents', null);
+        $response->assertJsonPath('data.0.minimum_permit_age', null);
+        // Null, not false — "not published for this state" is distinct from "no online testing".
+        $response->assertJsonPath('data.0.online_testing_available', null);
+        $this->assertSame($state->code, $response->json('data.0.code'));
+    }
+
     public function test_admin_cannot_create_a_state_with_duplicate_code(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

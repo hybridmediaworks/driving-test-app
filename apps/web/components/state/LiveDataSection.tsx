@@ -45,12 +45,12 @@ export default function LiveDataSection() {
   const sessionLength = formatSessionLength(stats?.avg_session_seconds ?? null);
 
   return (
-    <div className="z-10 relative md:p-15 p-5 text-center space-y-12 bg-[linear-gradient(180deg,#fff_0%,#F0FDF4_100%)] shadow-hover max-w-container mx-auto rounded-4xl">
+    <div className="z-10 relative md:p-15 p-5 text-center space-y-12 bg-[linear-gradient(180deg,#fff_0%,#F0FDF4_100%)] dark:bg-[linear-gradient(180deg,#1a1a1a_0%,#16211b_100%)] shadow-hover max-w-container mx-auto rounded-4xl">
       <Heading as="h3" className="max-w-162 mx-auto">
         How {selectedState} students are practicing
       </Heading>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
           <Paragraph size="lg" color="muted" className="leading-4!">
             {personLabel.charAt(0).toUpperCase() + personLabel.slice(1)}{" "}
             practiced
@@ -59,7 +59,7 @@ export default function LiveDataSection() {
             {stats ? stats.students_practiced_30d.toLocaleString() : "—"}
           </Heading>
         </div>
-        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
           <Paragraph size="lg" color="muted" className="leading-4!">
             Questions answered
           </Paragraph>
@@ -67,7 +67,7 @@ export default function LiveDataSection() {
             {stats ? stats.questions_answered_total.toLocaleString() : "—"}
           </Heading>
         </div>
-        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
           <Paragraph size="lg" color="muted" className="leading-4!">
             Average study session
           </Paragraph>
@@ -76,7 +76,7 @@ export default function LiveDataSection() {
           </Heading>
         </div>
 
-        <div className="bg-white rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
           <Paragraph size="lg" color="muted" className="leading-4!">
             Pass rate with premium
           </Paragraph>

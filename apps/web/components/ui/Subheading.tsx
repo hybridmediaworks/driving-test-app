@@ -19,7 +19,7 @@ export default function Subheading({
 }) {
   return (
     <Paragraph
-      className={`max-w-fit border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase ${alignClasses[align]} ${className}`}
+      className={`max-w-fit border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase ${alignClasses[align]} ${className}`}
       size="xs"
       color="primary"
     >

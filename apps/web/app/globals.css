@@ -141,6 +141,15 @@
 
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
+
+  /* Card washes — the tinted corner and the surface it fades into, for the home-page feature
+     cards. They live here (rather than in the class list) because those gradients are set through
+     an inline `style` prop, which a `dark:` variant can't reach. */
+  --wash-base: #ffffff;
+  --wash-blue: #dbeafe;
+  --wash-green: #dcfce7;
+  --wash-yellow: #fefce8;
+  --wash-red: #fef2f2;
 }
 
 button {
@@ -350,6 +359,18 @@ button {
 
 .dark {
   --background: oklch(0.145 0 0);
+  /* The site's two extra page grounds (cream tints in light mode) — without these the marketing
+     sections keep painting a light cream band behind dark text once Night Mode is on. Both sit
+     between the page ground and the card surface (neutral-800) so bands and cards stay apart. */
+  --background2: oklch(0.185 0 0);
+  --background3: oklch(0.225 0 0);
+  --sidebar-background: oklch(0.185 0 0);
+
+  --wash-base: #262626;
+  --wash-blue: #1b3050;
+  --wash-green: #143021;
+  --wash-yellow: #302a12;
+  --wash-red: #3a1d1d;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);

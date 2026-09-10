@@ -921,17 +921,17 @@ function QuizTaker({
         }}
         className="hidden"
       />
-      <div className="bg-white sticky top-0 z-90">
+      <div className="bg-white dark:bg-neutral-800 sticky top-0 z-90">
         <div className="max-w-container lg:mx-auto mx-5  flex items-center justify-between gap-3 py-3.5">
-          <Button href={exitHref} variant="ghost" className=" text-neutral-700 p-0!" size="sm">
-            <LogOut className="w-5 h-5 text-neutral-500" />
+          <Button href={exitHref} variant="ghost" className=" text-neutral-700 dark:text-neutral-300 p-0!" size="sm">
+            <LogOut className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
             {t("exit")}
           </Button>
           <div className="flex shrink-0 items-center justify-center gap-4">
             <Paragraph
               size="sm"
               color="primary"
-              className="hidden md:block rounded-full border border-blue-300 bg-blue-50 px-3 py-0.5 font-semibold"
+              className="hidden md:block rounded-full border border-blue-300 bg-blue-50 dark:bg-blue-500/10 px-3 py-0.5 font-semibold"
             >
               ✦ {t("practiceBadge")}
             </Paragraph>
@@ -957,10 +957,10 @@ function QuizTaker({
 
       <section className="pt-6 lg:pt-15 pb-35 px-5">
         <div className="max-w-container mx-auto grid lg:grid-cols-3 grid-cols-1 gap-4">
-          <div className="lg:col-span-2 p-5 lg:p-8 rounded-3xl border border-border bg-white shadow-[0_20px_50px_-26px_rgba(23,37,84,0.25)] space-y-4">
+          <div className="lg:col-span-2 p-5 lg:p-8 rounded-3xl border border-border bg-white dark:bg-neutral-800 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.25)] space-y-4">
             <div className="flex items-center justify-between gap-1 ">
               <div className="flex items-center sm:gap-4 gap-2 flex-wrap">
-                <Paragraph size="sm" color="primary" className=" rounded-full  bg-blue-50 px-3 py-1 font-semibold">
+                <Paragraph size="sm" color="primary" className=" rounded-full  bg-blue-50 dark:bg-blue-500/10 px-3 py-1 font-semibold">
                   {currentQuestion.topic ?? quiz.category?.title ?? "General"}
                 </Paragraph>
                 <Paragraph size="sm">
@@ -973,14 +973,14 @@ function QuizTaker({
                   className={`h-6 w-6 cursor-pointer ${
                     currentQuestion && flaggedIds.has(currentQuestion.id)
                       ? "fill-amber-400 text-amber-500"
-                      : "text-neutral-500"
+                      : "text-neutral-500 dark:text-neutral-400"
                   }`}
                 />
                 <div className="relative" ref={settingsRef}>
-                  <Settings onClick={() => setSettingsOpen((v) => !v)} className="h-6 w-6 cursor-pointer text-neutral-500" />
+                  <Settings onClick={() => setSettingsOpen((v) => !v)} className="h-6 w-6 cursor-pointer text-neutral-500 dark:text-neutral-400" />
 
                   {settingsOpen && (
-                    <div className="absolute top-full right-0 z-50 mt-2 w-72 rounded-lg border bg-white p-3 shadow-lg">
+                    <div className="absolute top-full right-0 z-50 mt-2 w-72 rounded-lg border bg-white dark:bg-neutral-800 p-3 shadow-lg">
                       <div className="flex items-center justify-between py-1.5">
                         <Paragraph size="sm" color="dark">
                           {t("voiceOver")}
@@ -1006,7 +1006,7 @@ function QuizTaker({
                           <select
                             value={ambientTrack ?? ""}
                             onChange={(e) => setAmbientTrack(Number(e.target.value))}
-                            className="w-full rounded-full bg-neutral-100 px-3 py-2 text-sm"
+                            className="w-full rounded-full bg-neutral-100 dark:bg-neutral-700 px-3 py-2 text-sm"
                           >
                             {ambientTracks.map((track) => (
                               <option key={track.id} value={track.id}>
@@ -1041,22 +1041,22 @@ function QuizTaker({
                           setSettingsOpen(false);
                           setShowShortcuts(true);
                         }}
-                        className="flex w-full cursor-pointer items-center justify-between rounded-md py-1.5 transition-colors hover:bg-neutral-50"
+                        className="flex w-full cursor-pointer items-center justify-between rounded-md py-1.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                       >
                         <Paragraph size="sm" color="dark">
                           {t("keyboardShortcuts")}
                         </Paragraph>
-                        <span className="rounded-md bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-500">
+                        <span className="rounded-md bg-neutral-100 dark:bg-neutral-700 px-2 py-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400">
                           Shift + ?
                         </span>
                       </button>
-                      <div className="flex items-center justify-center gap-1 rounded-full bg-neutral-100 p-1 text-sm">
+                      <div className="flex items-center justify-center gap-1 rounded-full bg-neutral-100 dark:bg-neutral-700 p-1 text-sm">
                         <button
                           type="button"
                           disabled={translating}
                           onClick={() => changeLanguage("en")}
                           className={`rounded-full px-4 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                            language === "en" ? "bg-blue-600 text-white" : "text-neutral-500"
+                            language === "en" ? "bg-blue-600 text-white" : "text-neutral-500 dark:text-neutral-400"
                           }`}
                         >
                           English
@@ -1066,7 +1066,7 @@ function QuizTaker({
                           disabled={translating}
                           onClick={() => changeLanguage("es")}
                           className={`rounded-full px-3 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                            language === "es" ? "bg-blue-600 text-white" : "text-neutral-500"
+                            language === "es" ? "bg-blue-600 text-white" : "text-neutral-500 dark:text-neutral-400"
                           }`}
                         >
                           Spanish
@@ -1077,7 +1077,7 @@ function QuizTaker({
                           disabled={translating}
                           onClick={() => changeLanguage("ru")}
                           className={`rounded-full px-3 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                            language === "ru" ? "bg-blue-600 text-white" : "text-neutral-500"
+                            language === "ru" ? "bg-blue-600 text-white" : "text-neutral-500 dark:text-neutral-400"
                           }`}
                         >
                           Russian
@@ -1115,7 +1115,7 @@ function QuizTaker({
           </div>
 
           <div className="space-y-4">
-            <div className=" rounded-2xl border border-border bg-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
+            <div className=" rounded-2xl border border-border bg-white dark:bg-neutral-800 p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
                   <Paragraph size="2xl" color="dark" className="font-semibold">
@@ -1128,7 +1128,7 @@ function QuizTaker({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowRestartConfirm(true)}
-                  className="border border-blue-300 hover:bg-blue-50"
+                  className="border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
                 >
                   <RotateCcw className="h-3.5 w-3.5" /> <span className="hidden md:inline-block">{t("restart")}</span>
                 </Button>
@@ -1149,12 +1149,12 @@ function QuizTaker({
                     className={`flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-1.5 transition-colors ${
                       progressFilter === tab.key
                         ? "border-transparent bg-blue-1000 text-white"
-                        : "border-border bg-white text-neutral-700 hover:bg-neutral-50"
+                        : "border-border bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700"
                     }`}
                   >
                     {tab.label}
                     <span
-                      className={progressFilter === tab.key ? "text-white/70" : "text-neutral-400"}
+                      className={progressFilter === tab.key ? "text-white/70" : "text-neutral-400 dark:text-neutral-500"}
                     >
                       {tab.count}
                     </span>
@@ -1183,8 +1183,8 @@ function QuizTaker({
                         : check?.is_correct === false
                           ? "border-red-200 bg-red-50 text-red-500"
                           : answers[question.id] !== undefined
-                            ? "border-blue-200 bg-blue-50 text-blue-600"
-                            : "border-border bg-background text-neutral-500";
+                            ? "border-blue-200 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                            : "border-border bg-background text-neutral-500 dark:text-neutral-400";
                     return (
                       <button
                         key={question.id}
@@ -1214,12 +1214,12 @@ function QuizTaker({
             />
           </div>
         </div>
-        <div className="bg-white border-t border py-4 px-5 h-20 fixed w-full bottom-0 left-0">
+        <div className="bg-white dark:bg-neutral-800 border-t border py-4 px-5 h-20 fixed w-full bottom-0 left-0">
           <div className="max-w-container mx-auto relative flex items-center justify-between gap-2">
             {streak >= 2 && <StreakBadge key={streak} streak={streak} language={language} />}
             <Button
               variant="ghost"
-              className=" text-neutral-700 p-0!"
+              className=" text-neutral-700 dark:text-neutral-300 p-0!"
               size="sm"
               onClick={() => setShowReportDialog(true)}
             >
@@ -1232,7 +1232,7 @@ function QuizTaker({
                 size="md"
                 disabled={currentIndex === 0}
                 onClick={previousQuestion}
-                className="border border-blue-300 hover:bg-blue-50"
+                className="border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
               >
                 <ArrowLeft /> {t("previous")}
               </Button>

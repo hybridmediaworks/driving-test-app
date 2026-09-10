@@ -15,9 +15,9 @@ export default function SimulatorCard({ simulator }: { simulator: PublicHazardSi
   return (
     <Link
       href={`/hazard-simulator/${simulator.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-transform hover:-translate-y-0.5"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white dark:bg-neutral-800 shadow-card transition-transform hover:-translate-y-0.5"
     >
-      <div className="relative aspect-video w-full overflow-hidden bg-neutral-100">
+      <div className="relative aspect-video w-full overflow-hidden bg-neutral-100 dark:bg-neutral-700">
         {simulator.thumbnail_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={simulator.thumbnail_url} alt="" className="h-full w-full object-cover" />
@@ -29,13 +29,13 @@ export default function SimulatorCard({ simulator }: { simulator: PublicHazardSi
         )}
         {simulator.locked && (
           <span className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-[2px]">
-            <Lock className="h-6 w-6 text-blue-700" />
+            <Lock className="h-6 w-6 text-blue-700 dark:text-blue-300" />
           </span>
         )}
       </div>
       <div className="space-y-2 p-4">
-        <p className="font-semibold text-neutral-900">{simulator.title}</p>
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500">
+        <p className="font-semibold text-neutral-900 dark:text-neutral-100">{simulator.title}</p>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
           <span className="font-semibold text-blue-500">{simulator.hazard_count} hazards</span>
           {simulator.duration_seconds ? <span>{formatDuration(simulator.duration_seconds)}</span> : null}
           {simulator.test_level && (
@@ -56,7 +56,7 @@ export default function SimulatorCard({ simulator }: { simulator: PublicHazardSi
                 ? "text-green-600"
                 : simulator.passed === false
                   ? "text-red-600"
-                  : "text-neutral-500"
+                  : "text-neutral-500 dark:text-neutral-400"
             }`}
           >
             {simulator.passed === true && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}

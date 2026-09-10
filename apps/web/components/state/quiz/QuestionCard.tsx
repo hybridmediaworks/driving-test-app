@@ -172,8 +172,8 @@ export default function QuestionCard({
               : isChosenWrong
                 ? "border-red-300 bg-red-50"
                 : isSelected && !isChecked
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-border hover:bg-neutral-50";
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10"
+                  : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-700";
 
             const badgeClass = isCorrectOption
               ? "bg-green-500 text-white"
@@ -181,7 +181,7 @@ export default function QuestionCard({
                 ? "bg-red-500 text-white"
                 : isSelected && !isChecked
                   ? "bg-blue-600 text-white"
-                  : "bg-neutral-100 text-neutral-500";
+                  : "bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400";
 
             return (
               <div
@@ -207,7 +207,7 @@ export default function QuestionCard({
                   {isChecked && (answerPopularity || isCorrectOption || isChosenWrong) && (
                     <div className="flex shrink-0 items-center gap-2">
                       {answerPopularity && popularity !== undefined && (
-                        <span className="text-xs font-semibold text-neutral-500">{popularity}%</span>
+                        <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{popularity}%</span>
                       )}
                       {isCorrectOption && (
                         <>

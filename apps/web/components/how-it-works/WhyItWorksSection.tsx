@@ -9,7 +9,7 @@ export default function WhyItWorksSection() {
       <div className="mx-auto max-w-container space-y-12 px-5">
         <div className="space-y-4 max-w-205">
           <Paragraph
-            className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
+            className="mb-2 border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
             size="xs"
             color="primary"
           >
@@ -25,8 +25,8 @@ export default function WhyItWorksSection() {
           </Paragraph>
         </div>
         <div className="grid gap-5 grid-cols-1 lg:grid-cols-2">
-          <div className="relative rounded-2xl border bg-white p-5 lg:p-8 space-y-6 shadow-card">
-            <BrainCircuit className="bg-blue-50 p-3.5 rounded-[11px] w-13.5 h-13.5 text-blue-600" />
+          <div className="relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-8 space-y-6 shadow-card">
+            <BrainCircuit className="bg-blue-50 dark:bg-blue-500/10 p-3.5 rounded-[11px] w-13.5 h-13.5 text-blue-600 dark:text-blue-400" />
             <Heading size="sm" className="mb-3">
               Adaptive AI, not a fixed deck
             </Heading>
@@ -41,8 +41,8 @@ export default function WhyItWorksSection() {
               set. [Dummy data — CLIENT TO CONFIRM]
             </Paragraph>
           </div>
-          <div className="relative rounded-2xl border bg-white p-5 lg:p-8 space-y-6 shadow-card">
-            <Database className="bg-blue-50 p-3.5 rounded-[11px] w-13.5 h-13.5 text-blue-600" />
+          <div className="relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-8 space-y-6 shadow-card">
+            <Database className="bg-blue-50 dark:bg-blue-500/10 p-3.5 rounded-[11px] w-13.5 h-13.5 text-blue-600 dark:text-blue-400" />
             <Heading size="sm" className="mb-3">
               Adaptive AI, not a fixed deck
             </Heading>

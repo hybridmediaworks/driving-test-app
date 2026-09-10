@@ -228,7 +228,7 @@ export default function HandbookSection() {
                 {chapterChips.map((chapter) => (
                   <li
                     key={chapter.number}
-                    className="rounded-2xl border border-background2 bg-white px-4 py-2 text-sm leading-5 text-neutral-700"
+                    className="rounded-2xl border border-background2 bg-white dark:bg-neutral-800 px-4 py-2 text-sm leading-5 text-neutral-700 dark:text-neutral-300"
                   >
                     {chapter.title}
                   </li>
@@ -239,7 +239,7 @@ export default function HandbookSection() {
 
           <Link
             href={`/handbook/${handbook.id}`}
-            className="inline-flex items-center gap-1.5 text-base leading-6 font-bold text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1.5 text-base leading-6 font-bold text-blue-600 dark:text-blue-400 hover:underline"
           >
             Open handbook <span aria-hidden>&rarr;</span>
           </Link>
@@ -265,17 +265,17 @@ export default function HandbookSection() {
                   </div>
                   <div className="flex flex-col gap-6">
                     <div className="flex flex-col gap-4">
-                      <span className="flex size-10.5 items-center justify-center rounded-lg border border-blue-50 bg-white text-blue-500">
+                      <span className="flex size-10.5 items-center justify-center rounded-lg border border-blue-50 dark:border-blue-500/20 bg-white dark:bg-neutral-800 text-blue-500">
                         <Icon className="size-5" />
                       </span>
                       <div className="space-y-2">
-                        <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900">
+                        <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100">
                           {card.title}
                         </h3>
                         <Paragraph>{card.body}</Paragraph>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 text-base leading-6 font-bold text-blue-600">
+                    <span className="inline-flex items-center gap-1.5 text-base leading-6 font-bold text-blue-600 dark:text-blue-400">
                       {card.cta} <span aria-hidden>&rarr;</span>
                     </span>
                   </div>
@@ -283,7 +283,7 @@ export default function HandbookSection() {
               );
 
               const cardClass =
-                "flex h-[433px] w-[300px] shrink-0 snap-start flex-col gap-6 rounded-[32px] border border-background3 bg-white p-6 text-left shadow-[0px_4px_24px_0px_rgba(157,175,181,0.25)] transition-transform duration-300 hover:-translate-y-1 sm:w-[320px]";
+                "flex h-[433px] w-[300px] shrink-0 snap-start flex-col gap-6 rounded-[32px] border border-background3 bg-white dark:bg-neutral-800 p-6 text-left shadow-[0px_4px_24px_0px_rgba(157,175,181,0.25)] transition-transform duration-300 hover:-translate-y-1 sm:w-[320px]";
 
               return card.href ? (
                 <Link key={card.title} href={card.href} className={cardClass}>
@@ -312,7 +312,7 @@ export default function HandbookSection() {
             aria-label="Previous handbook option"
             aria-hidden={!canScrollPrev}
             tabIndex={canScrollPrev ? 0 : -1}
-            className={`absolute top-1/2 left-0 hidden size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.12)] transition-opacity duration-200 lg:flex ${
+            className={`absolute top-1/2 left-0 hidden size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-blue-100 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.12)] transition-opacity duration-200 lg:flex ${
               canScrollPrev ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
@@ -324,7 +324,7 @@ export default function HandbookSection() {
             aria-label="Next handbook option"
             aria-hidden={!canScrollNext}
             tabIndex={canScrollNext ? 0 : -1}
-            className={`absolute top-1/2 right-0 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.12)] transition-opacity duration-200 lg:flex ${
+            className={`absolute top-1/2 right-0 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-blue-100 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.12)] transition-opacity duration-200 lg:flex ${
               canScrollNext ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >

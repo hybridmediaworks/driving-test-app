@@ -65,7 +65,7 @@ export default function SignedInHero() {
 
         <a
           href="#"
-          className="text-sm font-semibold text-blue-700 hover:underline"
+          className="text-sm font-semibold text-blue-700 dark:text-blue-300 hover:underline"
         >
           {examDate
             ? `Reschedule exam date · ${formatExamDate(examDate)}`

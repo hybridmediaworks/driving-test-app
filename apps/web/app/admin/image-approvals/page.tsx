@@ -192,13 +192,13 @@ function ApprovalRow({
             onClick={generate}
             disabled={busy !== null}
             spinning={busy === "generate"}
-            className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            className="border-blue-200 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10"
           />
 
           <label
             title="Upload image"
             aria-label="Upload image"
-            className={`inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border text-neutral-700 transition hover:bg-neutral-50 ${
+            className={`inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border text-neutral-700 dark:text-neutral-300 transition hover:bg-neutral-50 dark:hover:bg-neutral-700 ${
               busy !== null ? "pointer-events-none opacity-50" : ""
             }`}
           >

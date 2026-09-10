@@ -194,7 +194,7 @@ export default function DrivingVideosSection() {
             <div key={section} className="space-y-5">
               <div className="space-y-1">
                 <Paragraph size="lg" className="font-semibold" color="dark">
-                  {section} <span className="font-normal text-neutral-400">({sectionVideos.length})</span>
+                  {section} <span className="font-normal text-neutral-400 dark:text-neutral-500">({sectionVideos.length})</span>
                 </Paragraph>
                 {SECTION_BLURBS[section] && (
                   <Paragraph size="sm" color="muted">

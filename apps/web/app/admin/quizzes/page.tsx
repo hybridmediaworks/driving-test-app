@@ -152,7 +152,7 @@ function QuizzesIndexInner() {
                             {q.is_active ? (
                               <span className="text-xs text-muted-foreground">Active</span>
                             ) : (
-                              <span className="text-xs text-neutral-500">Inactive</span>
+                              <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">

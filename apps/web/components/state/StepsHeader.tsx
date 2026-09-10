@@ -16,12 +16,12 @@ export default function StepsHeader({ headerInfo }: { headerInfo?: HeaderInfo })
         )}
         <div>
           <h2 className="text-3xl font-semibold">{headerInfo?.headerTitle}</h2>
-          <p className="text-base text-gray-500">{headerInfo?.headerDesc}</p>
+          <p className="text-base text-gray-500 dark:text-neutral-400">{headerInfo?.headerDesc}</p>
         </div>
       </div>
 
       {headerInfo?.totalQuestions && (
-        <span className="w-1/5 text-right text-sm text-gray-400">{headerInfo.totalQuestions} questions + Marathon</span>
+        <span className="w-1/5 text-right text-sm text-gray-400 dark:text-neutral-500">{headerInfo.totalQuestions} questions + Marathon</span>
       )}
     </div>
   );

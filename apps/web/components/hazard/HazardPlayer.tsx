@@ -321,26 +321,26 @@ export default function HazardPlayer({
           {Array.from({ length: totalScored }).map((_, i) => (
             <span
               key={i}
-              className={`h-2.5 w-2.5 rounded-full ${i < spottedCount ? "bg-green-500" : "bg-neutral-300"}`}
+              className={`h-2.5 w-2.5 rounded-full ${i < spottedCount ? "bg-green-500" : "bg-neutral-300 dark:bg-neutral-600"}`}
             />
           ))}
         </div>
         {phase === "assessment" ? (
-          <p className="font-semibold tracking-wide text-neutral-900">{remaining} REMAINING</p>
+          <p className="font-semibold tracking-wide text-neutral-900 dark:text-neutral-100">{remaining} REMAINING</p>
         ) : (
-          <p className="font-medium text-blue-600">
+          <p className="font-medium text-blue-600 dark:text-blue-400">
             {phase === "demo" ? "Walkthrough" : phase === "handoff" ? "Get ready" : ""}
           </p>
         )}
         <div className="flex items-center gap-2">
-          <span className="tabular-nums text-neutral-500">
+          <span className="tabular-nums text-neutral-500 dark:text-neutral-400">
             {formatClock(currentTime)} / {formatClock(duration)}
           </span>
           {phase === "assessment" && !feedback && (
             <button
               type="button"
               onClick={() => (paused ? player?.play() : player?.pause())}
-              className="rounded-full p-1.5 text-neutral-600 hover:bg-neutral-100"
+              className="rounded-full p-1.5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
               aria-label={paused ? "Resume" : "Pause"}
             >
               {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
@@ -349,7 +349,7 @@ export default function HazardPlayer({
           <button
             type="button"
             onClick={onExit}
-            className="rounded-full p-1.5 text-neutral-400 hover:bg-neutral-100"
+            className="rounded-full p-1.5 text-neutral-400 dark:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700"
             aria-label="Exit simulator"
           >
             <X className="h-4 w-4" />
@@ -444,7 +444,7 @@ export default function HazardPlayer({
       </div>
 
       {phase === "assessment" && (
-        <p className="text-center text-xs text-neutral-400">Click a hazard as it develops · Space to pause</p>
+        <p className="text-center text-xs text-neutral-400 dark:text-neutral-500">Click a hazard as it develops · Space to pause</p>
       )}
     </div>
   );

@@ -122,7 +122,7 @@ export default function BillingSettingsPage() {
                 {subscription.subscription?.on_trial ? "Free trial" : subscription.status}
               </p>
               {subscription.subscription?.on_trial && subscription.subscription.trial_ends_at && (
-                <p className="rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
+                <p className="rounded-lg bg-blue-50 dark:bg-blue-500/10 p-3 text-sm text-blue-900">
                   You&apos;re on a free trial until{" "}
                   <strong>{new Date(subscription.subscription.trial_ends_at).toLocaleDateString()}</strong>. After
                   that, your card will be charged automatically for the {TIER_LABELS[subscription.tier] ?? subscription.tier}{" "}
@@ -192,7 +192,7 @@ export default function BillingSettingsPage() {
                     <TableCell>{invoice.status}</TableCell>
                     <TableCell>
                       {invoice.hosted_invoice_url && (
-                        <a href={invoice.hosted_invoice_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                        <a href={invoice.hosted_invoice_url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
                           View
                         </a>
                       )}

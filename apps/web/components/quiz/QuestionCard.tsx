@@ -22,9 +22,9 @@ export default function QuestionCard({
   const lottieAsset = question.assets.find((asset) => asset.type === "lottie");
 
   return (
-    <div className="rounded-3xl border border-gray-100 bg-white shadow-sm">
+    <div className="rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 shadow-sm">
       {lottieAsset ? (
-        <QuestionAnimation asset={lottieAsset} className="max-h-64 w-full rounded-t-3xl bg-neutral-50 object-cover" />
+        <QuestionAnimation asset={lottieAsset} className="max-h-64 w-full rounded-t-3xl bg-neutral-50 dark:bg-neutral-800 object-cover" />
       ) : (
         question.image_urls.length > 0 && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -36,7 +36,7 @@ export default function QuestionCard({
           Question {index + 1} of {total}
           {question.topic && ` · ${question.topic}`}
         </Paragraph>
-        <h2 className="mb-5 text-xl leading-snug font-bold text-neutral-900">{question.question_text}</h2>
+        <h2 className="mb-5 text-xl leading-snug font-bold text-neutral-900 dark:text-neutral-100">{question.question_text}</h2>
 
         <div className="space-y-1">
           {question.answers.map((option) => {
@@ -49,8 +49,8 @@ export default function QuestionCard({
                 key={option.id}
                 onClick={() => !reviewing && onSelect?.(option.id)}
                 className={`flex items-start gap-3 rounded-xl p-3 ${
-                  !reviewing ? "cursor-pointer hover:bg-neutral-50" : ""
-                } ${isSelected && !reviewing ? "bg-neutral-100" : ""} ${reviewing && isCorrectOption ? "bg-green-50" : ""} ${
+                  !reviewing ? "cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700" : ""
+                } ${isSelected && !reviewing ? "bg-neutral-100 dark:bg-neutral-700" : ""} ${reviewing && isCorrectOption ? "bg-green-50" : ""} ${
                   isWrongSelected ? "bg-red-50" : ""
                 }`}
               >
@@ -78,7 +78,7 @@ export default function QuestionCard({
         </div>
 
         {reviewing && feedback.explanation && (
-          <Paragraph size="sm" className="mt-4 rounded-xl bg-neutral-50 p-3 text-neutral-600">
+          <Paragraph size="sm" className="mt-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 p-3 text-neutral-600 dark:text-neutral-300">
             {feedback.explanation}
           </Paragraph>
         )}

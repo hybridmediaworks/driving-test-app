@@ -68,7 +68,7 @@ export default function ExamPlayer({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-700">
           <div
             className="h-full rounded-full bg-blue-600 transition-all"
             style={{ width: `${((index + 1) / questions.length) * 100}%` }}
@@ -88,7 +88,7 @@ export default function ExamPlayer({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           {answeredCount} of {questions.length} answered · exam mode, no going back
         </p>
         {isLast ? (

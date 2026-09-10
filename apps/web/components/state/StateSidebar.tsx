@@ -66,7 +66,7 @@ function ExamDate({ onSaved }: { onSaved: () => void }) {
       <div className="space-y-2">
         <label
           htmlFor="exam-date"
-          className="text-[11px] font-semibold tracking-wide text-neutral-500 uppercase"
+          className="text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase"
         >
           Exam date
         </label>
@@ -77,7 +77,7 @@ function ExamDate({ onSaved }: { onSaved: () => void }) {
             value={value}
             disabled={saving}
             onChange={(e) => setValue(e.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-border bg-white px-2 py-1 text-sm text-neutral-900"
+            className="min-w-0 flex-1 rounded-lg border border-border bg-white dark:bg-neutral-800 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100"
           />
           <button
             type="button"
@@ -96,10 +96,10 @@ function ExamDate({ onSaved }: { onSaved: () => void }) {
   return (
     <div className="flex items-start justify-between gap-2">
       <div>
-        <p className="text-[11px] font-semibold tracking-wide text-neutral-500 uppercase">
+        <p className="text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
           Exam date
         </p>
-        <p className="text-sm font-semibold text-blue-700">
+        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
           {examDate ? formatExamDate(examDate) : "Not set yet"}
         </p>
       </div>
@@ -107,7 +107,7 @@ function ExamDate({ onSaved }: { onSaved: () => void }) {
         type="button"
         onClick={startEditing}
         aria-label={examDate ? "Change exam date" : "Set exam date"}
-        className="rounded-full border border-border bg-white p-1.5 text-neutral-500 transition-colors hover:text-neutral-900"
+        className="rounded-full border border-border bg-white dark:bg-neutral-800 p-1.5 text-neutral-500 dark:text-neutral-400 transition-colors hover:text-neutral-900 dark:hover:text-neutral-100"
       >
         <Pencil className="size-3.5" />
       </button>
@@ -160,20 +160,20 @@ export default function StateSidebar({
   return (
     <aside className="flex w-full flex-col gap-4" aria-label="Your progress">
       {/* Permit card */}
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-card">
-        <p className="text-[11px] font-semibold tracking-wide text-neutral-500 uppercase">
+      <section className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4 shadow-card">
+        <p className="text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
           {`${selectedState} Learner's Permit`}
         </p>
 
         <div className="mt-3 flex items-center gap-2.5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-700">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-500/10 text-sm font-semibold text-blue-700 dark:text-blue-300">
             {initialsOf(user.name)}
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold tracking-wide text-neutral-500 uppercase">
+            <p className="text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
               Name
             </p>
-            <p className="truncate text-sm font-semibold text-neutral-900">
+            <p className="truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">
               {user.name}
             </p>
           </div>
@@ -198,43 +198,43 @@ export default function StateSidebar({
             />
           </div>
           <div className="mt-1.5 flex items-baseline justify-between gap-2">
-            <span className="text-sm font-bold text-neutral-900">
+            <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
               {coverage}%
             </span>
-            <span className="text-xs text-neutral-500">of questions seen</span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">of questions seen</span>
           </div>
         </div>
       </section>
 
       {/* Counts */}
       <section className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border bg-white p-4 shadow-card">
-          <p className="text-lg font-bold text-neutral-900">
+        <div className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4 shadow-card">
+          <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
             {tests.completed}
-            <span className="text-sm font-medium text-neutral-500">
+            <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
               /{tests.total}
             </span>
           </p>
-          <p className="mt-0.5 text-xs text-neutral-500">Tests completed</p>
+          <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">Tests completed</p>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-4 shadow-card">
-          <p className="text-lg font-bold text-neutral-900">
+        <div className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4 shadow-card">
+          <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
             {questions.covered}
-            <span className="text-sm font-medium text-neutral-500">
+            <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
               /{questions.total}
             </span>
           </p>
-          <p className="mt-0.5 text-xs text-neutral-500">Questions covered</p>
+          <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">Questions covered</p>
         </div>
       </section>
 
       {/* Steps to complete */}
       {steps.length > 1 && (
-        <section className="rounded-2xl border border-border bg-white p-4 shadow-card">
-          <h2 className="font-sora text-base font-semibold text-neutral-900">
+        <section className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4 shadow-card">
+          <h2 className="font-sora text-base font-semibold text-neutral-900 dark:text-neutral-100">
             Exam Prep
           </h2>
-          <p className="mt-3 text-[11px] font-semibold tracking-wide text-blue-600 uppercase">
+          <p className="mt-3 text-[11px] font-semibold tracking-wide text-blue-600 dark:text-blue-400 uppercase">
             Steps to complete
           </p>
           {/* Paid learners get the expandable per-quiz-type breakdown; free learners the flat list,
@@ -269,13 +269,13 @@ export default function StateSidebar({
                     className={`flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-bold ${
                       step.done
                         ? "border-blue-600 bg-blue-600 text-white"
-                        : "border-blue-300 bg-white text-blue-600"
+                        : "border-blue-300 bg-white dark:bg-neutral-800 text-blue-600 dark:text-blue-400"
                     }`}
                   >
                     {step.done ? <Check className="size-3.5" /> : index + 1}
                   </span>
                   <span
-                    className={`text-sm font-semibold ${step.done ? "text-neutral-400 line-through" : "text-neutral-900"}`}
+                    className={`text-sm font-semibold ${step.done ? "text-neutral-400 dark:text-neutral-500 line-through" : "text-neutral-900 dark:text-neutral-100"}`}
                   >
                     {step.label}
                   </span>
@@ -288,18 +288,18 @@ export default function StateSidebar({
       )}
 
       {/* Streak */}
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-white p-4 shadow-card">
-        <h2 className="font-sora text-base font-semibold text-neutral-900">
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4 shadow-card">
+        <h2 className="font-sora text-base font-semibold text-neutral-900 dark:text-neutral-100">
           {streak.current} Day Streak
         </h2>
-        <p className="mt-1 max-w-[70%] text-xs text-neutral-500">
+        <p className="mt-1 max-w-[70%] text-xs text-neutral-500 dark:text-neutral-400">
           Your streak continues when you answer {streak.daily_target} questions
           each day.
         </p>
         <ul className="mt-3 flex gap-2">
           {streak.days.map((day) => (
             <li key={day.date} className="flex flex-col items-center gap-1">
-              <span className="text-[11px] text-neutral-500">
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 {weekdayLetters(day.date)}
               </span>
               <span
@@ -307,7 +307,7 @@ export default function StateSidebar({
                 className={`flex size-5 items-center justify-center rounded-full ${
                   day.met
                     ? "bg-blue-600 text-white"
-                    : "border border-border bg-white"
+                    : "border border-border bg-white dark:bg-neutral-800"
                 }`}
               >
                 {day.met && <Check className="size-3" />}
@@ -323,7 +323,7 @@ export default function StateSidebar({
 
       <Link
         href="/dashboard"
-        className="rounded-2xl border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-blue-700 shadow-card hover:underline"
+        className="rounded-2xl border border-border bg-white dark:bg-neutral-800 px-4 py-3 text-center text-sm font-semibold text-blue-700 dark:text-blue-300 shadow-card hover:underline"
       >
         See full progress &rarr;
       </Link>

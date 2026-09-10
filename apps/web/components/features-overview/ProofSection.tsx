@@ -31,7 +31,7 @@ export default function ProofSection() {
       <div className="mx-auto max-w-container space-y-8 flex flex-col lg:flex-row justify-between items-center">
         <div className="lg:max-w-147.5 space-y-4">
           <Paragraph
-            className="border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
+            className="border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
             size="xs"
             color="primary"
           >
@@ -55,7 +55,7 @@ export default function ProofSection() {
               {avatars.map((avatar) => (
                 <div
                   key={avatar.initials}
-                  className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white ${avatar.color}`}
+                  className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white dark:ring-neutral-700 ${avatar.color}`}
                 >
                   {avatar.initials}
                 </div>
@@ -71,7 +71,7 @@ export default function ProofSection() {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-white border px-6 py-12 rounded-xl space-y-4"
+              className="bg-white dark:bg-neutral-800 border px-6 py-12 rounded-xl space-y-4"
             >
               <Heading as="h3" size="lg" color="primary">
                 {stat.value}

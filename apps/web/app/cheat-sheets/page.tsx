@@ -15,14 +15,14 @@ function CheatSheetCard({ sheet }: { sheet: PublicCheatSheet }) {
   return (
     <Link
       href={`/cheat-sheets/${sheet.id}`}
-      className="flex flex-col gap-3 rounded-2xl border border-gray-100 p-5 shadow-sm transition-shadow hover:shadow-md"
+      className="flex flex-col gap-3 rounded-2xl border border-gray-100 dark:border-white/10 p-5 shadow-sm transition-shadow hover:shadow-md"
     >
       {sheet.cover_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={sheet.cover_image_url} alt="" className="h-32 w-full rounded-xl object-cover" />
       )}
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-neutral-900">{sheet.title}</h3>
+        <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">{sheet.title}</h3>
         {sheet.is_premium && (
           <span className="flex shrink-0 items-center gap-1 text-xs text-amber-800">
             Premium
@@ -30,8 +30,8 @@ function CheatSheetCard({ sheet }: { sheet: PublicCheatSheet }) {
           </span>
         )}
       </div>
-      <p className="text-sm text-neutral-500">{sheet.summary}</p>
-      <p className="text-xs text-neutral-400">
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">{sheet.summary}</p>
+      <p className="text-xs text-neutral-400 dark:text-neutral-500">
         {sheet.category?.title}
         {sheet.state && ` · ${sheet.state.name}`}
         {sheet.vehicle_type && ` · ${sheet.vehicle_type.title}`}
@@ -64,13 +64,13 @@ function CheatSheetsBrowseInner() {
         <main className="flex-1">
           <div className="mx-auto max-w-container space-y-6 px-5 py-10 lg:py-14">
             <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-neutral-900">Cheat sheets</h1>
-              <p className="text-neutral-500">Condensed, high-yield study guides — read online or download as PDF.</p>
+              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Cheat sheets</h1>
+              <p className="text-neutral-500 dark:text-neutral-400">Condensed, high-yield study guides — read online or download as PDF.</p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("state") ?? ""}
                 onChange={(e) => updateFilter("state", e.target.value)}
               >
@@ -80,7 +80,7 @@ function CheatSheetsBrowseInner() {
                 ))}
               </select>
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("vehicle_type") ?? ""}
                 onChange={(e) => updateFilter("vehicle_type", e.target.value)}
               >
@@ -90,7 +90,7 @@ function CheatSheetsBrowseInner() {
                 ))}
               </select>
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("category") ?? ""}
                 onChange={(e) => updateFilter("category", e.target.value)}
               >
@@ -102,7 +102,7 @@ function CheatSheetsBrowseInner() {
             </div>
 
             {rows.length === 0 ? (
-              <p className="py-10 text-center text-sm text-neutral-500">No cheat sheets match those filters.</p>
+              <p className="py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">No cheat sheets match those filters.</p>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((sheet) => (

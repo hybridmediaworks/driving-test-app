@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\V1\FamilyController;
 use App\Http\Controllers\Api\V1\FlashcardReviewController;
 use App\Http\Controllers\Api\V1\HazardAttemptController;
 use App\Http\Controllers\Api\V1\PassGuaranteeClaimController;
+use App\Http\Controllers\Api\V1\ProgressController;
 use App\Http\Controllers\Api\V1\Public\AmbientTrackController;
 use App\Http\Controllers\Api\V1\Public\CheatSheetController as PublicCheatSheetController;
 use App\Http\Controllers\Api\V1\Public\EmailSubscriberController;
@@ -47,7 +48,6 @@ use App\Http\Controllers\Api\V1\Public\VehicleTypeController;
 use App\Http\Controllers\Api\V1\Public\VideoController as PublicVideoController;
 use App\Http\Controllers\Api\V1\QuizAttemptController;
 use App\Http\Controllers\Api\V1\RevenueCatWebhookController;
-use App\Http\Controllers\Api\V1\ProgressController;
 use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -65,6 +65,12 @@ Route::prefix('v1')->group(function (): void {
     // Public quiz-taking — guests may browse, take, and submit tests.
     Route::get('quizzes', [PublicQuizController::class, 'index']);
     Route::get('quizzes/{quiz}', [PublicQuizController::class, 'show']);
+    // Marketing preview — a handful of this quiz's questions WITH the correct answer and
+    // explanation already attached, for the "six real questions" block on the test's landing page.
+    // Deliberately different from the play flow (QuizQuestionResource withholds both until an
+    // answer is checked): here the answer is the point. Same entitlement gate as `show`, so a
+    // locked premium quiz reveals nothing.
+    Route::get('quizzes/{quiz}/sample-questions', [PublicQuizController::class, 'sampleQuestions']);
     Route::post('quizzes/{quiz}/attempts', [PublicQuizController::class, 'storeAttempt'])
         ->middleware('throttle:60,1');
     // Start (or resume) an in-progress attempt — called when the quiz player opens, before any

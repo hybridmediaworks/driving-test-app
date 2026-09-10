@@ -19,12 +19,12 @@ export default function PremiumDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl! gap-0 overflow-hidden rounded-3xl p-0">
-        <div className="flex items-center justify-center bg-blue-50">
+        <div className="flex items-center justify-center bg-blue-50 dark:bg-blue-500/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/premium_feature.svg" alt="" />
         </div>
 
-        <div className="space-y-5 bg-white p-10 text-center">
+        <div className="space-y-5 bg-white dark:bg-neutral-800 p-10 text-center">
           <Heading size="xs">{title}</Heading>
           <Paragraph className="text-center">{description}</Paragraph>
 

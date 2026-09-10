@@ -30,7 +30,7 @@ function RichText({ body }: { body: string }) {
 
         if (isList) {
           return (
-            <ul key={i} className="list-disc space-y-1.5 pl-5 text-neutral-700">
+            <ul key={i} className="list-disc space-y-1.5 pl-5 text-neutral-700 dark:text-neutral-300">
               {lines.map((line, j) => (
                 <li key={j}>{line.slice(2)}</li>
               ))}
@@ -61,13 +61,13 @@ export default function ExpertProfile({ expert }: { expert: Expert }) {
 
   return (
     <article className="mx-auto w-full max-w-3xl px-5 py-12 lg:py-16">
-      <header className="flex flex-col gap-6 border-b border-neutral-200 pb-8 sm:flex-row sm:items-center">
-        <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
+      <header className="flex flex-col gap-6 border-b border-neutral-200 dark:border-white/10 pb-8 sm:flex-row sm:items-center">
+        <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-neutral-200 dark:border-white/10 bg-neutral-100 dark:bg-neutral-700">
           {expert.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={expert.photo_url} alt={expert.name} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-neutral-400">
+            <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-neutral-400 dark:text-neutral-500">
               {initialsOf(expert.name)}
             </div>
           )}
@@ -87,7 +87,7 @@ export default function ExpertProfile({ expert }: { expert: Expert }) {
           )}
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1.5">
-            <span className="inline-flex items-center gap-1.5 text-sm text-neutral-600">
+            <span className="inline-flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-300">
               <BadgeCheck className="h-4 w-4 shrink-0 text-green-700" />
               Last verified {formatVerifiedDate(expert.verified_at)}
             </span>
@@ -96,7 +96,7 @@ export default function ExpertProfile({ expert }: { expert: Expert }) {
                 href={expert.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
                 <Linkedin className="h-4 w-4 shrink-0" />
                 LinkedIn
@@ -105,7 +105,7 @@ export default function ExpertProfile({ expert }: { expert: Expert }) {
             {expert.email && (
               <a
                 href={`mailto:${expert.email}`}
-                className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
                 <Mail className="h-4 w-4 shrink-0" />
                 {expert.email}
@@ -116,7 +116,7 @@ export default function ExpertProfile({ expert }: { expert: Expert }) {
       </header>
 
       {introParagraphs.length > 0 && (
-        <div className="space-y-3 py-8 text-lg text-neutral-700">
+        <div className="space-y-3 py-8 text-lg text-neutral-700 dark:text-neutral-300">
           {introParagraphs.map((p, i) => (
             <p key={i} className="leading-relaxed">
               {p}
@@ -126,7 +126,7 @@ export default function ExpertProfile({ expert }: { expert: Expert }) {
       )}
 
       {expert.sections.length > 0 && (
-        <div className="divide-y divide-neutral-200">
+        <div className="divide-y divide-neutral-200 dark:divide-white/10">
           {expert.sections.map((section, i) => (
             <section key={i} className="py-8">
               <Heading as="h2" size="2xs" className="mb-3">

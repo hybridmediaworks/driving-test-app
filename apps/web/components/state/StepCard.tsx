@@ -61,11 +61,11 @@ export default function StepCard({
   if (step.placeholder) {
     return (
       <div
-        className={`relative flex md:min-h-32 items-center gap-3 rounded-xl border bg-white p-4 ${
+        className={`relative flex md:min-h-32 items-center gap-3 rounded-xl border bg-white dark:bg-neutral-800 p-4 ${
           step.style === "large" ? "lg:col-span-2" : ""
         }`}
       >
-        <div className="flex min-w-10 min-h-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+        <div className="flex min-w-10 min-h-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:text-blue-300">
           <BookMarked className="w-4.5 h-4.5" />
         </div>
         <Paragraph color="muted" size="sm">
@@ -80,7 +80,7 @@ export default function StepCard({
     <div
       className={`group border rounded-2xl p-1 flex md:flex-col items-center md:items-start cursor-pointer transition-all duration-300 hover:-translate-y-0.75 ${
         step.style === "large" ? "lg:col-span-2" : ""
-      } ${step.status === "next" ? "border-blue-50 bg-[linear-gradient(90deg,#EFF6FF_0%,#DBEAFE_100%)] shadow-[0_4px_32px_0_rgba(59,130,246,0.32)]" : "border-background3 bg-white shadow-card"}`}
+      } ${step.status === "next" ? "border-blue-50 dark:border-blue-500/20 bg-[linear-gradient(90deg,#EFF6FF_0%,#DBEAFE_100%)] dark:bg-[linear-gradient(90deg,#16243d_0%,#1b3358_100%)] shadow-[0_4px_32px_0_rgba(59,130,246,0.32)]" : "border-background3 bg-white dark:bg-neutral-800 shadow-card"}`}
     >
       {connector && (
         <div
@@ -88,8 +88,8 @@ export default function StepCard({
             isFilled
               ? "border-blue-500"
               : isTrigger
-                ? "connector-fill border-white"
-                : "border-white"
+                ? "connector-fill border-white dark:border-neutral-700"
+                : "border-white dark:border-neutral-700"
           }`}
           style={
             isTrigger
@@ -139,10 +139,10 @@ export default function StepCard({
                   // hover CTA is a plain span here rather than a nested link.
                   <>
                     <div className="flex h-8 w-8 items-center justify-center rounded-4xl group-hover:hidden">
-                      <Gem className="text-blue-600 w-8 h-8 " />
+                      <Gem className="text-blue-600 dark:text-blue-400 w-8 h-8 " />
                     </div>
                     <div className="hidden group-hover:flex px-2">
-                      <span className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-yellow-500 bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-black md:w-fit">
+                      <span className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-yellow-500 bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-black dark:text-neutral-100 md:w-fit">
                         <Gem className="h-4 w-4" /> Upgrade to Premium
                       </span>
                     </div>
@@ -152,7 +152,7 @@ export default function StepCard({
                 <Paragraph
                   size="sm"
                   color="primary"
-                  className="rounded-full bg-white px-3 py-0.5 font-semibold"
+                  className="rounded-full bg-white dark:bg-neutral-800 px-3 py-0.5 font-semibold"
                 >
                   Next
                 </Paragraph>
@@ -180,7 +180,7 @@ export default function StepCard({
           {/* Completed-quiz result badge, top-right (the FREE/PREMIUM tag sits top-left). Passed →
               green tick, failed → red exclamation. Shown once the learner has taken the quiz. */}
           {step.outcome === "passed" && (
-            <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-green-500 ring-2 ring-white">
+            <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-green-500 ring-2 ring-white dark:ring-neutral-700">
               <Check
                 className="md:h-4 h-3 md:w-4 w-3 text-white"
                 strokeWidth={3}
@@ -188,7 +188,7 @@ export default function StepCard({
             </div>
           )}
           {step.outcome === "failed" && (
-            <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white">
+            <div className="absolute md:top-2 top-0.5 md:right-2 right-0.5 flex md:h-7 h-5 md:w-7 w-5 items-center justify-center rounded-full bg-red-500 ring-2 ring-white dark:ring-neutral-700">
               <span className="md:text-sm text-xs font-bold leading-none text-white">
                 !
               </span>

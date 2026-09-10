@@ -14,6 +14,10 @@ export type StateStats = {
   peak_hour: number | null;
   peak_weekday: string | null;
   pass_rate: number | null;
+  /** Mean score of each participant's first attempt at each quiz — retakes excluded. */
+  avg_first_try_score: number | null;
+  /** Share of graded attempts per score band, highest band first. Null until anything is graded. */
+  score_distribution: { label: string; percent: number }[] | null;
   daily_students_practiced: number[];
   daily_questions_answered: number[];
   daily_combined_practice_seconds: number[];

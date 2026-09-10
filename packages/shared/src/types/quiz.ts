@@ -24,6 +24,15 @@ export type State = {
   name: string;
   agency_name: string | null;
   dmv_website_url: string | null;
+  // Published per-state permit-test requirements, behind the "at a glance" grid on
+  // /{state}/{test-slug}. Admin-managed and null until filled in — the grid omits a fact it has
+  // no value for rather than showing a guess.
+  permit_test_fee_cents: number | null;
+  retake_wait_days: number | null;
+  supervised_driving_hours: number | null;
+  minimum_permit_age: number | null;
+  test_language_count: number | null;
+  online_testing_available: boolean | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -113,6 +122,27 @@ export type Quiz = {
   state?: State;
   vehicle_type?: VehicleType;
   quiz_questions_count?: number;
+};
+
+/**
+ * A worked example from GET /quizzes/{quiz}/sample-questions — the marketing preview shape, which
+ * (unlike {@link QuizQuestion}) already carries the explanation and marks the correct option.
+ */
+export type SampleQuizAnswer = {
+  id: number;
+  answer_text: string;
+  is_correct: boolean;
+  explanation: string | null;
+};
+
+export type SampleQuizQuestion = {
+  id: number;
+  question_text: string;
+  explanation: string | null;
+  topic: string | null;
+  difficulty: QuizDifficulty;
+  image_urls: string[];
+  answers?: SampleQuizAnswer[];
 };
 
 export type LaravelPageLink = {

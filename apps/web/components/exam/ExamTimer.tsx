@@ -40,7 +40,7 @@ export default function ExamTimer({
   return (
     <div
       className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold tabular-nums ${
-        urgent ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-700"
+        urgent ? "bg-red-50 text-red-600" : "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300"
       }`}
       role="timer"
       aria-live="polite"

@@ -20,6 +20,7 @@ use App\Http\Requests\Api\V1\Public\StoreQuizAttemptRequest;
 use App\Http\Requests\Api\V1\Public\StoreQuizQuestionReportRequest;
 use App\Http\Resources\Api\V1\Public\QuizQuestionResource;
 use App\Http\Resources\Api\V1\Public\QuizResource;
+use App\Http\Resources\Api\V1\Public\SampleQuizQuestionResource;
 use App\Http\Resources\Api\V1\QuizAttemptResource;
 use App\Models\ChallengeBankItem;
 use App\Models\Quiz;
@@ -271,6 +272,44 @@ class QuizController extends Controller
             'locked' => ! $unlocked,
             'questions' => $unlocked ? QuizQuestionResource::collection($quiz->quizQuestions) : null,
             'content_language' => $contentLanguage,
+        ]);
+    }
+
+    /**
+     * Sample questions for a quiz's public landing page
+     *
+     * Public — no authentication required. Returns up to `limit` (default 6, max 10) of this
+     * quiz's questions with the correct answer and explanation already attached, for the
+     * "real questions from this test" block on `/{state}/{test-slug}`.
+     *
+     * This is the one place that reveals answers without an attempt: the block exists to show
+     * what a real question and its explanation look like, so withholding them the way the
+     * play flow does (see {@see show()}) would leave it with nothing to show. It stays a
+     * preview — a handful of questions, never the whole test — and honours the same entitlement
+     * gate as the rest of the quiz, so a locked premium test returns an empty list.
+     */
+    public function sampleQuestions(Request $request, Quiz $quiz): JsonResponse
+    {
+        $this->authorize('view', $quiz);
+
+        // Same explicit Sanctum resolution as show() — this route carries no auth middleware, so
+        // Gate's ambient user lookup never sees the token.
+        $unlocked = Gate::forUser($request->user('sanctum'))->allows('attempt', $quiz);
+
+        if (! $unlocked) {
+            return response()->json(['data' => []]);
+        }
+
+        $limit = min(max($request->integer('limit') ?: 6, 1), 10);
+
+        $questions = $quiz->quizQuestions()
+            ->with('answers')
+            ->orderBy('sort_order')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'data' => SampleQuizQuestionResource::collection($questions),
         ]);
     }
 

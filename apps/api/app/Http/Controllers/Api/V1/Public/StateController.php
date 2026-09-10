@@ -68,6 +68,8 @@ class StateController extends Controller
                 'peak_hour' => $this->peakHour(clone $completed30d),
                 'peak_weekday' => $this->peakWeekday(clone $completed30d),
                 'pass_rate' => $this->passRate(clone $base),
+                'avg_first_try_score' => $this->avgFirstTryScore(clone $base),
+                'score_distribution' => $this->scoreDistribution(clone $base),
                 'daily_students_practiced' => $this->dailyDistinctParticipants(clone $completed30d),
                 'daily_questions_answered' => $this->dailySum(clone $completed30d, 'total_questions'),
                 'daily_combined_practice_seconds' => $this->dailySum(clone $completed30d, 'duration_seconds'),
@@ -93,6 +95,83 @@ class StateController extends Controller
         }
 
         return (int) round((clone $graded)->where('passed', true)->count() / $total * 100);
+    }
+
+    /**
+     * How graded attempts in this scope spread across score bands (highest band first) — the
+     * distribution behind the "how learners score first time" chart. All-time, same scope as
+     * {@see passRate()}, since it makes the same durable "how do learners here do" claim. Each
+     * entry's `percent` is that band's share of all graded attempts, rounded to whole percent;
+     * null when there's nothing graded yet so the frontend can omit the chart rather than draw
+     * five empty bars.
+     *
+     * @param  Builder<QuizAttempt>  $query
+     * @return list<array{label: string, percent: int}>|null
+     */
+    private function scoreDistribution($query): ?array
+    {
+        $graded = $query->where('status', AttemptStatus::Completed)->whereNotNull('score');
+        $total = (clone $graded)->count();
+
+        if ($total === 0) {
+            return null;
+        }
+
+        // Inclusive lower bound, exclusive upper — except the top band, which has to include 100.
+        $bands = [
+            ['label' => '90–100', 'min' => 90, 'max' => 101],
+            ['label' => '80–89', 'min' => 80, 'max' => 90],
+            ['label' => '70–79', 'min' => 70, 'max' => 80],
+            ['label' => '60–69', 'min' => 60, 'max' => 70],
+            ['label' => '<60', 'min' => 0, 'max' => 60],
+        ];
+
+        return collect($bands)
+            ->map(fn (array $band) => [
+                'label' => $band['label'],
+                'percent' => (int) round(
+                    (clone $graded)->where('score', '>=', $band['min'])->where('score', '<', $band['max'])->count()
+                    / $total * 100
+                ),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Mean score of each participant's *first* attempt at each quiz in this scope — retakes are
+     * excluded, so the figure answers "what do people score walking in cold" rather than being
+     * pulled up by the same learner grinding one test. De-duped in PHP for the same
+     * MySQL/SQLite-portability reason as {@see peakHour()}; null when nothing is graded yet.
+     *
+     * @param  Builder<QuizAttempt>  $query
+     */
+    private function avgFirstTryScore($query): ?int
+    {
+        $attempts = $query
+            ->where('status', AttemptStatus::Completed)
+            ->whereNotNull('score')
+            ->orderBy('started_at')
+            ->get(['user_id', 'guest_token', 'quiz_id', 'score']);
+
+        $firstTries = [];
+
+        foreach ($attempts as $attempt) {
+            $participant = $attempt->user_id !== null ? "u{$attempt->user_id}" : "g{$attempt->guest_token}";
+            $key = "{$participant}|{$attempt->quiz_id}";
+
+            // Ordered oldest-first above, so the first row seen for a participant/quiz pair is
+            // their first try — later retakes on the same pair are skipped.
+            if (! array_key_exists($key, $firstTries)) {
+                $firstTries[$key] = (int) $attempt->score;
+            }
+        }
+
+        if ($firstTries === []) {
+            return null;
+        }
+
+        return (int) round(array_sum($firstTries) / count($firstTries));
     }
 
     /**

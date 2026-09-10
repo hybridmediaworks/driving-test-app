@@ -12,11 +12,11 @@ export default function Switch({
       aria-checked={checked}
       onClick={() => onCheckedChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-        checked ? "bg-blue-600" : "bg-neutral-300"
+        checked ? "bg-blue-600" : "bg-neutral-300 dark:bg-neutral-600"
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+        className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-neutral-800 transition-transform ${
           checked ? "translate-x-4.5" : "translate-x-0.5"
         }`}
       />

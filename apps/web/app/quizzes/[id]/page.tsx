@@ -66,7 +66,7 @@ function QuizDetailInner({ id }: { id: string }) {
   if (!data && !notFoundError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-neutral-500">Loading…</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading…</p>
       </div>
     );
   }

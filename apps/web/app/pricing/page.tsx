@@ -126,7 +126,7 @@ function CompareCell({ value }: { value: CompareValue }) {
     return <Paragraph className="text-center">{value}</Paragraph>;
   }
   return value ? (
-    <Check className="mx-auto h-4.5 w-4.5 text-blue-600" />
+    <Check className="mx-auto h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
   ) : (
     <Minus className="mx-auto h-4.5 w-4.5 text-neutral-300" />
   );
@@ -232,7 +232,7 @@ function PricingInner() {
             <div className="mx-auto max-w-container space-y-12 px-5">
               <div className="flex flex-col items-center justify-center gap-4 max-w-225 mx-auto">
                 <Paragraph
-                  className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
+                  className="mb-2 border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
                   size="xs"
                   color="primary"
                 >
@@ -263,7 +263,7 @@ function PricingInner() {
                   return (
                     <div
                       key={plan.key}
-                      className={`relative flex flex-col justify-between space-y-5 rounded-xl bg-white p-8 ${
+                      className={`relative flex flex-col justify-between space-y-5 rounded-xl bg-white dark:bg-neutral-800 p-8 ${
                         isPopular
                           ? "border border-blue-600 shadow-[0_24px_50px_-26px_rgba(20,60,120,0.25),0_4px_6px_-2px_rgba(20,60,120,0.03)]"
                           : "border shadow-card lg:my-11.5"
@@ -353,11 +353,11 @@ function PricingInner() {
               </Paragraph>
             </div>
           </section>
-          <section className="py-15 md:space-y-15 lg:py-30 bg-[#F2F1EC]">
+          <section className="py-15 md:space-y-15 lg:py-30 bg-[#F2F1EC] dark:bg-background2">
             <div className="mx-auto max-w-container space-y-12 px-5">
               <div className="flex flex-col items-center justify-center gap-4 max-w-141.5 mx-auto">
                 <Paragraph
-                  className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
+                  className="mb-2 border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
                   size="xs"
                   color="primary"
                 >
@@ -371,10 +371,10 @@ function PricingInner() {
                   below if you want every detail.
                 </Paragraph>
               </div>
-              <div className="rounded-3xl bg-white border-border shadow-[0_20px_24px_-4px_rgba(20,60,120,0.08),0_8px_8px_-4px_rgba(20,60,120,0.03),0_1px_2px_0_rgba(0,0,0,0.05)] overflow-hidden">
+              <div className="rounded-3xl bg-white dark:bg-neutral-800 border-border shadow-[0_20px_24px_-4px_rgba(20,60,120,0.08),0_8px_8px_-4px_rgba(20,60,120,0.03),0_1px_2px_0_rgba(0,0,0,0.05)] overflow-hidden">
                 <div className="overflow-x-auto">
                   <div className="grid grid-cols-[1.8fr_1fr_1fr_1fr] min-w-175">
-                    <div className="px-6 py-5 bg-neutral-50 flex items-center">
+                    <div className="px-6 py-5 bg-neutral-50 dark:bg-neutral-800 flex items-center">
                       <Paragraph
                         size="2xl"
                         color="dark"
@@ -383,7 +383,7 @@ function PricingInner() {
                         Feature
                       </Paragraph>
                     </div>
-                    <div className="px-6 py-5 bg-neutral-50 flex items-center justify-center">
+                    <div className="px-6 py-5 bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
                       <Paragraph
                         size="2xl"
                         color="dark"
@@ -392,7 +392,7 @@ function PricingInner() {
                         Weekly
                       </Paragraph>
                     </div>
-                    <div className="px-6 py-5 bg-blue-50 flex items-center justify-center">
+                    <div className="px-6 py-5 bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
                       <Paragraph
                         size="2xl"
                         color="primary"
@@ -401,7 +401,7 @@ function PricingInner() {
                         Monthly
                       </Paragraph>
                     </div>
-                    <div className="px-6 py-5 bg-neutral-50 flex items-center justify-center">
+                    <div className="px-6 py-5 bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
                       <Paragraph
                         size="2xl"
                         color="dark"
@@ -429,7 +429,7 @@ function PricingInner() {
                             <CompareCell value={row.weekly} />
                           </div>
                           <div
-                            className={`px-6 py-5 flex items-center justify-center bg-blue-50 ${isLast ? "" : "border-b border-blue-100"}`}
+                            className={`px-6 py-5 flex items-center justify-center bg-blue-50 dark:bg-blue-500/10 ${isLast ? "" : "border-b border-blue-100"}`}
                           >
                             <CompareCell value={row.monthly} />
                           </div>
@@ -445,10 +445,10 @@ function PricingInner() {
                     <button
                       type="button"
                       onClick={() => setShowAllRows((value) => !value)}
-                      className="col-span-4 flex items-center justify-center gap-1 p-6 border-t border-border cursor-pointer hover:bg-neutral-50"
+                      className="col-span-4 flex items-center justify-center gap-1 p-6 border-t border-border cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700"
                     >
                       <ChevronDown
-                        className={`h-4 w-4 text-blue-600 transition-transform ${showAllRows ? "rotate-180" : ""}`}
+                        className={`h-4 w-4 text-blue-600 dark:text-blue-400 transition-transform ${showAllRows ? "rotate-180" : ""}`}
                       />
                       <Paragraph color="primary" className="font-semibold">
                         {showAllRows

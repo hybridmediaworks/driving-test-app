@@ -16,10 +16,10 @@ function FlashcardPreviewCard({ card, studyHref }: { card: PublicFlashcard; stud
   return (
     <Link
       href={studyHref}
-      className="flex flex-col gap-2 rounded-2xl border border-gray-100 p-5 shadow-sm transition-shadow hover:shadow-md"
+      className="flex flex-col gap-2 rounded-2xl border border-gray-100 dark:border-white/10 p-5 shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="font-semibold text-neutral-900">{card.front_text}</p>
+        <p className="font-semibold text-neutral-900 dark:text-neutral-100">{card.front_text}</p>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {/* Always visible when the card is marked premium, regardless of whether the
               current viewer (e.g. an admin) is actually locked out of it — distinct from the
@@ -30,7 +30,7 @@ function FlashcardPreviewCard({ card, studyHref }: { card: PublicFlashcard; stud
           {card.locked && <Lock className="h-4 w-4 text-amber-600" />}
         </div>
       </div>
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">
         {card.category?.title}
         {card.state && ` · ${card.state.name}`}
         {card.vehicle_type && ` · ${card.vehicle_type.title}`}
@@ -65,15 +65,15 @@ function FlashcardsBrowseInner() {
           <div className="mx-auto max-w-container space-y-6 px-5 py-10 lg:py-14">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="space-y-1">
-                <h1 className="text-2xl font-semibold text-neutral-900">Flashcards</h1>
-                <p className="text-neutral-500">Quick recall practice for signs, rules, and terms.</p>
+                <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Flashcards</h1>
+                <p className="text-neutral-500 dark:text-neutral-400">Quick recall practice for signs, rules, and terms.</p>
               </div>
               <Button href={studyHref}>Start studying</Button>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("state") ?? ""}
                 onChange={(e) => updateFilter("state", e.target.value)}
               >
@@ -83,7 +83,7 @@ function FlashcardsBrowseInner() {
                 ))}
               </select>
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("vehicle_type") ?? ""}
                 onChange={(e) => updateFilter("vehicle_type", e.target.value)}
               >
@@ -93,7 +93,7 @@ function FlashcardsBrowseInner() {
                 ))}
               </select>
               <select
-                className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm"
+                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
                 value={searchParams.get("category") ?? ""}
                 onChange={(e) => updateFilter("category", e.target.value)}
               >
@@ -105,7 +105,7 @@ function FlashcardsBrowseInner() {
             </div>
 
             {rows.length === 0 ? (
-              <p className="py-10 text-center text-sm text-neutral-500">No flashcards match those filters.</p>
+              <p className="py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">No flashcards match those filters.</p>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {rows.map((card) => (

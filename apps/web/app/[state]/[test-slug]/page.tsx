@@ -3,11 +3,20 @@ import { slugToStateName, stateAbbreviations, usStates } from "@/lib/usStates";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 import Header from "@/components/Header";
 import EmailCaptureSection from "@/components/state/EmailCaptureSection";
-import CTASection from "@/components/home/CTASection";
 import Footer from "@/components/Footer";
+import FeaturesSection from "@/components/home/FeaturesSection";
+import JourneySection from "@/components/home/JourneySection";
 import HeroSection from "@/components/state/test-slug/HeroSection";
 import PreparingSection from "@/components/state/test-slug/PreparingSection";
 import QuickFacts from "@/components/state/test-slug/QuickFacts";
+import AppointmentSection from "@/components/state/test-slug/AppointmentSection";
+import TopicBreakdownSection from "@/components/state/test-slug/TopicBreakdownSection";
+import ScoreDistributionSection from "@/components/state/test-slug/ScoreDistributionSection";
+import StateRulesSection from "@/components/state/test-slug/StateRulesSection";
+import MethodologySection from "@/components/state/test-slug/MethodologySection";
+import SampleQuestionsSection from "@/components/state/test-slug/SampleQuestionsSection";
+import ReviewsSection from "@/components/state/test-slug/ReviewsSection";
+import OtherStatesSection from "@/components/state/test-slug/OtherStatesSection";
 
 function resolveStateName(stateSlug: string): string {
   const name = stateSlug ? slugToStateName(stateSlug) : "";
@@ -66,13 +75,26 @@ export default async function WrittenTestPage({
     <WebLayoutProvider stateSlug={state}>
       <div className="flex min-h-screen flex-col bg-background">
         <Header variant="states" hideNav />
+        {/* Section order follows the Practice Hub frame in Figma (file M811hqlEYxeqrj8vxOFqnV,
+            node 4182:1394), top to bottom: hero → intro prose → facts grid → book-your-appointment
+            → hardest topics → score distribution → state-specific rules → the journey → the
+            toolkit → how we build the questions → sample questions → reviews → other states →
+            daily-question capture. Header and footer close the frame. */}
         <HeroSection testSlug={testSlug} />
         <PreparingSection testSlug={testSlug} />
         <QuickFacts testSlug={testSlug} />
-
+        <AppointmentSection />
+        <TopicBreakdownSection testSlug={testSlug} />
+        <ScoreDistributionSection />
+        <StateRulesSection />
+        <JourneySection variant="state" />
+        <FeaturesSection variant="state" />
+        <MethodologySection />
+        <SampleQuestionsSection testSlug={testSlug} />
+        <ReviewsSection />
+        <OtherStatesSection />
         <EmailCaptureSection />
-        <CTASection />
-        <Footer />
+        <Footer overlappedTop />
       </div>
     </WebLayoutProvider>
   );

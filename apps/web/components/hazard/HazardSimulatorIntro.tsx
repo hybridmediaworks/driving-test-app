@@ -40,27 +40,27 @@ export default function HazardSimulatorIntro({
   const categories = simulator.categories ?? [];
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 rounded-2xl border border-border bg-white p-6 sm:p-8">
+    <div className="mx-auto max-w-xl space-y-6 rounded-2xl border border-border bg-white dark:bg-neutral-800 p-6 sm:p-8">
       <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Hazard Perception</p>
-        <h1 className="text-2xl font-semibold text-neutral-900">{simulator.title}</h1>
-        {simulator.description && <p className="text-neutral-500">{simulator.description}</p>}
+        <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">Hazard Perception</p>
+        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">{simulator.title}</h1>
+        {simulator.description && <p className="text-neutral-500 dark:text-neutral-400">{simulator.description}</p>}
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm">
         {simulator.test_level && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 font-medium text-neutral-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700 px-3 py-1 font-medium text-neutral-700 dark:text-neutral-300">
             <Gauge className="h-4 w-4" /> {simulator.test_level}
           </span>
         )}
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 font-medium text-neutral-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700 px-3 py-1 font-medium text-neutral-700 dark:text-neutral-300">
           <Clock className="h-4 w-4" /> {formatDuration(simulator.duration_seconds)} min
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 font-medium text-neutral-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700 px-3 py-1 font-medium text-neutral-700 dark:text-neutral-300">
           {simulator.hazard_count} hazards
         </span>
         {simulator.test_location && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 font-medium text-neutral-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700 px-3 py-1 font-medium text-neutral-700 dark:text-neutral-300">
             <MapPin className="h-4 w-4" /> {simulator.test_location}
           </span>
         )}
@@ -68,7 +68,7 @@ export default function HazardSimulatorIntro({
 
       {categories.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-neutral-700">Watch for</p>
+          <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Watch for</p>
           <div className="flex flex-wrap gap-2">
             {categories.map((c) => {
               const meta = CATEGORY_META[c];
@@ -76,7 +76,7 @@ export default function HazardSimulatorIntro({
               return (
                 <span
                   key={c}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-100 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300"
                 >
                   <Icon className="h-4 w-4" /> {meta?.label ?? c}
                 </span>
@@ -86,16 +86,16 @@ export default function HazardSimulatorIntro({
         </div>
       )}
 
-      <div className="space-y-3 rounded-xl bg-neutral-50 p-4">
+      <div className="space-y-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 p-4">
         <label className="flex items-center justify-between gap-4">
-          <span className="text-sm font-medium text-neutral-800">Sound &amp; narration</span>
+          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Sound &amp; narration</span>
           <Switch
             checked={options.soundOn}
             onCheckedChange={(soundOn) => onOptionsChange({ ...options, soundOn })}
           />
         </label>
         <label className="flex items-center justify-between gap-4">
-          <span className="text-sm font-medium text-neutral-800">
+          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">
             Show the first {simulator.demo_hazard_count} hazards with hints
           </span>
           <Switch

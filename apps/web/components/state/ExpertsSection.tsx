@@ -126,7 +126,7 @@ function ReviewerPhoto({
       // on error, so there is otherwise nothing in the DOM to check.
       data-photo-src={reviewer.photo ?? undefined}
       data-photo-state={candidates.length > 0 ? "failed" : "missing"}
-      className={`${className} flex items-center justify-center bg-background2 font-sora text-5xl font-semibold text-neutral-500`}
+      className={`${className} flex items-center justify-center bg-background2 font-sora text-5xl font-semibold text-neutral-500 dark:text-neutral-400`}
     >
       {initialsOf(reviewer.name)}
     </div>
@@ -139,12 +139,12 @@ function ReviewerName({ reviewer }: { reviewer: Reviewer }) {
       {reviewer.href ? (
         <Link
           href={reviewer.href}
-          className="font-sora text-2xl leading-8 font-semibold text-neutral-900 hover:underline"
+          className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100 hover:underline"
         >
           {reviewer.name}
         </Link>
       ) : (
-        <p className="font-sora text-2xl leading-8 font-semibold text-neutral-900">
+        <p className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100">
           {reviewer.name}
         </p>
       )}
@@ -205,7 +205,7 @@ export default function ExpertsSection() {
 
         <div className="grid w-full grid-cols-1 items-stretch gap-5 lg:grid-cols-[minmax(0,785fr)_minmax(0,555fr)]">
           {/* Lead reviewer — photo beside the write-up */}
-          <article className="flex flex-col gap-8 rounded-[32px] border border-background2 bg-white p-8 shadow-[0px_4px_24px_0px_rgba(157,175,181,0.25)] sm:flex-row">
+          <article className="flex flex-col gap-8 rounded-[32px] border border-background2 bg-white dark:bg-neutral-800 p-8 shadow-[0px_4px_24px_0px_rgba(157,175,181,0.25)] sm:flex-row">
             <ReviewerPhoto
               reviewer={lead}
               className="w-full shrink-0 self-stretch rounded-3xl max-sm:aspect-square sm:w-[46%]"
@@ -222,7 +222,7 @@ export default function ExpertsSection() {
 
           {/* Second reviewer — photo above a short pull-quote */}
           {second && (
-            <article className="flex flex-col gap-8 rounded-[32px] border border-background2 bg-white p-8 shadow-[0px_4px_24px_0px_rgba(157,175,181,0.25)]">
+            <article className="flex flex-col gap-8 rounded-[32px] border border-background2 bg-white dark:bg-neutral-800 p-8 shadow-[0px_4px_24px_0px_rgba(157,175,181,0.25)]">
               <ReviewerPhoto
                 reviewer={second}
                 className="aspect-[490/296] w-full rounded-3xl"

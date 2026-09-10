@@ -179,8 +179,8 @@ export default function TestSteps({
                 beforeRowFilled
                   ? "border-blue-500"
                   : beforeRowTriggers
-                    ? "connector-fill border-white"
-                    : "border-white"
+                    ? "connector-fill border-white dark:border-neutral-700"
+                    : "border-white dark:border-neutral-700"
               }`}
               style={
                 beforeRowTriggers
@@ -196,8 +196,8 @@ export default function TestSteps({
                   afterRowFilled
                     ? "border-blue-500"
                     : afterRowTriggers
-                      ? "connector-fill border-white"
-                      : "border-white"
+                      ? "connector-fill border-white dark:border-neutral-700"
+                      : "border-white dark:border-neutral-700"
                 } ${shrinkConnectorBelow ? "left-0" : "w-full"}`}
                 style={{
                   ...(shrinkConnectorBelow

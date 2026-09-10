@@ -37,14 +37,14 @@ function FlashcardStudyInner() {
         <main className="flex-1">
           <div className="mx-auto max-w-2xl space-y-6 px-5 py-10 lg:py-14">
             <div className="space-y-1 text-center">
-              <h1 className="text-2xl font-semibold text-neutral-900">Flashcard study</h1>
+              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Flashcard study</h1>
               {!user && (
-                <p className="text-sm text-neutral-500">Sign in to save your progress across sessions.</p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">Sign in to save your progress across sessions.</p>
               )}
             </div>
 
             {cards === null ? (
-              <p className="text-center text-sm text-neutral-500">Loading…</p>
+              <p className="text-center text-sm text-neutral-500 dark:text-neutral-400">Loading…</p>
             ) : (
               <FlashcardDeck cards={cards} onReview={handleReview} />
             )}

@@ -95,7 +95,7 @@ function AmbientTracksIndexInner() {
                       <div className="min-w-0 space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-medium">{t.title}</span>
-                          {!t.is_active && <span className="text-xs text-neutral-500">Inactive</span>}
+                          {!t.is_active && <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Order {t.order_no} · {t.category?.title ?? "Every category (global)"}

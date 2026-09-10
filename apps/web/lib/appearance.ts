@@ -15,10 +15,9 @@ export function applyTheme(value: Appearance): void {
 }
 
 export function useAppearance() {
-  // Defaults to "light", not "system" — the site's components are only styled for
-  // light mode (no `dark:` variants anywhere), so auto-following the OS/browser's
-  // dark-mode preference produces a half-styled, broken-looking page. Only switch
-  // to dark/system if the user explicitly picks it from the toggle.
+  // Defaults to "light", not "system" — dark is opt-in (the account menu's Night Mode
+  // switch, or the appearance settings), so a visitor whose OS is set to dark still
+  // lands on the light site until they ask for dark themselves.
   const [appearance, setAppearance] = useState<Appearance>("light");
 
   useEffect(() => {

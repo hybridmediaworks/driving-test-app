@@ -30,7 +30,7 @@ export default function CheatSheetsBanner({
   }, [stateCode, vehicleType]);
 
   return (
-    <div className="relative flex items-center justify-between overflow-hidden rounded-2xl bg-blue-50 ps-5 pr-15">
+    <div className="relative flex items-center justify-between overflow-hidden rounded-2xl bg-blue-50 dark:bg-blue-500/10 ps-5 pr-15">
       <div className="space-y-3 py-5">
         <Paragraph className="max-w-md" size="sm">
           Condensed, high-yield study guides — read online or download as a PDF to study offline.

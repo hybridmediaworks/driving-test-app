@@ -20,7 +20,7 @@ export default function ExamResults({
     <div className="space-y-6">
       <div
         className={`rounded-3xl border p-6 text-center shadow-sm ${
-          passed === true ? "border-green-100 bg-green-50" : passed === false ? "border-red-100 bg-red-50" : "border-gray-100 bg-white"
+          passed === true ? "border-green-100 bg-green-50" : passed === false ? "border-red-100 bg-red-50" : "border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800"
         }`}
       >
         {passed !== null && (
@@ -29,7 +29,7 @@ export default function ExamResults({
           </div>
         )}
         <Paragraph color="primary" size="sm" className="font-semibold">Your score</Paragraph>
-        <p className="my-2 text-4xl font-bold text-neutral-900">{Math.round(attempt.score)}%</p>
+        <p className="my-2 text-4xl font-bold text-neutral-900 dark:text-neutral-100">{Math.round(attempt.score)}%</p>
         <Paragraph color="muted">
           {attempt.correct_count} of {attempt.total_questions} correct
         </Paragraph>

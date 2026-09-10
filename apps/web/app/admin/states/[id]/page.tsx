@@ -150,7 +150,7 @@ function ViewStateInner({ id }: { id: string }) {
                             {q.title}
                           </Link>
                           <PremiumBadge isPremium={q.is_premium} />
-                          {!q.is_active && <span className="text-xs text-neutral-500">Inactive</span>}
+                          {!q.is_active && <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {q.category?.title} · {q.total_questions} questions ·{" "}
@@ -194,7 +194,7 @@ function ViewStateInner({ id }: { id: string }) {
                             {c.title}
                           </Link>
                           <PremiumBadge isPremium={c.is_premium} />
-                          {!c.is_active && <span className="text-xs text-neutral-500">Inactive</span>}
+                          {!c.is_active && <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>}
                         </div>
                         <p className="line-clamp-1 text-sm text-muted-foreground">{c.summary}</p>
                       </div>
@@ -232,7 +232,7 @@ function ViewStateInner({ id }: { id: string }) {
                             {c.front_text}
                           </Link>
                           <PremiumBadge isPremium={c.is_premium} />
-                          {!c.is_active && <span className="text-xs text-neutral-500">Inactive</span>}
+                          {!c.is_active && <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>}
                         </div>
                         <p className="line-clamp-1 text-sm text-muted-foreground">{c.back_text}</p>
                       </div>
@@ -311,7 +311,7 @@ function ViewStateInner({ id }: { id: string }) {
                             {v.title}
                           </Link>
                           <PremiumBadge isPremium={v.is_premium} />
-                          {!v.is_active && <span className="text-xs text-neutral-500">Inactive</span>}
+                          {!v.is_active && <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {v.category?.title ?? "Any category"}

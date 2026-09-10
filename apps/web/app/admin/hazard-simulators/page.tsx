@@ -123,7 +123,7 @@ function HazardSimulatorsIndexInner() {
                             <span className="inline-flex rounded-full bg-neutral-500/15 px-2 py-0.5 text-xs">Inactive</span>
                           )}
                           {sim.content_locked && (
-                            <span className="inline-flex rounded-full bg-blue-500/15 px-2 py-0.5 text-xs text-blue-700">
+                            <span className="inline-flex rounded-full bg-blue-500/15 px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">
                               Locked
                             </span>
                           )}

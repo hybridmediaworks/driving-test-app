@@ -21,11 +21,11 @@ function StatTile({
   sub?: string;
 }) {
   return (
-    <div className="flex-1 rounded-xl border border-border bg-white p-4 text-center">
-      <Icon className="mx-auto h-5 w-5 text-blue-600" />
-      <p className="mt-2 text-xl font-semibold text-neutral-900">{value}</p>
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p>
-      {sub && <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>}
+    <div className="flex-1 rounded-xl border border-border bg-white dark:bg-neutral-800 p-4 text-center">
+      <Icon className="mx-auto h-5 w-5 text-blue-600 dark:text-blue-400" />
+      <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100">{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-neutral-400 dark:text-neutral-500">{label}</p>
+      {sub && <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{sub}</p>}
     </div>
   );
 }
@@ -74,9 +74,9 @@ export default function HazardResults({
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <div className="rounded-2xl border border-border bg-white p-6 text-center sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Hazard Score</p>
-        <p className="my-2 text-5xl font-bold text-blue-600">{score}%</p>
+      <div className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-6 text-center sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 dark:text-neutral-500">Hazard Score</p>
+        <p className="my-2 text-5xl font-bold text-blue-600 dark:text-blue-400">{score}%</p>
         <PassFailBadge passed={attempt.passed} failedLabel="Below the pass mark" size="sm" />
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -110,15 +110,15 @@ export default function HazardResults({
       )}
 
       {reviewing && current && (
-        <div className="space-y-3 rounded-2xl border border-border bg-white p-4">
+        <div className="space-y-3 rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-neutral-700">
+            <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
               Missed hazard {reviewIndex + 1} of {missed.length}
             </p>
             <button
               type="button"
               onClick={() => setReviewing(false)}
-              className="rounded-full p-1 text-neutral-400 hover:bg-neutral-100"
+              className="rounded-full p-1 text-neutral-400 dark:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700"
               aria-label="Close review"
             >
               <X className="h-4 w-4" />
@@ -129,9 +129,9 @@ export default function HazardResults({
             <div ref={containerRef} className="aspect-video w-full" />
           </div>
 
-          <div className="rounded-lg bg-blue-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">{current.type_label}</p>
-            <p className="text-sm text-neutral-700">{current.comment}</p>
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-500/10 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">{current.type_label}</p>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">{current.comment}</p>
           </div>
 
           <div className="flex items-center justify-between">

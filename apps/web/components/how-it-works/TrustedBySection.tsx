@@ -25,7 +25,7 @@ export default function TrustedBySection() {
             {avatars.map((avatar) => (
               <div
                 key={avatar.initials}
-                className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white ${avatar.color}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white dark:ring-neutral-700 ${avatar.color}`}
               >
                 {avatar.initials}
               </div>
@@ -45,7 +45,7 @@ export default function TrustedBySection() {
               size="sm"
               className="leading-tight text-center md:text-left"
             >
-              Trusted by <span className="text-blue-600">4.8M+ drivers</span>{" "}
+              Trusted by <span className="text-blue-600 dark:text-blue-400">4.8M+ drivers</span>{" "}
               across 47 states
             </Heading>
           </div>

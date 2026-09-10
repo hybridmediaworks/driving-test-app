@@ -116,7 +116,7 @@ export default function ExtraSupportSection() {
             <Link
               key={card.title}
               href={card.href}
-              className="group flex flex-col gap-6 overflow-hidden rounded-3xl border border-neutral-200 bg-white pb-8 shadow-hover transition-transform duration-300 hover:-translate-y-1"
+              className="group flex flex-col gap-6 overflow-hidden rounded-3xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-neutral-800 pb-8 shadow-hover transition-transform duration-300 hover:-translate-y-1"
             >
               {card.cover ?? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -126,7 +126,7 @@ export default function ExtraSupportSection() {
                   className="w-full rounded-[20px] object-cover"
                 />
               )}
-              <h3 className="px-8 font-sora text-2xl leading-8 font-semibold text-black">
+              <h3 className="px-8 font-sora text-2xl leading-8 font-semibold text-black dark:text-neutral-100">
                 {card.title}
               </h3>
             </Link>

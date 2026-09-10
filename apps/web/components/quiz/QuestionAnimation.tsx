@@ -17,7 +17,7 @@ const Player = dynamic(
  */
 export default function QuestionAnimation({
   asset,
-  className = "max-h-64 w-full rounded-xl bg-neutral-50 object-cover",
+  className = "max-h-64 w-full rounded-xl bg-neutral-50 dark:bg-neutral-800 object-cover",
 }: {
   asset: PublicQuizQuestionAsset;
   className?: string;

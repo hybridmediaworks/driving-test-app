@@ -108,16 +108,16 @@ export default function QuizResults({
 
       <div className="grid gap-5 lg:grid-cols-[2fr_1fr] lg:items-stretch">
         {/* ── Left: score + coverage + next-test (pixel-matched to reference) ── */}
-        <div className="rounded-3xl border border-border bg-white p-6 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.2)] sm:p-10 lg:p-14">
+        <div className="rounded-3xl border border-border bg-white dark:bg-neutral-800 p-6 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.2)] sm:p-10 lg:p-14">
           <div className="relative">
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-sm text-neutral-700">
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-sm text-neutral-700 dark:text-neutral-300">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
-                <strong className="text-neutral-900">{correct}</strong> {t("correctAnswersLabel")}
+                <strong className="text-neutral-900 dark:text-neutral-100">{correct}</strong> {t("correctAnswersLabel")}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-red-400" />
-                <strong className="text-neutral-900">{incorrect}</strong> {t("incorrectAnswersLabel")}
+                <strong className="text-neutral-900 dark:text-neutral-100">{incorrect}</strong> {t("incorrectAnswersLabel")}
               </span>
             </div>
             <div className="absolute -top-1 right-0 flex gap-2">
@@ -125,7 +125,7 @@ export default function QuizResults({
                 type="button"
                 onClick={onRetry}
                 title={t("restart")}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-600"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-neutral-400 dark:text-neutral-500 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:text-neutral-600 dark:hover:text-neutral-300"
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
@@ -133,14 +133,14 @@ export default function QuizResults({
                 type="button"
                 onClick={() => onSelectQuestion(0)}
                 title={t("all")}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-600"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-neutral-400 dark:text-neutral-500 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:text-neutral-600 dark:hover:text-neutral-300"
               >
                 <Eye className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          <h1 className="mt-3 text-center font-sora text-[2.5rem] font-extrabold leading-tight text-neutral-900">
+          <h1 className="mt-3 text-center font-sora text-[2.5rem] font-extrabold leading-tight text-neutral-900 dark:text-neutral-100">
             {headingLabel(percent, t)} - {percent}%
           </h1>
 
@@ -160,24 +160,24 @@ export default function QuizResults({
 
           {/* Body is inset narrower than the full-width green bar (matches the reference). */}
           <div className="px-2 sm:px-6 lg:px-12">
-            <p className="mt-2 text-right text-xs text-neutral-500">
+            <p className="mt-2 text-right text-xs text-neutral-500 dark:text-neutral-400">
               {t("passingThresholdLabel", { percent: passingThreshold })}
             </p>
 
             {showUpsell && (
               <>
-                <p className="mt-5 text-center text-sm leading-relaxed text-neutral-600">
+                <p className="mt-5 text-center text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
                   {t("practicedCoverageA", { seen: total, total: TOTAL_BANK, state: stateName })}
-                  <strong className="text-neutral-900">{t("practicedCoverageB", { remaining })}</strong>
+                  <strong className="text-neutral-900 dark:text-neutral-100">{t("practicedCoverageB", { remaining })}</strong>
                   {t("practicedCoverageC")}
                 </p>
 
                 <div className="mt-4">
                   <div className="text-sm">
-                    <span className="font-bold text-neutral-900">{total}</span>
-                    <span className="text-neutral-400">/{TOTAL_BANK}</span>
+                    <span className="font-bold text-neutral-900 dark:text-neutral-100">{total}</span>
+                    <span className="text-neutral-400 dark:text-neutral-500">/{TOTAL_BANK}</span>
                   </div>
-                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-600">
                     <div
                       className="h-full rounded-full bg-blue-600 transition-[width] duration-1000 ease-out"
                       style={{ width: `${barOn ? Math.max(4, (total / TOTAL_BANK) * 100) : 0}%` }}
@@ -194,14 +194,14 @@ export default function QuizResults({
                       <span className="text-[8px] font-bold uppercase leading-none tracking-wide opacity-90">Missed</span>
                     </div>
                     <div className="min-w-0">
-                      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-blue-600">
+                      <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                         {t("quickCramGuide")}
                       </span>
-                      <p className="mt-1 text-base font-bold leading-snug text-neutral-900">
+                      <p className="mt-1 text-base font-bold leading-snug text-neutral-900 dark:text-neutral-100">
                         {t("cramGuideTitle", { state: stateName })}
                       </p>
-                      <p className="mt-2 text-sm leading-relaxed text-neutral-600">{t("cramGuideDesc")}</p>
+                      <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">{t("cramGuideDesc")}</p>
                       <Button href="/cheat-sheets" size="md" className="mt-4 rounded-xl! text-sm! whitespace-nowrap">
                         {t("downloadCheatSheet", { state: stateName })} <ChevronRight className="size-4" />
                       </Button>
@@ -214,12 +214,12 @@ export default function QuizResults({
             <Button onClick={onContinue} className="mt-6 w-full rounded-2xl!">
               <SteeringWheel className="size-5" /> {t("takeNextPracticeTest")} <ChevronRight className="size-4" />
             </Button>
-            <p className="mt-2.5 text-center text-xs text-neutral-500">
+            <p className="mt-2.5 text-center text-xs text-neutral-500 dark:text-neutral-400">
               {t("newQuestionsMeta", { count: total, min: estMinutes })}
             </p>
 
             {showUpsell && (
-              <Button href="/pricing" variant="ghost" className="mt-3 w-full rounded-2xl! border border-blue-300 hover:bg-blue-50">
+              <Button href="/pricing" variant="ghost" className="mt-3 w-full rounded-2xl! border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
                 {t("getAllQuestionsCta", { total: `${TOTAL_BANK}+`, state: stateCode })}
               </Button>
             )}
@@ -227,12 +227,12 @@ export default function QuizResults({
         </div>
 
         {/* ── Right: AI weak areas + coach message + character ── */}
-        <div className="relative flex flex-col overflow-hidden rounded-3xl border border-border bg-white p-6 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.2)]">
-          <h3 className="text-lg font-bold text-neutral-900">{t("yourWeakAreas")}</h3>
+        <div className="relative flex flex-col overflow-hidden rounded-3xl border border-border bg-white dark:bg-neutral-800 p-6 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.2)]">
+          <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">{t("yourWeakAreas")}</h3>
 
           <div className="mt-3">
             {insightLoading ? (
-              <p className="text-sm text-neutral-400">{t("analyzingResults")}</p>
+              <p className="text-sm text-neutral-400 dark:text-neutral-500">{t("analyzingResults")}</p>
             ) : hasWeakAreas ? (
               <div className="flex flex-wrap gap-2">
                 {insight!.weak_areas.map((area) => (
@@ -252,7 +252,7 @@ export default function QuizResults({
             <Button
               variant="ghost"
               onClick={onRetry}
-              className="mt-4 w-full rounded-2xl! border border-blue-400 hover:bg-blue-50"
+              className="mt-4 w-full rounded-2xl! border border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10"
             >
               <Zap className="size-4" /> {t("fixWeakAreasNow")}
             </Button>
@@ -262,10 +262,10 @@ export default function QuizResults({
           <div className="min-h-6 flex-1" />
 
           {!insightLoading && insight?.message && (
-            <div className="relative rounded-2xl bg-blue-50 p-4 text-sm leading-relaxed text-neutral-700">
+            <div className="relative rounded-2xl bg-blue-50 dark:bg-blue-500/10 p-4 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
               {insight.message}
               {/* tail pointing down to the character */}
-              <span className="absolute -bottom-2 left-10 h-4 w-4 rotate-45 bg-blue-50" />
+              <span className="absolute -bottom-2 left-10 h-4 w-4 rotate-45 bg-blue-50 dark:bg-blue-500/10" />
             </div>
           )}
 

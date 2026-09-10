@@ -36,12 +36,12 @@ export default function ReadinessUpsell({
 
       <div className="mt-3">
         <div className="flex items-center justify-between text-xs font-semibold">
-          <span className="uppercase tracking-wide text-neutral-500">Question coverage</span>
-          <span className="text-neutral-800">
+          <span className="uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Question coverage</span>
+          <span className="text-neutral-800 dark:text-neutral-100">
             {seenCount} / {TOTAL_LABEL}
           </span>
         </div>
-        <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+        <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-600">
           <div className="h-full rounded-full bg-amber-500" style={{ width: `${pct}%` }} />
         </div>
       </div>

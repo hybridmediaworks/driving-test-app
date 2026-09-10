@@ -26,7 +26,7 @@ export default function RestartDialog({
         <div className="relative flex h-48 items-center justify-center bg-background2">
           {/* emphasis strokes */}
           <svg
-            className="absolute right-24 top-12 text-neutral-800"
+            className="absolute right-24 top-12 text-neutral-800 dark:text-neutral-100"
             width="44"
             height="44"
             viewBox="0 0 44 44"
@@ -41,12 +41,12 @@ export default function RestartDialog({
           </svg>
 
           {/* phone with restart icon */}
-          <div className="-rotate-12 rounded-2xl border-2 border-neutral-800 bg-white p-5 shadow-sm">
-            <RotateCcw className="h-12 w-12 text-blue-600" strokeWidth={2.5} />
+          <div className="-rotate-12 rounded-2xl border-2 border-neutral-800 bg-white dark:bg-neutral-800 p-5 shadow-sm">
+            <RotateCcw className="h-12 w-12 text-blue-600 dark:text-blue-400" strokeWidth={2.5} />
           </div>
         </div>
 
-        <div className="space-y-4 bg-white p-8 text-center">
+        <div className="space-y-4 bg-white dark:bg-neutral-800 p-8 text-center">
           <Heading size="xs">{t("restartTestTitle")}</Heading>
           <Paragraph className="text-center">
             {t("restartTestBody")}
@@ -56,7 +56,7 @@ export default function RestartDialog({
             <Button
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="flex-1 border border-blue-300 hover:bg-blue-50"
+              className="flex-1 border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
             >
               {t("cancel")}
             </Button>

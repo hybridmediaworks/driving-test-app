@@ -37,7 +37,7 @@ export default function OnePlatformSection() {
       <div className="mx-auto max-w-282 md:space-y-15 space-y-8">
         <div className="flex max-w-162.25 mx-auto flex-col items-center gap-4 text-center">
           <Paragraph
-            className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
+            className="mb-2 border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
             size="xs"
             color="primary"
           >
@@ -50,7 +50,7 @@ export default function OnePlatformSection() {
             what you study next.
           </Paragraph>
         </div>
-        <div className="lg:px-12.5 px-5 sm:px-8 md:py-15 py-6 space-y-10 border rounded-xl bg-white shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)]">
+        <div className="lg:px-12.5 px-5 sm:px-8 md:py-15 py-6 space-y-10 border rounded-xl bg-white dark:bg-neutral-800 shadow-[0_4px_6px_-2px_rgba(0,0,0,0.03),0_12px_16px_-4px_rgba(0,0,0,0.08)]">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 lg:gap-10">
             {highlights.map((item) => (
               <div key={item.title} className="space-y-1.5">

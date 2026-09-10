@@ -414,14 +414,14 @@ export default async function CdlPage({
                     and start earning $60K+ within weeks - not months.
                   </Paragraph>
                   <div className="flex items-center justify-start gap-2">
-                    <span className="max-w-34 text-sm font-bold text-neutral-900">
+                    <span className="max-w-34 text-sm font-bold text-neutral-900 dark:text-neutral-100">
                       FMCSA-Registered ELDT Provider
                     </span>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/tpr_logo_blue.svg" alt="" />
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/fmcsa_logo_blue.svg" alt="" />
-                    <span className="max-w-34 text-[9px] font-bold text-neutral-900">
+                    <span className="max-w-34 text-[9px] font-bold text-neutral-900 dark:text-neutral-100">
                       Federal Motor Carrier Safety Administration Provider
                     </span>
                   </div>
@@ -459,7 +459,7 @@ export default async function CdlPage({
                 {cdlGoals.map((goal) => (
                   <div
                     key={goal}
-                    className="flex cursor-pointer gap-3 rounded-xl border bg-white px-4 py-3.5 shadow-md hover:border-blue-400 hover:bg-blue-50"
+                    className="flex cursor-pointer gap-3 rounded-xl border bg-white dark:bg-neutral-800 px-4 py-3.5 shadow-md hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10"
                   >
                     <Paragraph
                       size="xs"
@@ -476,7 +476,7 @@ export default async function CdlPage({
                         Tractor-trailers, semis, 18-wheelers
                       </Paragraph>
                     </div>
-                    <ChevronRightIcon className="mt-1 text-neutral-400" />
+                    <ChevronRightIcon className="mt-1 text-neutral-400 dark:text-neutral-500" />
                   </div>
                 ))}
               </div>
@@ -501,7 +501,7 @@ export default async function CdlPage({
                 </section>
 
                 {section.video && (
-                  <section className="mb-12 grid grid-cols-[1fr_320px] gap-6 rounded-3xl bg-blue-50 p-6 max-lg:grid-cols-1">
+                  <section className="mb-12 grid grid-cols-[1fr_320px] gap-6 rounded-3xl bg-blue-50 dark:bg-blue-500/10 p-6 max-lg:grid-cols-1">
                     <div className="space-y-2">
                       <Paragraph
                         color="dark"
@@ -509,7 +509,7 @@ export default async function CdlPage({
                       >
                         {section.video.title}
                       </Paragraph>
-                      <div className="grid grid-cols-3 gap-x-5.5 gap-y-6 text-sm text-neutral-600">
+                      <div className="grid grid-cols-3 gap-x-5.5 gap-y-6 text-sm text-neutral-600 dark:text-neutral-300">
                         {videoTopicGroups.map((group, index) => (
                           <div className="space-y-3" key={index}>
                             <Paragraph
@@ -537,7 +537,7 @@ export default async function CdlPage({
                         <img src="/tpr_logo_blue.svg" alt="" />
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src="/fmcsa_logo_blue.svg" alt="" />
-                        <span className="text-[9px] font-bold text-neutral-900">
+                        <span className="text-[9px] font-bold text-neutral-900 dark:text-neutral-100">
                           Federal Motor Carrier Safety Administration Provider
                         </span>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -593,7 +593,7 @@ export default async function CdlPage({
               <CheatSheetsBanner />
             </section>
 
-            <section className="mb-10 flex items-center justify-between gap-15 rounded-3xl bg-blue-50 ps-5 pr-15 max-md:flex-col max-md:items-start">
+            <section className="mb-10 flex items-center justify-between gap-15 rounded-3xl bg-blue-50 dark:bg-blue-500/10 ps-5 pr-15 max-md:flex-col max-md:items-start">
               <div>
                 <Heading as="h3" size="xs" className="mb-1 text-[22px]!">
                   10 Things You Should Do Before Your CDL Knowledge Exam
@@ -623,9 +623,9 @@ export default async function CdlPage({
               data-nosnippet=""
             >
               <div className="expert flex flex-1 bg-transparent p-0">
-                <div className="flex w-full gap-5 rounded-[20px] bg-white px-5 pt-5 pb-3.5">
+                <div className="flex w-full gap-5 rounded-[20px] bg-white dark:bg-neutral-800 px-5 pt-5 pb-3.5">
                   <div className="image relative shrink-0">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-500/10">
                       <ShieldCheck className="h-7 w-7 text-blue-500" />
                     </div>
                   </div>
@@ -643,9 +643,9 @@ export default async function CdlPage({
                 </div>
               </div>
               <div className="expert flex flex-1 bg-transparent p-0">
-                <div className="flex w-full gap-5 rounded-[20px] bg-white px-5 pt-5 pb-3.5">
+                <div className="flex w-full gap-5 rounded-[20px] bg-white dark:bg-neutral-800 px-5 pt-5 pb-3.5">
                   <div className="image relative shrink-0">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-500/10">
                       <ShieldCheck className="h-7 w-7 text-blue-500" />
                     </div>
                   </div>

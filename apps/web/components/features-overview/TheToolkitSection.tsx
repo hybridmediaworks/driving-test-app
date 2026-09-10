@@ -21,7 +21,7 @@ export default function TheToolkitSection() {
       <div className="mx-auto max-w-container space-y-12">
         <div className="flex max-w-152.25 flex-col gap-4">
           <Paragraph
-            className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
+            className="mb-2 border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase max-w-fit"
             size="xs"
             color="primary"
           >
@@ -75,7 +75,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <NotepadText className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -87,7 +87,7 @@ export default function TheToolkitSection() {
                 </Paragraph>
               </div>
               <div className="space-y-6">
-                <div className="space-y-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="space-y-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100">
                   <div className="flex gap-2 items-center justify-between">
                     <Paragraph size="xs" className="font-bold">
                       QUESTION 18 / 46
@@ -118,7 +118,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <CarFront className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -130,7 +130,7 @@ export default function TheToolkitSection() {
                 </Paragraph>
               </div>
               <div className="space-y-6">
-                <div className="space-y-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="space-y-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100">
                   <div className="flex gap-2 items-center justify-between">
                     <Paragraph size="xs" className="font-bold">
                       ROAD TEST · STEP 4
@@ -146,7 +146,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <Mic className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -158,7 +158,7 @@ export default function TheToolkitSection() {
                 </Paragraph>
               </div>
               <div className="space-y-6">
-                <div className="space-y-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="space-y-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100">
                   <div className="flex gap-2 items-center justify-between">
                     <Paragraph size="xs" className="font-bold">
                       SESSION · COMMUTE
@@ -174,7 +174,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <ChartColumn className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -186,7 +186,7 @@ export default function TheToolkitSection() {
                 </Paragraph>
               </div>
               <div className="space-y-6">
-                <div className="space-y-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="space-y-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100">
                   <div className="flex gap-2 items-center justify-between">
                     <Paragraph size="xs" className="font-bold">
                       READINESS
@@ -205,7 +205,7 @@ export default function TheToolkitSection() {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white p-5 lg:p-7 shadow-card">
+            <div className="flex flex-col justify-between gap-6 relative rounded-2xl border bg-white dark:bg-neutral-800 p-5 lg:p-7 shadow-card">
               <div className="space-y-6">
                 <Copy className="bg-blue-100 p-3.5 rounded-[11px] w-14 h-14 text-blue-500" />
                 <Heading as="h3" size="sm" className="mb-2">
@@ -217,7 +217,7 @@ export default function TheToolkitSection() {
                 </Paragraph>
               </div>
               <div className="space-y-6">
-                <div className="space-y-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="space-y-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100">
                   <div className="flex gap-2 items-center justify-between">
                     <Paragraph size="xs" className="font-bold">
                       DECK · ROAD SIGNS

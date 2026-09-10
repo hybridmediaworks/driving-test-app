@@ -131,9 +131,9 @@ export default function TestimonialCarousel() {
       <button
         onClick={() => goTo(-1)}
         aria-label="Previous testimonial"
-        className="absolute top-65.5 left-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white bg-background2"
+        className="absolute top-65.5 left-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white dark:border-neutral-700 bg-background2"
       >
-        <ArrowLeft className="h-8 w-8 text-neutral-500" />
+        <ArrowLeft className="h-8 w-8 text-neutral-500 dark:text-neutral-400" />
       </button>
 
       <div ref={containerRef} className="relative h-144 overflow-hidden">
@@ -151,7 +151,7 @@ export default function TestimonialCarousel() {
 
       <div className="relative z-10 mx-auto -mt-[165px] max-w-[667px]">
         <div
-          className="space-y-3 rounded-xl bg-white p-8 text-center"
+          className="space-y-3 rounded-xl bg-white dark:bg-neutral-800 p-8 text-center"
           style={{
             boxShadow: "0px 20px 12px rgba(20, 60, 120, 0.08), 0px 8px 4px rgba(20, 60, 120, 0.03)",
           }}
@@ -179,9 +179,9 @@ export default function TestimonialCarousel() {
       <button
         onClick={() => goTo(1)}
         aria-label="Next testimonial"
-        className="absolute top-65.5 right-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white bg-background2"
+        className="absolute top-65.5 right-0 z-50 flex h-13 w-21 items-center justify-center rounded-2xl border border-white dark:border-neutral-700 bg-background2"
       >
-        <ArrowRight className="h-8 w-8 text-neutral-500" />
+        <ArrowRight className="h-8 w-8 text-neutral-500 dark:text-neutral-400" />
       </button>
     </div>
   );

@@ -21,7 +21,7 @@ export default function Slider({
       step={step}
       value={value[0]}
       onChange={(e) => onValueChange([Number(e.target.value)])}
-      className={`h-1.5 cursor-pointer appearance-none rounded-full bg-neutral-200 accent-blue-primary ${className}`}
+      className={`h-1.5 cursor-pointer appearance-none rounded-full bg-neutral-200 dark:bg-neutral-600 accent-blue-primary ${className}`}
     />
   );
 }

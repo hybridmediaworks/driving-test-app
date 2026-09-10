@@ -9,7 +9,7 @@ export default function ChallangeBankBanner() {
       <Heading size="xs" className="mb-2">
         Weak Spots{" "}
       </Heading>
-      <div className="relative flex items-center justify-start rounded-2xl bg-blue-50 px-5">
+      <div className="relative flex items-center justify-start rounded-2xl bg-blue-50 dark:bg-blue-500/10 px-5">
         <div className="space-y-3 py-5">
           <Paragraph className="max-w-md" size="sm">
             Weak Spots automatically retests you on all your missed questions until you nail every

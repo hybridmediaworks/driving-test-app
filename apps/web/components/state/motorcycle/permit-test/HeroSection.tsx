@@ -23,7 +23,7 @@ export default function HeroSection() {
           <div className="space-y-4 w-full xl:max-w-155">
             <Paragraph
               size="md"
-              className="flex max-w-fit font-semibold items-center gap-2 rounded-full border bg-white px-3.75 py-2.25 shadow-card"
+              className="flex max-w-fit font-semibold items-center gap-2 rounded-full border bg-white dark:bg-neutral-800 px-3.75 py-2.25 shadow-card"
             >
               <span className="relative inline-flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-200" />
@@ -63,7 +63,7 @@ export default function HeroSection() {
                 <BadgeCheck className="w-5 h-5 text-green-700" /> No signup
                 required
               </Paragraph>
-              <ReviewerBadge className="text-sm text-neutral-700" />
+              <ReviewerBadge className="text-sm text-neutral-700 dark:text-neutral-300" />
             </div>
           </div>
           <div

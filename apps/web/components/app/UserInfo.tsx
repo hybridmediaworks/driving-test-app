@@ -19,7 +19,7 @@ export default function UserInfo({
     <>
       <Avatar className="h-8 w-8 overflow-hidden rounded-lg">
         <AvatarFallback>
-          <span className="text-black">{getInitials(user.name)}</span>
+          <span className="text-black dark:text-neutral-100">{getInitials(user.name)}</span>
         </AvatarFallback>
       </Avatar>
 

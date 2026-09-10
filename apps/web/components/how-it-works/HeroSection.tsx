@@ -29,7 +29,7 @@ export default function HeroSection() {
       <div className="mx-auto max-w-container space-y-12 px-5 flex flex-col lg:flex-row justify-between items-center gap-4">
         <div className="space-y-4 lg:max-w-168.75">
           <Paragraph
-            className="mb-2 border-b border-blue-50 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
+            className="mb-2 border-b border-blue-50 dark:border-blue-500/20 px-3.5 py-1.25 font-bold tracking-[1.2px] uppercase"
             size="xs"
             color="primary"
           >
@@ -60,7 +60,7 @@ export default function HeroSection() {
             Free to start · No credit card · Average time to test-ready: 9 days.
           </Paragraph>
         </div>
-        <div className="bg-white w-full space-y-6 max-w-130 p-5 lg:p-8 rounded-xl shadow-[0_12px_35px_-26px_rgba(20,60,120,0.25),0_4px_6px_-2px_rgba(20,60,120,0.03)]">
+        <div className="bg-white dark:bg-neutral-800 w-full space-y-6 max-w-130 p-5 lg:p-8 rounded-xl shadow-[0_12px_35px_-26px_rgba(20,60,120,0.25),0_4px_6px_-2px_rgba(20,60,120,0.03)]">
           <Paragraph size="2xl" color="dark" className="font-semibold">
             The whole path, in one glance
           </Paragraph>

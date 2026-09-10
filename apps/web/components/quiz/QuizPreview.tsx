@@ -13,12 +13,12 @@ export default function QuizPreview({
   onStart: () => void;
 }) {
   return (
-    <div className="space-y-4 rounded-3xl border border-gray-100 bg-white p-8 text-center shadow-sm">
+    <div className="space-y-4 rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-8 text-center shadow-sm">
       {data.quiz.cover_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={data.quiz.cover_image_url} alt="" className="mx-auto max-h-48 rounded-2xl object-cover" />
       )}
-      <h1 className="text-2xl font-semibold text-neutral-900">{data.quiz.title}</h1>
+      <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">{data.quiz.title}</h1>
       <Paragraph color="muted">
         {data.quiz.category?.title}
         {data.quiz.state && ` · ${data.quiz.state.name}`}
@@ -36,9 +36,9 @@ export default function QuizPreview({
         </Paragraph>
       )}
       {data.locked ? (
-        <div className="space-y-3 rounded-2xl bg-blue-50 p-6">
+        <div className="space-y-3 rounded-2xl bg-blue-50 dark:bg-blue-500/10 p-6">
           <Lock className="mx-auto h-8 w-8 text-amber-600" />
-          <p className="text-sm font-semibold text-neutral-900">This is a premium quiz</p>
+          <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">This is a premium quiz</p>
           <Paragraph color="muted" size="sm">
             Upgrade to unlock this quiz and start practicing.
           </Paragraph>

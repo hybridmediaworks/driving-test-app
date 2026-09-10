@@ -2,20 +2,25 @@
 
 import { useEffect, useState } from "react";
 import type { Handbook, PaginatedResponse } from "@driving-test-app/shared";
-import Button from "@/components/ui/Button";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import Subheading from "@/components/ui/Subheading";
 import { api } from "@/lib/api";
 import { stateAbbreviations } from "@/lib/usStates";
+import { passingScorePercent, questionsToPass } from "@/lib/quizPassMark";
 import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useWebLayout } from "@/lib/web-layout-context";
+import { ArrowRight } from "lucide-react";
 
 const vehicleSlugs: Record<string, string> = {
   Car: "car",
   Motorcycle: "motorcycle",
   CDL: "cdl",
 };
+
+/** The soft white → blue wash the two prose cards sit on in Figma (radial, from the top-left
+ * corner). Set through a class rather than the theme's `--wash-*` variables because those are
+ * only wired up for the home page's inline-styled feature cards. */
+const CARD_WASH = "bg-[radial-gradient(140%_120%_at_0%_0%,#ffffff_36%,#dbeafe_100%)] dark:bg-none dark:bg-neutral-800";
 
 export default function PreparingSection({ testSlug }: { testSlug: string }) {
   const { selectedState, selectedVehicle } = useWebLayout();
@@ -45,54 +50,80 @@ export default function PreparingSection({ testSlug }: { testSlug: string }) {
   if (!quiz) return null;
 
   const isDrivingTest = quiz.test_track === "driving_test";
+  const testLabel = isDrivingTest ? "driving test" : "permit test";
+  const passPercent = passingScorePercent(quiz);
+  const toPass = questionsToPass(quiz);
 
   return (
-    <section className="py-15 lg:py-30 px-5 bg-background2">
-      <div className="max-w-container mx-auto flex flex-col lg:flex-row gap-5 items-center justify-between">
-        <div className="max-w-167.5 space-y-6">
-          <Subheading text="WHAT YOU’RE PREPARING FOR" />
-          <Heading>
-            The {stateCode} {isDrivingTest ? "driving test" : "permit test"} in one paragraph
-          </Heading>
-          <Paragraph size="lg">
-            {quiz.title} is part of our <strong>{quiz.category?.title ?? "practice"}</strong> question set and has{" "}
-            <strong>{quiz.total_questions} questions</strong>
-            {typeof quiz.passing_score_percent === "number" ? (
-              <>
-                {" "}
-                — you need at least <strong>{quiz.passing_score_percent}% correct</strong> to pass
-              </>
-            ) : null}
-            . All questions are based on the official {selectedState} Driver Handbook.
-          </Paragraph>
-          {handbook ? (
-            <Paragraph size="lg">
-              For the full official requirements — fees, required documents, and eligibility — read the real{" "}
-              <strong>{handbook.title}</strong>, not a summary.
+    <section className="bg-background2 px-5 py-15 lg:py-30">
+      {/* 840 / 120 / 399 — the exact three-part split of the 1359px container in Figma
+          (node 4387:458). */}
+      <div className="mx-auto flex max-w-container flex-col items-center gap-12 xl:flex-row xl:items-start xl:gap-30">
+        <div className="flex w-full flex-col gap-6.25 xl:max-w-210">
+          <div className="space-y-6">
+            <Heading as="h2">
+              The {selectedState} {testLabel} in one paragraph
+            </Heading>
+            <Paragraph>
+              {quiz.title} is part of our {quiz.category?.title ?? "practice"} question set and consists of{" "}
+              {quiz.total_questions} multiple-choice questions covering the topics outlined in the current{" "}
+              {/* The published handbook title already carries the state name ("Alabama Car
+                  Handbook"), so it isn't prefixed again here. */}
+              {handbook?.title ?? `${selectedState} Driver’s Manual`}.
+              {" "}
+              To pass, you must score at least {passPercent}% ({toPass} out of {quiz.total_questions} questions).{" "}
+              For the official requirements — fees, required documents, and eligibility — check with your local{" "}
+              {selectedState} DMV before test day.
             </Paragraph>
-          ) : (
-            <Paragraph size="lg">
-              For official requirements — fees, required documents, and eligibility — check your local{" "}
-              {selectedState} DMV before test day. DriveLane is an independent study platform, not affiliated
-              with the {selectedState} Division of Motor Vehicles.
-            </Paragraph>
-          )}
-          <div className="flex flex-wrap gap-3">
-            {handbook && (
-              <Button size="lg" variant="ghost" className="p-0!" href={`/handbook/${handbook.id}`}>
-                Read the official handbook
-              </Button>
-            )}
-            {quiz.source_url && (
-              <Button size="lg" variant="ghost" className="p-0!" href={quiz.source_url}>
-                View source
-              </Button>
-            )}
+          </div>
+
+          <div className="flex flex-col gap-5 md:flex-row md:items-stretch">
+            <div
+              className={`flex w-full flex-col justify-center gap-2.5 rounded-2xl p-6 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] md:w-[37%] ${CARD_WASH}`}
+            >
+              <p className="text-xl leading-7.5 font-semibold text-neutral-900 dark:text-neutral-100">
+                Practice before the real thing
+              </p>
+              <Paragraph>
+                Our free online {selectedState} DMV {testLabel} practice test reflects the latest state manual. The
+                test simulates real-world conditions and gives immediate feedback on any missed questions.
+              </Paragraph>
+            </div>
+
+            <div className={`flex w-full flex-col gap-4 rounded-3xl p-6 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] md:w-[63%] ${CARD_WASH}`}>
+              <p className="text-xl leading-7.5 font-semibold text-neutral-900 dark:text-neutral-100">Ready to apply?</p>
+              <Paragraph>
+                Once you’re ready to apply, go to the DMV with proof of identity (birth certificate, passport), your
+                Social Security card, and two proofs of residence (utility bill, bank statement). If under 18, you must
+                have signed consent from a parent, legal guardian, or adult spouse. Submit the documents, pass a vision
+                screening, pay the fee, and pass the official written test.
+              </Paragraph>
+              {handbook && (
+                <a
+                  href={`/handbook/${handbook.id}`}
+                  className="inline-flex items-center gap-1 text-lg leading-7 font-medium text-blue-500"
+                >
+                  Read more <ArrowRight className="h-5 w-5" />
+                </a>
+              )}
+            </div>
           </div>
         </div>
-        <div className="max-w-149.25">
+
+        {/* 399px wide, matching the phone's frame in Figma. The artwork is cut out of the flat
+            background Figma bakes into its exports, so it never covers the copy beside it. */}
+        <div className="w-full max-w-105 shrink-0 xl:w-99.75 xl:max-w-none">
+          {/* Plain <img>: the cut-out has an alpha channel, and next/image's optimiser will
+              re-encode it to JPEG for clients that don't advertise WebP, which would flatten the
+              transparency back onto a solid rectangle. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/what-you-prepare.svg" alt="what-you-prepare" className="w-full" />
+          <img
+            src="/test-slug/dmv-checklist-phone-v2.webp"
+            alt={`What to bring to the ${selectedState} DMV`}
+            width={791}
+            height={1235}
+            className="w-full"
+          />
         </div>
       </div>
     </section>

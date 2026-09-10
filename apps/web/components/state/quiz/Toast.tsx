@@ -22,7 +22,7 @@ export default function Toast({
   return createPortal(
     <div
       role="status"
-      className={`toast-in fixed left-1/2 top-6 z-[100] flex max-w-[min(92vw,420px)] -translate-x-1/2 items-start gap-3 rounded-2xl border bg-white p-4 shadow-[0_20px_50px_-20px_rgba(23,37,84,0.35)] ${
+      className={`toast-in fixed left-1/2 top-6 z-[100] flex max-w-[min(92vw,420px)] -translate-x-1/2 items-start gap-3 rounded-2xl border bg-white dark:bg-neutral-800 p-4 shadow-[0_20px_50px_-20px_rgba(23,37,84,0.35)] ${
         isError ? "border-red-200" : "border-green-200"
       }`}
     >
@@ -31,12 +31,12 @@ export default function Toast({
       ) : (
         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
       )}
-      <p className="flex-1 text-sm text-neutral-700">{message}</p>
+      <p className="flex-1 text-sm text-neutral-700 dark:text-neutral-300">{message}</p>
       <button
         type="button"
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="shrink-0 text-neutral-400 transition-colors hover:text-neutral-600"
+        className="shrink-0 text-neutral-400 dark:text-neutral-500 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
       >
         <X className="h-4 w-4" />
       </button>

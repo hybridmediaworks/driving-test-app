@@ -17,7 +17,7 @@ function CheckRow({
   label: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 py-1.5 text-sm text-neutral-700">
+    <label className="flex cursor-pointer items-start gap-3 py-1.5 text-sm text-neutral-700 dark:text-neutral-300">
       <input
         type="checkbox"
         checked={checked}
@@ -110,14 +110,14 @@ export default function ReportMistakeDialog({
         </Paragraph>
 
         <div className="mt-4 space-y-1">
-          <p className="text-sm font-semibold text-neutral-900">{t("questionLabel")}</p>
+          <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t("questionLabel")}</p>
           <CheckRow checked={flagQuestion} onChange={setFlagQuestion} label={question.question_text} />
 
           {hasImage && (
             <CheckRow checked={flagImage} onChange={setFlagImage} label={t("signOrImage")} />
           )}
 
-          <p className="pt-2 text-sm font-semibold text-neutral-900">{t("answersLabel")}</p>
+          <p className="pt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t("answersLabel")}</p>
           {question.answers.map((a) => (
             <CheckRow
               key={a.id}
@@ -127,11 +127,11 @@ export default function ReportMistakeDialog({
             />
           ))}
 
-          <p className="pt-2 text-sm font-semibold text-neutral-900">{t("hintLabel")}</p>
+          <p className="pt-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t("hintLabel")}</p>
           <CheckRow checked={flagHint} onChange={setFlagHint} label={t("hintExplanationCheckbox")} />
         </div>
 
-        <label className="mt-4 block text-sm text-neutral-600">
+        <label className="mt-4 block text-sm text-neutral-600 dark:text-neutral-300">
           {t("describeWhatIsWrong")}
           <textarea
             value={comment}
@@ -146,21 +146,21 @@ export default function ReportMistakeDialog({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("enterYourName")}
-          className="mt-3 w-full rounded-xl bg-background2 px-4 py-3 text-sm outline-none placeholder:text-neutral-400 focus:ring-2 focus:ring-blue-300"
+          className="mt-3 w-full rounded-xl bg-background2 px-4 py-3 text-sm outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:ring-2 focus:ring-blue-300"
         />
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("enterYourEmail")}
-          className="mt-3 w-full rounded-xl bg-background2 px-4 py-3 text-sm outline-none placeholder:text-neutral-400 focus:ring-2 focus:ring-blue-300"
+          className="mt-3 w-full rounded-xl bg-background2 px-4 py-3 text-sm outline-none placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:ring-2 focus:ring-blue-300"
         />
 
         <div className="mt-5 flex items-center gap-3">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="flex-1 border border-blue-300 hover:bg-blue-50"
+            className="flex-1 border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
           >
             {t("cancel")}
           </Button>

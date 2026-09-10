@@ -133,7 +133,7 @@ function VideosIndexInner() {
                             ) : (
                               <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Free</span>
                             )}
-                            {!v.is_active && <span className="text-xs text-neutral-500">Inactive</span>}
+                            {!v.is_active && <span className="text-xs text-neutral-500 dark:text-neutral-400">Inactive</span>}
                           </div>
                           <p className="text-sm text-muted-foreground">
                             Order {v.order_no} · {v.category?.title ?? "Any category"}

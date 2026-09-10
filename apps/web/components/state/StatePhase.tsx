@@ -78,8 +78,8 @@ export default function StatePhase({
                 previousPhaseFullyCompleted
                   ? "border-blue-500"
                   : animateCircleIn
-                    ? "connector-fill border-white"
-                    : "border-white"
+                    ? "connector-fill border-white dark:border-neutral-700"
+                    : "border-white dark:border-neutral-700"
               }`}
               style={
                 animateCircleIn
@@ -91,7 +91,7 @@ export default function StatePhase({
           <Heading
             as="h3"
             size="xs"
-            className={`relative overflow-hidden rounded-full flex items-center justify-center md:min-w-25 md:min-h-25 min-w-15 min-h-15 md:border-14 border-6 ${showActiveStyle ? "border-blue-100 text-white" : "border-background3 bg-white"}`}
+            className={`relative overflow-hidden rounded-full flex items-center justify-center md:min-w-25 md:min-h-25 min-w-15 min-h-15 md:border-14 border-6 ${showActiveStyle ? "border-blue-100 text-white" : "border-background3 bg-white dark:bg-neutral-800"}`}
           >
             {isActive && !animateCircleIn && (
               <span
@@ -113,8 +113,8 @@ export default function StatePhase({
               isActive && !animateCircleIn
                 ? "border-blue-500"
                 : animateCircleIn
-                  ? "connector-fill border-white"
-                  : "border-white"
+                  ? "connector-fill border-white dark:border-neutral-700"
+                  : "border-white dark:border-neutral-700"
             }`}
             style={
               animateCircleIn

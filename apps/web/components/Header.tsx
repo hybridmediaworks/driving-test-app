@@ -135,7 +135,7 @@ export default function Header({
             <div className="relative">
               <button
                 onClick={() => toggleDropdown("states")}
-                className="flex h-11.5 items-center gap-2 rounded-full bg-blue-50 p-3 text-base font-medium text-blue-700 transition-shadow hover:shadow-md"
+                className="flex h-11.5 items-center gap-2 rounded-full bg-blue-50 dark:bg-blue-500/10 p-3 text-base font-medium text-blue-700 dark:text-blue-300 transition-shadow hover:shadow-md"
               >
                 <MapPin className="h-6 w-6 text-blue-500" />
                 {selectedState}
@@ -143,8 +143,8 @@ export default function Header({
               </button>
 
               {activeDropdown === "states" && (
-                <div className="absolute top-full left-0 z-50 mt-2 w-145 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl">
-                  <p className="mb-3 text-xs font-semibold tracking-wide text-neutral-400 uppercase">
+                <div className="absolute top-full left-0 z-50 mt-2 w-145 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-4 shadow-xl">
+                  <p className="mb-3 text-xs font-semibold tracking-wide text-neutral-400 dark:text-neutral-500 uppercase">
                     Select State
                   </p>
                   <div className="grid grid-cols-3 gap-0.5 text-sm">
@@ -153,9 +153,9 @@ export default function Header({
                         key={state}
                         href={stateHref(state)}
                         onClick={closeStateDropdown}
-                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-neutral-700 hover:bg-blue-50 hover:text-blue-600 ${
+                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-neutral-700 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 ${
                           selectedState === state
-                            ? "bg-blue-50 font-medium text-blue-600"
+                            ? "bg-blue-50 dark:bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400"
                             : ""
                         }`}
                       >
@@ -170,22 +170,22 @@ export default function Header({
             <div className="relative">
               <button
                 onClick={() => toggleDropdown("car")}
-                className="flex h-11.5 items-center gap-2 rounded-full bg-neutral-100 p-3 text-base font-medium text-neutral-700 transition-shadow hover:shadow-md"
+                className="flex h-11.5 items-center gap-2 rounded-full bg-neutral-100 dark:bg-neutral-700 p-3 text-base font-medium text-neutral-700 dark:text-neutral-300 transition-shadow hover:shadow-md"
               >
-                <VehicleIcon className="h-6 w-6 text-neutral-500" />
+                <VehicleIcon className="h-6 w-6 text-neutral-500 dark:text-neutral-400" />
                 {selectedVehicle}
-                <ChevronDown className="h-5 w-5 text-neutral-400" />
+                <ChevronDown className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
               </button>
 
               {activeDropdown === "car" && (
-                <div className="absolute top-full left-0 z-50 mt-2 w-52 rounded-2xl border border-gray-100 bg-white py-2 shadow-xl">
+                <div className="absolute top-full left-0 z-50 mt-2 w-52 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 py-2 shadow-xl">
                   {vehicleOptions.map((item) => (
                     <a
                       key={item.label}
                       onClick={() => selectVehicle(item.label)}
-                      className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
+                      className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 ${
                         selectedVehicle === item.label
-                          ? "bg-blue-50 font-medium text-blue-600"
+                          ? "bg-blue-50 dark:bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400"
                           : ""
                       }`}
                     >
@@ -201,22 +201,22 @@ export default function Header({
               <div className="relative">
                 <button
                   onClick={() => toggleDropdown("testType")}
-                  className="flex h-11.5 items-center gap-2 rounded-full bg-neutral-100 p-3 text-base font-medium text-neutral-700 transition-shadow hover:shadow-md"
+                  className="flex h-11.5 items-center gap-2 rounded-full bg-neutral-100 dark:bg-neutral-700 p-3 text-base font-medium text-neutral-700 dark:text-neutral-300 transition-shadow hover:shadow-md"
                 >
-                  <TestTypeIcon className="h-6 w-6 text-neutral-500" />
+                  <TestTypeIcon className="h-6 w-6 text-neutral-500 dark:text-neutral-400" />
                   {selectedTestTypeOption.label}
-                  <ChevronDown className="h-5 w-5 text-neutral-400" />
+                  <ChevronDown className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
                 </button>
 
                 {activeDropdown === "testType" && (
-                  <div className="absolute top-full left-0 z-50 mt-2 w-52 rounded-2xl border border-gray-100 bg-white py-2 shadow-xl">
+                  <div className="absolute top-full left-0 z-50 mt-2 w-52 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 py-2 shadow-xl">
                     {testTypeOptions.map((item) => (
                       <a
                         key={item.value}
                         onClick={() => selectTestType(item.value)}
-                        className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
+                        className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 ${
                           selectedTestType === item.value
-                            ? "bg-blue-50 font-medium text-blue-600"
+                            ? "bg-blue-50 dark:bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400"
                             : ""
                         }`}
                       >
@@ -233,7 +233,7 @@ export default function Header({
 
         <div className="hidden items-center gap-6 lg:flex">
           <Button className="p-0!" variant="ghost">
-            <HelpCircle className="h-6 w-6 text-neutral-500" />
+            <HelpCircle className="h-6 w-6 text-neutral-500 dark:text-neutral-400" />
           </Button>
           {user ? (
             <PublicAccountMenu user={user} />
@@ -249,7 +249,7 @@ export default function Header({
               <Button
                 size="md"
                 variant="gold"
-                className="gap-2 bg-yellow-500! font-semibold text-neutral-700! shadow-xs hover:bg-yellow-600!"
+                className="gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600!"
                 href="/pricing"
               >
                 <Gem className="h-5 w-5" />
@@ -260,7 +260,7 @@ export default function Header({
         </div>
 
         <button
-          className="flex items-center justify-center rounded-lg p-2 text-neutral-700 hover:bg-neutral-100 lg:hidden"
+          className="flex items-center justify-center rounded-lg p-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 lg:hidden"
           onClick={() => setMobileMenuOpen((v) => !v)}
         >
           {mobileMenuOpen ? (
@@ -272,12 +272,12 @@ export default function Header({
       </div>
 
       {mobileMenuOpen && (
-        <div className="absolute top-full right-4 left-4 z-50 mt-2 rounded-2xl border border-gray-100 bg-white p-5 shadow-xl lg:hidden">
+        <div className="absolute top-full right-4 left-4 z-50 mt-2 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-5 shadow-xl lg:hidden">
           {showNav && (
             <>
               <button
                 onClick={() => setMobileStatesOpen((v) => !v)}
-                className="flex w-full items-center justify-between rounded-xl bg-blue-50 px-4 py-3 font-medium text-blue-700"
+                className="flex w-full items-center justify-between rounded-xl bg-blue-50 dark:bg-blue-500/10 px-4 py-3 font-medium text-blue-700 dark:text-blue-300"
               >
                 <span className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-blue-500" />
@@ -290,7 +290,7 @@ export default function Header({
 
               {mobileStatesOpen && (
                 <div className="mt-3 max-h-64 overflow-y-auto">
-                  <p className="mb-2 text-xs font-semibold tracking-wide text-gray-400 uppercase">
+                  <p className="mb-2 text-xs font-semibold tracking-wide text-gray-400 dark:text-neutral-500 uppercase">
                     Select State
                   </p>
                   <div className="grid grid-cols-2 gap-0.5 text-sm">
@@ -299,9 +299,9 @@ export default function Header({
                         key={state}
                         href={stateHref(state)}
                         onClick={closeStateDropdown}
-                        className={`cursor-pointer rounded-lg px-3 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 ${
+                        className={`cursor-pointer rounded-lg px-3 py-2 text-gray-700 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 ${
                           selectedState === state
-                            ? "bg-blue-50 font-medium text-blue-600"
+                            ? "bg-blue-50 dark:bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400"
                             : ""
                         }`}
                       >
@@ -312,17 +312,17 @@ export default function Header({
                 </div>
               )}
 
-              <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
+              <div className="mt-4 space-y-2 border-t border-gray-100 dark:border-white/10 pt-4">
                 <button
                   onClick={() => setMobileCarOpen((v) => !v)}
-                  className="flex w-full items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 font-medium text-neutral-700"
+                  className="flex w-full items-center justify-between rounded-xl bg-neutral-100 dark:bg-neutral-700 px-4 py-3 font-medium text-neutral-700 dark:text-neutral-300"
                 >
                   <span className="flex items-center gap-2">
-                    <VehicleIcon className="h-5 w-5 text-neutral-500" />
+                    <VehicleIcon className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
                     {selectedVehicle}
                   </span>
                   <ChevronDown
-                    className={`h-5 w-5 text-neutral-400 transition-transform ${mobileCarOpen ? "rotate-180" : ""}`}
+                    className={`h-5 w-5 text-neutral-400 dark:text-neutral-500 transition-transform ${mobileCarOpen ? "rotate-180" : ""}`}
                   />
                 </button>
                 {mobileCarOpen && (
@@ -331,9 +331,9 @@ export default function Header({
                       <a
                         key={item.label}
                         onClick={() => selectVehicle(item.label)}
-                        className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 ${
+                        className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 ${
                           selectedVehicle === item.label
-                            ? "bg-blue-50 font-medium text-blue-600"
+                            ? "bg-blue-50 dark:bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400"
                             : ""
                         }`}
                       >
@@ -348,17 +348,17 @@ export default function Header({
           )}
 
           {!hideNav && variant === "states" && selectedVehicle !== "CDL" && (
-            <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
+            <div className="mt-4 space-y-2 border-t border-gray-100 dark:border-white/10 pt-4">
               <button
                 onClick={() => setMobileTestTypeOpen((v) => !v)}
-                className="flex w-full items-center justify-between rounded-xl bg-neutral-100 px-4 py-3 font-medium text-neutral-700"
+                className="flex w-full items-center justify-between rounded-xl bg-neutral-100 dark:bg-neutral-700 px-4 py-3 font-medium text-neutral-700 dark:text-neutral-300"
               >
                 <span className="flex items-center gap-2">
-                  <TestTypeIcon className="h-5 w-5 text-neutral-500" />
+                  <TestTypeIcon className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
                   {selectedTestTypeOption.label}
                 </span>
                 <ChevronDown
-                  className={`h-5 w-5 text-neutral-400 transition-transform ${mobileTestTypeOpen ? "rotate-180" : ""}`}
+                  className={`h-5 w-5 text-neutral-400 dark:text-neutral-500 transition-transform ${mobileTestTypeOpen ? "rotate-180" : ""}`}
                 />
               </button>
               {mobileTestTypeOpen && (
@@ -367,9 +367,9 @@ export default function Header({
                     <a
                       key={item.value}
                       onClick={() => selectTestType(item.value)}
-                      className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 ${
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 dark:text-neutral-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 ${
                         selectedTestType === item.value
-                          ? "bg-blue-50 font-medium text-blue-600"
+                          ? "bg-blue-50 dark:bg-blue-500/10 font-medium text-blue-600 dark:text-blue-400"
                           : ""
                       }`}
                     >
@@ -382,7 +382,7 @@ export default function Header({
             </div>
           )}
 
-          <div className="mt-4 flex justify-center gap-3 border-t border-gray-100 pt-4">
+          <div className="mt-4 flex justify-center gap-3 border-t border-gray-100 dark:border-white/10 pt-4">
             {user ? (
               <PublicAccountMenu user={user} />
             ) : (
@@ -397,7 +397,7 @@ export default function Header({
                 <Button
                   size="md"
                   variant="gold"
-                  className="flex-1 justify-center gap-2 bg-yellow-500! font-semibold text-neutral-700! shadow-xs hover:bg-yellow-600!"
+                  className="flex-1 justify-center gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600!"
                   href="/pricing"
                 >
                   <Gem className="h-5 w-5" />
