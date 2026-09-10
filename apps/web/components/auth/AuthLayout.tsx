@@ -22,8 +22,8 @@ export default function AuthLayout({
                   on dark without recolouring the blue mark. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/company-logo.svg"
-                alt=""
+                src="/driving-test-logo.png"
+                alt="Driving Test"
                 className="w-full max-w-36.5 dark:invert dark:hue-rotate-180"
               />
             </Link>

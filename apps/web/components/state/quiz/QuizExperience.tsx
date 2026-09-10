@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ArrowLeft, ArrowRight, Bookmark, Flag, Gem, LogOut, RotateCcw, Settings } from "lucide-react";
 import type {
   AmbientTrack,
   ContentLanguage,
-  PaginatedResponse,
   PublicQuiz,
   PublicQuizQuestion,
   QuizAnswerCheckResponse,
@@ -197,6 +197,8 @@ function QuizTaker({
 }) {
   const { user, loading: authLoading } = useAuth();
   const { isPremium } = useEntitlement();
+  const pathname = usePathname();
+  const loginHref = `/login?redirect=${encodeURIComponent(pathname)}`;
 
   // Bookmarking a question is a Premium-only action: a guest is prompted to sign in, a signed-in
   // non-Premium learner is prompted to upgrade, and only a Premium learner actually toggles the
@@ -724,15 +726,19 @@ function QuizTaker({
   // results screen (and per-question review) renders exactly as it did right after finishing —
   // gradedByQuestionId/questionStatuses derive from `attempt`, the rest from checkedByQuestionId.
   // No attempt found (or the fetch fails) → fall through to a normal fresh quiz.
+  // Deliberately the public `/quizzes/:id/attempts/latest` endpoint, not the account-only
+  // `/attempts` — that one 401s for a guest (it has no guest_token to key off), which used to
+  // silently dump a guest who'd just finished a test back into a blank fresh attempt instead of
+  // their results.
   useEffect(() => {
     if (initialView !== "results") return;
     let cancelled = false;
 
     api
-      .get<PaginatedResponse<QuizAttempt>>(`/attempts?quiz=${quiz.id}&per_page=1`)
+      .get<{ attempt: QuizAttempt | null }>(`/quizzes/${quiz.id}/attempts/latest`)
       .then((res) => {
         if (cancelled) return;
-        const past = res.data[0];
+        const past = res.attempt;
         if (!past) {
           setLoadingResults(false);
           return;
@@ -939,11 +945,18 @@ function QuizTaker({
               {title}
             </Paragraph>
           </div>
-          {!isPremium && (
-            <Button href="/pricing" size="sm" variant="gold">
-              <Gem className="w-5" /> {t("upgrade")}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {!user && !authLoading && (
+              <Button href={loginHref} variant="ghost" size="sm" className="text-neutral-700">
+                {t("login")}
+              </Button>
+            )}
+            {!isPremium && (
+              <Button href="/pricing" size="sm" variant="gold">
+                <Gem className="w-5" /> {t("upgrade")}
+              </Button>
+            )}
+          </div>
         </div>
         <div className="h-2.5 flex-1 overflow-hidden bg-background2">
           <div
