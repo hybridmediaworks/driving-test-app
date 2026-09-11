@@ -297,6 +297,41 @@ class QuizBrowsingTest extends TestCase
         $this->get("/api/v1/quiz-question-assets/{$asset->id}/content")->assertNotFound();
     }
 
+    public function test_it_reports_the_difficulty_most_of_a_quizs_questions_carry(): void
+    {
+        $quiz = Quiz::factory()->create(['is_active' => true]);
+        QuizQuestion::factory()->count(3)->for($quiz, 'quiz')->create(['difficulty' => 'medium']);
+        QuizQuestion::factory()->for($quiz, 'quiz')->create(['difficulty' => 'easy']);
+
+        $this->getJson('/api/v1/quizzes')
+            ->assertOk()
+            ->assertJsonPath('data.0.difficulty', 'medium');
+
+        $this->getJson("/api/v1/quizzes/{$quiz->id}")
+            ->assertOk()
+            ->assertJsonPath('quiz.difficulty', 'medium');
+    }
+
+    public function test_difficulty_is_null_for_a_quiz_with_no_questions(): void
+    {
+        Quiz::factory()->create(['is_active' => true]);
+
+        $this->getJson('/api/v1/quizzes')
+            ->assertOk()
+            ->assertJsonPath('data.0.difficulty', null);
+    }
+
+    public function test_difficulty_ties_break_toward_the_harder_band(): void
+    {
+        $quiz = Quiz::factory()->create(['is_active' => true]);
+        QuizQuestion::factory()->count(2)->for($quiz, 'quiz')->create(['difficulty' => 'easy']);
+        QuizQuestion::factory()->count(2)->for($quiz, 'quiz')->create(['difficulty' => 'hard']);
+
+        $this->getJson('/api/v1/quizzes')
+            ->assertOk()
+            ->assertJsonPath('data.0.difficulty', 'hard');
+    }
+
     public function test_show_blocks_inactive_quiz(): void
     {
         $quiz = Quiz::factory()->create(['is_active' => false]);

@@ -6,8 +6,9 @@ import type { PaginatedResponse, PublicCheatSheet, State } from "@driving-test-a
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { api } from "@/lib/api";
+import { DMV_DIRECTORY_URL } from "@/lib/dmv";
 import { stateAbbreviations } from "@/lib/usStates";
-import { passingScorePercent, questionsToPass } from "@/lib/quizPassMark";
+import { questionsToPass } from "@/lib/quizPassMark";
 import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useWebLayout } from "@/lib/web-layout-context";
 import {
@@ -29,7 +30,8 @@ type Fact = {
   /** Tailwind background for the 40px icon tile — the per-fact hue from Figma. */
   tone: string;
   label: string;
-  value: string;
+  /** Null when the API hasn't published this fact for the state/quiz yet — rendered as a dash. */
+  value: string | null;
   link?: { label: string; href: string; external?: boolean };
   /** Takes the rest of its row (the long "what to bring" list), so the grid never ends on an
    * empty cell. */
@@ -112,8 +114,10 @@ export default function QuickFacts({ testSlug }: { testSlug: string }) {
   const fee = formatFee(stateInfo?.permit_test_fee_cents);
   const toPass = questionsToPass(quiz);
 
-  // Figma order, left to right and top to bottom.
-  const facts: (Fact | false)[] = [
+  // Figma order, left to right and top to bottom. Every cell is always rendered: a fact the API
+  // hasn't published yet shows an em dash rather than dropping out, so the grid keeps its shape
+  // instead of collapsing into a half-empty panel.
+  const facts: Fact[] = [
     {
       icon: FileText,
       tone: "bg-blue-500",
@@ -126,65 +130,65 @@ export default function QuickFacts({ testSlug }: { testSlug: string }) {
       label: "Passing score",
       value: `${toPass} / ${quiz.total_questions}`,
     },
-    !!duration && {
+    {
       icon: Timer,
       tone: "bg-purple-500",
       label: "Time limit",
       value: duration,
     },
-    !!fee && {
+    {
       icon: CircleDollarSign,
       tone: "bg-red-500",
       label: "Test fee",
       value: fee,
     },
-    stateInfo?.retake_wait_days != null && {
+    {
       icon: RotateCcw,
       tone: "bg-blue-600",
       label: "If you fail",
       value:
-        stateInfo.retake_wait_days === 0
-          ? "Retake same day"
-          : `Wait ${pluralise(stateInfo.retake_wait_days, "day")}`,
+        stateInfo?.retake_wait_days == null
+          ? null
+          : stateInfo.retake_wait_days === 0
+            ? "Retake same day"
+            : `Wait ${pluralise(stateInfo.retake_wait_days, "day")}`,
     },
-    stateInfo?.supervised_driving_hours != null && {
+    {
       icon: Car,
       tone: "bg-orange-500",
       label: "Supervised hours",
-      value: `${stateInfo.supervised_driving_hours} hrs`,
+      value: stateInfo?.supervised_driving_hours == null ? null : `${stateInfo.supervised_driving_hours} hrs`,
     },
-    stateInfo?.minimum_permit_age != null && {
+    {
       icon: UserRound,
       tone: "bg-green-600",
       label: "Minimum age",
-      value: `${stateInfo.minimum_permit_age} yrs`,
+      value: stateInfo?.minimum_permit_age == null ? null : `${stateInfo.minimum_permit_age} yrs`,
     },
-    stateInfo?.test_language_count != null && {
+    {
       icon: Globe,
       tone: "bg-yellow-400",
       label: "Test languages",
-      value: String(stateInfo.test_language_count),
+      value: stateInfo?.test_language_count == null ? null : String(stateInfo.test_language_count),
     },
-    stateInfo?.online_testing_available != null && {
+    {
       icon: MonitorCheck,
       tone: "bg-purple-600",
       label: "Online testing",
-      value: stateInfo.online_testing_available ? "Yes" : "No",
+      value: stateInfo?.online_testing_available == null ? null : stateInfo.online_testing_available ? "Yes" : "No",
     },
     {
       icon: MapPinned,
       tone: "bg-red-600",
       label: "Where",
       value: `${stateCode} ${agencyName} offices`,
-      ...(stateInfo?.dmv_website_url
-        ? {
-            link: {
-              label: `Find ${selectedState} ${agencyName} locations`,
-              href: stateInfo.dmv_website_url,
-              external: true,
-            },
-          }
-        : {}),
+      // Same fallback as the booking band: the state's own site when published, USAGov's state
+      // DMV directory otherwise, so the link is never missing.
+      link: {
+        label: `Find ${selectedState} ${agencyName} locations`,
+        href: stateInfo?.dmv_website_url ?? DMV_DIRECTORY_URL,
+        external: true,
+      },
     },
     {
       icon: FileText,
@@ -196,10 +200,9 @@ export default function QuickFacts({ testSlug }: { testSlug: string }) {
     },
   ];
 
-  const visible = facts.filter((f): f is Fact => f !== false);
   // The wide cell fills whatever is left of its row, so the grid never ends on a blank tile.
   // Spelled out rather than interpolated so Tailwind can see the class names.
-  const wideSpan = WIDE_SPANS[(visible.length - 1) % 4];
+  const wideSpan = WIDE_SPANS[(facts.length - 1) % 4];
 
   return (
     <section className="px-5 py-15 lg:py-30">
@@ -215,7 +218,7 @@ export default function QuickFacts({ testSlug }: { testSlug: string }) {
         </div>
 
         <div className="grid w-full grid-cols-1 gap-px overflow-hidden rounded-[32px] border border-background3 dark:border-white/10 bg-background3 dark:bg-white/10 p-px shadow-[0px_20px_40px_-10px_rgba(11,11,13,0.1)] sm:grid-cols-2 lg:grid-cols-4">
-          {visible.map((fact) => (
+          {facts.map((fact) => (
             <div
               key={fact.label}
               className={`flex flex-col gap-3 bg-white dark:bg-neutral-800 px-9 py-6 ${
@@ -228,8 +231,14 @@ export default function QuickFacts({ testSlug }: { testSlug: string }) {
                 </span>
                 <div className="space-y-1">
                   <Paragraph>{fact.label}</Paragraph>
-                  <p className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100">
-                    {fact.value}
+                  <p
+                    className={`font-sora text-2xl leading-8 font-semibold ${
+                      fact.value === null
+                        ? "text-neutral-400 dark:text-neutral-500"
+                        : "text-neutral-900 dark:text-neutral-100"
+                    }`}
+                  >
+                    {fact.value ?? "—"}
                   </p>
                 </div>
               </div>

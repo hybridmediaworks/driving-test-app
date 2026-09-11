@@ -10,7 +10,10 @@ import { questionsToPass } from "@/lib/quizPassMark";
 import { TRUSTPILOT_MAX, TRUSTPILOT_REVIEW_COUNT, TRUSTPILOT_SCORE } from "@/lib/socialProof";
 import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useStateStats } from "@/lib/useStateStats";
-import { ArrowRight, CircleCheck, Clock, RotateCcw, SignalHigh } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock, RotateCcw, SignalHigh } from "lucide-react";
+
+/** Sentence case for the difficulty band the API derives from a quiz's own questions. */
+const DIFFICULTY_LABELS = { easy: "Easy", medium: "Medium", hard: "Hard" } as const;
 
 /** The four exam topics the Figma hero lists under "Tricky exam topics covered here" — they're
  * marketing copy about the permit test in general, not per-quiz data the API returns. */
@@ -129,14 +132,14 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Paragraph className="flex items-center gap-1" size="sm">
-              <CircleCheck className="h-6 w-6 text-green-500" /> 5-min quizzes
+              <BadgeCheck className="h-6 w-6 text-green-700" /> 5-min quizzes
             </Paragraph>
             <Paragraph className="flex items-center gap-1" size="sm">
-              <CircleCheck className="h-6 w-6 text-green-500" /> No signup required
+              <BadgeCheck className="h-6 w-6 text-green-700" /> No signup required
             </Paragraph>
             {quiz?.category?.title && (
               <Paragraph className="flex items-center gap-1" size="sm">
-                <CircleCheck className="h-6 w-6 text-green-500" /> Part of our {quiz.category.title} set
+                <BadgeCheck className="h-6 w-6 text-green-700" /> Part of {quiz.category.title} set
               </Paragraph>
             )}
           </div>
@@ -146,8 +149,20 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
             wider than it, hanging over both edges and 83px above its top (Figma 4182:4322). */}
         <div className="w-full max-w-141.75 shrink-0 px-5.5 pt-14 sm:pt-20.75">
           <div className="relative flow-root space-y-5 rounded-[32px] bg-blue-100 dark:bg-blue-500/10 px-5.5 pb-10 shadow-[0px_12px_40.793px_-21.212px_rgba(23,37,84,0.12)]">
-            <div className="absolute inset-0 z-0 overflow-hidden rounded-[32px]">
-              <div className="absolute -bottom-1/2 -left-1/2 z-0 aspect-square h-full w-full rounded-full bg-white dark:bg-neutral-800 blur-[125px]" />
+            {/* The panel's wash is Figma's own asset (node 4182:4324) rather than a CSS blur —
+                a 976px plate holding a 476px white circle under a 125px Gaussian, centred just
+                inside the bottom-left corner (7.65% across, 92.07% down) so the fill pales toward
+                the left edge and stays blue on the right. `m-0` keeps the parent's space-y off it,
+                and the wrapper does the clipping because the panel itself can't (the test card
+                deliberately overhangs it). */}
+            <div className="absolute inset-0 z-0 m-0 overflow-hidden rounded-[32px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/test-slug/panel-glow.svg"
+                alt=""
+                aria-hidden
+                className="absolute top-[92.07%] left-[7.65%] size-244 max-w-none -translate-x-1/2 -translate-y-1/2 dark:opacity-10"
+              />
             </div>
 
             <div className="relative z-10 -mx-5.5 -mt-14 w-[calc(100%+44px)] sm:-mx-11 sm:-mt-20.75 sm:w-[calc(100%+88px)]">
@@ -158,10 +173,12 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
                 className="relative w-full rounded-xl md:rounded-2xl shadow-[inset_0_1.565px_0_0_rgba(255,255,255,0.22),inset_0_0_0_1.565px_rgba(255,255,255,0.09),0_37.571px_78.273px_-34.44px_rgba(8,9,12,0.55),0_12.524px_31.309px_-18.786px_rgba(8,9,12,0.45)]"
               />
               <div className="absolute bottom-4 flex w-full flex-wrap items-center justify-center gap-2.5">
-                <Chip>
-                  <SignalHigh className="h-4 w-4 text-yellow-500" />
-                  {quiz?.is_premium ? "Premium" : "Free"}
-                </Chip>
+                {quiz?.difficulty && (
+                  <Chip>
+                    <SignalHigh className="h-4 w-4 text-yellow-500" />
+                    {DIFFICULTY_LABELS[quiz.difficulty]}
+                  </Chip>
+                )}
                 {duration && (
                   <Chip>
                     <Clock className="h-4 w-4" />

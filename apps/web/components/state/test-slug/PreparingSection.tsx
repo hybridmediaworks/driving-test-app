@@ -112,17 +112,24 @@ export default function PreparingSection({ testSlug }: { testSlug: string }) {
 
         {/* 399px wide, matching the phone's frame in Figma. The artwork is cut out of the flat
             background Figma bakes into its exports, so it never covers the copy beside it. */}
-        <div className="w-full max-w-105 shrink-0 xl:w-99.75 xl:max-w-none">
+        <div className="w-full max-w-105 shrink-0 xl:relative xl:h-153.25 xl:w-99.75 xl:max-w-none">
           {/* Plain <img>: the cut-out has an alpha channel, and next/image's optimiser will
               re-encode it to JPEG for clients that don't advertise WebP, which would flatten the
-              transparency back onto a solid rectangle. */}
+              transparency back onto a solid rectangle.
+
+              The asset carries the mockup's own drop shadow (Figma bakes it into the artwork
+              rather than applying a layer effect), so it is wider and taller than the handset
+              itself. On wide screens it's taken out of flow inside the frame's 399x613 box and
+              nudged so the *handset* measures 399px and lands where Figma puts it, leaving the
+              shadow free to spill past the column without stretching the section. Narrower
+              screens just fit the whole plate to the column. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/test-slug/dmv-checklist-phone-v2.webp"
+            src="/test-slug/dmv-checklist-phone-v5.webp"
             alt={`What to bring to the ${selectedState} DMV`}
-            width={791}
-            height={1235}
-            className="w-full"
+            width={917}
+            height={1349}
+            className="w-full max-w-none xl:absolute xl:-top-1.75 xl:-left-8 xl:w-115.75"
           />
         </div>
       </div>

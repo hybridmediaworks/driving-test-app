@@ -6,8 +6,10 @@ import {
   ChevronDown,
   Gem,
   GraduationCap,
-  HelpCircle,
+  Info,
+  Mail,
   MapPin,
+  MessagesSquare,
   Menu,
   Route,
   Truck,
@@ -23,7 +25,28 @@ import { useAuth } from "@/lib/auth-context";
 import { stateToSlug, usStates } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
-type Dropdown = null | "states" | "car" | "testType";
+type Dropdown = null | "states" | "car" | "testType" | "help";
+
+/** Where "Send email" goes. Empty until a support address is published — the item then falls back
+ * to the contact page rather than opening a mail client addressed to nobody. */
+const SUPPORT_EMAIL = "";
+
+/** Live chat needs a provider widget; until one is wired up the item points at the contact page. */
+const LIVE_CHAT_URL = "";
+
+const helpOptions = [
+  { label: "Help center", icon: Info, href: "/how-it-works" },
+  {
+    label: "Live Chat",
+    icon: MessagesSquare,
+    href: LIVE_CHAT_URL || "/contact",
+  },
+  {
+    label: "Send email",
+    icon: Mail,
+    href: SUPPORT_EMAIL ? `mailto:${SUPPORT_EMAIL}` : "/contact",
+  },
+];
 
 const vehiclePaths: Record<string, string> = {
   Car: "",
@@ -64,6 +87,7 @@ export default function Header({
   const [mobileStatesOpen, setMobileStatesOpen] = useState(false);
   const [mobileCarOpen, setMobileCarOpen] = useState(false);
   const [mobileTestTypeOpen, setMobileTestTypeOpen] = useState(false);
+  const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -232,9 +256,38 @@ export default function Header({
         )}
 
         <div className="hidden items-center gap-6 lg:flex">
-          <Button className="p-0!" variant="ghost">
-            <HelpCircle className="h-6 w-6 text-neutral-500 dark:text-neutral-400" />
-          </Button>
+          {/* Support links are for people with an account — signed-out visitors don't see them. */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => toggleDropdown("help")}
+                className="flex items-center gap-1.5 rounded-full px-2 py-1 text-base font-medium text-neutral-900 dark:text-neutral-100"
+              >
+                Help
+                <ChevronDown className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+              </button>
+
+              {activeDropdown === "help" && (
+                <div className="absolute top-full right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl dark:border-white/10 dark:bg-neutral-800">
+                  {helpOptions.map((item, index) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setActiveDropdown(null)}
+                      className={`flex items-center gap-3 px-4 py-3.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-neutral-300 dark:hover:bg-blue-500/10 dark:hover:text-blue-400 ${
+                        index > 0
+                          ? "border-t border-gray-100 dark:border-white/10"
+                          : ""
+                      }`}
+                    >
+                      <item.icon className="h-5 w-5 text-blue-500" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {user ? (
             <PublicAccountMenu user={user} />
           ) : (
@@ -376,6 +429,42 @@ export default function Header({
                       <item.icon className="h-4 w-4 text-blue-500" />
                       {item.label}
                     </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Help lives in the desktop bar too — repeated here because that bar is hidden
+              below lg, and support links shouldn't drop off on a phone. Signed-in only,
+              matching the desktop bar. */}
+          {user && (
+            <div className={showNav ? "mt-4" : ""}>
+              <button
+                onClick={() => setMobileHelpOpen((v) => !v)}
+                className="flex w-full items-center justify-between rounded-xl px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100"
+              >
+                <span className="flex items-center gap-2">
+                  <Info className="h-5 w-5 text-blue-500" />
+                  Help
+                </span>
+                <ChevronDown
+                  className={`h-5 w-5 text-neutral-400 dark:text-neutral-500 transition-transform ${mobileHelpOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {mobileHelpOpen && (
+                <div className="mt-1 flex flex-col">
+                  {helpOptions.map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-4 py-2.5 pl-10 text-sm text-gray-600 dark:text-neutral-300 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                    >
+                      <item.icon className="h-4 w-4 text-blue-500" />
+                      {item.label}
+                    </Link>
                   ))}
                 </div>
               )}

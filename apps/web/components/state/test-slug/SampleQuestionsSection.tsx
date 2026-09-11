@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { SampleQuizQuestion } from "@driving-test-app/shared";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
+import { usePinnedScroll } from "@/lib/usePinnedScroll";
 import { useSampleQuestions } from "@/lib/useQuizQuestions";
 import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useWebLayout } from "@/lib/web-layout-context";
@@ -32,8 +33,9 @@ export default function SampleQuestionsSection({ testSlug }: { testSlug: string 
   const quiz = useResolvedQuiz(testSlug);
   const questions = useSampleQuestions(quiz?.id, SAMPLE_SIZE);
   const stateCode = quiz?.state?.code ?? "";
-
   const sample = questions.slice(0, SAMPLE_SIZE);
+  const { spacerRef, stickyRef, viewportRef, contentRef } = usePinnedScroll(sample.length);
+
   if (sample.length === 0) return null;
 
   const countWord = NUMBER_WORDS[sample.length] ?? String(sample.length);
@@ -42,29 +44,32 @@ export default function SampleQuestionsSection({ testSlug }: { testSlug: string 
     // The question scroller runs to the frame's bottom edge in Figma — the 120px of air below
     // belongs to the next section, not this one.
     <section className="px-5 py-15 lg:pt-30 lg:pb-0">
-      <div className="mx-auto flex max-w-container flex-col items-start justify-between gap-10 lg:flex-row">
-        <div className="flex w-full flex-col gap-6 lg:max-w-94.75">
-          <Heading as="h2">
-            {countWord} real {stateCode || selectedState} questions
-          </Heading>
-          <Paragraph size="xl">
-            Written and verified against the current {selectedState} Driver’s Manual. Try one, then reveal the
-            answer and explanation.
-          </Paragraph>
-        </div>
+      {/* The section locks to the screen and steps through the questions as you scroll, in either
+          direction, releasing the page once the last one is up. The box below carries the extra
+          scroll length that costs — see lib/usePinnedScroll.ts. */}
+      <div ref={spacerRef}>
+        <div
+          ref={stickyRef}
+          className="mx-auto flex max-w-container flex-col items-start justify-between gap-10 lg:flex-row"
+        >
+          <div className="flex w-full flex-col gap-6 lg:max-w-94.75">
+            <Heading as="h2">
+              {countWord} real {stateCode || selectedState} questions
+            </Heading>
+            <Paragraph size="xl">
+              Written and verified against the current {selectedState} Driver’s Manual. Try one, then reveal the
+              answer and explanation.
+            </Paragraph>
+          </div>
 
-        {/* Fixed-height scroller on desktop, exactly as in Figma — the stack keeps going past the
-            fold so it reads as a bank of questions rather than a finite list. */}
-        <div className="w-full lg:h-159 lg:w-221.25 lg:overflow-y-auto">
-          <div className="flex flex-col gap-5 lg:pb-40">
-            {sample.map((question, index) => (
-              <QuestionCard
-                key={question.id}
-                question={question}
-                index={index}
-                total={sample.length}
-              />
-            ))}
+          {/* Fixed-height viewport on desktop, exactly as in Figma — the stack keeps going past the
+              fold so it reads as a bank of questions rather than a finite list. */}
+          <div ref={viewportRef} className="w-full lg:h-159 lg:w-221.25 lg:overflow-hidden">
+            <div ref={contentRef} className="flex flex-col gap-5">
+              {sample.map((question, index) => (
+                <QuestionCard key={question.id} question={question} index={index} total={sample.length} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -126,9 +131,7 @@ function QuestionCard({ question, index, total }: { question: SampleQuizQuestion
               <p className="font-semibold text-green-600">
                 Correct answer: {LETTERS[correctIndex] ?? correctIndex + 1} - {correct.answer_text}
               </p>
-              {explanation && (
-                <p className="text-sm leading-5 text-neutral-700 dark:text-neutral-300">{explanation}</p>
-              )}
+              {explanation && <p className="text-sm leading-5 text-neutral-700 dark:text-neutral-300">{explanation}</p>}
             </div>
           )}
         </div>
