@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { slugToStateName, usStates } from "@/lib/usStates";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 import Header from "@/components/Header";
-import EmailCaptureSection from "@/components/state/EmailCaptureSection";
 import CTASection from "@/components/home/CTASection";
 import Footer from "@/components/Footer";
-import MotorcycleTestTypeContent from "@/components/state/motorcycle/MotorcycleTestTypeContent";
+import StateTestTypeContent from "@/components/state/StateTestTypeContent";
+import StateHubLayout from "@/components/state/StateHubLayout";
+import SignedOutOnly from "@/components/state/SignedOutOnly";
 
 function resolveStateName(stateSlug: string): string {
   const name = stateSlug ? slugToStateName(stateSlug) : "";
@@ -40,13 +41,20 @@ export default async function MotorcyclePage({
   return (
     <WebLayoutProvider stateSlug={state} vehicleSlug="motorcycle">
       <div className="flex min-h-screen flex-col bg-background">
-        <Header variant="states" />
-        <main className="flex-1">
-          <MotorcycleTestTypeContent />
-          <EmailCaptureSection />
+        {/* Signed-in learners get the progress rail down the right of the whole page, with the
+            header inside the same column so the rail starts level with it. The CTA and footer stay
+            outside, full-width, so the CTA's split background still runs edge to edge into the
+            footer. */}
+        <StateHubLayout header={<Header variant="states" />}>
+          <main className="flex-1">
+            <StateTestTypeContent />
+          </main>
+        </StateHubLayout>
+
+        <SignedOutOnly>
           <CTASection />
-          <Footer />
-        </main>
+        </SignedOutOnly>
+        <Footer />
       </div>
     </WebLayoutProvider>
   );
