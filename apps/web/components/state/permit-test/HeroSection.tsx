@@ -25,6 +25,8 @@ export default function HeroSection() {
   const { selectedState, selectedVehicle } = useWebLayout();
   const stats = useStateStats();
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
+  const isCdl = selectedVehicle === "CDL";
+  const isMotorcycle = selectedVehicle === "Motorcycle";
   const nextQuizSlug = useNextQuizSlug("permit_test");
   // Jump straight to the test the learner should take now (first one if nothing's been taken yet,
   // otherwise wherever their progression left off) instead of a generic free+premium browse list.
@@ -53,17 +55,30 @@ export default function HeroSection() {
       <section className="py-15 lg:py-24 px-5">
         <div className="mx-auto max-w-container  flex flex-col xl:flex-row justify-between items-center xl:gap-4 md:gap-26 gap-18">
           <div className="space-y-8 xl:max-w-155">
-            <Heading as="h1" className="mb-4.5">
-              Start your Free{" "}
-              <span className="relative inline-block whitespace-nowrap">
-                {selectedState}
-                <HandUnderline />
-              </span>{" "}
-              DMV Practice Test.
-            </Heading>
+            {isCdl ? (
+              <Heading as="h1" className="mb-4.5">
+                {selectedState} CDL Practice Tests - All Endorsements
+              </Heading>
+            ) : isMotorcycle ? (
+              <Heading as="h1" className="mb-4.5">
+                {selectedState} Motorcycle Practice Tests 2026
+              </Heading>
+            ) : (
+              <Heading as="h1" className="mb-4.5">
+                Start your Free{" "}
+                <span className="relative inline-block whitespace-nowrap">
+                  {selectedState}
+                  <HandUnderline />
+                </span>{" "}
+                DMV Practice Test.
+              </Heading>
+            )}
             <Paragraph size="lg">
-              Everything you need to pass the written test, from traffic signs
-              to tricky road rules — all in one place.
+              {isCdl
+                ? "Practice the exact question formats your DMV uses. When you sit down for the real test, you'll know the answer before you finish reading the question. Pass, get your CDL, and start earning $60K+ within weeks - not months."
+                : isMotorcycle
+                  ? `Practice with real exam-like questions that mirror your ${selectedState} DMV permit test - same format, same difficulty, same tricky answer choices.`
+                  : "Everything you need to pass the written test, from traffic signs to tricky road rules — all in one place."}
             </Paragraph>
             <Button className="w-full md:w-fit" href={quizHref}>
               Start Free Practice Test <ArrowRight />
