@@ -304,18 +304,63 @@ export default function MethodologySection() {
   );
 }
 
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+/**
+ * The reviewer's own photo, then the bundled stand-in, then their initials. A published photo can
+ * point at media this environment can't serve — an upload whose derived conversion never landed,
+ * say — and a broken-image glyph in the middle of the card reads far worse than a placeholder.
+ * Failures are tracked by src rather than as a flag, so a later swap (a real photo finally being
+ * published) still gets its own chance to load.
+ */
+function ReviewerPhoto({ reviewer }: { reviewer: Reviewer }) {
+  const [failed, setFailed] = useState<string[]>([]);
+  const candidates = [reviewer.photo, reviewer.fallbackPhoto].filter(
+    (src): src is string => Boolean(src),
+  );
+  const src = candidates.find((candidate) => !failed.includes(candidate));
+
+  if (!src) {
+    return (
+      <div
+        aria-hidden
+        // Keeps what was tried inspectable — the <img> is unmounted on error, so there is
+        // otherwise nothing left in the DOM to check.
+        data-photo-src={reviewer.photo || undefined}
+        data-photo-state={candidates.length > 0 ? "failed" : "missing"}
+        className="flex h-61 w-full items-center justify-center rounded-3xl bg-background2 font-sora text-5xl font-semibold text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400"
+      >
+        {initialsOf(reviewer.name)}
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      onError={() => setFailed((prev) => [...prev, src])}
+      className="h-61 w-full rounded-3xl object-cover"
+    />
+  );
+}
+
 /** One reviewer portrait card: photo, pull quote, name and role. */
 function ReviewerCard({ reviewer }: { reviewer: Reviewer | undefined }) {
   if (!reviewer) return null;
 
   const body = (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={reviewer.photo}
-        alt=""
-        className="h-61 w-full rounded-3xl object-cover"
-      />
+      <ReviewerPhoto reviewer={reviewer} />
       <div className="flex flex-col gap-6 px-2">
         {/* A published write-up can run long; the card has room for a pull quote, not the whole
             profile — the rest is on /experts/{slug}, which the card links to. */}

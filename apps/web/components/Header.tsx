@@ -89,10 +89,18 @@ export default function Header({
   const [mobileTestTypeOpen, setMobileTestTypeOpen] = useState(false);
   const [mobileHelpOpen, setMobileHelpOpen] = useState(false);
   const navRef = useRef<HTMLElement | null>(null);
+  const helpRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+      // Both menu groups have to be checked: the state/vehicle/test-type dropdowns live inside
+      // the nav, but Help sits in the actions bar beside it. Testing the nav alone meant a click
+      // on Help counted as "outside" and closed the menu in the same click that opened it.
+      const inside = [navRef.current, helpRef.current].some(
+        (el) => el && el.contains(e.target as Node),
+      );
+
+      if (!inside) {
         setActiveDropdown(null);
       }
     }
@@ -258,7 +266,7 @@ export default function Header({
         <div className="hidden items-center gap-6 lg:flex">
           {/* Support links are for people with an account — signed-out visitors don't see them. */}
           {user && (
-            <div className="relative">
+            <div className="relative" ref={helpRef}>
               <button
                 onClick={() => toggleDropdown("help")}
                 className="flex items-center gap-1.5 rounded-full px-2 py-1 text-base font-medium text-neutral-900 dark:text-neutral-100"
