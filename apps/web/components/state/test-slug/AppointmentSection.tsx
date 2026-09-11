@@ -8,12 +8,12 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { State } from "@driving-test-app/shared";
 import { api } from "@/lib/api";
+import { DMV_DIRECTORY_URL } from "@/lib/dmv";
 import { stateAbbreviations } from "@/lib/usStates";
 
 /**
  * Full-bleed booking prompt between the facts grid and the weak-topics breakdown — an aerial road
- * plate, darkened, with the state's own DMV site as the destination. Falls back to a plain deep
- * blue when the state has no published booking URL, so the band never links nowhere.
+ * plate, darkened, with the state's own DMV site as the destination.
  */
 export default function AppointmentSection() {
   const { selectedState } = useWebLayout();
@@ -38,7 +38,9 @@ export default function AppointmentSection() {
     };
   }, [stateCode]);
 
-  const bookingUrl = stateInfo?.dmv_website_url;
+  // The CTA is the whole point of this band, so it always renders: the state's own booking page
+  // when it's been published, and USAGov's state DMV directory otherwise.
+  const bookingUrl = stateInfo?.dmv_website_url ?? DMV_DIRECTORY_URL;
   const agencyName = stateInfo?.agency_name ?? "DMV";
 
   return (
@@ -58,11 +60,9 @@ export default function AppointmentSection() {
         <Paragraph size="xl" className="max-w-161.5 text-neutral-300!">
           Field offices release slots 90 days out. Book before you finish studying, not after.
         </Paragraph>
-        {bookingUrl && (
-          <Button className="mt-2 px-12 to-blue-800!" href={bookingUrl}>
-            Schedule your appointment now <ArrowRight />
-          </Button>
-        )}
+        <Button className="mt-2 px-12 to-blue-800!" href={bookingUrl}>
+          Schedule your appointment now <ArrowRight />
+        </Button>
       </div>
     </section>
   );

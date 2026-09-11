@@ -74,7 +74,7 @@ export default async function WrittenTestPage({
   return (
     <WebLayoutProvider stateSlug={state}>
       <div className="flex min-h-screen flex-col bg-background">
-        <Header variant="states" hideNav />
+        <Header variant="states" />
         {/* Section order follows the Practice Hub frame in Figma (file M811hqlEYxeqrj8vxOFqnV,
             node 4182:1394), top to bottom: hero → intro prose → facts grid → book-your-appointment
             → hardest topics → score distribution → state-specific rules → the journey → the
@@ -85,7 +85,7 @@ export default async function WrittenTestPage({
         <QuickFacts testSlug={testSlug} />
         <AppointmentSection />
         <TopicBreakdownSection testSlug={testSlug} />
-        <ScoreDistributionSection />
+        <ScoreDistributionSection testSlug={testSlug} />
         <StateRulesSection />
         <JourneySection variant="state" />
         <FeaturesSection variant="state" />

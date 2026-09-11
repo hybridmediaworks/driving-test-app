@@ -12,6 +12,35 @@ use Illuminate\Support\Facades\Gate;
 class QuizResource extends JsonResource
 {
     /**
+     * The quiz's overall difficulty: the band most of its questions sit in, from the
+     * per-difficulty counts the controller attaches. Ties break toward the harder band, since
+     * calling a test easier than it plays would be the worse mistake. Null when the counts
+     * weren't loaded, or when the quiz has no questions yet.
+     */
+    private function resolveDifficulty(): ?string
+    {
+        $attributes = $this->resource->getAttributes();
+
+        $counts = [];
+        foreach (['hard', 'medium', 'easy'] as $band) {
+            $key = "{$band}_questions_count";
+            if (! array_key_exists($key, $attributes)) {
+                return null;
+            }
+            $counts[$band] = (int) $attributes[$key];
+        }
+
+        if (array_sum($counts) === 0) {
+            return null;
+        }
+
+        // arsort keeps insertion order for ties, and $counts is ordered hard → easy above.
+        arsort($counts);
+
+        return array_key_first($counts);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -28,6 +57,10 @@ class QuizResource extends JsonResource
             'test_track' => $this->test_track,
             'total_questions' => $this->total_questions,
             'duration_seconds' => $this->duration_seconds,
+            // Derived from the quiz's own questions, not stored: whichever difficulty most of them
+            // carry. Present only when the caller loaded the per-difficulty counts (see
+            // QuizController::withDifficultyCounts) — null otherwise, so nothing has to guess.
+            'difficulty' => $this->resolveDifficulty(),
             'passing_score_percent' => $this->passing_score_percent,
             'is_premium' => $this->is_premium,
             'locked' => ! $unlocked,

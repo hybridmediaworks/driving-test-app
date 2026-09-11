@@ -87,6 +87,9 @@ export type Quiz = {
   test_track: "permit_test" | "driving_test";
   total_questions: number;
   duration_seconds: number | null;
+  // Derived from the quiz's own questions (the band most of them carry), not stored. Null when
+  // the quiz has no questions yet.
+  difficulty?: QuizDifficulty | null;
   passing_score_percent: number | null;
   is_premium: boolean;
   is_active: boolean;

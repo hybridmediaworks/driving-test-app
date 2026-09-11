@@ -27,6 +27,7 @@ use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionReport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,38 @@ class QuizController extends Controller
         $token = $request->header('X-Guest-Token') ?: $request->input('guest_token');
 
         return is_string($token) && $token !== '' ? $token : null;
+    }
+
+    /**
+     * Per-difficulty question counts, as three aggregate sub-selects rather than loading the
+     * questions — QuizResource folds them into the single `difficulty` value the marketing pages
+     * show. Three extra sub-selects, but no N+1 and no second round trip.
+     *
+     * @param  Builder<Quiz>  $query
+     * @return Builder<Quiz>
+     */
+    private function withDifficultyCounts($query)
+    {
+        return $query->withCount([
+            'quizQuestions as easy_questions_count' => fn ($q) => $q->where('difficulty', 'easy'),
+            'quizQuestions as medium_questions_count' => fn ($q) => $q->where('difficulty', 'medium'),
+            'quizQuestions as hard_questions_count' => fn ($q) => $q->where('difficulty', 'hard'),
+        ]);
+    }
+
+    /**
+     * Same counts as {@see withDifficultyCounts()}, for a quiz that's already been fetched (the
+     * single-quiz route resolves it by route-model binding, so there's no builder to tap).
+     */
+    private function attachDifficultyCounts(Quiz $quiz): void
+    {
+        $counts = $this->withDifficultyCounts($quiz->newQuery()->whereKey($quiz->getKey()))
+            ->first()
+            ?->only(['easy_questions_count', 'medium_questions_count', 'hard_questions_count']);
+
+        if ($counts !== null) {
+            $quiz->forceFill($counts);
+        }
     }
 
     /**
@@ -141,6 +174,7 @@ class QuizController extends Controller
         $query = Quiz::query()
             ->where('is_active', true)
             ->with(['category', 'quizType', 'state', 'vehicleType', 'previewImageQuestion.media'])
+            ->tap(fn ($q) => $this->withDifficultyCounts($q))
             ->when($userId !== null || $guestToken !== null, fn ($q) => $q->withMax([
                 'attempts as best_score' => fn ($a) => $a
                     ->where('status', AttemptStatus::Completed)
@@ -231,6 +265,7 @@ class QuizController extends Controller
         $this->authorize('view', $quiz);
 
         $quiz->load(['category', 'quizType', 'state', 'vehicleType']);
+        $this->attachDifficultyCounts($quiz);
         // This route intentionally carries no auth:sanctum middleware (guests may browse) — that
         // means Gate's ambient/default-guard user resolution never sees the Sanctum token even
         // when one is sent, so the entitled user must be resolved explicitly here.

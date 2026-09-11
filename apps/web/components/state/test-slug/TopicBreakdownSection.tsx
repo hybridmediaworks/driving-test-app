@@ -5,6 +5,7 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { stateToSlug } from "@/lib/usStates";
 import { useQuizQuestions } from "@/lib/useQuizQuestions";
+import { useQuizTopics } from "@/lib/useQuizTopics";
 import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useStateStats } from "@/lib/useStateStats";
 import { useWebLayout } from "@/lib/web-layout-context";
@@ -21,29 +22,14 @@ export default function TopicBreakdownSection({ testSlug }: { testSlug: string }
   const stateSlug = stateToSlug(selectedState);
   const quiz = useResolvedQuiz(testSlug);
   const questions = useQuizQuestions(quiz?.id);
+  const topics = useQuizTopics(quiz?.id);
   const stats = useStateStats();
-
-  const counts = new Map<string, number>();
-  for (const question of questions) {
-    const topic = question.topic?.trim();
-    if (!topic) continue;
-    counts.set(topic, (counts.get(topic) ?? 0) + 1);
-  }
-
-  const topics = [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([topic, count]) => ({
-      topic,
-      count,
-      share: Math.round((count / questions.length) * 100),
-    }));
 
   if (topics.length === 0) return null;
 
   return (
-    // The tinted band runs 376px past the last card: the score-distribution card that follows is
-    // pulled up into it so it straddles the colour change, exactly as in Figma.
+    // The tinted band runs 376px past the last card so the score-distribution card below can be
+    // pulled up into it and straddle the colour change, exactly as in Figma.
     <section className="bg-background2 px-5 py-15 lg:pt-30 lg:pb-94">
       <div className="mx-auto max-w-container">
         <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-end">
