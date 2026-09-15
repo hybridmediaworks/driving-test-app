@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import StepCard from "@/components/state/StepCard";
 
 type Step = {
@@ -8,6 +8,7 @@ type Step = {
   slug?: string;
   totalQuestions?: string;
   totalTime?: string;
+  duration?: string;
   type?: "free" | "premium";
   locked?: boolean;
   lockMode?: "premium" | "progress";
@@ -101,6 +102,8 @@ export default function TestSteps({
   nextConnector = false,
   phaseActive = false,
   phaseJustActivated = false,
+  leadingConnector = true,
+  renderStep,
 }: {
   steps: Step[];
   /** State slug (e.g. "alabama") — forwarded to each StepCard so it links to the real per-test page. */
@@ -111,6 +114,13 @@ export default function TestSteps({
   phaseActive?: boolean;
   /** Phase just became active (previous phase's last step just completed) — first row's entry connector animates in. */
   phaseJustActivated?: boolean;
+  /** Whether the very first row draws its entry-connector stub — off for grids with no numbered
+   * phase badge to its left (e.g. the driving-videos grid), which the stub otherwise assumes. */
+  leadingConnector?: boolean;
+  /** Custom card renderer, given the step and its position in the full (unchunked) `steps` list —
+   * defaults to the standard StepCard. Lets non-quiz content (driving videos) reuse this exact
+   * connector-track layout while keeping its own click behavior (dialog/simulator link). */
+  renderStep?: (step: Step, index: number) => ReactNode;
 }) {
   const tier = useResponsiveTier();
   const isDesktop = tier === "desktop";
@@ -163,33 +173,35 @@ export default function TestSteps({
             className={`relative isolate grid grid-cols-[repeat(var(--ts-cols),minmax(0,1fr))] gap-5 ${showConnectorBelow ? "md:mb-16" : ""}`}
             style={{ "--ts-cols": effectiveColumns } as React.CSSProperties}
           >
-            <div
-              className={`before_row pointer-events-none absolute -z-10 -top-11.75 h-30.5 border-solid max-md:hidden ${
-                isFirstRow
-                  ? "left-0 w-20 border-b"
-                  : // Left edge (-17.5 = 70px out) lands on the same x as the phase rail that
-                    // runs down from the numbered badge: this container is inset 116px (see the
-                    // wrapper's w-[calc(100%-116px)]) and that rail sits 46px in from the same
-                    // origin, so 116 - 46 = 70. The width has to grow by that same 30px
-                    // (20 -> 27.5, i.e. 80px -> 110px) so the right end still meets the previous
-                    // row's after_row, which starts 40px in — otherwise the snake breaks open
-                    // with a 30px gap at every wrap.
-                    "-left-17.5 w-27.5 rounded-l-[28px] border-14 border-r-0"
-              } ${
-                beforeRowFilled
-                  ? "border-blue-500"
-                  : beforeRowTriggers
-                    ? "connector-fill border-white dark:border-neutral-700"
-                    : "border-white dark:border-neutral-700"
-              }`}
-              style={
-                beforeRowTriggers
-                  ? ({
-                      "--fill-index": isFirstRow ? 5 : 1,
-                    } as React.CSSProperties)
-                  : undefined
-              }
-            />
+            {(!isFirstRow || leadingConnector) && (
+              <div
+                className={`before_row pointer-events-none absolute -z-10 -top-11.75 h-30.5 border-solid max-md:hidden ${
+                  isFirstRow
+                    ? "left-0 w-20 border-b"
+                    : // Left edge (-17.5 = 70px out) lands on the same x as the phase rail that
+                      // runs down from the numbered badge: this container is inset 116px (see the
+                      // wrapper's w-[calc(100%-116px)]) and that rail sits 46px in from the same
+                      // origin, so 116 - 46 = 70. The width has to grow by that same 30px
+                      // (20 -> 27.5, i.e. 80px -> 110px) so the right end still meets the previous
+                      // row's after_row, which starts 40px in — otherwise the snake breaks open
+                      // with a 30px gap at every wrap.
+                      "-left-17.5 w-27.5 rounded-l-[28px] border-14 border-r-0"
+                } ${
+                  beforeRowFilled
+                    ? "border-blue-500"
+                    : beforeRowTriggers
+                      ? "connector-fill border-white dark:border-neutral-700"
+                      : "border-white dark:border-neutral-700"
+                }`}
+                style={
+                  beforeRowTriggers
+                    ? ({
+                        "--fill-index": isFirstRow ? 5 : 1,
+                      } as React.CSSProperties)
+                    : undefined
+                }
+              />
+            )}
             {showConnectorBelow && (
               <div
                 className={`after_row pointer-events-none absolute -z-10 top-15.25 h-[calc(100%-30px)] -right-10 rounded-r-[28px] border-14 border-solid border-l-0 max-md:hidden ${
@@ -221,9 +233,18 @@ export default function TestSteps({
               />
             )}
 
-            {row.map((step, index) => (
-              <StepCard key={index} step={step} state={state} connector />
-            ))}
+            {row.map((step, index) => {
+              const globalIndex = rowIndex * effectiveColumns + index;
+              return (
+                <Fragment key={globalIndex}>
+                  {renderStep ? (
+                    renderStep(step, globalIndex)
+                  ) : (
+                    <StepCard step={step} state={state} connector />
+                  )}
+                </Fragment>
+              );
+            })}
           </div>
         );
       })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useLayoutEffect, useState, type ReactNode } from "react";
 import { isValidState, slugToStateName } from "./usStates";
 
 const STORAGE_KEY = "selectedState";
@@ -52,7 +52,11 @@ export function WebLayoutProvider({
   const [hasResolvedTestType, setHasResolvedTestType] = useState(false);
 
   // Reads from localStorage/route slug only after mount to avoid SSR/client hydration mismatches.
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so this resolves before the browser paints the new page on a
+  // client-side route change — otherwise StateTestTypeContent's `null` render (while unresolved)
+  // briefly collapses <main> to zero height, visibly snapping the footer up against the header
+  // for a frame before the real content pops in and pushes it back down.
+  useLayoutEffect(() => {
     const storedStateRaw = localStorage.getItem(STORAGE_KEY);
     const storedState = storedStateRaw && isValidState(storedStateRaw) ? storedStateRaw : "";
     if (storedStateRaw && !storedState) {

@@ -78,7 +78,7 @@ export default function StepCard({
 
   const content = (
     <div
-      className={`group border rounded-2xl p-1 flex md:flex-col items-center md:items-start cursor-pointer transition-all duration-300 hover:-translate-y-0.75 ${
+      className={`group h-full flex-1 border rounded-2xl p-1 flex md:flex-col items-center md:items-start cursor-pointer transition-all duration-300 hover:-translate-y-0.75 ${
         step.style === "large" ? "lg:col-span-2" : ""
       } ${step.status === "next" ? "border-blue-50 dark:border-blue-500/20 bg-[linear-gradient(90deg,#EFF6FF_0%,#DBEAFE_100%)] dark:bg-[linear-gradient(90deg,#16243d_0%,#1b3358_100%)] shadow-[0_4px_32px_0_rgba(59,130,246,0.32)]" : "border-background3 bg-white dark:bg-neutral-800 shadow-card"}`}
     >
@@ -203,7 +203,7 @@ export default function StepCard({
         step.duration ||
         step.totalQuestions ||
         step.totalTime) && (
-        <div className="md:p-4 px-3 md:space-y-2">
+        <div className="md:p-4 px-3 md:flex md:flex-1 md:flex-col md:gap-2">
           {step.title && (
             <Paragraph
               color={`${step.status === "next" ? "primary" : "dark"}`}
@@ -222,7 +222,10 @@ export default function StepCard({
             step.duration ||
             step.totalQuestions ||
             step.totalTime) && (
-            <Paragraph size="sm" className="font-semibold text-blue-500!">
+            // md:mt-auto pushes this to the bottom of the card regardless of how many lines the
+            // title above it wraps to, so the duration/question-count line lands on the same
+            // baseline across every card in a row instead of floating right under the title.
+            <Paragraph size="sm" className="font-semibold text-blue-500! md:mt-auto">
               {step.questions !== undefined && `${step.questions} questions`}
               {step.total && `${step.total}${cardType ? ` ${cardType}` : ""}`}
               {step.duration && step.duration}
@@ -250,7 +253,7 @@ export default function StepCard({
 
   if (href) {
     return (
-      <Link href={href} className="block">
+      <Link href={href} className="flex flex-col h-full">
         {content}
       </Link>
     );
