@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Billing\CreateCheckoutSession;
+use App\Actions\Billing\SyncStripeSubscriptions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreCheckoutRequest;
 use App\Http\Resources\Api\V1\InvoiceResource;
@@ -17,6 +18,7 @@ class BillingController extends Controller
     public function __construct(
         private readonly CreateCheckoutSession $createCheckoutSession,
         private readonly EntitlementResolver $entitlement,
+        private readonly SyncStripeSubscriptions $syncSubscriptions,
     ) {}
 
     /**
@@ -48,8 +50,20 @@ class BillingController extends Controller
     public function subscription(Request $request): JsonResponse
     {
         $user = $request->user();
-        $entitlement = $this->entitlement->resolve($user);
         $subscription = $user->subscription('default');
+
+        // A customer with no subscription row is the shape a missed webhook leaves behind: checkout
+        // created the Stripe customer, the charge went through, and nothing ever wrote the
+        // subscription here. Ask Stripe directly before reporting them as free — this is the call
+        // the post-checkout page polls, so the account repairs itself instead of needing a webhook
+        // redelivery. Anyone who really has no subscription costs one API call.
+        if ($subscription === null && $user->stripe_id !== null) {
+            if (($this->syncSubscriptions)($user) > 0) {
+                $subscription = $user->subscription('default');
+            }
+        }
+
+        $entitlement = $this->entitlement->resolve($user);
 
         return response()->json([
             'tier' => $entitlement->tier,

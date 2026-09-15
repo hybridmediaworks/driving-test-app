@@ -3,6 +3,7 @@
 namespace Tests\Feature\Billing;
 
 use App\Actions\Billing\CreateCheckoutSession;
+use App\Actions\Billing\SyncStripeSubscriptions;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -71,6 +72,65 @@ class BillingControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertJson(['tier' => 'free', 'is_premium' => false, 'subscription' => null]);
+    }
+
+    public function test_subscription_repairs_a_missing_row_from_stripe_before_reporting_free(): void
+    {
+        Plan::factory()->create(['key' => 'monthly', 'stripe_price_id' => 'price_recovered']);
+        // The shape a missed webhook leaves: a Stripe customer exists, the local subscription row
+        // never got written, and the user is sitting on the free tier despite having paid.
+        $user = User::factory()->create(['stripe_id' => 'cus_missed_webhook']);
+
+        // The real action calls Stripe; the fake stands in for "Stripe says they're subscribed".
+        $this->app->instance(SyncStripeSubscriptions::class, new class extends SyncStripeSubscriptions
+        {
+            public function __invoke(User $user): int
+            {
+                Subscription::query()->create([
+                    'user_id' => $user->id,
+                    'type' => 'default',
+                    'stripe_id' => 'sub_recovered',
+                    'stripe_status' => 'active',
+                    'stripe_price' => 'price_recovered',
+                    'quantity' => 1,
+                ]);
+
+                $user->unsetRelation('subscriptions');
+
+                return 1;
+            }
+        });
+
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/billing/subscription');
+
+        $response->assertOk();
+        $response->assertJson(['tier' => 'monthly_subscriber', 'is_premium' => true]);
+        $response->assertJsonPath('subscription.stripe_status', 'active');
+        $this->assertDatabaseHas('subscriptions', ['stripe_id' => 'sub_recovered', 'user_id' => $user->id]);
+    }
+
+    public function test_subscription_does_not_call_stripe_when_a_row_already_exists(): void
+    {
+        Plan::factory()->create(['key' => 'monthly', 'stripe_price_id' => 'price_no_sync']);
+        $user = User::factory()->create(['stripe_id' => 'cus_already_synced']);
+        Subscription::query()->create([
+            'user_id' => $user->id,
+            'type' => 'default',
+            'stripe_id' => 'sub_already_synced',
+            'stripe_status' => 'active',
+            'stripe_price' => 'price_no_sync',
+            'quantity' => 1,
+        ]);
+
+        $this->app->instance(SyncStripeSubscriptions::class, new class extends SyncStripeSubscriptions
+        {
+            public function __invoke(User $user): int
+            {
+                throw new \RuntimeException('Stripe must not be called when a subscription is already stored.');
+            }
+        });
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/v1/billing/subscription')->assertOk();
     }
 
     public function test_subscription_reflects_an_active_paid_subscription(): void

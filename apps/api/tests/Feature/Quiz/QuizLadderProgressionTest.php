@@ -86,18 +86,21 @@ class QuizLadderProgressionTest extends TestCase
         $this->assertFalse($data[1]['is_next']);
     }
 
-    public function test_paid_user_must_finish_the_previous_quiz_to_unlock_the_next(): void
+    public function test_paid_user_sees_the_whole_ladder_open_without_finishing_anything(): void
     {
         $this->buildLadder();
         $user = $this->makeSubscriber();
 
         $data = collect($this->actingAs($user, 'sanctum')->getJson('/api/v1/quizzes?state=AL&vehicle_type=car&test_track=permit_test&per_page=100')->json('data'));
 
-        // Free open + is_next; both premium are paid-for but not yet reached → "progress".
+        // Paying is the whole gate: every rung is open straight after subscribing, with nothing
+        // completed. is_next still marks the first unfinished one as the suggested starting point.
         $this->assertNull($data[0]['lock_reason']);
+        $this->assertNull($data[1]['lock_reason']);
+        $this->assertNull($data[2]['lock_reason']);
         $this->assertTrue($data[0]['is_next']);
-        $this->assertSame('progress', $data[1]['lock_reason']);
-        $this->assertSame('progress', $data[2]['lock_reason']);
+        $this->assertFalse($data[1]['is_next']);
+        $this->assertFalse($data[2]['is_next']);
     }
 
     public function test_admin_sees_the_whole_ladder_open_without_finishing_anything(): void
@@ -107,8 +110,8 @@ class QuizLadderProgressionTest extends TestCase
 
         $data = collect($this->actingAs($admin, 'sanctum')->getJson('/api/v1/quizzes?state=AL&vehicle_type=car&test_track=permit_test&per_page=100')->json('data'));
 
-        // The admin bypass covers the progression chain, not just the paywall — every rung is open
-        // with nothing completed, so staff can open any test to check its content.
+        // Admins count as entitled (the QA bypass), so they get the same open ladder as a
+        // subscriber — every rung open with nothing completed.
         $this->assertNull($data[0]['lock_reason']);
         $this->assertNull($data[1]['lock_reason']);
         $this->assertNull($data[2]['lock_reason']);
@@ -119,7 +122,7 @@ class QuizLadderProgressionTest extends TestCase
         $this->assertFalse($data[2]['is_next']);
     }
 
-    public function test_completing_a_quiz_unlocks_and_advances_next_for_a_paid_user(): void
+    public function test_completing_a_quiz_advances_next_for_a_paid_user(): void
     {
         ['q1' => $q1] = $this->buildLadder();
         $user = $this->makeSubscriber();
@@ -137,19 +140,22 @@ class QuizLadderProgressionTest extends TestCase
 
         $data = $this->actingAs($user, 'sanctum')->getJson('/api/v1/quizzes?state=AL&vehicle_type=car&test_track=permit_test&per_page=100')->json('data');
 
-        // Test 1 done → not next; Test 2 now open + next; Test 3 still gated on Test 2.
+        // Test 1 done → no longer next; is_next moves to Test 2. Nothing is gated for a
+        // subscriber, so Test 3 is open too — it is simply not the suggested one.
         $this->assertTrue($data[0]['attempted']);
         $this->assertFalse($data[0]['is_next']);
         $this->assertNull($data[1]['lock_reason']);
         $this->assertTrue($data[1]['is_next']);
-        $this->assertSame('progress', $data[2]['lock_reason']);
+        $this->assertNull($data[2]['lock_reason']);
+        $this->assertFalse($data[2]['is_next']);
     }
 
     public function test_slug_lookup_falls_back_to_payment_only_lock_reason(): void
     {
         ['q2' => $q2] = $this->buildLadder();
 
-        // A non-ladder request (slug lookup) doesn't resolve the chain — premium reads as payment-locked.
+        // A non-ladder request (slug lookup) doesn't resolve the ladder — premium still reads as
+        // payment-locked for someone who hasn't paid.
         $this->getJson("/api/v1/quizzes?state=AL&slug={$q2->slug}")
             ->assertOk()
             ->assertJsonPath('data.0.lock_reason', 'premium')
