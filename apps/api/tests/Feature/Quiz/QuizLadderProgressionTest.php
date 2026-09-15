@@ -100,6 +100,25 @@ class QuizLadderProgressionTest extends TestCase
         $this->assertSame('progress', $data[2]['lock_reason']);
     }
 
+    public function test_admin_sees_the_whole_ladder_open_without_finishing_anything(): void
+    {
+        $this->buildLadder();
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $data = collect($this->actingAs($admin, 'sanctum')->getJson('/api/v1/quizzes?state=AL&vehicle_type=car&test_track=permit_test&per_page=100')->json('data'));
+
+        // The admin bypass covers the progression chain, not just the paywall — every rung is open
+        // with nothing completed, so staff can open any test to check its content.
+        $this->assertNull($data[0]['lock_reason']);
+        $this->assertNull($data[1]['lock_reason']);
+        $this->assertNull($data[2]['lock_reason']);
+
+        // is_next still points at the first unfinished quiz.
+        $this->assertTrue($data[0]['is_next']);
+        $this->assertFalse($data[1]['is_next']);
+        $this->assertFalse($data[2]['is_next']);
+    }
+
     public function test_completing_a_quiz_unlocks_and_advances_next_for_a_paid_user(): void
     {
         ['q1' => $q1] = $this->buildLadder();

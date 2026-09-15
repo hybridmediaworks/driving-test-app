@@ -20,7 +20,8 @@ use App\Services\Entitlement\EntitlementResolver;
  *     should route to pricing.
  *   - lock_reason "progress": premium content the viewer HAS paid for but hasn't reached yet (the
  *     previous quiz isn't completed) → locked silently, no pricing.
- *   - lock_reason null: open (free, or entitled-and-reached, or already completed).
+ *   - lock_reason null: open (free, or entitled-and-reached, or already completed, or an admin —
+ *     the admin bypass covers the chain as well as the paywall, so staff can open any rung).
  *   - is_next: the single first open, not-yet-completed quiz — the one to take now.
  *
  * "Completed" means any completed attempt (score-agnostic), matching the pass line used elsewhere.
@@ -38,7 +39,11 @@ class ResolveQuizProgression
      */
     public function __invoke(string $stateCode, string $vehicleType, string $testTrack, ?User $user, ?string $guestToken = null): array
     {
-        $isEntitled = $this->entitlement->resolve($user)->hasFeature(Feature::PremiumQuiz);
+        $entitlement = $this->entitlement->resolve($user);
+        $isEntitled = $entitlement->hasFeature(Feature::PremiumQuiz);
+        // Admins skip the chain as well as the paywall. The bypass exists so staff can open any
+        // rung to check its content; making them play through the ladder first would defeat it.
+        $skipProgression = $entitlement->isAdmin;
 
         $quizzes = Quiz::query()
             ->where('is_active', true)
@@ -89,7 +94,7 @@ class ResolveQuizProgression
                     $lockReason = null;
                 } elseif (! $isEntitled) {
                     $lockReason = 'premium';
-                } elseif ($previousCompleted || $attempted) {
+                } elseif ($skipProgression || $previousCompleted || $attempted) {
                     $lockReason = null;
                 } else {
                     $lockReason = 'progress';

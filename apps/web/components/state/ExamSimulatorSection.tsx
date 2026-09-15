@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Gem } from "lucide-react";
+import { Gem, Play, Timer } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { useEntitlement } from "@/lib/auth-context";
@@ -57,7 +57,8 @@ export default function ExamSimulatorSection() {
     .find((p) => p.header.headerTitle === "The exam simulator")
     ?.steps.find((s) => !s.placeholder && s.slug)?.slug;
 
-  const canStart = isPremium && Boolean(simulatorSlug) && Boolean(selectedState);
+  const canStart =
+    isPremium && Boolean(simulatorSlug) && Boolean(selectedState);
   const ctaHref = canStart
     ? `/${stateToSlug(selectedState)}/${simulatorSlug}`
     : "/pricing";
@@ -88,11 +89,22 @@ export default function ExamSimulatorSection() {
             <div aria-hidden className="absolute inset-0 bg-white/55" />
 
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-6 text-center lg:gap-8">
-              <Gem
-                aria-hidden
-                strokeWidth={1.25}
-                className="size-14 text-yellow-500 sm:size-20 lg:size-30"
-              />
+              {/* The gem marks premium content, so it only belongs on the upsell. A learner who
+                  already has it gets the stopwatch instead — this is a timed exam run, not
+                  something to buy. */}
+              {canStart ? (
+                <Timer
+                  aria-hidden
+                  strokeWidth={1.25}
+                  className="size-14 text-blue-600 sm:size-20 lg:size-30 dark:text-blue-400"
+                />
+              ) : (
+                <Gem
+                  aria-hidden
+                  strokeWidth={1.25}
+                  className="size-14 text-yellow-500 sm:size-20 lg:size-30"
+                />
+              )}
               <div className="flex w-full max-w-[518px] flex-col items-center gap-4 lg:gap-6">
                 <div className="flex flex-col items-center gap-3 lg:gap-4">
                   <p className="font-sora text-[26px] leading-tight font-semibold tracking-[-0.96px] text-black dark:text-neutral-100 sm:text-[36px] lg:text-[48px] lg:leading-14">
@@ -108,7 +120,11 @@ export default function ExamSimulatorSection() {
                   href={ctaHref}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-yellow-500 px-5 py-3 text-base font-semibold text-neutral-700 dark:text-neutral-300 shadow-xs transition-opacity hover:opacity-95"
                 >
-                  <Gem aria-hidden className="size-5" />
+                  {canStart ? (
+                    <Play aria-hidden className="size-5 fill-current" />
+                  ) : (
+                    <Gem aria-hidden className="size-5" />
+                  )}
                   {canStart ? "Start the simulator" : "Upgrade to Premium"}
                 </Link>
               </div>
