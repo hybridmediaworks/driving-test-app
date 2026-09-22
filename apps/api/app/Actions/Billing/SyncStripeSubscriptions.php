@@ -74,6 +74,11 @@ class SyncStripeSubscriptions
                 'ends_at' => $data->cancel_at_period_end || $data->status === 'canceled'
                     ? Carbon::createFromTimestamp($data->cancel_at ?? $data->ended_at ?? $data->current_period_end)
                     : null,
+                // Stripe's own creation time, not ours: Cashier resolves subscription('default')
+                // as subscriptions()->orderBy('created_at', 'desc')->first(), and a whole sync
+                // lands inside one second — a resubscriber's canceled row could come back first
+                // and report a paying customer as free.
+                'created_at' => Carbon::createFromTimestamp($data->created),
             ]);
 
             foreach ($items as $item) {

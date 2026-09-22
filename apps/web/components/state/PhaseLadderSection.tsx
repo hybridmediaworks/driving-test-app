@@ -2,7 +2,7 @@
 
 import StatePhase from "@/components/state/StatePhase";
 import { useHasProgressSidebar } from "@/components/state/StateHubLayout";
-import { PROMOTED_TO_OWN_SECTION } from "@/lib/stateHubSections";
+import { PROMOTED_TO_OWN_SECTION, splitLadderPhases } from "@/lib/stateHubSections";
 import { useLadderPhases } from "@/lib/usePhaseCompletion";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { stateToSlug } from "@/lib/usStates";
@@ -18,13 +18,21 @@ import { stateToSlug } from "@/lib/usStates";
  */
 export default function PhaseLadderSection() {
   const phases = useLadderPhases();
-  const { selectedState } = useWebLayout();
+  const { selectedState, selectedVehicle } = useWebLayout();
   const hasSidebar = useHasProgressSidebar();
   const stateSlug = selectedState ? stateToSlug(selectedState) : undefined;
 
-  const ladderPhases = phases.filter(
+  // CDL numbers only its main program; its optional endorsements render un-numbered in
+  // OptionalEndorsementsSection instead. Car and motorcycle keep every phase here.
+  const { ladder } = splitLadderPhases(phases, selectedVehicle);
+
+  const ladderPhases = ladder.filter(
     (p) => !PROMOTED_TO_OWN_SECTION.includes(p.header.headerTitle),
   );
+
+  // CDL numbers its main program from 1, even though that category is not the first one the API
+  // returns (its optional endorsements render un-numbered further down instead).
+  const isCdl = selectedVehicle === "CDL";
 
   if (ladderPhases.length === 0) return null;
 
@@ -36,6 +44,7 @@ export default function PhaseLadderSection() {
             <StatePhase
               key={phase.phase}
               phase={phase.phase}
+              displayNumber={isCdl ? index + 1 : undefined}
               state={stateSlug}
               /* The rail takes 320px out of the row, so four cards across would leave them too
                  narrow to read at laptop widths — three keeps them the size they are without it. */

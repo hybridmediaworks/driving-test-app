@@ -6,6 +6,7 @@ import ExpertsSection from "@/components/state/ExpertsSection";
 import ExtraSupportSection from "@/components/state/ExtraSupportSection";
 import GoFurtherSection from "@/components/state/GoFurtherSection";
 import HandbookSection from "@/components/state/HandbookSection";
+import OptionalEndorsementsSection from "@/components/state/OptionalEndorsementsSection";
 import PhaseLadderSection from "@/components/state/PhaseLadderSection";
 import PremiumSpeedSection from "@/components/state/PremiumSpeedSection";
 import QuizVaultSection from "@/components/state/QuizVaultSection";
@@ -31,6 +32,8 @@ export default function PermitTestContent() {
       <div className={`relative bg-background2 ${signedOut ? "pt-52.5" : ""}`}>
         <PhaseLadderSection />
       </div>
+      {/* CDL only — renders nothing for car/motorcycle. */}
+      <OptionalEndorsementsSection />
       <PremiumSpeedSection />
       <ExamSimulatorSection />
       <ExtraSupportSection />

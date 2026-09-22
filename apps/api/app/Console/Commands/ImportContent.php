@@ -78,10 +78,6 @@ class ImportContent extends Command
         $wantedStates = $this->csvOption('state');
         $vehicleSlugs = $this->csvOption('vehicle-type') ?: ['car', 'motorcycle'];
 
-        if (in_array('cdl', $vehicleSlugs, true)) {
-            $this->warn('CDL is deferred per docs/PHASE_3_CONTENT_PLATFORM.md — importing it anyway since you asked explicitly.');
-        }
-
         $summary = new ImportSummary;
 
         $stateFolders = collect(File::directories($root))

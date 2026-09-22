@@ -18,3 +18,4 @@ dev-local-test.log
 docs
 apps/api/docs
 apps/web/docs
+apps/api/data

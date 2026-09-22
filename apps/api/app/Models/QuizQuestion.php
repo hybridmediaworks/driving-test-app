@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\QuestionDifficulty;
+use App\Enums\QuizQuestionAssetType;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,6 +33,16 @@ class QuizQuestion extends Model implements HasMedia
         'image_urls',
     ];
 
+    /**
+     * `image_urls` is appended to every serialization and now reads externally-hosted images out
+     * of `assets`, so the relation is needed wherever a question is rendered — eager-loading it
+     * here keeps the paths that don't ask for it explicitly (sample questions, challenge bank,
+     * admin listings) from going N+1.
+     *
+     * @var list<string>
+     */
+    protected $with = ['assets'];
+
     protected function casts(): array
     {
         return [
@@ -58,8 +69,23 @@ class QuizQuestion extends Model implements HasMedia
      */
     protected function imageUrls(): Attribute
     {
+        // Two sources, one list: images we host ourselves (Spatie media) and images left at the
+        // source URL. The crawled sets reuse a few hundred stock images across hundreds of
+        // thousands of questions, so copying a file per reference cost ~17GB for CDL alone —
+        // those are stored as `image` assets pointing at the origin instead. Consumers do not
+        // need to care which is which.
         return Attribute::get(fn (): array => $this->getMedia(self::MEDIA_COLLECTION_IMAGES)
             ->map(fn ($media) => $media->getUrl())
+            ->concat(
+                $this->assets
+                    ->where('type', QuizQuestionAssetType::Image)
+                    ->sortBy('sort_order')
+                    // ->url, not ->external_url: the row keeps its origin URL for provenance, but
+                    // once `content:localize-quiz-assets --only=images` has pulled the file down the
+                    // accessor serves our own copy instead.
+                    ->pluck('url')
+                    ->filter()
+            )
             ->values()
             ->all());
     }

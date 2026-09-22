@@ -16,11 +16,16 @@ class ImageRegenerationResource extends JsonResource
     public function toArray(Request $request): array
     {
         $media = $this->media();
+        $asset = $this->asset;
+
+        // Asset-backed rows keep their one shared file (and its backup) on the asset's own disk;
+        // media-backed rows use the media's. Everything below reads from whichever applies.
+        $disk = $asset?->disk ?? $media?->disk;
 
         // A backup row can point at a file that no longer exists — anything approved before backups
         // moved to S3 was on wiped container storage. Verify existence so the UI shows a clean
         // "not available" instead of a broken image.
-        $backupExists = $this->exists($media?->disk, $this->backup_path);
+        $backupExists = $this->exists($disk, $this->backup_path);
 
         return [
             'id' => $this->id,
@@ -30,14 +35,19 @@ class ImageRegenerationResource extends JsonResource
             'attempts' => $this->attempts,
             'error' => $this->error,
             // Live original — a direct (S3) URL the browser loads itself.
-            'original_url' => $media?->getUrl(),
+            'original_url' => $asset?->url ?? $media?->getUrl(),
+            'vehicle_type' => $this->whenLoaded('vehicleType', fn () => [
+                'id' => $this->vehicleType->id,
+                'name' => $this->vehicleType->name,
+                'title' => $this->vehicleType->title,
+            ]),
             'has_candidate' => (bool) ($this->candidate_disk && $this->candidate_path),
             'has_backup' => $backupExists,
             // Direct (signed) URLs for the candidate/backup so the browser loads them straight from
             // storage in parallel — far faster than streaming each image through the API. Null when the
             // disk can't sign (e.g. local dev); the UI then falls back to the guarded stream route.
             'candidate_url' => $this->signedUrl($this->candidate_disk, $this->candidate_path),
-            'backup_url' => $backupExists ? $this->signedUrl($media?->disk, $this->backup_path) : null,
+            'backup_url' => $backupExists ? $this->signedUrl($disk, $this->backup_path) : null,
             'decided_at' => $this->decided_at,
         ];
     }

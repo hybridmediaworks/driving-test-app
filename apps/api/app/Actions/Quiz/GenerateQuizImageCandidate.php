@@ -43,11 +43,13 @@ class GenerateQuizImageCandidate
             ]);
         }
 
-        $media = $row->media();
-        if ($media === null) {
+        // Media row or shared asset file — CDL rows only have the latter, and demanding media here
+        // failed every one of them on the first attempt.
+        $original = $row->originalFile();
+        if ($original === null) {
             $row->update([
                 'status' => ImageRegenerationStatus::Failed,
-                'error' => 'Representative media row is missing.',
+                'error' => 'The original image file is missing (no media row, and no localized asset file).',
                 'attempts' => $row->attempts + 1,
             ]);
 
@@ -57,11 +59,11 @@ class GenerateQuizImageCandidate
         $tmp = null;
         $originalTmp = null;
         try {
-            // Pull the original into a local temp file first, so the rest works whether media lives on
-            // the local disk or a remote one like S3 — `$media->getPath()` is only a real filesystem
+            // Pull the original into a local temp file first, so the rest works whether it lives on
+            // the local disk or a remote one like S3 — a media/asset path is only a real filesystem
             // path for local disks; on S3 it is just the object key and reading it locally fails.
             $originalTmp = tempnam(sys_get_temp_dir(), 'orig_').'.jpg';
-            File::put($originalTmp, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+            File::put($originalTmp, Storage::disk($original['disk'])->get($original['path']));
 
             // Sign/symbol images are inpainted (Edit): the sign is masked and kept EXACTLY while only
             // the background is regenerated to a fresh setting — so the pictogram never drifts yet the
@@ -101,14 +103,14 @@ class GenerateQuizImageCandidate
                 Storage::disk($row->candidate_disk)->delete($row->candidate_path);
             }
 
-            // Stage on the media's own disk (S3 in production) so it survives container redeploys —
-            // container-local storage is wiped on every recreate.
+            // Stage on the original's own disk (S3 in production) so it survives container redeploys
+            // — container-local storage is wiped on every recreate.
             $relativePath = "quiz-candidates/{$row->id}/".Str::uuid()->toString().'.jpg';
-            Storage::disk($media->disk)->put($relativePath, File::get($tmp));
+            Storage::disk($original['disk'])->put($relativePath, File::get($tmp));
 
             $row->update([
                 'prompt' => $prompt,
-                'candidate_disk' => $media->disk,
+                'candidate_disk' => $original['disk'],
                 'candidate_path' => $relativePath,
                 'status' => ImageRegenerationStatus::AwaitingReview,
                 'attempts' => $row->attempts + 1,

@@ -16,6 +16,13 @@ const vehicleSlugToLabel: Record<string, string> = {
   cdl: "CDL",
 };
 
+/** Vehicles that only have a permit track. CDL is endorsement-based — General Knowledge, HazMat,
+ * Air Brakes and so on — with no behind-the-wheel track, on driving-tests.org or in our own data.
+ * Without this, arriving at /[state]/cdl with "driving_test" left in localStorage from an earlier
+ * car visit renders DrivingTestContent against a track that has no CDL quizzes at all: an empty
+ * page rather than the ladder. */
+const permitOnlyVehicles = ["CDL"];
+
 type WebLayoutContextValue = {
   selectedState: string;
   setSelectedState: (state: string) => void;
@@ -25,6 +32,8 @@ type WebLayoutContextValue = {
   selectedTestType: string;
   setSelectedTestType: (testType: string) => void;
   hasResolvedTestType: boolean;
+  /** The current vehicle has no driving-test track, so the track switcher has nothing to offer. */
+  isPermitOnlyVehicle: boolean;
 };
 
 const WebLayoutContext = createContext<WebLayoutContextValue | null>(null);
@@ -82,13 +91,16 @@ export function WebLayoutProvider({
     setSelectedStateRaw(initialState);
     setHasStoredState(!!storedState || !!validPropState);
     setSelectedVehicleRaw(initialVehicle);
-    setSelectedTestTypeRaw(storedTestType || "permit_test");
+    const initialTestType = permitOnlyVehicles.includes(initialVehicle)
+      ? "permit_test"
+      : storedTestType || "permit_test";
+    setSelectedTestTypeRaw(initialTestType);
     setHasResolvedTestType(true);
 
     if (validPropState) {
       localStorage.setItem(STORAGE_KEY, initialState);
       localStorage.setItem(VEHICLE_STORAGE_KEY, initialVehicle);
-      localStorage.setItem(TEST_TYPE_STORAGE_KEY, storedTestType || "permit_test");
+      localStorage.setItem(TEST_TYPE_STORAGE_KEY, initialTestType);
     }
   }, [stateSlug, vehicleSlug]);
 
@@ -104,6 +116,7 @@ export function WebLayoutProvider({
     setSelectedVehicleRaw(value);
     if (!validVehicles.includes(value)) return;
     localStorage.setItem(VEHICLE_STORAGE_KEY, value);
+    if (permitOnlyVehicles.includes(value)) setSelectedTestType("permit_test");
   }
 
   function setSelectedTestType(value: string) {
@@ -123,6 +136,7 @@ export function WebLayoutProvider({
         selectedTestType,
         setSelectedTestType,
         hasResolvedTestType,
+        isPermitOnlyVehicle: permitOnlyVehicles.includes(selectedVehicle),
       }}
     >
       {children}

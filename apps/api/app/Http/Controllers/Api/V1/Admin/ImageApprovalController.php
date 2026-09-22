@@ -35,7 +35,14 @@ class ImageApprovalController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = QuizImageRegeneration::query()->latest('id');
+        $query = QuizImageRegeneration::query()->with(['vehicleType', 'asset'])->latest('id');
+
+        // ?vehicle_type=car|motorcycle|cdl — the queue is reviewed one vehicle at a time, since the
+        // imagery and the prompts that suit it differ completely between them.
+        $vehicleType = $request->string('vehicle_type')->toString();
+        if ($vehicleType !== '' && $vehicleType !== 'all') {
+            $query->whereHas('vehicleType', fn ($q) => $q->where('name', $vehicleType));
+        }
 
         $status = $request->string('status')->toString();
         if ($status === '') {
@@ -71,8 +78,9 @@ class ImageApprovalController extends Controller
     {
         abort_unless((bool) $regeneration->backup_path, 404);
 
-        // Backups live on the media's own disk (S3 in production).
-        $disk = Storage::disk($regeneration->media()?->disk ?? 'local');
+        // Backups live on whichever disk holds the original — the asset's for asset-backed rows,
+        // the media's otherwise (S3 in production).
+        $disk = Storage::disk($regeneration->asset?->disk ?? $regeneration->media()?->disk ?? 'local');
         abort_unless($disk->exists($regeneration->backup_path), 404);
 
         return $disk->response($regeneration->backup_path);

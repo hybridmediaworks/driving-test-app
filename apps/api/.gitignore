@@ -29,3 +29,6 @@ Thumbs.db
 
 # Python venv for the sign-mask helper (rembg)
 scripts/.venv/
+
+# Crawled content dropped here for content:import — hundreds of MB, never committed.
+/data

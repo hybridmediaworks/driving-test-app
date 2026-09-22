@@ -4,7 +4,7 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import TestSteps from "@/components/state/TestSteps";
 import { phaseAnchorId } from "@/lib/stateHubSections";
-import { isMarathonStep } from "@/lib/phaseLadder";
+import { phaseSummary } from "@/lib/phaseLadder";
 import {
   usePhaseCompletion,
   type PhaseCompletionState,
@@ -17,6 +17,7 @@ export default function StatePhase({
   usePhaseData = usePhaseCompletion,
   state,
   columns = 4,
+  displayNumber,
 }: {
   phase: number;
   nextConnector?: boolean;
@@ -27,6 +28,9 @@ export default function StatePhase({
   state?: string;
   /** Desktop step-grid columns. Drops to 3 when the progress sidebar takes a slice of the row. */
   columns?: number;
+  /** Number shown in the circle when it differs from the API's phase number — CDL numbers its main
+   * program from 1 even though that category isn't the first one the API returns. */
+  displayNumber?: number;
 }) {
   const { phase: phaseData } = usePhaseData(phase);
   const {
@@ -37,26 +41,7 @@ export default function StatePhase({
   if (!phaseData) return null;
 
   const hasSteps = phaseData.steps.length > 0;
-  const isPlaceholder = hasSteps && phaseData.steps.every((s) => s.placeholder);
-
-  // The header's own totalQuestions sums every quiz in the phase, marathon included — which
-  // double-counts, since a marathon is a re-run of the same material as the short tests it
-  // follows. Count those tests, then name the marathon alongside rather than adding it in.
-  const realSteps = phaseData.steps.filter((s) => !s.placeholder);
-  const marathons = realSteps.filter(isMarathonStep);
-  const practiceQuestions = realSteps
-    .filter((s) => !isMarathonStep(s))
-    .reduce((sum, s) => sum + Number(s.totalQuestions ?? 0), 0);
-  const summary = isPlaceholder
-    ? "Coming soon"
-    : [
-        practiceQuestions > 0 ? `${practiceQuestions} questions` : null,
-        marathons.length > 0
-          ? `+ ${marathons.length > 1 ? `${marathons.length} Marathons` : "Marathon"}`
-          : null,
-      ]
-        .filter(Boolean)
-        .join(" ");
+  const summary = phaseSummary(phaseData);
 
   // A phase is "active" either because the backend says so, or because the
   // phase before it is already fully done (no live trigger — just render the
@@ -106,7 +91,7 @@ export default function StatePhase({
                 style={{ "--fill-index": 3 } as React.CSSProperties}
               />
             )}
-            <span className="relative">{phaseData.phase}</span>
+            <span className="relative">{displayNumber ?? phaseData.phase}</span>
           </Heading>
           <div
             className={`md:w-18 w-8.5 ms-auto md:-me-4.5 md:border-l-14 border-l-8 md:border-b-14 border-b-8 rounded-bl-[28px] h-[calc(100%+14px)] ${

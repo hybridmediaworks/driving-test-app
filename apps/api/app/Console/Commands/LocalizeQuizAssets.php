@@ -26,8 +26,15 @@ use Throwable;
  *  - Lottie: `quiz_question_assets` rows are hot-linked via `external_url`. We download each unique
  *    animation into `public/quiz-lottie/` and point the rows at the local disk (external_url kept
  *    for provenance; the model's `url` accessor now prefers the local copy).
+ *  - Images: the same treatment for `image` asset rows, which is how the CDL import stores photos —
+ *    one row per question, but only ~696 distinct files behind 96,771 rows, so every row for a URL
+ *    is repointed at the single downloaded copy. Independent of `photos`, so localizing CDL images
+ *    never re-fetches the car/motorcycle media.
  *
- * Idempotent: already-materialised files are skipped unless `--force` is passed.
+ * Idempotent: already-materialised files are skipped unless `--force` is passed. Files are named
+ * `<url hash>-<stem>` (see localPath) so two source URLs sharing a filename can't collide; the run
+ * that introduces that naming re-downloads everything once and deletes each pre-hash copy as it
+ * goes.
  *
  *   php artisan content:localize-quiz-assets --dry-run
  *   php artisan content:localize-quiz-assets
@@ -36,7 +43,7 @@ use Throwable;
 class LocalizeQuizAssets extends Command
 {
     protected $signature = 'content:localize-quiz-assets
-        {--only=photos,lottie : Comma-separated asset kinds to localize (photos,lottie)}
+        {--only=photos,lottie,images : Comma-separated asset kinds to localize (photos,lottie,images)}
         {--force : Re-download and overwrite files that already exist locally}
         {--limit= : Cap how many photo media rows / lottie URLs to process (for testing)}
         {--dry-run : Report what would be downloaded without writing anything}';
@@ -62,7 +69,7 @@ class LocalizeQuizAssets extends Command
 
     public function handle(): int
     {
-        $only = $this->csvOption('only') ?: ['photos', 'lottie'];
+        $only = $this->csvOption('only') ?: ['photos', 'lottie', 'images'];
         $dryRun = (bool) $this->option('dry-run');
         $limit = $this->option('limit') !== null ? max(0, (int) $this->option('limit')) : null;
 
@@ -72,6 +79,10 @@ class LocalizeQuizAssets extends Command
 
         if (in_array('lottie', $only, true)) {
             $this->localizeLottie($dryRun, $limit);
+        }
+
+        if (in_array('images', $only, true)) {
+            $this->localizeImages($dryRun, $limit);
         }
 
         $this->report($dryRun);
@@ -178,7 +189,7 @@ class LocalizeQuizAssets extends Command
         $this->info("Lottie: {$urls->count()} unique animation(s) to localize.");
 
         foreach ($urls as $url) {
-            $relativePath = 'quiz-lottie/'.$this->safeBasename($url, 'json');
+            $relativePath = $this->localPath('quiz-lottie', $url, 'json');
             $absolute = Storage::disk('public')->path($relativePath);
 
             $needsDownload = ! File::exists($absolute) || (bool) $this->option('force');
@@ -210,9 +221,87 @@ class LocalizeQuizAssets extends Command
                 ->where('external_url', $url)
                 ->update(['disk' => 'public', 'path' => $relativePath]);
             $this->increment('lottie.rows_pointed_local', $updated);
+            $this->deletePreHashCopy('quiz-lottie', $url, 'json', 'public');
         }
 
         $this->newLine();
+    }
+
+    /**
+     * Photo assets stored as links rather than media rows (see ImportQuizzesFromCrawl): the CDL
+     * import writes one `image` asset row per question but the source draws them from a few hundred
+     * files, so this downloads each DISTINCT url once and repoints every row at that one copy. No
+     * per-row file at all — 696 files for 96,771 rows — which is why this is a separate pass from
+     * `photos` above, where Spatie owns a real file path per media row and duplicates are hardlinked.
+     *
+     * Leaves `photos` (the existing car/motorcycle media) completely untouched, so
+     * `--only=images` re-downloads nothing that is already local.
+     */
+    private function localizeImages(bool $dryRun, ?int $limit): void
+    {
+        $urls = QuizQuestionAsset::query()
+            ->where('type', QuizQuestionAssetType::Image)
+            ->whereNotNull('external_url')
+            ->distinct()
+            ->orderBy('external_url')
+            ->pluck('external_url');
+
+        if ($limit !== null) {
+            $urls = $urls->take($limit);
+        }
+
+        $this->info("Images: {$urls->count()} unique image(s) to localize.");
+
+        if ($urls->isEmpty()) {
+            return;
+        }
+
+        $bar = $this->output->createProgressBar($urls->count());
+        $bar->start();
+
+        // Same disk Spatie puts quiz media on, so CDL images live wherever the car/motorcycle
+        // images already live (S3 in production via MEDIA_DISK). Addressed purely through the
+        // Storage abstraction — `->path()` only exists on local disks and would fatal on S3.
+        $diskName = (string) config('media-library.disk_name', 'public');
+        $disk = Storage::disk($diskName);
+
+        foreach ($urls as $url) {
+            $relativePath = $this->localPath('quiz-images', $url, 'jpg');
+
+            $needsDownload = ! $disk->exists($relativePath) || (bool) $this->option('force');
+
+            if ($dryRun) {
+                $this->increment($needsDownload ? 'images.would_download' : 'images.skipped_present');
+                $bar->advance();
+
+                continue;
+            }
+
+            if ($needsDownload) {
+                $response = $this->fetch($url);
+                if ($response === null) {
+                    $this->increment('images.download_failed');
+                    $bar->advance();
+
+                    continue;
+                }
+                $disk->put($relativePath, $response->body());
+                $this->increment('images.downloaded');
+            } else {
+                $this->increment('images.skipped_present');
+            }
+
+            $updated = QuizQuestionAsset::query()
+                ->where('type', QuizQuestionAssetType::Image)
+                ->where('external_url', $url)
+                ->update(['disk' => $diskName, 'path' => $relativePath]);
+            $this->increment('images.rows_pointed_local', $updated);
+            $this->deletePreHashCopy('quiz-images', $url, 'jpg', $diskName);
+            $bar->advance();
+        }
+
+        $bar->finish();
+        $this->newLine(2);
     }
 
     /** Hardlink $canonical -> $target, falling back to a copy across filesystems / on failure. */
@@ -266,11 +355,38 @@ class LocalizeQuizAssets extends Command
         $name = basename($path);
 
         if ($name === '' || ! Str::contains($name, '.')) {
-            $name = 'asset-'.md5($url).'.'.$fallbackExtension;
+            $name = 'asset.'.$fallbackExtension;
         }
 
         // Guard against traversal / odd characters while keeping the original stem readable.
         return Str::of($name)->replaceMatches('/[^A-Za-z0-9._-]/', '_')->value();
+    }
+
+    /**
+     * Storage path for one source URL: `<dir>/<url hash>-<original stem>`.
+     *
+     * The hash prefix is what makes it unique. The source reuses filenames across its upload
+     * folders (/2019/01/sign.png and /2021/07/sign.png, and Bodymovin's ubiquitous data.json), and
+     * keyed on the basename alone the second URL looks already-downloaded — every row for it then
+     * silently gets the first URL's picture. The readable stem is kept so storage stays browsable.
+     */
+    private function localPath(string $directory, string $url, string $fallbackExtension): string
+    {
+        return "{$directory}/".substr(md5($url), 0, 8).'-'.$this->safeBasename($url, $fallbackExtension);
+    }
+
+    /**
+     * The pre-hash path this URL used to be stored at, deleted once its rows point at the new one.
+     * Without it the rename would strand the entire old cache on disk (S3 in production). A no-op
+     * on every run after the first — nothing is written to an unprefixed path any more.
+     */
+    private function deletePreHashCopy(string $directory, string $url, string $fallbackExtension, string $disk): void
+    {
+        $legacy = "{$directory}/".$this->safeBasename($url, $fallbackExtension);
+        if (Storage::disk($disk)->exists($legacy)) {
+            Storage::disk($disk)->delete($legacy);
+            $this->increment('stale_pre_hash_files_deleted');
+        }
     }
 
     private function increment(string $key, int $by = 1): void

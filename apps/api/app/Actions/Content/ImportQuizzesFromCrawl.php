@@ -13,10 +13,8 @@ use App\Models\QuizType;
 use App\Models\State;
 use App\Models\VehicleType;
 use App\Support\ImportSummary;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Throwable;
 
 /**
  * Imports one questions.json file. Confirmed against real Alabama/Alaska data, the source uses
@@ -34,11 +32,9 @@ use Throwable;
  */
 class ImportQuizzesFromCrawl
 {
-    /** @var array<string, string> url -> local temp file path, reused across questions/quizzes in one run */
-    private array $imageCache = [];
-
     public function __construct(
         private readonly GenerateUniqueSlug $generateUniqueSlug,
+        private readonly ImportFlashcardsFromCrawl $importFlashcards,
     ) {}
 
     public function __invoke(
@@ -70,14 +66,14 @@ class ImportQuizzesFromCrawl
         bool $dryRun,
     ): void {
         foreach ($sections as $sectionIndex => $section) {
-            $category = $this->upsertCategory($section['title'] ?? '', $sectionIndex, $state, $vehicleType, $testTrack, $summary);
+            $category = $this->upsertCategory($section['title'] ?? '', $sectionIndex, $state, $vehicleType, $testTrack, $summary, $dryRun);
             if ($category === null) {
                 continue;
             }
 
-            foreach ($section['subcategories'] ?? [] as $subcategory) {
+            foreach (array_values($section['subcategories'] ?? []) as $position => $subcategory) {
                 $quizType = $this->resolveQuizType($category->title, (string) ($subcategory['title'] ?? ''));
-                $this->importQuiz($subcategory, $state, $vehicleType, $testTrack, $category, $quizType, $summary, $dryRun);
+                $this->importQuiz($subcategory, $state, $vehicleType, $testTrack, $category, $quizType, $summary, $dryRun, $position);
             }
         }
     }
@@ -104,15 +100,15 @@ class ImportQuizzesFromCrawl
 
         $sectionIndex = 0;
         foreach ($grouped as $groupLabel => $rows) {
-            $category = $this->upsertCategory($groupLabel, $sectionIndex, $state, $vehicleType, $testTrack, $summary);
+            $category = $this->upsertCategory($groupLabel, $sectionIndex, $state, $vehicleType, $testTrack, $summary, $dryRun);
             $sectionIndex++;
             if ($category === null) {
                 continue;
             }
 
-            foreach ($rows as $subcategory) {
+            foreach (array_values($rows) as $position => $subcategory) {
                 $quizType = $this->resolveQuizType($category->title, (string) ($subcategory['title'] ?? ''));
-                $this->importQuiz($subcategory, $state, $vehicleType, $testTrack, $category, $quizType, $summary, $dryRun);
+                $this->importQuiz($subcategory, $state, $vehicleType, $testTrack, $category, $quizType, $summary, $dryRun, $position);
             }
         }
     }
@@ -124,6 +120,7 @@ class ImportQuizzesFromCrawl
         VehicleType $vehicleType,
         string $testTrack,
         ImportSummary $summary,
+        bool $dryRun,
     ): ?QuizCategory {
         $sectionTitle = trim($sectionTitle);
         if ($sectionTitle === '') {
@@ -144,6 +141,15 @@ class ImportQuizzesFromCrawl
             // scraper error string ever reaching a user-facing quiz category name.
             $summary->warn("Data-quality artifact section title \"{$sectionTitle}\" ({$state->name}/{$vehicleType->name}/{$testTrack}) — substituted with the verified real heading \"Practice Essential Topics\".");
             $sectionTitle = 'Practice Essential Topics';
+        }
+
+        if ($dryRun) {
+            // A dry run must not write: report what would happen and hand back an unsaved model
+            // (importQuiz only reads ->title before its own dry-run early return).
+            $category = QuizCategory::query()->where('name', Str::slug($sectionTitle))->first();
+            $summary->increment($category === null ? 'quiz_categories.would_create' : 'quiz_categories.reused');
+
+            return $category ?? new QuizCategory(['title' => $sectionTitle]);
         }
 
         $category = QuizCategory::query()->firstOrCreate(
@@ -180,6 +186,7 @@ class ImportQuizzesFromCrawl
         ?QuizType $quizType,
         ImportSummary $summary,
         bool $dryRun,
+        int $position,
     ): void {
         $title = trim((string) ($subcategory['title'] ?? ''));
         if ($title === '') {
@@ -193,24 +200,45 @@ class ImportQuizzesFromCrawl
             $summary->warn("Unexpected tier value \"{$tier}\" for quiz \"{$title}\" — defaulting to premium.");
         }
 
+        // The source lists flashcard sets in the same sections as the tests, but they are cards,
+        // not multiple-choice questions — they belong in `flashcards`, not `quizzes`.
+        if (ImportFlashcardsFromCrawl::looksLikeFlashcardSet($subcategory)) {
+            ($this->importFlashcards)($subcategory, $state, $vehicleType, $category, $tier === 'PREMIUM', $summary, $dryRun);
+
+            return;
+        }
+
         if ($dryRun) {
             $summary->increment('quizzes.would_import');
 
             return;
         }
 
-        $slug = $this->generateUniqueSlug->__invoke(
-            'quizzes',
-            "{$state->code} {$vehicleType->name} {$title}",
-        );
+        $key = ['state_id' => $state->id, 'vehicle_type_id' => $vehicleType->id, 'title' => $title, 'test_track' => $testTrack];
+
+        // Keep the slug a quiz was first imported with. Generating one unconditionally meant a
+        // re-import saw its own existing slug as "taken" and rewrote the row to `...-1`, then
+        // `...-2` — every re-run silently churned every public quiz URL.
+        $existing = Quiz::query()->where($key)->first(['id', 'slug', 'order_no']);
+        $slug = $existing?->slug
+            ?? $this->generateUniqueSlug->__invoke('quizzes', "{$state->code} {$vehicleType->name} {$title}");
+
+        // Position within its section in the source file — the order the site itself lists the
+        // tests in (Test 1..13, then Marathon, then Exam Simulator). Without it every imported
+        // quiz sits at order_no 0 and the ladder falls back to sorting by title, which reads
+        // "Test 10, Test 11, Test 2" and puts the marathon first. Only set on create so a hand-
+        // tuned order in /admin/quizzes survives a re-import. `?:` not `??` — the column is
+        // non-nullable default 0, so 0 is the "never ordered" value that needs backfilling.
+        $orderNo = $existing?->order_no ?: $position + 1;
 
         $quiz = Quiz::query()->updateOrCreate(
-            ['state_id' => $state->id, 'vehicle_type_id' => $vehicleType->id, 'title' => $title, 'test_track' => $testTrack],
+            $key,
             [
                 'quiz_category_id' => $category->id,
                 'quiz_type_id' => $quizType?->id,
                 'title' => $title,
                 'slug' => $slug,
+                'order_no' => $orderNo,
                 'source_url' => $subcategory['url'] ?? null,
                 'is_premium' => $tier === 'PREMIUM',
                 'is_active' => true,
@@ -218,13 +246,25 @@ class ImportQuizzesFromCrawl
         );
         $summary->increment($quiz->wasRecentlyCreated ? 'quizzes.created' : 'quizzes.updated');
 
-        // Individual model deletes (not a bulk query delete) so Spatie's deleting-model media
-        // cleanup actually fires — a bulk ->delete() on the relation skips model events entirely.
-        $quiz->quizQuestions()->get()->each(fn (QuizQuestion $question) => $question->delete());
+        $oldQuestions = $quiz->quizQuestions()->with('media')->get();
 
-        foreach ($subcategory['questions'] ?? [] as $questionRow) {
-            $this->importQuestion($questionRow, $quiz, $summary);
-        }
+        // One commit per quiz rather than one per row: with innodb_flush_log_at_trx_commit=1 the
+        // per-row fsync, not the work itself, was the import's bottleneck. The wipe belongs inside
+        // it too — committed separately, a failed re-import left the quiz with zero questions.
+        DB::transaction(function () use ($subcategory, $quiz, $oldQuestions, $summary) {
+            // Rows only: Spatie's deleting-model hook would unlink the image FILES here, and a
+            // rollback cannot put those back — it would restore the questions pointing at images
+            // already gone. The files go below, once the re-import has actually committed.
+            $oldQuestions->each(fn (QuizQuestion $question) => $question->deletePreservingMedia());
+
+            foreach ($subcategory['questions'] ?? [] as $questionRow) {
+                $this->importQuestion($questionRow, $quiz, $summary);
+            }
+        });
+
+        // Individual model deletes (not a bulk query delete) so Spatie's deleting-media hook fires
+        // and takes the file and its conversions with the row.
+        $oldQuestions->each(fn (QuizQuestion $question) => $question->media->each->delete());
 
         $quiz->syncTotalQuestions();
     }
@@ -266,72 +306,37 @@ class ImportQuizzesFromCrawl
         ]);
         $summary->increment('quiz_questions.created');
 
-        foreach ($options as $index => $optionText) {
-            QuizAnswer::query()->create([
-                'quiz_question_id' => $question->id,
-                'answer_text' => (string) $optionText,
-                'is_correct' => $index === $answerIndex,
-                'sort_order' => $index,
-            ]);
-        }
+        $now = now();
+        QuizAnswer::query()->insert(array_map(fn ($index, $optionText) => [
+            'quiz_question_id' => $question->id,
+            'answer_text' => (string) $optionText,
+            'is_correct' => $index === $answerIndex,
+            'sort_order' => $index,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], array_keys($options), $options));
 
+        // Images are referenced, not copied. The source draws on a few hundred stock images
+        // across hundreds of thousands of questions (CDL: 122,301 references, 696 distinct
+        // files), and Spatie stores one file per reference — ~17GB for CDL, for 96MB of actual
+        // pictures. A `lottie`/`image` asset row holding the source URL costs nothing, and
+        // QuizQuestion::$image_urls folds them in alongside any self-hosted media.
         foreach (array_filter((array) ($row['question_images'] ?? [])) as $index => $url) {
             $url = (string) $url;
             $extension = Str::lower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
 
-            if ($extension === 'json') {
-                // "Road situation" questions link a Lottie vector animation (Bodymovin JSON —
-                // v/fr/ip/op/layers/assets schema), not a raster image: it can't go through
-                // Spatie's `images` media collection (mime-restricted to real image types), so it
-                // gets its own asset row instead, mirroring how video/audio assets already work.
-                QuizQuestionAsset::query()->create([
-                    'quiz_question_id' => $question->id,
-                    'type' => QuizQuestionAssetType::Lottie,
-                    'external_url' => $url,
-                    'sort_order' => $index,
-                ]);
-                $summary->increment('question_assets.lottie_created');
+            // "Road situation" questions link a Lottie vector animation (Bodymovin JSON —
+            // v/fr/ip/op/layers/assets schema) rather than a raster image; they have always been
+            // kept as asset rows, and now the raster images are too.
+            $isLottie = $extension === 'json';
 
-                continue;
-            }
-
-            $this->attachImage($question, $url, $summary);
-        }
-    }
-
-    private function attachImage(QuizQuestion $question, string $url, ImportSummary $summary): void
-    {
-        try {
-            if (! isset($this->imageCache[$url])) {
-                $response = Http::timeout(15)->get($url);
-                if (! $response->successful()) {
-                    $summary->warn("Image fetch failed ({$response->status()}): {$url}");
-
-                    return;
-                }
-
-                $extension = pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION) ?: 'jpg';
-                $tempPath = tempnam(sys_get_temp_dir(), 'qimg_').'.'.$extension;
-                File::put($tempPath, $response->body());
-                $this->imageCache[$url] = $tempPath;
-            }
-
-            $question->addMedia($this->imageCache[$url])
-                ->preservingOriginal()
-                ->withCustomProperties(['source_url' => $url])
-                ->toMediaCollection(QuizQuestion::MEDIA_COLLECTION_IMAGES);
-            $summary->increment('question_images.attached');
-        } catch (Throwable $e) {
-            $summary->warn("Image attach failed for {$url}: {$e->getMessage()}");
-        }
-    }
-
-    public function __destruct()
-    {
-        foreach ($this->imageCache as $path) {
-            if (File::exists($path)) {
-                File::delete($path);
-            }
+            QuizQuestionAsset::query()->create([
+                'quiz_question_id' => $question->id,
+                'type' => $isLottie ? QuizQuestionAssetType::Lottie : QuizQuestionAssetType::Image,
+                'external_url' => $url,
+                'sort_order' => $index,
+            ]);
+            $summary->increment($isLottie ? 'question_assets.lottie_created' : 'question_assets.image_created');
         }
     }
 }

@@ -58,6 +58,31 @@ export function isMarathonStep(step: { title?: string }): boolean {
   return /marathon/i.test(step.title ?? "");
 }
 
+/**
+ * The "N questions + Marathon" line above a phase heading. A marathon re-runs the same material as
+ * the short tests it follows, so adding its count in would double-count the phase — it gets named
+ * alongside the total instead. Shared by the numbered ladder and the endorsement list so both read
+ * the same.
+ */
+export function phaseSummary(phase: PhaseLadderPhase): string {
+  const realSteps = phase.steps.filter((s) => !s.placeholder);
+  if (realSteps.length === 0) return "Coming soon";
+
+  const marathons = realSteps.filter(isMarathonStep);
+  const practiceQuestions = realSteps
+    .filter((s) => !isMarathonStep(s))
+    .reduce((sum, s) => sum + Number(s.totalQuestions ?? 0), 0);
+
+  return [
+    practiceQuestions > 0 ? `${practiceQuestions} questions` : null,
+    marathons.length > 0
+      ? `+ ${marathons.length > 1 ? `${marathons.length} Marathons` : "Marathon"}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 const CATEGORIES_CACHE_MS = 5 * 60 * 1000;
 let categoriesCache: { at: number; data: QuizCategory[] } | null = null;
 

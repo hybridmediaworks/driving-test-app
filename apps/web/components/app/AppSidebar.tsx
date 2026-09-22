@@ -67,7 +67,18 @@ const adminNavItems = [
   { title: "All Results", href: "/admin/attempts", icon: ClipboardCheck },
   { title: "Email Subscribers", href: "/admin/email-subscribers", icon: Mail },
   { title: "Pass Guarantee Claims", href: "/admin/pass-guarantee-claims", icon: Receipt },
-  { title: "Image Approvals", href: "/admin/image-approvals", icon: Images },
+  {
+    title: "Image Approvals",
+    href: "/admin/image-approvals",
+    icon: Images,
+    // The queue is reviewed one vehicle at a time — the imagery, and the prompt that suits it,
+    // differ completely between a car intersection diagram and a CDL air-brake schematic.
+    children: [
+      { title: "Car", href: "/admin/image-approvals?vehicle_type=car" },
+      { title: "Motorcycle", href: "/admin/image-approvals?vehicle_type=motorcycle" },
+      { title: "CDL", href: "/admin/image-approvals?vehicle_type=cdl" },
+    ],
+  },
   { title: "States", href: "/admin/states", icon: MapPin },
   { title: "Vehicle Types", href: "/admin/vehicle-types", icon: Bike },
   { title: "Quiz Types", href: "/admin/quiz-types", icon: ListChecks },

@@ -81,6 +81,7 @@ export default function Header({
     setSelectedVehicle,
     selectedTestType,
     setSelectedTestType,
+    isPermitOnlyVehicle,
   } = useWebLayout();
   const [activeDropdown, setActiveDropdown] = useState<Dropdown>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -229,7 +230,7 @@ export default function Header({
               )}
             </div>
 
-            {variant === "states" && selectedVehicle !== "CDL" && (
+            {variant === "states" && !isPermitOnlyVehicle && (
               <div className="relative">
                 <button
                   onClick={() => toggleDropdown("testType")}
@@ -408,7 +409,7 @@ export default function Header({
             </>
           )}
 
-          {!hideNav && variant === "states" && selectedVehicle !== "CDL" && (
+          {!hideNav && variant === "states" && !isPermitOnlyVehicle && (
             <div className="mt-4 space-y-2 border-t border-gray-100 dark:border-white/10 pt-4">
               <button
                 onClick={() => setMobileTestTypeOpen((v) => !v)}

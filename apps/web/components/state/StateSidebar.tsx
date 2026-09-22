@@ -10,8 +10,10 @@ import { useExamDate } from "@/lib/useExamDate";
 import { useLadderPhases } from "@/lib/usePhaseCompletion";
 import {
   HANDBOOK_SECTION_ID,
+  endorsementAnchorId,
   scrollToSection,
   sectionIdForPhase,
+  splitLadderPhases,
 } from "@/lib/stateHubSections";
 import { useWebLayout } from "@/lib/web-layout-context";
 
@@ -133,7 +135,7 @@ export default function StateSidebar({
 }) {
   const { user } = useAuth();
   const { isPremium } = useEntitlement();
-  const { selectedState } = useWebLayout();
+  const { selectedState, selectedVehicle } = useWebLayout();
   const phases = useLadderPhases();
 
   if (!user) return null;
@@ -147,8 +149,13 @@ export default function StateSidebar({
   // The checklist mirrors the real ladder for this state/vehicle/track — including the phases the
   // redesign renders as their own sections further down — then the handbook, which is the last
   // thing left before the exam. Each step knows where its section is so it can scroll to it.
+  // CDL's optional endorsements are listed on their own below rather than as numbered steps, so
+  // the checklist counts only what the learner actually has to finish. Other vehicles split into
+  // ladder-only and render exactly as before.
+  const { ladder, endorsements } = splitLadderPhases(phases, selectedVehicle);
+
   const steps = [
-    ...phases.map((phase) => ({
+    ...ladder.map((phase) => ({
       label: phase.header.headerTitle,
       done:
         phase.steps.length > 0 && phase.steps.every((step) => step.completed),
@@ -229,7 +236,7 @@ export default function StateSidebar({
       </section>
 
       {/* Steps to complete */}
-      {steps.length > 1 && (
+      {(steps.length > 1 || endorsements.length > 0) && (
         <section className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4 shadow-card">
           <h2 className="font-sora text-base font-semibold text-neutral-900 dark:text-neutral-100">
             Exam Prep
@@ -241,7 +248,7 @@ export default function StateSidebar({
               which is all their progress can actually fill in. */}
           {isPremium ? (
             <ExamPrepTree
-              phases={phases}
+              phases={ladder}
               coveredByQuiz={questions.by_quiz ?? {}}
             />
           ) : (
@@ -283,6 +290,32 @@ export default function StateSidebar({
               </li>
             ))}
           </ol>
+          )}
+
+          {/* CDL's optional endorsements — listed, not numbered, because they aren't steps on the
+              way to anything: a driver adds the ones their job needs, in any order. */}
+          {endorsements.length > 0 && (
+            <>
+              <p className="mt-5 text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
+                Additional endorsements
+              </p>
+              <ul className="mt-2 space-y-0.5">
+                {endorsements.map((phase) => (
+                  <li key={phase.phase}>
+                    <a
+                      href={`#${endorsementAnchorId(phase.phase)}`}
+                      onClick={(event) => {
+                        if (scrollToSection(endorsementAnchorId(phase.phase)))
+                          event.preventDefault();
+                      }}
+                      className="block rounded-lg py-1 pr-1.5 pl-1 text-sm text-neutral-700 transition-colors hover:bg-background2 dark:text-neutral-300"
+                    >
+                      {phase.header.headerTitle}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </section>
       )}

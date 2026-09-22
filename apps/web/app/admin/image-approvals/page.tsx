@@ -255,6 +255,7 @@ function AdminImageApprovalsInner() {
   const [preview, setPreview] = useState<string | null>(null);
 
   const status = searchParams.get("status") ?? "awaiting_review";
+  const vehicleType = searchParams.get("vehicle_type") ?? "";
   const page = Number(searchParams.get("page") ?? "1") || 1;
 
   // Pagination and the status filter do a FULL page reload (not SPA soft-nav) so the list reliably
@@ -269,7 +270,9 @@ function AdminImageApprovalsInner() {
   }
 
   const { data: rows, reload } = usePaginatedList<ImageRegeneration>(
-    `/admin/image-approvals?status=${encodeURIComponent(status)}`,
+    `/admin/image-approvals?status=${encodeURIComponent(status)}${
+      vehicleType ? `&vehicle_type=${encodeURIComponent(vehicleType)}` : ""
+    }`,
     page,
   );
   const items = rows?.data ?? [];
@@ -291,6 +294,24 @@ function AdminImageApprovalsInner() {
             </p>
           </div>
 
+          <div className="flex flex-wrap gap-4">
+          <div className="flex w-full max-w-xs flex-col gap-1">
+            <label className="text-sm font-medium" htmlFor="f-vehicle">
+              Vehicle
+            </label>
+            <select
+              id="f-vehicle"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              value={vehicleType}
+              onChange={(e) => go({ vehicle_type: e.target.value, page: "" })}
+            >
+              <option value="">All vehicles</option>
+              <option value="car">Car</option>
+              <option value="motorcycle">Motorcycle</option>
+              <option value="cdl">CDL</option>
+            </select>
+          </div>
+
           <div className="flex w-full max-w-xs flex-col gap-1">
             <label className="text-sm font-medium" htmlFor="f-status">
               Status
@@ -308,6 +329,7 @@ function AdminImageApprovalsInner() {
               <option value="pending">Pending</option>
               <option value="all">All</option>
             </select>
+          </div>
           </div>
 
           <Card>
