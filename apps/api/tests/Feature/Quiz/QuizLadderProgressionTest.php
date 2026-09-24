@@ -221,4 +221,38 @@ class QuizLadderProgressionTest extends TestCase
             ->assertJsonPath('data.0.attempted', true)
             ->assertJsonPath('data.0.user_passed', true);
     }
+
+    /**
+     * CDL's optional endorsements sort ahead of the main program on order_no alone (General
+     * Knowledge is 0, HazMat is 1), which put the "Next" badge in a section the hub lists below
+     * the main program. The main program has to win.
+     */
+    public function test_cdl_next_lands_in_the_main_program_not_an_endorsement(): void
+    {
+        $state = State::factory()->create(['code' => 'AL']);
+        $vehicle = VehicleType::factory()->create(['name' => 'cdl']);
+
+        $endorsement = QuizCategory::factory()->create(['title' => 'General Knowledge', 'order_no' => 0, 'is_active' => true]);
+        $mainProgram = QuizCategory::factory()->create(['title' => 'Hazardous Materials (HazMat)', 'order_no' => 1, 'is_active' => true]);
+
+        foreach ([[$endorsement, 'GK Test 1'], [$mainProgram, 'HazMat Test 1']] as [$category, $title]) {
+            Quiz::factory()->create([
+                'is_active' => true,
+                'state_id' => $state->id,
+                'vehicle_type_id' => $vehicle->id,
+                'quiz_category_id' => $category->id,
+                'test_track' => 'permit_test',
+                'order_no' => 1,
+                'is_premium' => false,
+                'title' => $title,
+            ]);
+        }
+
+        $data = $this->getJson('/api/v1/quizzes?state=AL&vehicle_type=cdl&test_track=permit_test&per_page=100')
+            ->assertOk()
+            ->json('data');
+
+        $next = array_column(array_filter($data, fn ($quiz) => $quiz['is_next']), 'title');
+        $this->assertSame(['HazMat Test 1'], $next);
+    }
 }

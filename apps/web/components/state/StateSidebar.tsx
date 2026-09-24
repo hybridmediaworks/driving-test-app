@@ -299,22 +299,16 @@ export default function StateSidebar({
               <p className="mt-5 text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
                 Additional endorsements
               </p>
-              <ul className="mt-2 space-y-0.5">
-                {endorsements.map((phase) => (
-                  <li key={phase.phase}>
-                    <a
-                      href={`#${endorsementAnchorId(phase.phase)}`}
-                      onClick={(event) => {
-                        if (scrollToSection(endorsementAnchorId(phase.phase)))
-                          event.preventDefault();
-                      }}
-                      className="block rounded-lg py-1 pr-1.5 pl-1 text-sm text-neutral-700 transition-colors hover:bg-background2 dark:text-neutral-300"
-                    >
-                      {phase.header.headerTitle}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              {/* Same rings as the steps above — an endorsement is optional, but once a driver
+                  starts one they track it the same way. Left as plain lines: no chevron to open,
+                  and no handbook row, which belongs to the ladder. */}
+              <ExamPrepTree
+                phases={endorsements}
+                coveredByQuiz={questions.by_quiz ?? {}}
+                anchorFor={(phase) => endorsementAnchorId(phase.phase)}
+                includeHandbook={false}
+                collapsible={false}
+              />
             </>
           )}
         </section>

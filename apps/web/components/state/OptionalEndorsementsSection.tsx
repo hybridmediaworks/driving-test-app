@@ -36,7 +36,10 @@ export default function OptionalEndorsementsSection() {
       className="md:px-15 scroll-mt-6 bg-background px-5 pt-15 pb-15 lg:pt-20 lg:pb-20"
     >
       <div className="mx-auto max-w-container">
-        <div className="min-w-0 space-y-4">
+        {/* Same md:ps-29 as each endorsement's own heading below, so the section title, the
+            endorsement titles and the cards all share one left edge. The inset is the 116px gutter
+            TestSteps reserves for the phase circle and the connector that snakes through it. */}
+        <div className="md:ps-29 min-w-0 space-y-4">
           <Heading as="h2">Optional endorsements</Heading>
           <Paragraph color="muted" className="max-w-3xl">
             Add the ones your job needs. Each is a separate {selectedState} endorsement exam — take

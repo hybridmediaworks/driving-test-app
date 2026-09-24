@@ -153,9 +153,18 @@ function jumpTo(event: React.MouseEvent, sectionId: string) {
 export default function ExamPrepTree({
   phases,
   coveredByQuiz,
+  anchorFor = (phase) => sectionIdForPhase(phase.header.headerTitle, phase.phase),
+  includeHandbook = true,
+  collapsible = true,
 }: {
   phases: PhaseLadderPhase[];
   coveredByQuiz: Record<string, number>;
+  /** Where a phase's row links to. Endorsements live in their own section, not the ladder. */
+  anchorFor?: (phase: PhaseLadderPhase) => string;
+  /** The handbook is the ladder's last stop; a second tree on the same page mustn't repeat it. */
+  includeHandbook?: boolean;
+  /** False keeps rows as plain lines — no chevron, no per-quiz-type breakdown underneath. */
+  collapsible?: boolean;
 }) {
   const rows: Row[] = phases.map((phase) => {
     const groups = groupSteps(phase.steps);
@@ -165,21 +174,20 @@ export default function ExamPrepTree({
 
     return {
       label: phase.header.headerTitle,
-      sectionId: sectionIdForPhase(phase.header.headerTitle, phase.phase),
+      sectionId: anchorFor(phase),
       done,
       total,
       // A phase with one group shows that group's own count; with several, the chevron does the
       // talking and the numbers live on the rows underneath.
       count: groups.length === 1 ? totals[0].count : null,
-      groups: groups.length > 1 ? groups : [],
+      groups: collapsible && groups.length > 1 ? groups : [],
     };
   });
 
-  const [expanded, setExpanded] = useState<string[]>(() =>
-    rows.find((row) => row.groups.length > 0)
-      ? [rows.find((row) => row.groups.length > 0)!.sectionId]
-      : [],
-  );
+  const [expanded, setExpanded] = useState<string[]>(() => {
+    const first = rows.find((row) => row.groups.length > 0);
+    return first ? [first.sectionId] : [];
+  });
 
   function toggle(sectionId: string) {
     setExpanded((current) =>
@@ -259,16 +267,18 @@ export default function ExamPrepTree({
         );
       })}
 
-      <li className="flex items-center gap-2.5">
-        <ProgressRing done={0} total={1} />
-        <a
-          href={`#${HANDBOOK_SECTION_ID}`}
-          onClick={(event) => jumpTo(event, HANDBOOK_SECTION_ID)}
-          className="min-w-0 flex-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100 hover:underline"
-        >
-          Handbook
-        </a>
-      </li>
+      {includeHandbook && (
+        <li className="flex items-center gap-2.5">
+          <ProgressRing done={0} total={1} />
+          <a
+            href={`#${HANDBOOK_SECTION_ID}`}
+            onClick={(event) => jumpTo(event, HANDBOOK_SECTION_ID)}
+            className="min-w-0 flex-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100 hover:underline"
+          >
+            Handbook
+          </a>
+        </li>
+      )}
     </ul>
   );
 }

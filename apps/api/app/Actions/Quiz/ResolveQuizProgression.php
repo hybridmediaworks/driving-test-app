@@ -33,6 +33,13 @@ class ResolveQuizProgression
 {
     private const EXTRA_SUPPORT_TITLE = 'The extra support';
 
+    /**
+     * CDL's main program. Its other categories are optional endorsements a driver picks per job, so
+     * the hub numbers this one and lists the rest under "Optional endorsements" — see
+     * CDL_MAIN_PROGRAM_TITLE in apps/web/lib/stateHubSections.ts, which must name the same category.
+     */
+    private const CDL_MAIN_PROGRAM_TITLE = 'Hazardous Materials (HazMat)';
+
     public function __construct(
         private readonly EntitlementResolver $entitlement,
     ) {}
@@ -68,13 +75,28 @@ class ResolveQuizProgression
         // groupBy preserves the is_premium/order_no/title order above within each category.
         $byCategory = $quizzes->groupBy('quiz_category_id');
 
-        // Display order: order_no/title, but "The extra support" is always the last rung.
+        // Display order: order_no/title, then re-ranked into the order the page actually reads in,
+        // so "next" lands on the card the learner sees first. "The extra support" is always the last
+        // rung; for CDL the main program comes before the optional endorsements, which would
+        // otherwise win on order_no alone (General Knowledge is 0, HazMat is 1) and put "Next" in a
+        // section the learner hasn't been sent to yet.
+        $isCdl = strcasecmp($vehicleType, 'cdl') === 0;
+
         $categories = QuizCategory::query()
             ->where('is_active', true)
             ->orderBy('order_no')
             ->orderBy('title')
             ->get()
-            ->sortBy(fn (QuizCategory $c) => $c->title === self::EXTRA_SUPPORT_TITLE ? 1 : 0)
+            ->sortBy(function (QuizCategory $c) use ($isCdl): int {
+                if ($isCdl && $c->title === self::CDL_MAIN_PROGRAM_TITLE) {
+                    return 0;
+                }
+                if ($c->title === self::EXTRA_SUPPORT_TITLE) {
+                    return $isCdl ? 1 : 2;
+                }
+
+                return $isCdl ? 2 : 1;
+            })
             ->values();
 
         $map = [];
