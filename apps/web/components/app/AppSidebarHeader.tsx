@@ -1,3 +1,5 @@
+import { Globe } from "lucide-react";
+import Button from "@/components/ui/Button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Breadcrumbs from "./Breadcrumbs";
 
@@ -12,6 +14,15 @@ export default function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: B
           <Breadcrumbs breadcrumbs={breadcrumbs} />
         </div>
       )}
+      {/* ms-auto so it still sits right when there are no breadcrumbs to take up the slack. */}
+      <Button
+        href="/"
+        text="Go to website"
+        icon={Globe}
+        variant="outline"
+        size="sm"
+        className="ms-auto shrink-0"
+      />
     </header>
   );
 }
