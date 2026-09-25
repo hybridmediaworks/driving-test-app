@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\QuizQuestionAssetType;
 use App\Enums\TestTrack;
 use App\Models\Concerns\BelongsToStateAndVehicleType;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -93,8 +94,12 @@ class Quiz extends Model implements HasMedia
     /**
      * The first question (by sort order) that actually has an image, used to give each quiz a
      * representative thumbnail on listing cards instead of a shared generic cover. A one-of-many
-     * HasOne so it stays a single, eager-loadable relation (`with('previewImageQuestion.media')`)
-     * — the `whereHas('media', …)` constraint keeps it pointed at a question that has an image.
+     * HasOne so it stays a single, eager-loadable relation (`with('previewImageQuestion.media')`).
+     *
+     * A question's image lives in one of two places, and the constraint has to accept either or the
+     * relation comes back null and the card falls back to the shared cover: car/motorcycle images
+     * are Spatie media rows, CDL's are quiz_question_assets rows referencing the source image (see
+     * QuizQuestion::imageUrls, which merges the two the same way).
      *
      * @return HasOne<QuizQuestion, $this>
      */
@@ -102,10 +107,15 @@ class Quiz extends Model implements HasMedia
     {
         return $this->hasOne(QuizQuestion::class)->ofMany(
             ['sort_order' => 'min', 'id' => 'min'],
-            fn ($query) => $query->whereHas(
-                'media',
-                fn ($q) => $q->where('collection_name', QuizQuestion::MEDIA_COLLECTION_IMAGES),
-            ),
+            fn ($query) => $query->where(fn ($q) => $q
+                ->whereHas(
+                    'media',
+                    fn ($m) => $m->where('collection_name', QuizQuestion::MEDIA_COLLECTION_IMAGES),
+                )
+                ->orWhereHas(
+                    'assets',
+                    fn ($a) => $a->where('type', QuizQuestionAssetType::Image),
+                )),
         );
     }
 

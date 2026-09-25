@@ -45,6 +45,29 @@ beforeEach(() => {
 });
 
 describe("fetchTodayData", () => {
+  it("puts CDL's main program first, ahead of the endorsements the backend orders before it", async () => {
+    // General Knowledge is order_no 0 and HazMat is 1, so the backend hands them over in that
+    // order — but HazMat is the program a CDL learner works through, the rest are optional.
+    mockFetchCategories.mockResolvedValue([
+      { id: 10, name: "general-knowledge", title: "General Knowledge" },
+      { id: 20, name: "hazmat", title: "Hazardous Materials (HazMat)" },
+      { id: 30, name: "school-bus", title: "School Bus" },
+    ]);
+    mockFetchQuizzes.mockResolvedValue([
+      quiz({ id: 1, title: "GK 1", category: { id: 10, name: "general-knowledge", title: "General Knowledge" } }),
+      quiz({ id: 2, title: "HazMat 1", category: { id: 20, name: "hazmat", title: "Hazardous Materials (HazMat)" } }),
+      quiz({ id: 3, title: "Bus 1", category: { id: 30, name: "school-bus", title: "School Bus" } }),
+    ]);
+
+    const data = await fetchTodayData("cdl", "AL");
+
+    expect(data.testRows.map((row: TodayTestRow) => row.title)).toEqual([
+      "Hazardous Materials (HazMat)",
+      "General Knowledge",
+      "School Bus",
+    ]);
+  });
+
   it("groups quizzes into category rows (in order), splits out the exam, and maps cheat sheets", async () => {
     mockFetchCategories.mockResolvedValue([
       { id: 10, name: "basics", title: "Basics" },

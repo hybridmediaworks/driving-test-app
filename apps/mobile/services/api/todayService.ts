@@ -99,6 +99,12 @@ function toTheoryItem(sheet: PublicCheatSheet): TodayTheoryItem {
 // category order could drop it mid-list.
 const EXTRA_SUPPORT_TITLE = "The extra support";
 
+// CDL's main program. Its other categories are optional endorsements a driver picks per job, so it
+// leads the list rather than whatever the admin-defined order puts first (General Knowledge is
+// order_no 0, HazMat is 1). Same title web and the API use — see CDL_MAIN_PROGRAM_TITLE in
+// apps/web/lib/stateHubSections.ts and in ResolveQuizProgression.
+const CDL_MAIN_PROGRAM_TITLE = "Hazardous Materials (HazMat)";
+
 /**
  * Fetches everything the Today (home) tab needs in one go. The quizzes list is the primary request:
  * if it rejects (no network, API down) the whole call rejects so the screen can show its error +
@@ -110,7 +116,8 @@ const EXTRA_SUPPORT_TITLE = "The extra support";
  * apps/web/lib/phaseLadder.ts: walk every category from GET /quiz-categories in the backend's own
  * order, restricted to `test_track: permit_test`, and emit a row for any category that has at
  * least one quiz — no name whitelist, so a brand-new category shows up with zero app changes.
- * "The extra support" is special-cased to always sort last, same as web.
+ * "The extra support" is special-cased to always sort last, and for CDL the main program sorts
+ * first — both the same as web.
  *
  * The one deliberate difference from web: mobile keeps the exam simulator as its own dedicated
  * Exam card (below) rather than folding it into these rows, so `quiz_type: "final"` quizzes are
@@ -138,8 +145,18 @@ export async function fetchTodayData(vehicle: VehicleType, state: string): Promi
     byCategoryId.get(categoryId)!.push(quiz);
   }
 
+  // Stable sort, so everything but CDL's main program keeps the backend's own order.
+  const orderedCategories =
+    vehicle === "cdl"
+      ? [...categories].sort(
+          (a, b) =>
+            Number(b.title === CDL_MAIN_PROGRAM_TITLE) -
+            Number(a.title === CDL_MAIN_PROGRAM_TITLE),
+        )
+      : categories;
+
   const orderedRows: Omit<TodayTestRow, "badge">[] = [];
-  for (const category of categories) {
+  for (const category of orderedCategories) {
     if (category.title === EXTRA_SUPPORT_TITLE) continue; // appended after the loop, always last
     const quizzes = byCategoryId.get(category.id);
     if (!quizzes || quizzes.length === 0) continue;

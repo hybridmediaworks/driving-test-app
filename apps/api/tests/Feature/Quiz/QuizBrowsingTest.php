@@ -3,6 +3,7 @@
 namespace Tests\Feature\Quiz;
 
 use App\Enums\AttemptStatus;
+use App\Enums\QuizQuestionAssetType;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
@@ -90,6 +91,27 @@ class QuizBrowsingTest extends TestCase
         $response->assertOk();
         $this->assertNotNull($expectedUrl);
         $response->assertJsonPath('data.0.preview_image_url', $expectedUrl);
+    }
+
+    public function test_index_uses_an_asset_backed_question_image_as_the_preview_image(): void
+    {
+        // CDL question images are quiz_question_assets rows pointing at the source image, not Spatie
+        // media. A preview that only looked at media left every CDL card on the shared generic
+        // cover, so all of them showed the same picture.
+        $quiz = Quiz::factory()->create(['is_active' => true]);
+        QuizQuestion::factory()->for($quiz, 'quiz')->create(['sort_order' => 1]);
+        $withImage = QuizQuestion::factory()->for($quiz, 'quiz')->create(['sort_order' => 2]);
+        QuizQuestionAsset::query()->create([
+            'quiz_question_id' => $withImage->id,
+            'type' => QuizQuestionAssetType::Image,
+            'external_url' => 'https://example.test/road-sign.jpg',
+            'sort_order' => 0,
+        ]);
+
+        $response = $this->getJson('/api/v1/quizzes');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.0.preview_image_url', 'https://example.test/road-sign.jpg');
     }
 
     public function test_index_preview_image_is_null_when_no_question_has_an_image(): void
