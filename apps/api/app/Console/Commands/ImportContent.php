@@ -112,6 +112,22 @@ class ImportContent extends Command
     }
 
     /**
+     * The state's real handbook among the PDFs the crawl dropped in one folder. Two things make
+     * the alphabetically-first file the wrong pick: a state can have supplementary leaflets next
+     * to the handbook (Oregon's "6619.pdf.pdf" sorts before "Download PDF, English.pdf"), and a
+     * failed download is still saved with a .pdf name while holding an HTML error page (South
+     * Dakota, South Carolina) — Spatie then rejects it and the state ends up with no handbook at
+     * all. So: only files that really start with %PDF, and the canonical "Download PDF" name wins.
+     */
+    private function pickHandbookPdf(string $handbookDir): ?string
+    {
+        return collect(File::glob($handbookDir.DIRECTORY_SEPARATOR.'*.pdf'))
+            ->filter(fn (string $path) => str_starts_with((string) file_get_contents($path, length: 5), '%PDF-'))
+            ->sortByDesc(fn (string $path) => Str::contains(basename($path), 'Download PDF'))
+            ->first();
+    }
+
+    /**
      * @param  list<string>  $vehicleSlugs
      * @param  list<string>  $only
      */
@@ -218,7 +234,7 @@ class ImportContent extends Command
                 $handbookDir = $testTrackFolder.DIRECTORY_SEPARATOR.'handbook';
                 $handbookJsonPath = $handbookDir.DIRECTORY_SEPARATOR.'handbook.json';
                 if (File::isDirectory($handbookDir) && ($data = $this->readJson($handbookJsonPath, $summary))) {
-                    $pdfPath = collect(File::glob($handbookDir.DIRECTORY_SEPARATOR.'*.pdf'))->first();
+                    $pdfPath = $this->pickHandbookPdf($handbookDir);
                     $this->line("     handbook.json ({$label})");
                     $importHandbook($data, $pdfPath, $state, $vehicleType, $summary, $dryRun);
                 }

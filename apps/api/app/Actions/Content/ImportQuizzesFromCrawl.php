@@ -208,6 +208,17 @@ class ImportQuizzesFromCrawl
             return;
         }
 
+        // Hazard simulators are listed in the same sections as the tests, but they are video
+        // exercises with no questions at all: the crawl records the row and puts the real content
+        // (vimeo id, hazard timings, level, duration) in simulators.json, which
+        // ImportSimulatorsFromCrawl already imports. Without this guard they land here too — 663
+        // question-less quizzes across the 51 states, duplicating the simulators.
+        if (($subcategory['questions'] ?? []) === []) {
+            $summary->increment('quizzes.skipped_empty');
+
+            return;
+        }
+
         if ($dryRun) {
             $summary->increment('quizzes.would_import');
 

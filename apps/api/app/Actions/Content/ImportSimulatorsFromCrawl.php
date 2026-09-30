@@ -4,6 +4,8 @@ namespace App\Actions\Content;
 
 use App\Actions\Quiz\GenerateUniqueSlug;
 use App\Enums\HazardType;
+use App\Models\Hazard;
+use App\Models\HazardFrame;
 use App\Models\HazardSimulator;
 use App\Models\State;
 use App\Models\VehicleType;
@@ -11,6 +13,7 @@ use App\Models\Video;
 use App\Support\DurationParser;
 use App\Support\ImportSummary;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Imports one simulators.json — hazard-perception exercises, Vimeo-embedded, Driving Test track
@@ -67,10 +70,17 @@ class ImportSimulatorsFromCrawl
                 continue;
             }
 
-            $slug = $this->generateUniqueSlug->__invoke('videos', "{$state->code} {$vehicleType->name} {$title}");
+            $key = ['state_id' => $state->id, 'vehicle_type_id' => $vehicleType->id, 'test_track' => $testTrack, 'title' => $title];
+
+            // Keep the slug a video was first imported with. Generating one unconditionally meant
+            // a re-import saw the row's own slug as "taken" and rewrote it to `...-1`, then
+            // `...-2` — every re-run silently churned every public video URL. Same fix as
+            // ImportQuizzesFromCrawl.
+            $slug = Video::query()->where($key)->value('slug')
+                ?? $this->generateUniqueSlug->__invoke('videos', "{$state->code} {$vehicleType->name} {$title}");
 
             $video = Video::query()->updateOrCreate(
-                ['state_id' => $state->id, 'vehicle_type_id' => $vehicleType->id, 'test_track' => $testTrack, 'title' => $title],
+                $key,
                 [
                     'slug' => $slug,
                     'section' => $row['section'] ?? null,
@@ -187,7 +197,9 @@ class ImportSimulatorsFromCrawl
             $inTimeline = array_key_exists($sourceId, $timelineOrder);
             $mode = in_array($h['mode'] ?? null, ['demo', 'assessment'], true) ? $h['mode'] : 'assessment';
 
-            $simulator->hazards()->updateOrCreate(
+            $frames = array_values(array_filter((array) ($h['frames'] ?? []), 'is_array'));
+
+            $hazard = $simulator->hazards()->updateOrCreate(
                 ['source_hazard_id' => $sourceId],
                 [
                     'type_raw' => $h['type'] ?? null,
@@ -199,13 +211,17 @@ class ImportSimulatorsFromCrawl
                     'time_start' => $start,
                     'time_end' => $end,
                     'frame_count' => (int) ($h['frame_count'] ?? 0),
-                    // No source geometry — left null; the player draws a category fallback zone,
-                    // or staff set a real box later in admin. hazard_frames untouched.
+                    // The first keyframe, so the static player highlights where the hazard
+                    // actually appears instead of resolvedBox()'s category fallback zone. Still
+                    // null when the crawl carries no geometry — then the fallback stands.
+                    'box' => self::normalizeBox($frames[0] ?? null),
                     'comment' => $h['comment'] ?? null,
                     'audio_url' => $h['audio_url'] ?? null,
                 ],
             );
             $summary->increment('hazards.upserted');
+
+            $this->syncFrames($hazard, $frames, $summary);
         }
 
         // A hazard the timeline references but the pool never defines — import what exists, flag it.
@@ -241,9 +257,90 @@ class ImportSimulatorsFromCrawl
      * fabricated image; failures are logged and skipped rather than blocking the import. Backfills
      * existing rows too (idempotent re-import), not just newly created ones.
      */
+    /**
+     * The moving outline, one row per keyframe. hazard_frames was defined for exactly this and
+     * left empty because earlier crawls stated only a `frame_count`; the coordinates arrive now.
+     * Replaced wholesale rather than upserted — a keyframe carries no source id, so its position
+     * in the list is its only identity.
+     *
+     * @param  list<array<string, mixed>>  $frames
+     */
+    private function syncFrames(Hazard $hazard, array $frames, ImportSummary $summary): void
+    {
+        $hazard->frames()->delete();
+
+        $now = now();
+        $rows = [];
+        foreach ($frames as $index => $frame) {
+            $box = self::normalizeBox($frame);
+            if ($box === null) {
+                continue;
+            }
+
+            $rows[] = [
+                'hazard_id' => $hazard->id,
+                't' => (float) ($frame['time'] ?? 0),
+                'box' => json_encode($box),
+                'sort_order' => $index,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+            $summary->increment('hazard_frames.created');
+        }
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            HazardFrame::query()->insert($chunk);
+        }
+    }
+
+    /**
+     * One scraped keyframe -> the normalized box both `hazards.box` and `hazard_frames.box` store.
+     * The source states the outline as percentages of the video frame (top/left/width/height);
+     * the columns are 0-1 {x,y,w,h}.
+     *
+     * @param  array<string, mixed>|null  $frame
+     * @return array{x: float, y: float, w: float, h: float}|null
+     */
+    private static function normalizeBox(?array $frame): ?array
+    {
+        if ($frame === null || ! isset($frame['left'], $frame['top'], $frame['width'], $frame['height'])) {
+            return null;
+        }
+
+        return [
+            'x' => round((float) $frame['left'] / 100, 5),
+            'y' => round((float) $frame['top'] / 100, 5),
+            'w' => round((float) $frame['width'] / 100, 5),
+            'h' => round((float) $frame['height'] / 100, 5),
+        ];
+    }
+
+    /**
+     * A thumbnail worth keeping — the media ROW alone isn't enough. Storage that is wiped (a
+     * container rebuild, a cleared local disk) leaves the rows behind pointing at files that no
+     * longer exist, and a re-import that only checked for a row skipped straight past them, so
+     * every one of those videos kept rendering a broken image. Checking the file means a
+     * re-import heals them; when it's there, nothing is re-downloaded.
+     */
+    private static function hasUsableThumbnail(Video $video): bool
+    {
+        $media = $video->getFirstMedia(Video::MEDIA_COLLECTION_THUMBNAIL);
+        if ($media === null) {
+            return false;
+        }
+
+        if (Storage::disk($media->disk)->exists($media->getPathRelativeToRoot())) {
+            return true;
+        }
+
+        $media->delete();
+
+        return false;
+    }
+
     private function attachThumbnail(Video $video, ?string $vimeoId, string $title, ImportSummary $summary): void
     {
-        if ($vimeoId === null || $video->getFirstMedia(Video::MEDIA_COLLECTION_THUMBNAIL) !== null) {
+        if ($vimeoId === null || self::hasUsableThumbnail($video)) {
             return;
         }
 

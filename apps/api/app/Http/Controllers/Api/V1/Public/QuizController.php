@@ -173,7 +173,11 @@ class QuizController extends Controller
 
         $query = Quiz::query()
             ->where('is_active', true)
-            ->with(['category', 'quizType', 'state', 'vehicleType', 'previewImageQuestion.media'])
+            // `.assets` alongside `.media`: a question's image lives in one or the other — car's are
+            // Spatie media, CDL's and motorcycle's are quiz_question_assets rows (see
+            // QuizQuestion::imageUrls). Loading only media left every asset-backed preview to a
+            // lazy query per quiz.
+            ->with(['category', 'quizType', 'state', 'vehicleType', 'previewImageQuestion.media', 'previewImageQuestion.assets'])
             ->tap(fn ($q) => $this->withDifficultyCounts($q))
             ->when($userId !== null || $guestToken !== null, fn ($q) => $q->withMax([
                 'attempts as best_score' => fn ($a) => $a

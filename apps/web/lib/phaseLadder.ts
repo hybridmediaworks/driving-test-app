@@ -128,6 +128,23 @@ export function invalidatePhaseLadder(): void {
  * lock state. The progressive "finish one to unlock the next" chain is computed server-side now, so
  * both web and mobile render the same result — the frontend just reflects it.
  */
+/**
+ * A card's thumbnail. It is decorative — the API derives it from one of the quiz's own question
+ * images — but some quizzes are entirely text ("Fines and Limits Test" in every state, plus a few
+ * Practice Test 1s: the source has no picture on any of their questions). Those used to drop
+ * straight to the one house cover, so the same static image showed up across the page. Borrowing a
+ * sibling's image from the same phase keeps each card looking like the section it belongs to.
+ */
+function imageFor(quiz: Quiz, siblings: Quiz[]): string {
+  return (
+    quiz.preview_image_url ??
+    quiz.cover_image_url ??
+    siblings.find((q) => q.preview_image_url ?? q.cover_image_url)?.preview_image_url ??
+    siblings.find((q) => q.cover_image_url)?.cover_image_url ??
+    "/driving-tests.jpg"
+  );
+}
+
 function lockFromQuiz(quiz: Quiz): { locked: boolean; lockMode: PhaseLadderStep["lockMode"] } {
   const reason = quiz.lock_reason ?? null;
   return { locked: reason !== null, lockMode: reason ?? undefined };
@@ -235,7 +252,7 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
         outcome: outcomeOf(quiz),
         inProgress: quiz.in_progress ?? undefined,
         status: quiz.is_next ? "next" : undefined,
-        image: quiz.preview_image_url ?? quiz.cover_image_url ?? "/driving-tests.jpg",
+        image: imageFor(quiz, quizzes),
       })),
     });
   }
@@ -273,7 +290,7 @@ async function loadPhaseLadder(stateCode: string, vehicleType: string, testTrack
               outcome: outcomeOf(quiz),
               inProgress: quiz.in_progress ?? undefined,
               status: quiz.is_next ? ("next" as const) : undefined,
-              image: quiz.preview_image_url ?? quiz.cover_image_url ?? "/driving-tests.jpg",
+              image: imageFor(quiz, extraQuizzes),
             }))
           : [{ step: 1, placeholder: true, style: "large" as const }],
     });

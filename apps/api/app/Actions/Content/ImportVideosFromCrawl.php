@@ -8,6 +8,7 @@ use App\Models\VehicleType;
 use App\Models\Video;
 use App\Support\DurationParser;
 use App\Support\ImportSummary;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Imports one videos.json — instructional/road-test-commentary videos, YouTube-embedded. See
@@ -43,10 +44,17 @@ class ImportVideosFromCrawl
                 continue;
             }
 
-            $slug = $this->generateUniqueSlug->__invoke('videos', "{$state->code} {$vehicleType->name} {$title}");
+            $key = ['state_id' => $state->id, 'vehicle_type_id' => $vehicleType->id, 'test_track' => $testTrack, 'title' => $title];
+
+            // Keep the slug a video was first imported with. Generating one unconditionally meant
+            // a re-import saw the row's own slug as "taken" and rewrote it to `...-1`, then
+            // `...-2` — every re-run silently churned every public video URL. Same fix as
+            // ImportQuizzesFromCrawl.
+            $slug = Video::query()->where($key)->value('slug')
+                ?? $this->generateUniqueSlug->__invoke('videos', "{$state->code} {$vehicleType->name} {$title}");
 
             $video = Video::query()->updateOrCreate(
-                ['state_id' => $state->id, 'vehicle_type_id' => $vehicleType->id, 'test_track' => $testTrack, 'title' => $title],
+                $key,
                 [
                     'slug' => $slug,
                     'section' => $row['section'] ?? null,
@@ -75,9 +83,32 @@ class ImportVideosFromCrawl
      * — no API call needed, unlike Vimeo (see ImportSimulatorsFromCrawl). Backfills existing rows
      * too (idempotent re-import), not just newly created ones.
      */
+    /**
+     * A thumbnail worth keeping — the media ROW alone isn't enough. Storage that is wiped (a
+     * container rebuild, a cleared local disk) leaves the rows behind pointing at files that no
+     * longer exist, and a re-import that only checked for a row skipped straight past them, so
+     * every one of those videos kept rendering a broken image. Checking the file means a
+     * re-import heals them; when it's there, nothing is re-downloaded.
+     */
+    private static function hasUsableThumbnail(Video $video): bool
+    {
+        $media = $video->getFirstMedia(Video::MEDIA_COLLECTION_THUMBNAIL);
+        if ($media === null) {
+            return false;
+        }
+
+        if (Storage::disk($media->disk)->exists($media->getPathRelativeToRoot())) {
+            return true;
+        }
+
+        $media->delete();
+
+        return false;
+    }
+
     private function attachThumbnail(Video $video, ?string $youtubeId, string $title, ImportSummary $summary): void
     {
-        if ($youtubeId === null || $video->getFirstMedia(Video::MEDIA_COLLECTION_THUMBNAIL) !== null) {
+        if ($youtubeId === null || self::hasUsableThumbnail($video)) {
             return;
         }
 
