@@ -41,6 +41,10 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          # The action kills the session after 10 minutes by default, which is under what a
+          # cold build costs on a 2-vCPU box — it died mid-way through compiling the PHP
+          # extensions and reported "Run Command Timeout", looking like a build failure.
+          command_timeout: 40m
           script: |
             set -e
             cd /home/ubuntu/driving-test-app
