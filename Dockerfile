@@ -4,8 +4,18 @@
 FROM node:22-alpine AS web-build
 WORKDIR /repo
 RUN corepack enable
-COPY . .
+
+# Manifests first, install, THEN the source. Copying the whole repo before `pnpm install` made that
+# install part of a layer keyed on every file in the repo, so a one-line PHP change re-ran the whole
+# dependency install. Split like this it only re-runs when a manifest or the lockfile actually moves.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY apps/mobile/package.json ./apps/mobile/
+COPY packages/shared/package.json ./packages/shared/
 RUN pnpm install --frozen-lockfile
+
+COPY . .
 ENV NEXT_PUBLIC_API_URL=/api/v1
 RUN pnpm --filter web build
 
@@ -25,10 +35,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Laravel API
-COPY apps/api ./apps/api
+# Laravel API — same split as the node install above: the two composer manifests, then install,
+# then the application code, so editing a controller does not re-resolve every package.
 WORKDIR /var/www/apps/api
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+COPY apps/api/composer.json apps/api/composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts --no-autoloader
+
+COPY apps/api ./
+RUN composer dump-autoload --optimize --no-dev && composer run-script post-autoload-dump
 
 # Next.js standalone build (server + hoisted node_modules, static assets, public files)
 WORKDIR /var/www

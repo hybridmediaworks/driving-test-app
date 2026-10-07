@@ -45,16 +45,27 @@ jobs:
             set -e
             cd /home/ubuntu/driving-test-app
 
-            # MySQL runs as its own container on the `dt` network and must survive a deploy, so the
-            # prunes below are scoped to dangling/unused build junk only — never `docker system prune`.
-            # Reclaim disk BEFORE building. Old images, stopped containers and the
-            # BuildKit layer cache (including junk left by previously failed builds)
-            # pile up on the EBS volume and eventually make `pnpm install` fail with
-            # ENOSPC. Pruning first lets a wedged box recover on the next push.
+            # Only clear the build cache when the disk is actually tight. Wiping it on every deploy
+            # (which this did, on the old 8GB box, to survive ENOSPC during `pnpm install`) means
+            # every build starts from zero — PHP extensions recompiled, pnpm re-installed, Next
+            # rebuilt — so a one-line change costs the same ~10 minutes as a rewrite. With room on
+            # the volume the cache is what makes a small deploy small.
+            #
+            # MySQL runs as its own container on the `dt` network and must survive this: dangling
+            # images and stopped containers only, never `docker system prune`, never `-a` while the
+            # mysql image is in use.
             df -h /
             sudo docker container prune -f
-            sudo docker image prune -af
-            sudo docker builder prune -af
+            sudo docker image prune -f
+
+            AVAIL_GB=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+            if [ "$AVAIL_GB" -lt 10 ]; then
+              echo "Only ${AVAIL_GB}G free — clearing the build cache."
+              sudo docker image prune -af
+              sudo docker builder prune -af
+            else
+              echo "${AVAIL_GB}G free — keeping the build cache."
+            fi
             df -h /
 
             sudo docker build -t driving-test-app:latest .
