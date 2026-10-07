@@ -6,8 +6,8 @@ use App\Enums\QuizQuestionAssetType;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionAsset;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -135,10 +135,16 @@ class LocalizeQuizAssets extends Command
             return;
         }
 
-        $target = $media->getPath();
+        // Addressed through the media row's OWN disk, not the local filesystem. This branch used
+        // $media->getPath() + File::* + hardlinks, which only exist on a local disk: with
+        // MEDIA_DISK=s3 it wrote into the container instead of the bucket, so every deploy wiped the
+        // lot while the rows went on pointing at them. Duplicates are now server-side S3 copies
+        // rather than hardlinks — one object each instead of one inode, but nothing re-downloaded.
+        $disk = Storage::disk($media->disk);
+        $target = $media->getPathRelativeToRoot();
 
-        if (File::exists($target) && ! $this->option('force')) {
-            // Adopt an already-present file as the canonical copy so its duplicates can hardlink to it.
+        if ($disk->exists($target) && ! $this->option('force')) {
+            // Adopt an already-present file as the canonical copy so its duplicates can copy from it.
             $this->photoCache[$sourceUrl] ??= $target;
             $this->increment('photos.skipped_present');
 
@@ -152,10 +158,8 @@ class LocalizeQuizAssets extends Command
             return;
         }
 
-        File::ensureDirectoryExists(dirname($target));
-
         // First time we see this URL: fetch the bytes into the target (this becomes the canonical
-        // copy). Every later row with the same URL just hardlinks to it.
+        // copy). Every later row with the same URL is copied from it on the storage side.
         if (! isset($this->photoCache[$sourceUrl])) {
             $response = $this->fetch($sourceUrl);
             if ($response === null) {
@@ -163,14 +167,14 @@ class LocalizeQuizAssets extends Command
 
                 return;
             }
-            File::put($target, $response->body());
+            $disk->put($target, $response->body());
             $this->photoCache[$sourceUrl] = $target;
             $this->increment('photos.downloaded');
 
             return;
         }
 
-        $this->materializeFrom($this->photoCache[$sourceUrl], $target, 'photos');
+        $this->materializeFrom($disk, $this->photoCache[$sourceUrl], $target, 'photos');
     }
 
     private function localizeLottie(bool $dryRun, ?int $limit): void
@@ -310,26 +314,22 @@ class LocalizeQuizAssets extends Command
     }
 
     /** Hardlink $canonical -> $target, falling back to a copy across filesystems / on failure. */
-    private function materializeFrom(string $canonical, string $target, string $group): void
+    private function materializeFrom(Filesystem $disk, string $canonical, string $target, string $group): void
     {
-        if (File::exists($target)) {
-            File::delete($target);
+        if ($disk->exists($target)) {
+            $disk->delete($target);
         }
 
-        if (@link($canonical, $target)) {
-            $this->increment("{$group}.hardlinked");
-
-            return;
-        }
-
-        if (@copy($canonical, $target)) {
+        // Server-side on S3 — the bytes never come back down to the box, so 35k duplicates cost API
+        // calls rather than bandwidth. On a local disk this is an ordinary file copy.
+        if ($disk->copy($canonical, $target)) {
             $this->increment("{$group}.copied");
 
             return;
         }
 
         $this->increment("{$group}.link_failed");
-        $this->recordWarning("Could not hardlink or copy {$canonical} -> {$target}.");
+        $this->recordWarning("Could not copy {$canonical} -> {$target}.");
     }
 
     private function fetch(string $url): ?Response
