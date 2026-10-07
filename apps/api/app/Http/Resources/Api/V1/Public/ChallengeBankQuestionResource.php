@@ -26,6 +26,9 @@ class ChallengeBankQuestionResource extends JsonResource
             'question_text' => $this->question_text,
             'topic' => $this->topic,
             'difficulty' => $this->difficulty,
+            // Why it is in the vault — set by the controller from the bank row. Both can be true.
+            'missed' => (bool) $this->missed,
+            'bookmarked' => (bool) $this->bookmarked,
             'image_urls' => $this->image_urls,
             'answers' => QuizAnswerOptionResource::collection($this->whenLoaded('answers')),
             'assets' => QuizQuestionAssetResource::collection($this->whenLoaded('assets')),

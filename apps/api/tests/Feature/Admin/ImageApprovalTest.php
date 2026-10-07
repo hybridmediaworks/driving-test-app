@@ -151,7 +151,10 @@ class ImageApprovalTest extends TestCase
 
     public function test_upload_stages_a_designer_image_as_candidate(): void
     {
-        Storage::fake('local');
+        // A row whose original can't be resolved (no media, no localized asset) still has to stage
+        // its candidate on the media disk — S3 in production. Falling back to the local disk put it
+        // on container storage that the next deploy wipes.
+        Storage::fake(config('media-library.disk_name'));
         $row = QuizImageRegeneration::query()->create([
             'source_url' => 'u',
             'status' => ImageRegenerationStatus::Pending,
@@ -167,7 +170,8 @@ class ImageApprovalTest extends TestCase
         $row->refresh();
         $this->assertEquals(ImageRegenerationStatus::AwaitingReview, $row->status);
         $this->assertNotNull($row->candidate_path);
-        $this->assertTrue(Storage::disk('local')->exists($row->candidate_path));
+        $this->assertSame(config('media-library.disk_name'), $row->candidate_disk);
+        $this->assertTrue(Storage::disk($row->candidate_disk)->exists($row->candidate_path));
         $this->assertSame('Manual designer upload', $row->prompt);
     }
 
@@ -182,7 +186,7 @@ class ImageApprovalTest extends TestCase
 
     public function test_upload_accepts_a_large_within_limit_image(): void
     {
-        Storage::fake('local');
+        Storage::fake(config('media-library.disk_name'));
         $row = QuizImageRegeneration::query()->create(['source_url' => 'big', 'status' => ImageRegenerationStatus::Pending]);
 
         // ~7 MB — under the app's 8 MB cap. In production this only works when PHP's upload_max_filesize

@@ -1,8 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import { ArrowLeft, ArrowRight, Bookmark, Flag, Gem, LogOut, RotateCcw, Settings } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bookmark,
+  Flag,
+  Gem,
+  LogOut,
+  RotateCcw,
+  Settings,
+} from "lucide-react";
 import type {
   AmbientTrack,
   ContentLanguage,
@@ -25,8 +34,6 @@ import StreakBadge from "@/components/state/quiz/StreakBadge";
 import ReportMistakeDialog from "@/components/state/quiz/ReportMistakeDialog";
 import Toast, { type ToastVariant } from "@/components/state/quiz/Toast";
 import QuizResults from "@/components/state/quiz/QuizResults";
-import PremiumDialog from "@/components/billing/PremiumDialog";
-import SignInDialog from "@/components/auth/SignInDialog";
 import { api, ApiError } from "@/lib/api";
 import { invalidatePhaseLadder } from "@/lib/phaseLadder";
 import { invalidateResolvedQuiz } from "@/lib/useResolvedQuiz";
@@ -55,9 +62,14 @@ function shuffleQuiz(questions: PublicQuizQuestion[]): PublicQuizQuestion[] {
 // attempt), so a resumed attempt reattaches to the exact same order instead of reshuffling. Drops
 // any id `source` no longer has (e.g. a question was removed after the attempt started) rather
 // than crashing on it.
-function orderQuestionsById(order: number[], source: PublicQuizQuestion[]): PublicQuizQuestion[] {
+function orderQuestionsById(
+  order: number[],
+  source: PublicQuizQuestion[],
+): PublicQuizQuestion[] {
   const byId = new Map(source.map((q) => [q.id, q]));
-  return order.map((id) => byId.get(id)).filter((q): q is PublicQuizQuestion => q !== undefined);
+  return order
+    .map((id) => byId.get(id))
+    .filter((q): q is PublicQuizQuestion => q !== undefined);
 }
 
 function loadStoredFlags(quizId: number): Set<number> {
@@ -134,7 +146,9 @@ export default function QuizExperience({
           </Paragraph>
         ) : quiz === null ? (
           <div className="py-20 text-center space-y-4">
-            <Paragraph color="muted">{loadError ?? t("testUnavailable")}</Paragraph>
+            <Paragraph color="muted">
+              {loadError ?? t("testUnavailable")}
+            </Paragraph>
             <Button href={notFoundHref}>{notFoundLabel}</Button>
           </div>
         ) : data === null ? (
@@ -147,9 +161,7 @@ export default function QuizExperience({
           </Paragraph>
         ) : locked ? (
           <div className="py-20 text-center space-y-4">
-            <Paragraph color="muted">
-              {t("premiumQuizNotice")}
-            </Paragraph>
+            <Paragraph color="muted">{t("premiumQuizNotice")}</Paragraph>
             <Button href="/pricing">
               <Gem className="w-5" /> {t("upgradeToPremium")}
             </Button>
@@ -198,18 +210,15 @@ function QuizTaker({
   const { user, loading: authLoading } = useAuth();
   const { isPremium } = useEntitlement();
   const pathname = usePathname();
+  const router = useRouter();
   const loginHref = `/login?redirect=${encodeURIComponent(pathname)}`;
-
-  // Bookmarking a question is a Premium-only action: a guest is prompted to sign in, a signed-in
-  // non-Premium learner is prompted to upgrade, and only a Premium learner actually toggles the
-  // flag (see toggleFlag below).
-  const [signInDialogOpen, setSignInDialogOpen] = useState(false);
-  const [bookmarkUpsellOpen, setBookmarkUpsellOpen] = useState(false);
 
   const [showResults, setShowResults] = useState(false);
   // When entered via "View results", we start on a loading screen while the last attempt is fetched
   // and its graded answers are rehydrated, then flip straight to the results view below.
-  const [loadingResults, setLoadingResults] = useState(initialView === "results");
+  const [loadingResults, setLoadingResults] = useState(
+    initialView === "results",
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [furthestIndex, setFurthestIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -225,19 +234,27 @@ function QuizTaker({
   // Blocks the quiz UI until the attempt has been started/resumed and its question order and any
   // already-graded answers are in place — skipped entirely for "View results", which populates
   // loadedQuestions synchronously below instead.
-  const [startingAttempt, setStartingAttempt] = useState(initialView !== "results");
+  const [startingAttempt, setStartingAttempt] = useState(
+    initialView !== "results",
+  );
 
   // Questions are ordered per attempt: server-persisted order once starting/resuming resolves
   // (see the effect below), or a local shuffle for the "View results" path, which doesn't start a
   // new attempt and only needs *some* stable order to review answers against.
-  const [loadedQuestions, setLoadedQuestions] = useState<PublicQuizQuestion[]>(() =>
-    initialView === "results" ? shuffleQuiz(questions) : [],
+  const [loadedQuestions, setLoadedQuestions] = useState<PublicQuizQuestion[]>(
+    () => (initialView === "results" ? shuffleQuiz(questions) : []),
   );
 
   // Practice mode: each answered question is graded immediately via the check endpoint.
-  const [checkedByQuestionId, setCheckedByQuestionId] = useState<Record<number, QuizAnswerCheckResponse>>({});
-  const [flaggedIds, setFlaggedIds] = useState<Set<number>>(() => loadStoredFlags(quiz.id));
-  const [progressFilter, setProgressFilter] = useState<"all" | "correct" | "incorrect" | "flagged">("all");
+  const [checkedByQuestionId, setCheckedByQuestionId] = useState<
+    Record<number, QuizAnswerCheckResponse>
+  >({});
+  const [flaggedIds, setFlaggedIds] = useState<Set<number>>(() =>
+    loadStoredFlags(quiz.id),
+  );
+  const [progressFilter, setProgressFilter] = useState<
+    "all" | "correct" | "incorrect" | "flagged"
+  >("all");
 
   // Consecutive-correct streak. The ref is read synchronously inside the async grade handler;
   // `streak` state drives the live badge in the bottom bar.
@@ -247,7 +264,10 @@ function QuizTaker({
   const [hintOpen, setHintOpen] = useState(true);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
-  const [toast, setToast] = useState<{ message: string; variant: ToastVariant } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    variant: ToastVariant;
+  } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
@@ -259,20 +279,25 @@ function QuizTaker({
   const [ambientTracks, setAmbientTracks] = useState<AmbientTrack[]>([]);
   const [fontSize, setFontSize] = useState([50]);
 
-  const [language, setLanguageState] = useState<QuizLanguage>(loadStoredLanguage);
-  const t: TFunction = (key, vars) =>
-    translate(language, key, vars);
+  const [language, setLanguageState] =
+    useState<QuizLanguage>(loadStoredLanguage);
+  const t: TFunction = (key, vars) => translate(language, key, vars);
   // What was actually served for the current `language` — may be "en" even when `language` is
   // "es"/"ru" if translation isn't available (unconfigured, or failed) for this quiz right now.
   const [contentLanguage, setContentLanguage] = useState<ContentLanguage>("en");
   const [translating, setTranslating] = useState(false);
   // Per-language translated question sets already fetched this attempt, so switching back and
   // forth (or restarting) never re-hits the API for a language already seen once.
-  const translatedCacheRef = useRef<Partial<Record<"es" | "ru", PublicQuizQuestion[]>>>({});
+  const translatedCacheRef = useRef<
+    Partial<Record<"es" | "ru", PublicQuizQuestion[]>>
+  >({});
 
   // Re-maps `order` (an existing loadedQuestions array, whatever its current shuffle/progress
   // position) onto the requested language's text, by question id — never changes array order.
-  function applyLanguageToOrder(order: PublicQuizQuestion[], lang: QuizLanguage): PublicQuizQuestion[] {
+  function applyLanguageToOrder(
+    order: PublicQuizQuestion[],
+    lang: QuizLanguage,
+  ): PublicQuizQuestion[] {
     const source = lang === "en" ? questions : translatedCacheRef.current[lang];
     if (!source) return order;
     const byId = new Map(source.map((q) => [q.id, q]));
@@ -291,7 +316,9 @@ function QuizTaker({
 
     setTranslating(true);
     try {
-      const res = await api.get<QuizShowResponse>(`/quizzes/${quiz.id}?language=${next}`);
+      const res = await api.get<QuizShowResponse>(
+        `/quizzes/${quiz.id}?language=${next}`,
+      );
       if (res.questions) translatedCacheRef.current[next] = res.questions;
       setLoadedQuestions((prev) => applyLanguageToOrder(prev, next));
       setContentLanguage(res.content_language);
@@ -335,7 +362,9 @@ function QuizTaker({
   // lifetime of this mounted QuizTaker (the parent remounts it via key={quiz.id}).
   useEffect(() => {
     let cancelled = false;
-    const categoryQuery = quiz.category?.name ? `?category=${encodeURIComponent(quiz.category.name)}` : "";
+    const categoryQuery = quiz.category?.name
+      ? `?category=${encodeURIComponent(quiz.category.name)}`
+      : "";
     api
       .get<{ tracks: AmbientTrack[] }>(`/ambient-tracks${categoryQuery}`)
       .then((res) => {
@@ -354,7 +383,11 @@ function QuizTaker({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setSettingsOpen(false);
+      if (
+        settingsRef.current &&
+        !settingsRef.current.contains(e.target as Node)
+      )
+        setSettingsOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -365,7 +398,8 @@ function QuizTaker({
   // so it's null until `ambientTracks` has loaded or if the API's bucket isn't configured — a
   // missing/broken file fails silently via `onError` below rather than leaving a stuck attempt.
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
-  const currentTrackUrl = ambientTracks.find((t) => t.id === ambientTrack)?.url ?? null;
+  const currentTrackUrl =
+    ambientTracks.find((t) => t.id === ambientTrack)?.url ?? null;
 
   useEffect(() => {
     const audio = ambientAudioRef.current;
@@ -386,20 +420,28 @@ function QuizTaker({
 
   const isViewingFurthest = currentIndex === furthestIndex;
   const currentQuestion = loadedQuestions[currentIndex];
-  const selectedOptionId = currentQuestion ? answers[currentQuestion.id] : undefined;
+  const selectedOptionId = currentQuestion
+    ? answers[currentQuestion.id]
+    : undefined;
   const isAnswered = selectedOptionId !== undefined;
 
-  const questionFontScale = useMemo(() => 0.85 + (fontSize[0] / 100) * 0.45, [fontSize]);
+  const questionFontScale = useMemo(
+    () => 0.85 + (fontSize[0] / 100) * 0.45,
+    [fontSize],
+  );
 
   // Correctness is unknown client-side until the attempt is graded server-side — these only
   // become meaningful once `attempt` exists (post-submission).
   const gradedByQuestionId = useMemo(() => {
     const map = new Map<number, boolean>();
-    for (const a of attempt?.answers ?? []) map.set(a.question_id, a.is_correct);
+    for (const a of attempt?.answers ?? [])
+      map.set(a.question_id, a.is_correct);
     return map;
   }, [attempt]);
 
-  function questionStatus(questionId: number): "correct" | "incorrect" | "unanswered" {
+  function questionStatus(
+    questionId: number,
+  ): "correct" | "incorrect" | "unanswered" {
     if (!gradedByQuestionId.has(questionId)) return "unanswered";
     return gradedByQuestionId.get(questionId) ? "correct" : "incorrect";
   }
@@ -407,10 +449,18 @@ function QuizTaker({
   const questionStatuses = loadedQuestions.map((q) => questionStatus(q.id));
 
   // Live sidebar counts come from instant-feedback grading, not the (post-submit) attempt.
-  const currentCheck = currentQuestion ? checkedByQuestionId[currentQuestion.id] : undefined;
-  const correctCount = loadedQuestions.filter((q) => checkedByQuestionId[q.id]?.is_correct === true).length;
-  const incorrectCount = loadedQuestions.filter((q) => checkedByQuestionId[q.id]?.is_correct === false).length;
-  const flaggedCount = loadedQuestions.filter((q) => flaggedIds.has(q.id)).length;
+  const currentCheck = currentQuestion
+    ? checkedByQuestionId[currentQuestion.id]
+    : undefined;
+  const correctCount = loadedQuestions.filter(
+    (q) => checkedByQuestionId[q.id]?.is_correct === true,
+  ).length;
+  const incorrectCount = loadedQuestions.filter(
+    (q) => checkedByQuestionId[q.id]?.is_correct === false,
+  ).length;
+  const flaggedCount = loadedQuestions.filter((q) =>
+    flaggedIds.has(q.id),
+  ).length;
 
   // ----- Voice-over (Web Speech API) -----
   // Owned by the parent (not QuestionCard) so the `v` / `e` / `tv` keyboard shortcuts and the
@@ -423,7 +473,9 @@ function QuizTaker({
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith("en"));
+      const voice = window.speechSynthesis
+        .getVoices()
+        .find((v) => v.lang.toLowerCase().startsWith("en"));
       if (voice) utterance.voice = voice;
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
@@ -437,25 +489,35 @@ function QuizTaker({
   }, []);
 
   const stopSpeaking = useCallback(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (typeof window !== "undefined" && "speechSynthesis" in window)
+      window.speechSynthesis.cancel();
     setIsSpeaking(false);
   }, []);
 
   const speakQuestion = useCallback(() => {
     if (!currentQuestion) return;
     const optionsText = currentQuestion.answers
-      .map((option, index) => `Option ${String.fromCharCode(65 + index)}: ${option.answer_text}`)
+      .map(
+        (option, index) =>
+          `Option ${String.fromCharCode(65 + index)}: ${option.answer_text}`,
+      )
       .join(". ");
     speak(`${currentQuestion.question_text}. ${optionsText}`);
   }, [currentQuestion, speak]);
 
   const speakExplanation = useCallback(() => {
     if (!currentQuestion || !currentCheck) return;
-    const correctAnswer = currentQuestion.answers.find((a) => a.id === currentCheck.correct_answer_id);
+    const correctAnswer = currentQuestion.answers.find(
+      (a) => a.id === currentCheck.correct_answer_id,
+    );
     const resultText = currentCheck.is_correct
       ? "Correct!"
       : `Incorrect. The correct answer is ${correctAnswer?.answer_text ?? ""}.`;
-    speak(currentCheck.explanation ? `${resultText} ${currentCheck.explanation}` : resultText);
+    speak(
+      currentCheck.explanation
+        ? `${resultText} ${currentCheck.explanation}`
+        : resultText,
+    );
   }, [currentQuestion, currentCheck, speak]);
 
   const toggleSpeakQuestion = useCallback(
@@ -472,7 +534,8 @@ function QuizTaker({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     speakQuestion();
     return () => {
-      if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      if (typeof window !== "undefined" && "speechSynthesis" in window)
+        window.speechSynthesis.cancel();
     };
   }, [voiceOver, speakQuestion]);
 
@@ -522,19 +585,38 @@ function QuizTaker({
     // The `/me` session check can still be in flight on a hard refresh — wait it out rather than
     // flashing the sign-in prompt at someone who's actually already logged in.
     if (authLoading) return;
-    if (!user) {
-      setSignInDialogOpen(true);
-      return;
-    }
+    // The vault is Premium only, so anyone without it goes to the plans page rather than being told
+    // about a feature and left where they were. The redirect comes back here afterwards.
     if (!isPremium) {
-      setBookmarkUpsellOpen(true);
+      router.push(`/pricing?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
+
+    const questionId = currentQuestion.id;
+    const bookmarking = !flaggedIds.has(questionId);
+
+    // Mark it locally first so the icon answers the click, then tell the server. A failure rolls the
+    // mark back rather than leaving the icon claiming a save that never happened.
     setFlaggedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(currentQuestion.id)) next.delete(currentQuestion.id);
-      else next.add(currentQuestion.id);
+      if (bookmarking) next.add(questionId);
+      else next.delete(questionId);
       return next;
+    });
+
+    // `only=bookmarked` so un-bookmarking a question the learner also got wrong leaves it in the
+    // vault as a miss — the grader's list is not theirs to clear from here.
+    const request = bookmarking
+      ? api.post("/challenge-bank", { question_ids: [questionId] })
+      : api.delete(`/challenge-bank/${questionId}?only=bookmarked`);
+
+    request.catch(() => {
+      setFlaggedIds((prev) => {
+        const next = new Set(prev);
+        if (bookmarking) next.delete(questionId);
+        else next.add(questionId);
+        return next;
+      });
     });
   }
 
@@ -639,7 +721,11 @@ function QuizTaker({
     // 1–4 select the answer at that position (1 → A) while the question is still open.
     if (key >= "1" && key <= "4") {
       const idx = Number(key) - 1;
-      if (currentQuestion && !checkedByQuestionId[currentQuestion.id] && idx < currentQuestion.answers.length) {
+      if (
+        currentQuestion &&
+        !checkedByQuestionId[currentQuestion.id] &&
+        idx < currentQuestion.answers.length
+      ) {
         e.preventDefault();
         selectOption(currentQuestion.answers[idx].id);
       }
@@ -705,18 +791,28 @@ function QuizTaker({
     // force_new: true always starts a brand-new attempt — without it, the old (never-submitted)
     // one would just keep coming back and silently undo the restart on the next reload.
     try {
-      const res = await api.post<QuizAttemptStartResponse>(`/quizzes/${quiz.id}/attempts/start`, {
-        force_new: true,
-      });
+      const res = await api.post<QuizAttemptStartResponse>(
+        `/quizzes/${quiz.id}/attempts/start`,
+        {
+          force_new: true,
+        },
+      );
       setAttemptId(res.attempt.id);
       // A brand-new attempt replaces whatever in-progress one the caches were built around —
       // refresh them so the detail page / ladder reflect this attempt's state on the way back.
       invalidateResolvedQuiz();
       invalidatePhaseLadder();
-      setLoadedQuestions(applyLanguageToOrder(orderQuestionsById(res.attempt.question_order, questions), language));
+      setLoadedQuestions(
+        applyLanguageToOrder(
+          orderQuestionsById(res.attempt.question_order, questions),
+          language,
+        ),
+      );
     } catch {
       setAttemptId(null);
-      setLoadedQuestions(applyLanguageToOrder(shuffleQuiz(questions), language));
+      setLoadedQuestions(
+        applyLanguageToOrder(shuffleQuiz(questions), language),
+      );
     } finally {
       setStartingAttempt(false);
     }
@@ -735,7 +831,9 @@ function QuizTaker({
     let cancelled = false;
 
     api
-      .get<{ attempt: QuizAttempt | null }>(`/quizzes/${quiz.id}/attempts/latest`)
+      .get<{ attempt: QuizAttempt | null }>(
+        `/quizzes/${quiz.id}/attempts/latest`,
+      )
       .then((res) => {
         if (cancelled) return;
         const past = res.attempt;
@@ -755,7 +853,8 @@ function QuizTaker({
             explanation: a.explanation,
             answer_popularity: null,
           };
-          if (a.selected_answer_id != null) restoredAnswers[a.question_id] = a.selected_answer_id;
+          if (a.selected_answer_id != null)
+            restoredAnswers[a.question_id] = a.selected_answer_id;
         }
 
         setCheckedByQuestionId(checked);
@@ -790,19 +889,26 @@ function QuizTaker({
       .then((res) => {
         if (cancelled) return;
 
-        const ordered = orderQuestionsById(res.attempt.question_order, questions);
+        const ordered = orderQuestionsById(
+          res.attempt.question_order,
+          questions,
+        );
         const checked: Record<number, QuizAnswerCheckResponse> = {};
         const restoredAnswers: Record<number, number> = {};
         for (const [questionId, check] of Object.entries(res.answers)) {
           const id = Number(questionId);
           checked[id] = check;
-          if (check.selected_answer_id != null) restoredAnswers[id] = check.selected_answer_id;
+          if (check.selected_answer_id != null)
+            restoredAnswers[id] = check.selected_answer_id;
         }
         // Navigation only ever advances one question at a time (see nextQuestion/goToQuestion
         // below), so "how many questions were answered" and "how far the learner got" are always
         // the same index — land back on the first unanswered one, or the last question if every
         // one was already answered but never submitted.
-        const resumeIndex = Math.min(Object.keys(checked).length, ordered.length - 1);
+        const resumeIndex = Math.min(
+          Object.keys(checked).length,
+          ordered.length - 1,
+        );
 
         setAttemptId(res.attempt.id);
         // There's now an in-progress attempt to resume. The detail page and phase ladder each
@@ -823,7 +929,9 @@ function QuizTaker({
       .catch(() => {
         if (cancelled) return;
         setAttemptId(null);
-        setLoadedQuestions(applyLanguageToOrder(shuffleQuiz(questions), language));
+        setLoadedQuestions(
+          applyLanguageToOrder(shuffleQuiz(questions), language),
+        );
         setStartingAttempt(false);
       });
 
@@ -838,14 +946,17 @@ function QuizTaker({
     setSubmitError(null);
 
     try {
-      const res = await api.post<{ attempt: QuizAttempt }>(`/quizzes/${quiz.id}/attempts`, {
-        answers: Object.entries(answers).map(([questionId, answerId]) => ({
-          question_id: Number(questionId),
-          answer_id: answerId,
-        })),
-        duration_seconds: Math.round((Date.now() - startedAt) / 1000),
-        attempt_id: attemptId,
-      });
+      const res = await api.post<{ attempt: QuizAttempt }>(
+        `/quizzes/${quiz.id}/attempts`,
+        {
+          answers: Object.entries(answers).map(([questionId, answerId]) => ({
+            question_id: Number(questionId),
+            answer_id: answerId,
+          })),
+          duration_seconds: Math.round((Date.now() - startedAt) / 1000),
+          attempt_id: attemptId,
+        },
+      );
       setAttempt(res.attempt);
       setShowResults(true);
       // This quiz is now completed — drop the cached ladder AND the resolved-quiz cache so both the
@@ -854,7 +965,9 @@ function QuizTaker({
       invalidatePhaseLadder();
       invalidateResolvedQuiz();
     } catch (err) {
-      setSubmitError(err instanceof ApiError ? err.message : t("submitFailedError"));
+      setSubmitError(
+        err instanceof ApiError ? err.message : t("submitFailedError"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -868,7 +981,10 @@ function QuizTaker({
   // Persist flag marks per-quiz so they survive reloads within this browser.
   useEffect(() => {
     try {
-      localStorage.setItem(`quiz-flags-${quiz.id}`, JSON.stringify([...flaggedIds]));
+      localStorage.setItem(
+        `quiz-flags-${quiz.id}`,
+        JSON.stringify([...flaggedIds]),
+      );
     } catch {
       // ignore quota / private-mode errors
     }
@@ -880,7 +996,6 @@ function QuizTaker({
     const timer = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
-
 
   if (loadingResults || startingAttempt) {
     return (
@@ -923,13 +1038,19 @@ function QuizTaker({
           // browser cancelling the old track's in-flight load. Only a genuine load/decode error
           // (network failure, missing file, unsupported format) should disable the toggle.
           const code = e.currentTarget.error?.code;
-          if (code && code !== MediaError.MEDIA_ERR_ABORTED) setAmbientMusic(false);
+          if (code && code !== MediaError.MEDIA_ERR_ABORTED)
+            setAmbientMusic(false);
         }}
         className="hidden"
       />
       <div className="bg-white dark:bg-neutral-800 sticky top-0 z-90">
         <div className="max-w-container lg:mx-auto mx-5  flex items-center justify-between gap-3 py-3.5">
-          <Button href={exitHref} variant="ghost" className=" text-neutral-700 dark:text-neutral-300 p-0!" size="sm">
+          <Button
+            href={exitHref}
+            variant="ghost"
+            className=" text-neutral-700 dark:text-neutral-300 p-0!"
+            size="sm"
+          >
             <LogOut className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
             {t("exit")}
           </Button>
@@ -947,7 +1068,12 @@ function QuizTaker({
           </div>
           <div className="flex items-center gap-2">
             {!user && !authLoading && (
-              <Button href={loginHref} variant="ghost" size="sm" className="text-neutral-700">
+              <Button
+                href={loginHref}
+                variant="ghost"
+                size="sm"
+                className="text-neutral-700"
+              >
                 {t("login")}
               </Button>
             )}
@@ -962,7 +1088,9 @@ function QuizTaker({
           <div
             className="h-2.5 bg-linear-to-r rounded-tr-2xl rounded-br-2xl from-blue-500 to-blue-700 transition-all"
             style={{
-              width: loadedQuestions.length ? `${((currentIndex + 1) / loadedQuestions.length) * 100}%` : "0%",
+              width: loadedQuestions.length
+                ? `${((currentIndex + 1) / loadedQuestions.length) * 100}%`
+                : "0%",
             }}
           />
         </div>
@@ -973,11 +1101,16 @@ function QuizTaker({
           <div className="lg:col-span-2 p-5 lg:p-8 rounded-3xl border border-border bg-white dark:bg-neutral-800 shadow-[0_20px_50px_-26px_rgba(23,37,84,0.25)] space-y-4">
             <div className="flex items-center justify-between gap-1 ">
               <div className="flex items-center sm:gap-4 gap-2 flex-wrap">
-                <Paragraph size="sm" color="primary" className=" rounded-full  bg-blue-50 dark:bg-blue-500/10 px-3 py-1 font-semibold">
+                <Paragraph
+                  size="sm"
+                  color="primary"
+                  className=" rounded-full  bg-blue-50 dark:bg-blue-500/10 px-3 py-1 font-semibold"
+                >
                   {currentQuestion.topic ?? quiz.category?.title ?? "General"}
                 </Paragraph>
                 <Paragraph size="sm">
-                  <strong>Questions</strong> {currentIndex + 1}/{loadedQuestions.length}
+                  <strong>Questions</strong> {currentIndex + 1}/
+                  {loadedQuestions.length}
                 </Paragraph>
               </div>
               <div className="flex sm:gap-3 gap-2 items-center justify-center">
@@ -990,7 +1123,10 @@ function QuizTaker({
                   }`}
                 />
                 <div className="relative" ref={settingsRef}>
-                  <Settings onClick={() => setSettingsOpen((v) => !v)} className="h-6 w-6 cursor-pointer text-neutral-500 dark:text-neutral-400" />
+                  <Settings
+                    onClick={() => setSettingsOpen((v) => !v)}
+                    className="h-6 w-6 cursor-pointer text-neutral-500 dark:text-neutral-400"
+                  />
 
                   {settingsOpen && (
                     <div className="absolute top-full right-0 z-50 mt-2 w-72 rounded-lg border bg-white dark:bg-neutral-800 p-3 shadow-lg">
@@ -998,27 +1134,38 @@ function QuizTaker({
                         <Paragraph size="sm" color="dark">
                           {t("voiceOver")}
                         </Paragraph>
-                        <Switch checked={voiceOver} onCheckedChange={setVoiceOver} />
+                        <Switch
+                          checked={voiceOver}
+                          onCheckedChange={setVoiceOver}
+                        />
                       </div>
                       <hr className="my-1 border-border" />
                       <div className="flex items-center justify-between py-1.5">
                         <Paragraph size="sm" color="dark">
                           {t("answerPopularity")}
                         </Paragraph>
-                        <Switch checked={answerPopularity} onCheckedChange={setAnswerPopularity} />
+                        <Switch
+                          checked={answerPopularity}
+                          onCheckedChange={setAnswerPopularity}
+                        />
                       </div>
                       <hr className="my-1 border-border" />
                       <div className="flex items-center justify-between py-1.5">
                         <Paragraph size="sm" color="dark">
                           {t("ambientMusic")}
                         </Paragraph>
-                        <Switch checked={ambientMusic} onCheckedChange={setAmbientMusic} />
+                        <Switch
+                          checked={ambientMusic}
+                          onCheckedChange={setAmbientMusic}
+                        />
                       </div>
                       {ambientMusic && ambientTracks.length > 0 && (
                         <div className="pb-1.5">
                           <select
                             value={ambientTrack ?? ""}
-                            onChange={(e) => setAmbientTrack(Number(e.target.value))}
+                            onChange={(e) =>
+                              setAmbientTrack(Number(e.target.value))
+                            }
                             className="w-full rounded-full bg-neutral-100 dark:bg-neutral-700 px-3 py-2 text-sm"
                           >
                             {ambientTracks.map((track) => (
@@ -1035,16 +1182,31 @@ function QuizTaker({
                           <Paragraph size="sm" color="dark">
                             {t("fontSize")}
                           </Paragraph>
-                          <button type="button" onClick={() => setFontSize([50])} className="cursor-pointer">
+                          <button
+                            type="button"
+                            onClick={() => setFontSize([50])}
+                            className="cursor-pointer"
+                          >
                             <Paragraph size="xs" color="primary">
                               {t("default")}
                             </Paragraph>
                           </button>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold text-blue-primary">A</span>
-                          <Slider value={fontSize} min={0} max={100} step={1} onValueChange={setFontSize} className="flex-1" />
-                          <span className="text-base font-bold text-blue-primary">A</span>
+                          <span className="text-xs font-bold text-blue-primary">
+                            A
+                          </span>
+                          <Slider
+                            value={fontSize}
+                            min={0}
+                            max={100}
+                            step={1}
+                            onValueChange={setFontSize}
+                            className="flex-1"
+                          />
+                          <span className="text-base font-bold text-blue-primary">
+                            A
+                          </span>
                         </div>
                       </div>
                       <hr className="my-1 border-border" />
@@ -1069,7 +1231,9 @@ function QuizTaker({
                           disabled={translating}
                           onClick={() => changeLanguage("en")}
                           className={`rounded-full px-4 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                            language === "en" ? "bg-blue-600 text-white" : "text-neutral-500 dark:text-neutral-400"
+                            language === "en"
+                              ? "bg-blue-600 text-white"
+                              : "text-neutral-500 dark:text-neutral-400"
                           }`}
                         >
                           English
@@ -1079,7 +1243,9 @@ function QuizTaker({
                           disabled={translating}
                           onClick={() => changeLanguage("es")}
                           className={`rounded-full px-3 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                            language === "es" ? "bg-blue-600 text-white" : "text-neutral-500 dark:text-neutral-400"
+                            language === "es"
+                              ? "bg-blue-600 text-white"
+                              : "text-neutral-500 dark:text-neutral-400"
                           }`}
                         >
                           Spanish
@@ -1090,19 +1256,29 @@ function QuizTaker({
                           disabled={translating}
                           onClick={() => changeLanguage("ru")}
                           className={`rounded-full px-3 py-1.5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                            language === "ru" ? "bg-blue-600 text-white" : "text-neutral-500 dark:text-neutral-400"
+                            language === "ru"
+                              ? "bg-blue-600 text-white"
+                              : "text-neutral-500 dark:text-neutral-400"
                           }`}
                         >
                           Russian
                         </button>
                       </div>
                       {translating && (
-                        <Paragraph size="xs" color="muted" className="pt-2 text-center">
+                        <Paragraph
+                          size="xs"
+                          color="muted"
+                          className="pt-2 text-center"
+                        >
                           {t("translatingQuiz")}
                         </Paragraph>
                       )}
                       {contentLanguage !== "en" && !translating && (
-                        <Paragraph size="xs" color="muted" className="pt-2 text-center">
+                        <Paragraph
+                          size="xs"
+                          color="muted"
+                          className="pt-2 text-center"
+                        >
                           {t("machineTranslatedNotice")}
                         </Paragraph>
                       )}
@@ -1124,7 +1300,9 @@ function QuizTaker({
               onSelectOption={selectOption}
               t={t}
             />
-            {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+            {submitError && (
+              <p className="text-sm text-destructive">{submitError}</p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -1134,7 +1312,9 @@ function QuizTaker({
                   <Paragraph size="2xl" color="dark" className="font-semibold">
                     {t("yourProgress")}
                   </Paragraph>
-                  <Paragraph size="sm">{t("allowedToFail", { count: allowedToFail })}</Paragraph>
+                  <Paragraph size="sm">
+                    {t("allowedToFail", { count: allowedToFail })}
+                  </Paragraph>
                 </div>
 
                 <Button
@@ -1143,17 +1323,34 @@ function QuizTaker({
                   onClick={() => setShowRestartConfirm(true)}
                   className="border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" /> <span className="hidden md:inline-block">{t("restart")}</span>
+                  <RotateCcw className="h-3.5 w-3.5" />{" "}
+                  <span className="hidden md:inline-block">{t("restart")}</span>
                 </Button>
               </div>
 
               <div className="mb-4 mt-4 flex w-full flex-wrap items-center justify-between gap-2 text-xs font-semibold">
                 {(
                   [
-                    { key: "all", label: t("all"), count: loadedQuestions.length },
-                    { key: "correct", label: t("correct"), count: correctCount },
-                    { key: "incorrect", label: t("incorrect"), count: incorrectCount },
-                    { key: "flagged", label: t("flagged"), count: flaggedCount },
+                    {
+                      key: "all",
+                      label: t("all"),
+                      count: loadedQuestions.length,
+                    },
+                    {
+                      key: "correct",
+                      label: t("correct"),
+                      count: correctCount,
+                    },
+                    {
+                      key: "incorrect",
+                      label: t("incorrect"),
+                      count: incorrectCount,
+                    },
+                    {
+                      key: "flagged",
+                      label: t("flagged"),
+                      count: flaggedCount,
+                    },
                   ] as const
                 ).map((tab) => (
                   <button
@@ -1167,7 +1364,11 @@ function QuizTaker({
                   >
                     {tab.label}
                     <span
-                      className={progressFilter === tab.key ? "text-white/70" : "text-neutral-400 dark:text-neutral-500"}
+                      className={
+                        progressFilter === tab.key
+                          ? "text-white/70"
+                          : "text-neutral-400 dark:text-neutral-500"
+                      }
                     >
                       {tab.count}
                     </span>
@@ -1180,9 +1381,12 @@ function QuizTaker({
                   .map((question, index) => ({ question, index }))
                   .filter(({ question }) => {
                     const check = checkedByQuestionId[question.id];
-                    if (progressFilter === "correct") return check?.is_correct === true;
-                    if (progressFilter === "incorrect") return check?.is_correct === false;
-                    if (progressFilter === "flagged") return flaggedIds.has(question.id);
+                    if (progressFilter === "correct")
+                      return check?.is_correct === true;
+                    if (progressFilter === "incorrect")
+                      return check?.is_correct === false;
+                    if (progressFilter === "flagged")
+                      return flaggedIds.has(question.id);
                     return true;
                   })
                   .map(({ question, index }) => {
@@ -1221,6 +1425,8 @@ function QuizTaker({
               key={currentQuestion.id}
               quizId={quiz.id}
               questionId={currentQuestion.id}
+              answered={isAnswered}
+              selectedAnswerId={selectedOptionId}
               open={hintOpen}
               onToggle={() => setHintOpen((v) => !v)}
               t={t}
@@ -1229,7 +1435,9 @@ function QuizTaker({
         </div>
         <div className="bg-white dark:bg-neutral-800 border-t border py-4 px-5 h-20 fixed w-full bottom-0 left-0">
           <div className="max-w-container mx-auto relative flex items-center justify-between gap-2">
-            {streak >= 2 && <StreakBadge key={streak} streak={streak} language={language} />}
+            {streak >= 2 && (
+              <StreakBadge key={streak} streak={streak} language={language} />
+            )}
             <Button
               variant="ghost"
               className=" text-neutral-700 dark:text-neutral-300 p-0!"
@@ -1250,11 +1458,19 @@ function QuizTaker({
                 <ArrowLeft /> {t("previous")}
               </Button>
               {currentIndex + 1 === loadedQuestions.length ? (
-                <Button size="md" disabled={(isViewingFurthest && !isAnswered) || submitting} onClick={submitAttempt}>
+                <Button
+                  size="md"
+                  disabled={(isViewingFurthest && !isAnswered) || submitting}
+                  onClick={submitAttempt}
+                >
                   {submitting ? t("grading") : t("seeResults")}
                 </Button>
               ) : (
-                <Button size="md" disabled={isViewingFurthest && !isAnswered} onClick={nextQuestion}>
+                <Button
+                  size="md"
+                  disabled={isViewingFurthest && !isAnswered}
+                  onClick={nextQuestion}
+                >
                   {t("nextQuestion")} <ArrowRight />
                 </Button>
               )}
@@ -1263,14 +1479,16 @@ function QuizTaker({
         </div>
       </section>
 
-      <RestartDialog open={showRestartConfirm} onOpenChange={setShowRestartConfirm} onConfirm={restart} t={t} />
-      <KeyboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} t={t} />
-      <SignInDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen} />
-      <PremiumDialog
-        open={bookmarkUpsellOpen}
-        onOpenChange={setBookmarkUpsellOpen}
-        title="Bookmarking is a Premium feature"
-        description="Saving questions for later is part of Premium. Upgrade to bookmark questions and revisit them anytime."
+      <RestartDialog
+        open={showRestartConfirm}
+        onOpenChange={setShowRestartConfirm}
+        onConfirm={restart}
+        t={t}
+      />
+      <KeyboardShortcutsDialog
+        open={showShortcuts}
+        onOpenChange={setShowShortcuts}
+        t={t}
       />
       {currentQuestion && (
         <ReportMistakeDialog
@@ -1283,7 +1501,13 @@ function QuizTaker({
           t={t}
         />
       )}
-      {toast && <Toast message={toast.message} variant={toast.variant} onDismiss={() => setToast(null)} />}
+      {toast && (
+        <Toast
+          message={toast.message}
+          variant={toast.variant}
+          onDismiss={() => setToast(null)}
+        />
+      )}
     </>
   );
 }

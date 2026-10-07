@@ -62,8 +62,14 @@ class StateController extends Controller
             'stats' => [
                 'active_today' => $this->distinctParticipants(clone $activeToday),
                 'students_practiced_30d' => $this->distinctParticipants(clone $completed30d),
-                'questions_answered_total' => (int) (clone $completed30d)->sum('total_questions'),
-                'avg_session_seconds' => $this->nullableRound((clone $completed30d)->avg('duration_seconds')),
+                // All-time, like pass_rate below. The three "how people here are practicing" cards sat
+                // on the 30-day window beside an all-time pass rate, with nothing on screen saying so:
+                // a state with real history but a quiet month read "0 students, 0 questions, 79% pass
+                // rate", which looks broken rather than quiet. questions_answered_total was already
+                // named for all-time while being computed over 30 days.
+                'students_practiced_total' => $this->distinctParticipants((clone $base)->where('status', AttemptStatus::Completed)),
+                'questions_answered_total' => (int) (clone $base)->where('status', AttemptStatus::Completed)->sum('total_questions'),
+                'avg_session_seconds' => $this->nullableRound((clone $base)->where('status', AttemptStatus::Completed)->avg('duration_seconds')),
                 'combined_practice_seconds' => (int) (clone $completed30d)->sum('duration_seconds'),
                 'peak_hour' => $this->peakHour(clone $completed30d),
                 'peak_weekday' => $this->peakWeekday(clone $completed30d),

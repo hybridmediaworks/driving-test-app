@@ -15,12 +15,20 @@ type HintMessage = { role: "hint" | "user" | "tutor"; text: string };
 export default function HintPanel({
   quizId,
   questionId,
+  answered,
+  selectedAnswerId,
   open,
   onToggle,
   t,
 }: {
   quizId: number;
   questionId: number;
+  /** Gates the reveal server-side: until the learner has answered, the tutor must not name the
+      correct option. Omitting it left the API defaulting to false, so the fuller explanation a
+      learner has earned by answering never arrived. */
+  answered: boolean;
+  /** The option they picked, so a wrong one can be addressed by name. Only used once answered. */
+  selectedAnswerId?: number;
   open: boolean;
   onToggle: () => void;
   t: TFunction;
@@ -50,6 +58,8 @@ export default function HintPanel({
       const res = await api.post<QuizAssistResponse>(`/quizzes/${quizId}/questions/${questionId}/assist`, {
         mode,
         message,
+        answered,
+        selected_answer_id: selectedAnswerId,
       });
       setMessages((m) => [...m, { role: mode === "hint" ? "hint" : "tutor", text: res.reply }]);
     } catch (err) {

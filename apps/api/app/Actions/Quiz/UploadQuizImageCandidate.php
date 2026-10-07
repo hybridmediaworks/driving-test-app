@@ -25,9 +25,11 @@ class UploadQuizImageCandidate
     public function __invoke(QuizImageRegeneration $row, UploadedFile $file): QuizImageRegeneration
     {
         // Persist on the original's own disk (S3 in production) so it survives container redeploys.
-        // Asset-backed rows (CDL) have no media row, and defaulting them to 'local' staged the
-        // candidate on container storage that the next deploy wipes.
-        $disk = $row->originalFile()['disk'] ?? 'local';
+        // originalFile() comes back null when the row's media was deleted out from under it — a
+        // re-import replaces a quiz's questions, taking their media with them. Falling back to
+        // 'local' then staged the candidate on container storage that the next deploy wipes, so
+        // fall back to the media disk the rest of the app writes to instead.
+        $disk = $row->originalFile()['disk'] ?? (string) config('media-library.disk_name', 'public');
 
         $out = tempnam(sys_get_temp_dir(), 'upl_').'.jpg';
         Image::load($file->getRealPath())->fit(Fit::Crop, self::WIDTH, self::HEIGHT)->save($out);

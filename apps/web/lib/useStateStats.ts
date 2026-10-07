@@ -7,7 +7,10 @@ import { api } from "@/lib/api";
 
 export type StateStats = {
   active_today: number;
+  /** Distinct participants in the last 30 days — say so wherever it is shown. */
   students_practiced_30d: number;
+  /** Distinct participants over all time, like `pass_rate`. */
+  students_practiced_total: number;
   questions_answered_total: number;
   avg_session_seconds: number | null;
   combined_practice_seconds: number;
@@ -47,7 +50,9 @@ export function useStateStats(): StateStats | null {
     let cancelled = false;
 
     api
-      .get<{ stats: StateStats }>(`/states/${stateCode}/stats?vehicle_type=${vehicleType}`)
+      .get<{ stats: StateStats }>(
+        `/states/${stateCode}/stats?vehicle_type=${vehicleType}`,
+      )
       .then((res) => {
         if (!cancelled) setStats(res.stats);
       })

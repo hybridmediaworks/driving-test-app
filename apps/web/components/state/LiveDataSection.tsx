@@ -11,31 +11,16 @@ function formatSessionLength(seconds: number | null): string | null {
   return minutes > 0 ? `${minutes} min` : `${Math.round(seconds)} sec`;
 }
 
-function formatPeakHour(hour: number | null): string | null {
-  if (hour === null) return null;
-  const period = hour < 12 ? "AM" : "PM";
-  const twelveHour = hour % 12 === 0 ? 12 : hour % 12;
-  return `${twelveHour} ${period}`;
-}
-
-function formatPeakTime(hour: number | null, weekday: string | null): string {
-  const hourLabel = formatPeakHour(hour);
-  if (!hourLabel) return "Not enough data yet";
-  return weekday ? `${hourLabel} on ${weekday}s` : hourLabel;
-}
-
-function formatCombinedPractice(seconds: number): string {
-  const hours = seconds / 3600;
-  if (hours >= 24) return `${Math.round(hours / 24).toLocaleString()} days`;
-  if (hours >= 1) return `${Math.round(hours).toLocaleString()} hrs`;
-  return `${Math.round(seconds / 60).toLocaleString()} min`;
-}
-
 /**
  * Real activity numbers from GET /states/{code}/stats — shared by every vehicle type/test track
  * combination (previously four separate components each with their own hardcoded numbers). Reads
  * small today since real traffic is low; that's the honest state of things, not a placeholder to
  * dress up with fabricated deltas or a nationwide-rank claim.
+ *
+ * The pass rate was the one card still showing a made-up number (a flat "95.6% with premium") beside
+ * three live ones. The endpoint has carried a real `pass_rate` all along — graded attempts that
+ * passed, for this state and vehicle, premium or not — so it shows that, and a dash until anything
+ * has been graded, like its neighbours.
  */
 export default function LiveDataSection() {
   const { selectedState, selectedVehicle } = useWebLayout();
@@ -56,7 +41,7 @@ export default function LiveDataSection() {
             practiced
           </Paragraph>
           <Heading as="h3" className="text-blue-500!">
-            {stats ? stats.students_practiced_30d.toLocaleString() : "—"}
+            {stats ? stats.students_practiced_total.toLocaleString() : "—"}
           </Heading>
         </div>
         <div className="bg-white dark:bg-neutral-800 rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
@@ -78,10 +63,10 @@ export default function LiveDataSection() {
 
         <div className="bg-white dark:bg-neutral-800 rounded-2xl border shadow-card p-3 lg:p-8 space-y-2">
           <Paragraph size="lg" color="muted" className="leading-4!">
-            Pass rate with premium
+            Pass rate on our tests
           </Paragraph>
           <Heading as="h3" className="text-green-500!">
-            95.6%
+            {stats?.pass_rate != null ? `${stats.pass_rate}%` : "—"}
           </Heading>
         </div>
       </div>

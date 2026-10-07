@@ -2,19 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import StateSelectModal from "@/components/home/StateSelectModal";
-import { stateToSlug } from "@/lib/usStates";
+import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
 export default function CTASection({ href }: { href?: string } = {}) {
   const { selectedState, hasStoredState } = useWebLayout();
   const [showStateModal, setShowStateModal] = useState(false);
+  const pathname = usePathname();
 
+  // The state hub is the natural destination, except on the state hub itself — this section sits at
+  // the foot of `/[state]`, where linking there is a click that lands you back where you started.
+  // There, send them on to that state's practice tests, which is what the button offers anyway.
+  const hubHref = hasStoredState ? `/${stateToSlug(selectedState)}` : undefined;
   const stateHref =
-    href ?? (hasStoredState ? `/${stateToSlug(selectedState)}` : undefined);
+    href ??
+    (hubHref === pathname
+      ? `/quizzes?state=${stateAbbreviations[selectedState]}&vehicle_type=car&test_track=permit_test`
+      : hubHref);
 
   function onStartClick() {
     if (!hasStoredState) {
@@ -91,49 +100,49 @@ export default function CTASection({ href }: { href?: string } = {}) {
           {/* Content */}
           <div className="relative z-10 px-8 py-14 sm:px-12 sm:py-20 lg:py-[120px] lg:pr-8 lg:pl-[120px]">
             <div className="max-w-[566px]">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-blue-100 py-[7px] pr-[15px] pl-[7px]">
-              <span className="rounded-full bg-blue-500 px-2 py-[3px] text-xs leading-[18px] font-bold text-white">
-                Start today
-              </span>
-              <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                Free, no credit card required
-              </span>
-            </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-blue-100 py-[7px] pr-[15px] pl-[7px]">
+                <span className="rounded-full bg-blue-500 px-2 py-[3px] text-xs leading-[18px] font-bold text-white">
+                  Start today
+                </span>
+                <span className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+                  Free, no credit card required
+                </span>
+              </div>
 
-            <Heading as="h2" className="mt-6 text-neutral-100!">
-              Start your DMV test preparations today
-            </Heading>
+              <Heading as="h2" className="mt-6 text-neutral-100!">
+                Start your DMV test preparations today
+              </Heading>
 
-            <Paragraph
-              size="xl"
-              className="mt-3 max-w-[530px] text-neutral-300!"
-            >
-              Join 4.8 million drivers who prepared smarter, not harder. Your
-              first practice test is completely free.
-            </Paragraph>
+              <Paragraph
+                size="xl"
+                className="mt-3 max-w-[530px] text-neutral-300!"
+              >
+                Join 4.8 million drivers who prepared smarter, not harder. Your
+                first practice test is completely free.
+              </Paragraph>
 
-            <div className="mt-6">
-              {stateHref ? (
-                <Link href={stateHref} className={buttonClass}>
-                  {buttonInner}
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onStartClick}
-                  className={buttonClass}
-                >
-                  {buttonInner}
-                </button>
-              )}
-            </div>
+              <div className="mt-6">
+                {stateHref ? (
+                  <Link href={stateHref} className={buttonClass}>
+                    {buttonInner}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onStartClick}
+                    className={buttonClass}
+                  >
+                    {buttonInner}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {false && <StateSelectModal
+          <StateSelectModal
             open={showStateModal}
             onClose={() => setShowStateModal(false)}
-          />}
+          />
         </div>
       </div>
     </section>

@@ -7,21 +7,20 @@ import Paragraph from "@/components/ui/Paragraph";
 
 /**
  * "The Quiz Vault" — the two-up Missed / Bookmarked cards beside the laptop mockup
- * (Figma node 4147:8408). Both cards go to the dashboard, where the real "Weak Spots" retest
- * list lives.
+ * (Figma node 4147:8408). Both cards open the real vault, which keeps these as two lists.
  */
 const CARDS = [
   {
     icon: BookOpen,
     title: "Missed Questions",
-    body: "Full text, searchable",
-    href: "/dashboard",
+    body: "Kept until you get them right",
+    href: "/vault",
   },
   {
     icon: Bookmark,
     title: "Bookmarked Questions",
-    body: "Full text, searchable",
-    href: "/dashboard",
+    body: "Saved as you practise",
+    href: "/vault",
   },
 ];
 

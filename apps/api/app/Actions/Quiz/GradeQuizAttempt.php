@@ -80,22 +80,10 @@ class GradeQuizAttempt
             // finally got right leaves the bank.
             $owner = $this->challengeBankOwner($userId, $guestToken);
             if ($owner !== null) {
-                if ($wrongQuestionIds !== []) {
-                    $now = now();
-                    ChallengeBankItem::query()->insertOrIgnore(array_map(fn ($qid) => [
-                        ...$owner,
-                        'quiz_question_id' => $qid,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ], $wrongQuestionIds));
-                }
-
-                if ($correctQuestionIds !== []) {
-                    ChallengeBankItem::query()
-                        ->where($owner)
-                        ->whereIn('quiz_question_id', $correctQuestionIds)
-                        ->delete();
-                }
+                // Only the "missed" reason is the grader's to set and clear — a question the learner
+                // bookmarked on purpose stays in the vault even once they finally answer it right.
+                ChallengeBankItem::mark($owner, $wrongQuestionIds, 'missed');
+                ChallengeBankItem::clear($owner, $correctQuestionIds, 'missed');
             }
 
             // Counted from what's actually persisted (not just this call's payload) so a resumed

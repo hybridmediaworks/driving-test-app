@@ -161,7 +161,9 @@ class StateStatsTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('stats.students_practiced_30d', 2);
-        $response->assertJsonPath('stats.questions_answered_total', 23);
+        // All-time counts take the 40-day-old attempt in too; the in-progress one stays out of both.
+        $response->assertJsonPath('stats.students_practiced_total', 3);
+        $response->assertJsonPath('stats.questions_answered_total', 43);
     }
 
     public function test_it_sums_combined_practice_seconds_within_the_30_day_window_only(): void

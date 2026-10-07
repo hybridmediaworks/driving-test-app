@@ -29,14 +29,22 @@ class ChallengeBankController extends Controller
             return response()->json(['data' => []]);
         }
 
-        $questions = ChallengeBankItem::query()
+        $items = ChallengeBankItem::query()
             ->where($owner)
             ->with(['question.answers', 'question.assets'])
             ->latest()
             ->get()
-            ->pluck('question')
-            ->filter() // drop any whose underlying question was deleted
-            ->values();
+            ->filter(fn (ChallengeBankItem $item) => $item->question !== null); // question since deleted
+
+        // Each question carries why it is here, so the vault can list missed and bookmarked
+        // separately. A question can be both — got wrong AND saved — and shows in both lists.
+        $questions = $items->map(function (ChallengeBankItem $item) {
+            $question = $item->question;
+            $question->setAttribute('missed', $item->missed);
+            $question->setAttribute('bookmarked', $item->bookmarked);
+
+            return $question;
+        })->values();
 
         return response()->json([
             'data' => ChallengeBankQuestionResource::collection($questions),
@@ -60,17 +68,10 @@ class ChallengeBankController extends Controller
             return response()->json(['message' => 'No caller identity — sign in or send an X-Guest-Token.'], 422);
         }
 
-        $now = now();
-        $rows = collect($validated['question_ids'])->unique()->map(fn ($id) => [
-            ...$owner,
-            'quiz_question_id' => $id,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ])->all();
-
-        // insertOrIgnore relies on the unique(user_id|guest_token, quiz_question_id) index to skip
-        // duplicates.
-        ChallengeBankItem::query()->insertOrIgnore($rows);
+        // Marks the question bookmarked, which is its own reason to be in the vault: a question the
+        // learner saves stays saved even after they answer it right, and the grader's `missed` flag
+        // is left alone on a question that is already there for having been got wrong.
+        ChallengeBankItem::mark($owner, collect($validated['question_ids'])->unique()->values()->all(), 'bookmarked');
 
         return response()->json([
             'count' => ChallengeBankItem::query()->where($owner)->count(),
@@ -78,17 +79,24 @@ class ChallengeBankController extends Controller
     }
 
     /**
-     * Remove a question from the Challenge Bank — called once the learner answers it correctly.
-     * A no-op (still 200) if it wasn't in their bank.
+     * Drop a question from the vault entirely — both reasons at once, which is what "remove from my
+     * vault" means and what the mobile app's clear-all has always relied on.
+     *
+     * `?only=bookmarked` clears just that reason instead, for the web quiz screen's bookmark toggle:
+     * un-bookmarking a question the learner also got wrong should leave it filed as missed, not quietly
+     * wipe it from the list the grader is keeping for them. A no-op (still 200) either way if it was
+     * never in their bank.
      */
     public function destroy(Request $request, QuizQuestion $question): JsonResponse
     {
+        $request->validate(['only' => ['sometimes', Rule::in(['missed', 'bookmarked'])]]);
+
         $owner = $this->owner($request);
         if ($owner !== null) {
-            ChallengeBankItem::query()
-                ->where($owner)
-                ->where('quiz_question_id', $question->id)
-                ->delete();
+            $only = $request->string('only')->toString();
+            foreach ($only !== '' ? [$only] : ['missed', 'bookmarked'] as $flag) {
+                ChallengeBankItem::clear($owner, [$question->id], $flag);
+            }
         }
 
         return response()->json([

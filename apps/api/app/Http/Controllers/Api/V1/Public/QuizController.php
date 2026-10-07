@@ -550,19 +550,9 @@ class QuizController extends Controller
             : (($guestToken = $this->resolveGuestToken($request)) !== null ? ['guest_token' => $guestToken] : null);
 
         if ($bankOwner !== null) {
-            if ($graded['is_correct']) {
-                ChallengeBankItem::query()
-                    ->where($bankOwner)
-                    ->where('quiz_question_id', $question->id)
-                    ->delete();
-            } else {
-                ChallengeBankItem::query()->insertOrIgnore([
-                    ...$bankOwner,
-                    'quiz_question_id' => $question->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            $graded['is_correct']
+                ? ChallengeBankItem::clear($bankOwner, [$question->id], 'missed')
+                : ChallengeBankItem::mark($bankOwner, [$question->id], 'missed');
         }
 
         // Persist the answer against the in-progress attempt so the player can resume ("Continue").
