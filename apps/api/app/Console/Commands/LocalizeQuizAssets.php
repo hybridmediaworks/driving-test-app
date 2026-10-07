@@ -188,11 +188,17 @@ class LocalizeQuizAssets extends Command
 
         $this->info("Lottie: {$urls->count()} unique animation(s) to localize.");
 
+        // The media disk, exactly as the images below — not a hardcoded 'public'. On the public disk
+        // these sat in the container's own storage, so every deploy wiped all 1,800 animations while
+        // their rows went on pointing at them: a broken animation on every lottie question until
+        // someone re-ran this command. Same fault as the media rows written before MEDIA_DISK=s3.
+        $diskName = (string) config('media-library.disk_name', 'public');
+        $disk = Storage::disk($diskName);
+
         foreach ($urls as $url) {
             $relativePath = $this->localPath('quiz-lottie', $url, 'json');
-            $absolute = Storage::disk('public')->path($relativePath);
 
-            $needsDownload = ! File::exists($absolute) || (bool) $this->option('force');
+            $needsDownload = ! $disk->exists($relativePath) || (bool) $this->option('force');
 
             if ($dryRun) {
                 $this->increment($needsDownload ? 'lottie.would_download' : 'lottie.skipped_present');
@@ -207,8 +213,7 @@ class LocalizeQuizAssets extends Command
 
                     continue;
                 }
-                File::ensureDirectoryExists(dirname($absolute));
-                File::put($absolute, $response->body());
+                $disk->put($relativePath, $response->body());
                 $this->increment('lottie.downloaded');
             } else {
                 $this->increment('lottie.skipped_present');
@@ -219,9 +224,9 @@ class LocalizeQuizAssets extends Command
             $updated = QuizQuestionAsset::query()
                 ->where('type', QuizQuestionAssetType::Lottie)
                 ->where('external_url', $url)
-                ->update(['disk' => 'public', 'path' => $relativePath]);
+                ->update(['disk' => $diskName, 'path' => $relativePath]);
             $this->increment('lottie.rows_pointed_local', $updated);
-            $this->deletePreHashCopy('quiz-lottie', $url, 'json', 'public');
+            $this->deletePreHashCopy('quiz-lottie', $url, 'json', $diskName);
         }
 
         $this->newLine();
