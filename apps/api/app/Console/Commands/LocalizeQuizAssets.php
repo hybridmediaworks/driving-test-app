@@ -320,10 +320,20 @@ class LocalizeQuizAssets extends Command
             $disk->delete($target);
         }
 
-        // Server-side on S3 — the bytes never come back down to the box, so 35k duplicates cost API
-        // calls rather than bandwidth. On a local disk this is an ordinary file copy.
+        // Server-side first — the bytes never come back down to the box. Flysystem's S3 copy reads the
+        // source's ACL to carry its visibility across, which a bucket with ACLs disabled (Object
+        // Ownership: bucket owner enforced, the setting AWS now recommends) refuses. The disk has
+        // 'throw' => false, so that surfaces only as a silent false. Reading and re-writing the bytes
+        // needs no ACL at all and is still cheap: EC2 to S3 in the same region, no egress.
         if ($disk->copy($canonical, $target)) {
             $this->increment("{$group}.copied");
+
+            return;
+        }
+
+        $contents = $disk->get($canonical);
+        if ($contents !== null && $disk->put($target, $contents)) {
+            $this->increment("{$group}.rewritten");
 
             return;
         }

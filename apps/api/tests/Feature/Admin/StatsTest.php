@@ -12,14 +12,128 @@ use App\Models\Plan;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
+use App\Models\State;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class StatsTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * QuizAttempt has no factory, so build the minimum a stats query reads. `created_at` is set
+     * after the insert: it is not fillable, so passing it to create() silently drops it and every
+     * row lands on today — which is exactly what these tests are trying to tell apart.
+     */
+    private function makeAttempts(int $quizId, int $count, \DateTimeInterface $at): void
+    {
+        for ($i = 0; $i < $count; $i++) {
+            QuizAttempt::query()->create([
+                'quiz_id' => $quizId,
+                'status' => AttemptStatus::Completed,
+                'total_questions' => 1,
+                'correct_count' => 1,
+                'score' => 100,
+                'started_at' => $at,
+                'completed_at' => $at,
+            ])->forceFill(['created_at' => $at, 'updated_at' => $at])->saveQuietly();
+        }
+    }
+
+    /** Same reason as makeAttempts: created_at is not fillable on User either. */
+    private function makeUserAt(\DateTimeInterface $at): void
+    {
+        User::factory()->create()->forceFill(['created_at' => $at, 'updated_at' => $at])->saveQuietly();
+    }
+
+    public function test_the_library_is_broken_down_by_vehicle_type(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $car = VehicleType::query()->firstOrCreate(['name' => 'car'], ['title' => 'Car']);
+        $moto = VehicleType::query()->firstOrCreate(['name' => 'motorcycle'], ['title' => 'Motorcycle']);
+
+        $carQuiz = Quiz::factory()->create(['vehicle_type_id' => $car->id]);
+        $motoQuiz = Quiz::factory()->create(['vehicle_type_id' => $moto->id]);
+        QuizQuestion::factory()->count(3)->create(['quiz_id' => $carQuiz->id]);
+        QuizQuestion::factory()->create(['quiz_id' => $motoQuiz->id]);
+
+        $byVehicle = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/stats')
+            ->assertOk()
+            ->json('content.questions_by_vehicle');
+
+        // Largest first, so the headline breakdown reads without the client re-sorting it.
+        $this->assertSame('car', $byVehicle[0]['name']);
+        $this->assertSame(3, $byVehicle[0]['questions']);
+        $this->assertSame('motorcycle', $byVehicle[1]['name']);
+        $this->assertSame(1, $byVehicle[1]['questions']);
+    }
+
+    public function test_today_counts_only_cover_today(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $quiz = Quiz::factory()->create();
+
+        $this->makeUserAt(now()->subDay());
+        $this->makeUserAt(now());
+
+        $this->makeAttempts($quiz->id, 1, now()->subDay());
+        $this->makeAttempts($quiz->id, 2, now());
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/stats');
+
+        // The admin account itself was made just now, so it counts too.
+        $response->assertOk()
+            ->assertJsonPath('users.new_today', 2)
+            ->assertJsonPath('attempts.today', 2);
+    }
+
+    public function test_top_states_are_ranked_and_the_rest_are_summed(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        // Six states so one of them has to fall outside the top five.
+        $volumes = ['CA' => 9, 'TX' => 7, 'NY' => 5, 'FL' => 4, 'OH' => 3, 'WY' => 2];
+        foreach ($volumes as $code => $count) {
+            $state = State::factory()->create(['code' => $code, 'name' => $code]);
+            $quiz = Quiz::factory()->create(['state_id' => $state->id]);
+            $this->makeAttempts($quiz->id, $count, now());
+        }
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/stats');
+
+        $response->assertOk()
+            ->assertJsonCount(5, 'activity.top_states_last_7_days.states')
+            ->assertJsonPath('activity.top_states_last_7_days.states.0.code', 'CA')
+            ->assertJsonPath('activity.top_states_last_7_days.states.0.total', 9)
+            ->assertJsonPath('activity.top_states_last_7_days.states.4.code', 'OH')
+            // Wyoming misses the cut, so its two attempts show up in the combined row rather
+            // than vanishing — a five-line chart that silently drops the rest misleads.
+            ->assertJsonPath('activity.top_states_last_7_days.others_total', 2);
+    }
+
+    public function test_each_top_state_carries_seven_daily_figures(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $state = State::factory()->create(['code' => 'CA', 'name' => 'California']);
+        $quiz = Quiz::factory()->create(['state_id' => $state->id]);
+
+        $this->makeAttempts($quiz->id, 2, now());
+        $this->makeAttempts($quiz->id, 1, now()->subDays(3));
+        // Outside the window entirely.
+        $this->makeAttempts($quiz->id, 1, now()->subDays(20));
+
+        $daily = $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/stats')
+            ->assertOk()
+            ->json('activity.top_states_last_7_days.states.0.daily');
+
+        $this->assertCount(7, $daily);
+        $this->assertSame(2, $daily[6]);  // today, last
+        $this->assertSame(1, $daily[3]);  // three days ago
+        $this->assertSame(3, array_sum($daily));
+    }
 
     public function test_guest_cannot_view_stats(): void
     {

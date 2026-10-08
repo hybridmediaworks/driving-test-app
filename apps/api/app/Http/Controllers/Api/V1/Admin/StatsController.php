@@ -9,14 +9,18 @@ use App\Models\CheatSheet;
 use App\Models\FamilyGroup;
 use App\Models\Flashcard;
 use App\Models\FlashcardReview;
+use App\Models\HazardSimulator;
 use App\Models\PassGuaranteeClaim;
 use App\Models\Plan;
 use App\Models\Quiz;
+use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Models\QuizCategory;
 use App\Models\QuizQuestion;
+use App\Models\State;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Models\Video;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 
@@ -46,6 +50,7 @@ class StatsController extends Controller
                 'total' => User::query()->count(),
                 'admins' => User::query()->where('is_admin', true)->count(),
                 'verified' => User::query()->whereNotNull('email_verified_at')->count(),
+                'new_today' => User::query()->where('created_at', '>=', now()->startOfDay())->count(),
                 'new_last_7_days' => User::query()->where('created_at', '>=', now()->subDays(7))->count(),
                 'daily_new_last_7_days' => $this->dailyCounts(User::query()),
             ],
@@ -54,16 +59,24 @@ class StatsController extends Controller
                 'active' => Quiz::query()->where('is_active', true)->count(),
                 'categories' => QuizCategory::query()->count(),
                 'questions' => QuizQuestion::query()->count(),
+                'answers' => QuizAnswer::query()->count(),
             ],
             'attempts' => [
                 'total' => QuizAttempt::query()->count(),
                 'completed' => (clone $completedAttempts)->count(),
                 'in_progress' => QuizAttempt::query()->where('status', AttemptStatus::InProgress)->count(),
                 'average_score' => $averageScore === null ? null : round((float) $averageScore, 1),
+                'today' => QuizAttempt::query()->where('created_at', '>=', now()->startOfDay())->count(),
                 'last_7_days' => QuizAttempt::query()->where('created_at', '>=', now()->subDays(7))->count(),
                 'daily_last_7_days' => $this->dailyCounts(QuizAttempt::query()),
             ],
             'content' => [
+                'states' => State::query()->count(),
+                'videos' => Video::query()->count(),
+                'hazard_simulators' => HazardSimulator::query()->count(),
+                // The library's spread across vehicle types — the one cut of the catalogue that
+                // says something a single total cannot: where the content actually is.
+                'questions_by_vehicle' => $this->questionsByVehicle(),
                 'flashcards' => [
                     'total' => Flashcard::query()->count(),
                     'active' => Flashcard::query()->where('is_active', true)->count(),
@@ -75,6 +88,9 @@ class StatsController extends Controller
                     'active' => CheatSheet::query()->where('is_active', true)->count(),
                     'premium' => CheatSheet::query()->where('is_premium', true)->count(),
                 ],
+            ],
+            'activity' => [
+                'top_states_last_7_days' => $this->topStates(),
             ],
             'billing' => [
                 'active_weekly_subscribers' => $activeWeekly,
@@ -90,6 +106,64 @@ class StatsController extends Controller
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Question counts per vehicle type, largest first.
+     *
+     * @return list<array{name: string, questions: int}>
+     */
+    private function questionsByVehicle(): array
+    {
+        return QuizQuestion::query()
+            ->join('quizzes', 'quizzes.id', '=', 'quiz_questions.quiz_id')
+            ->join('vehicle_types', 'vehicle_types.id', '=', 'quizzes.vehicle_type_id')
+            ->selectRaw('vehicle_types.name, COUNT(*) as questions')
+            ->groupBy('vehicle_types.name')
+            ->orderByDesc('questions')
+            ->get()
+            ->map(fn ($row) => ['name' => $row->name, 'questions' => (int) $row->questions])
+            ->all();
+    }
+
+    /**
+     * The five busiest states over the last 7 days, each with its seven daily figures (oldest
+     * first), plus one combined row for everywhere else.
+     *
+     * The "others" row matters: five lines out of fifty-two is a readable chart but a misleading
+     * one on its own, and a reader has no way to tell whether the states left out are quiet or
+     * merely unlabelled. One more line answers that without crowding the plot.
+     *
+     * @return array{states: list<array{code: string, name: string, total: int, daily: list<int>}>, others_total: int}
+     */
+    private function topStates(int $limit = 5): array
+    {
+        $since = now()->subDays(6)->startOfDay();
+
+        $rows = QuizAttempt::query()
+            ->join('quizzes', 'quizzes.id', '=', 'quiz_attempts.quiz_id')
+            ->join('states', 'states.id', '=', 'quizzes.state_id')
+            ->where('quiz_attempts.created_at', '>=', $since)
+            ->selectRaw('states.code, states.name, DATE(quiz_attempts.created_at) as day, COUNT(*) as count')
+            ->groupBy('states.code', 'states.name', 'day')
+            ->get();
+
+        $days = collect(range(6, 0))->map(fn (int $ago) => now()->subDays($ago)->toDateString())->all();
+
+        $byState = $rows->groupBy('code')->map(fn ($stateRows) => [
+            'code' => $stateRows->first()->code,
+            'name' => $stateRows->first()->name,
+            'total' => (int) $stateRows->sum('count'),
+            'daily' => collect($days)
+                ->map(fn (string $day) => (int) ($stateRows->firstWhere('day', $day)->count ?? 0))
+                ->values()
+                ->all(),
+        ])->sortByDesc('total')->values();
+
+        return [
+            'states' => $byState->take($limit)->values()->all(),
+            'others_total' => (int) $byState->skip($limit)->sum('total'),
+        ];
     }
 
     /**

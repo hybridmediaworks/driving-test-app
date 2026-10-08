@@ -15,7 +15,12 @@ COPY apps/mobile/package.json ./apps/mobile/
 COPY packages/shared/package.json ./packages/shared/
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+# Only what the web build reads. `COPY . .` put the whole repo into this layer, so editing a PHP
+# file — nothing to do with Next — invalidated it and rebuilt the frontend from scratch, which is
+# the slow half of a deploy. apps/api and apps/mobile are not inputs to `pnpm --filter web build`.
+COPY packages ./packages
+COPY apps/web ./apps/web
+
 ENV NEXT_PUBLIC_API_URL=/api/v1
 RUN pnpm --filter web build
 
