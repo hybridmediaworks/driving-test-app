@@ -1,9 +1,7 @@
 "use client";
 
-import { Check, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
-import { stateToSlug } from "@/lib/usStates";
 
 type Pass = {
   name: string;
@@ -95,11 +93,7 @@ export default function RecentPasses() {
 
           return (
             <li key={`${pass.name}-${pass.state}`}>
-              <Link
-                href={`/${stateToSlug(pass.state)}`}
-                aria-label={`${pass.name} passed in ${pass.state} ${elapsed} — see the ${pass.state} test guide`}
-                className="group flex items-center gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-blue-50/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:hover:bg-blue-500/10"
-              >
+              <div className="flex items-center gap-3 px-2 py-3">
                 <span
                   aria-hidden
                   className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-semibold ${pass.tint}`}
@@ -122,11 +116,7 @@ export default function RecentPasses() {
                   </span>
                 </span>
 
-                <ChevronRight
-                  aria-hidden
-                  className="size-4 shrink-0 text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-neutral-600"
-                />
-              </Link>
+              </div>
             </li>
           );
         })}

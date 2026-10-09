@@ -43,7 +43,7 @@ function Stat({ value, color }: { value: string; color: string }) {
 export default function BestAppSection() {
   return (
     <section
-      className="px-5 pb-16 lg:pb-0"
+      className="relative z-10 px-5 pb-16 lg:pb-0"
       style={{
         // Split backdrop: the tan (section-above) colour on top and the lighter
         // section colour below, with the hard boundary falling behind the iPad's
@@ -56,15 +56,18 @@ export default function BestAppSection() {
         {/* iPad quiz mockup — pulled up so it straddles the section boundary and
             bleeds into the section above, matching the Figma composition. */}
         <div className="-mt-4 flex justify-center lg:-mt-14">
-          <Image
-            src="/bestapp/ipad-cut.png"
-            alt="A DriveLane practice question shown on an iPad"
-            width={1003}
-            height={791}
-            quality={92}
-            sizes="(max-width: 1024px) 100vw, 980px"
-            className="h-auto w-full max-w-[980px]"
-          />
+          <div className="w-full max-w-[980px] overflow-hidden rounded-[2.5rem] bg-black">
+            <video
+              src="/bestapp/ipad-quiz.mp4"
+              poster="/bestapp/ipad-cut.png"
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-label="A DriveLane practice question shown on an iPad"
+              className="h-auto w-full rounded-[5rem]"
+            />
+          </div>
         </div>
 
         {/* Heading */}
