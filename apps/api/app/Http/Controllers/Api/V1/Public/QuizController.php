@@ -27,6 +27,7 @@ use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionReport;
+use App\Support\LikeSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
@@ -214,6 +215,10 @@ class QuizController extends Controller
 
         if ($request->filled('test_track')) {
             $query->where('test_track', $request->string('test_track'));
+        }
+
+        if ($request->filled('search')) {
+            LikeSearch::apply($query, $request->string('search')->toString(), ['title']);
         }
 
         $perPage = min(max($request->integer('per_page', 15), 5), 100);

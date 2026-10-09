@@ -1,15 +1,28 @@
 "use client";
 
+import { Suspense } from "react";
 import type { PublicQuiz } from "@driving-test-app/shared";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import BrowseFilters from "@/components/browse/BrowseFilters";
+import BrowseGrid from "@/components/browse/BrowseGrid";
+import BrowseHeader from "@/components/browse/BrowseHeader";
 import QuizCard from "@/components/quiz/QuizCard";
-import { usePaginatedList } from "@/hooks/use-paginated-list";
+import Paginator from "@/components/ui/Paginator";
+import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
-export default function ExamSimulatorPage() {
-  // No pagination UI on this page (small, capped list) — always page 1.
-  const { data: exams } = usePaginatedList<PublicQuiz>("/quizzes?quiz_type=final", 1);
+function ExamSimulatorBrowseInner() {
+  const { searchParams, filterQuery, page, updateFilter, updateFilters, setPage } = useUrlQuery();
+
+  // `quiz_type=final` is what makes this page the exam simulator rather than the practice list, so
+  // it is fixed here and the learner's own filters are appended to it. There used to be no
+  // pagination at all, which showed the first fifteen of several hundred exams and no way on.
+  const { data: exams, loading } = usePaginatedList<PublicQuiz>(
+    `/quizzes?quiz_type=final${filterQuery ? `&${filterQuery}` : ""}`,
+    page,
+  );
+
   const rows = exams?.data ?? [];
 
   return (
@@ -18,27 +31,46 @@ export default function ExamSimulatorPage() {
         <Header variant="home" hideNav />
         <main className="flex-1">
           <div className="mx-auto max-w-container space-y-6 px-5 py-10 lg:py-14">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Exam simulator</h1>
-              <p className="text-neutral-500 dark:text-neutral-400">
-                The real format: same question count, a strict clock, and a clear pass/fail result — no feedback until
-                you finish.
-              </p>
-            </div>
+            <BrowseHeader
+              title="Exam simulator"
+              description="The real format: same question count, a strict clock, and a clear pass/fail result — no feedback until you finish."
+              total={exams?.meta.total ?? null}
+              unit="exams"
+            />
 
-            {rows.length === 0 ? (
-              <p className="py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">No exam simulations are available yet.</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {rows.map((quiz) => (
-                  <QuizCard key={quiz.id} quiz={quiz} />
-                ))}
-              </div>
-            )}
+            <BrowseFilters
+              fields={["state", "vehicle_type", "test_track"]}
+              searchParams={searchParams}
+              updateFilter={updateFilter}
+              updateFilters={updateFilters}
+              loading={loading}
+              searchPlaceholder="Search exams"
+            />
+
+            <BrowseGrid
+              loading={loading}
+              count={rows.length}
+              emptyTitle="No exams match those filters"
+              emptyHint="Try a different state or vehicle type, or clear the filters to see everything."
+            >
+              {rows.map((quiz) => (
+                <QuizCard key={quiz.id} quiz={quiz} />
+              ))}
+            </BrowseGrid>
+
+            {exams && exams.meta.total > 0 && <Paginator meta={exams.meta} onPageChange={setPage} />}
           </div>
         </main>
         <Footer />
       </div>
     </WebLayoutProvider>
+  );
+}
+
+export default function ExamSimulatorPage() {
+  return (
+    <Suspense>
+      <ExamSimulatorBrowseInner />
+    </Suspense>
   );
 }

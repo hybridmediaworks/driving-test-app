@@ -32,6 +32,29 @@ class QuizBrowsingTest extends TestCase
         $this->assertFalse($titles->contains('Inactive Quiz'));
     }
 
+    public function test_index_filters_by_search_term(): void
+    {
+        Quiz::factory()->create(['is_active' => true, 'title' => 'Alabama Road Signs Practice']);
+        Quiz::factory()->create(['is_active' => true, 'title' => 'Texas Permit Test']);
+
+        $titles = collect($this->getJson('/api/v1/quizzes?search=road signs')->assertOk()->json('data'))->pluck('title');
+
+        $this->assertTrue($titles->contains('Alabama Road Signs Practice'));
+        $this->assertFalse($titles->contains('Texas Permit Test'));
+    }
+
+    public function test_index_search_treats_like_wildcards_as_literal_characters(): void
+    {
+        Quiz::factory()->create(['is_active' => true, 'title' => 'Scored 90% Review']);
+        Quiz::factory()->create(['is_active' => true, 'title' => 'Texas Permit Test']);
+
+        // Unescaped, `%` is a LIKE wildcard and this search would return every quiz.
+        $titles = collect($this->getJson('/api/v1/quizzes?search=%')->assertOk()->json('data'))->pluck('title');
+
+        $this->assertTrue($titles->contains('Scored 90% Review'));
+        $this->assertFalse($titles->contains('Texas Permit Test'));
+    }
+
     public function test_index_filters_by_state_vehicle_type_and_category(): void
     {
         $match = Quiz::factory()->create(['is_active' => true]);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Admin\EmailSubscriberResource;
 use App\Models\EmailSubscriber;
+use App\Support\LikeSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -23,8 +24,7 @@ class EmailSubscriberController extends Controller
         $query = EmailSubscriber::query()->latest();
 
         if ($request->filled('search')) {
-            $search = $request->string('search')->toString();
-            $query->where('email', 'like', "%{$search}%");
+            LikeSearch::apply($query, $request->string('search')->toString(), ['email']);
         }
 
         if ($request->filled('status')) {

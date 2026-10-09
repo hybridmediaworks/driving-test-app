@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Public\CheatSheetResource;
 use App\Http\Resources\Api\V1\Public\CheatSheetSectionResource;
 use App\Models\CheatSheet;
+use App\Support\LikeSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -53,6 +54,10 @@ class CheatSheetController extends Controller
         if ($request->filled('category')) {
             $name = $request->string('category')->toString();
             $query->where(fn ($q) => $q->whereNull('quiz_category_id')->orWhereHas('category', fn ($q2) => $q2->where('name', $name)));
+        }
+
+        if ($request->filled('search')) {
+            LikeSearch::apply($query, $request->string('search')->toString(), ['title', 'summary']);
         }
 
         return CheatSheetResource::collection($query->paginate($perPage)->withQueryString());

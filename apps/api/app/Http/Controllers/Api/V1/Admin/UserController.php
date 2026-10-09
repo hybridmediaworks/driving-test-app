@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Admin\StoreUserRequest;
 use App\Http\Requests\Api\V1\Admin\UpdateUserRequest;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
+use App\Support\LikeSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -26,8 +27,7 @@ class UserController extends Controller
         $query = User::query()->latest();
 
         if ($request->filled('search')) {
-            $term = '%'.$request->string('search')->toString().'%';
-            $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('email', 'like', $term));
+            LikeSearch::apply($query, $request->string('search')->toString(), ['name', 'email']);
         }
 
         if ($request->has('is_admin')) {

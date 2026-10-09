@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Public;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Public\FlashcardResource;
 use App\Models\Flashcard;
+use App\Support\LikeSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,6 +85,13 @@ class FlashcardController extends Controller
         if ($request->filled('category')) {
             $name = $request->string('category')->toString();
             $query->where(fn ($q) => $q->whereNull('quiz_category_id')->orWhereHas('category', fn ($q2) => $q2->where('name', $name)));
+        }
+
+        // Narrows the study deck too, not just the browse grid — `study` builds its query from the
+        // same filters, so searching "right of way" and hitting Start studying gives you a session
+        // of exactly the cards you were looking at.
+        if ($request->filled('search')) {
+            LikeSearch::apply($query, $request->string('search')->toString(), ['front_text', 'back_text']);
         }
 
         return $query;

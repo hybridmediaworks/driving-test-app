@@ -1,60 +1,28 @@
 "use client";
 
-import { Lock } from "lucide-react";
-import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
-import type { PublicFlashcard, QuizCategory, State, VehicleType } from "@driving-test-app/shared";
+import { Suspense } from "react";
+import type { PublicFlashcard } from "@driving-test-app/shared";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import BrowseFilters from "@/components/browse/BrowseFilters";
+import BrowseGrid from "@/components/browse/BrowseGrid";
+import BrowseHeader from "@/components/browse/BrowseHeader";
+import FlashcardCard from "@/components/flashcards/FlashcardCard";
 import Button from "@/components/ui/Button";
 import Paginator from "@/components/ui/Paginator";
-import { api } from "@/lib/api";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 import { usePaginatedList, useUrlQuery } from "@/hooks/use-paginated-list";
 
-function FlashcardPreviewCard({ card, studyHref }: { card: PublicFlashcard; studyHref: string }) {
-  return (
-    <Link
-      href={studyHref}
-      className="flex flex-col gap-2 rounded-2xl border border-gray-100 dark:border-white/10 p-5 shadow-sm transition-shadow hover:shadow-md"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-semibold text-neutral-900 dark:text-neutral-100">{card.front_text}</p>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          {/* Always visible when the card is marked premium, regardless of whether the
-              current viewer (e.g. an admin) is actually locked out of it — distinct from the
-              lock icon below, which reflects this viewer's own access. */}
-          {card.is_premium && (
-            <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-800">Premium</span>
-          )}
-          {card.locked && <Lock className="h-4 w-4 text-amber-600" />}
-        </div>
-      </div>
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-        {card.category?.title}
-        {card.state && ` · ${card.state.name}`}
-        {card.vehicle_type && ` · ${card.vehicle_type.title}`}
-      </p>
-    </Link>
-  );
-}
-
 function FlashcardsBrowseInner() {
-  const { searchParams, filterQuery, page, updateFilter, setPage } = useUrlQuery();
+  const { searchParams, filterQuery, page, updateFilter, updateFilters, setPage } = useUrlQuery();
 
-  const [states, setStates] = useState<State[]>([]);
-  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
-  const [categories, setCategories] = useState<QuizCategory[]>([]);
-
-  useEffect(() => {
-    api.get<{ data: State[] }>("/states").then((res) => setStates(res.data));
-    api.get<{ data: VehicleType[] }>("/vehicle-types").then((res) => setVehicleTypes(res.data));
-    api.get<{ data: QuizCategory[] }>("/quiz-categories").then((res) => setCategories(res.data));
-  }, []);
-
-  const { data: flashcards } = usePaginatedList<PublicFlashcard>(`/flashcards${filterQuery ? `?${filterQuery}` : ""}`, page);
+  const { data: flashcards, loading } = usePaginatedList<PublicFlashcard>(
+    `/flashcards${filterQuery ? `?${filterQuery}` : ""}`,
+    page,
+  );
 
   const rows = flashcards?.data ?? [];
+  // Carries the filters through, so you study exactly the deck you were just looking at.
   const studyHref = `/flashcards/study${filterQuery ? `?${filterQuery}` : ""}`;
 
   return (
@@ -63,56 +31,33 @@ function FlashcardsBrowseInner() {
         <Header variant="home" hideNav />
         <main className="flex-1">
           <div className="mx-auto max-w-container space-y-6 px-5 py-10 lg:py-14">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="space-y-1">
-                <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Flashcards</h1>
-                <p className="text-neutral-500 dark:text-neutral-400">Quick recall practice for signs, rules, and terms.</p>
-              </div>
-              <Button href={studyHref}>Start studying</Button>
-            </div>
+            <BrowseHeader
+              title="Flashcards"
+              description="Quick recall practice for signs, rules, and terms."
+              total={flashcards?.meta.total ?? null}
+              unit="cards"
+              action={<Button href={studyHref}>Start studying</Button>}
+            />
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <select
-                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
-                value={searchParams.get("state") ?? ""}
-                onChange={(e) => updateFilter("state", e.target.value)}
-              >
-                <option value="">All states</option>
-                {states.map((s) => (
-                  <option key={s.id} value={s.code}>{s.name}</option>
-                ))}
-              </select>
-              <select
-                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
-                value={searchParams.get("vehicle_type") ?? ""}
-                onChange={(e) => updateFilter("vehicle_type", e.target.value)}
-              >
-                <option value="">All vehicle types</option>
-                {vehicleTypes.map((v) => (
-                  <option key={v.id} value={v.name}>{v.title}</option>
-                ))}
-              </select>
-              <select
-                className="h-10 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 px-3 text-sm"
-                value={searchParams.get("category") ?? ""}
-                onChange={(e) => updateFilter("category", e.target.value)}
-              >
-                <option value="">All categories</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.name}>{c.title}</option>
-                ))}
-              </select>
-            </div>
+            <BrowseFilters
+              fields={["state", "vehicle_type", "category"]}
+              searchParams={searchParams}
+              updateFilter={updateFilter}
+              updateFilters={updateFilters}
+              loading={loading}
+              searchPlaceholder="Search flashcards"
+            />
 
-            {rows.length === 0 ? (
-              <p className="py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">No flashcards match those filters.</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {rows.map((card) => (
-                  <FlashcardPreviewCard key={card.id} card={card} studyHref={studyHref} />
-                ))}
-              </div>
-            )}
+            <BrowseGrid
+              loading={loading}
+              count={rows.length}
+              emptyTitle="No flashcards match those filters"
+              emptyHint="Try a different state or vehicle type, or clear the filters to see everything."
+            >
+              {rows.map((card) => (
+                <FlashcardCard key={card.id} card={card} studyHref={studyHref} />
+              ))}
+            </BrowseGrid>
 
             {flashcards && flashcards.meta.total > 0 && <Paginator meta={flashcards.meta} onPageChange={setPage} />}
           </div>

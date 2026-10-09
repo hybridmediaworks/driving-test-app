@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PaginatedResponse } from "@driving-test-app/shared";
 import { api, ApiError } from "@/lib/api";
 
@@ -29,23 +29,32 @@ export function useUrlQuery() {
   filterParams.delete("page");
   const filterQuery = filterParams.toString();
 
-  const updateFilter = useCallback(
-    (key: string, value: string) => {
+  /**
+   * Applies several filters in one navigation. Calling `updateFilter` in a loop cannot do this:
+   * every call reads the same `searchParams` from the render it was created in, so each one would
+   * build its URL from the original query string and only the last would survive.
+   */
+  const updateFilters = useCallback(
+    (patch: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
+      for (const [key, value] of Object.entries(patch)) {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
       }
-      if (key !== "page") params.delete("page");
+      if (!("page" in patch)) params.delete("page");
       router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname);
     },
     [searchParams, router, pathname],
   );
 
+  const updateFilter = useCallback((key: string, value: string) => updateFilters({ [key]: value }), [updateFilters]);
+
   const setPage = useCallback((newPage: number) => updateFilter("page", String(newPage)), [updateFilter]);
 
-  return { searchParams, filterQuery, page, updateFilter, setPage };
+  return { searchParams, filterQuery, page, updateFilter, updateFilters, setPage };
 }
 
 /**
@@ -63,19 +72,34 @@ export function useUrlQuery() {
  * plain page number (see `components/ui/Paginator.tsx`).
  */
 export function usePaginatedList<T>(path: string | null, page: number) {
-  const [data, setData] = useState<PaginatedResponse<T> | null>(null);
+  // The response is kept alongside the URL it answered, which is what makes `loading` derivable
+  // rather than another piece of state: a request is in flight exactly when the newest response
+  // on hand answered a different URL than the one being asked for now. Without that distinction a
+  // list page cannot tell "still loading" from "nothing matched", and briefly renders its empty
+  // state over results that are on their way — which is what a filtered URL did on first paint.
+  const [result, setResult] = useState<{ url: string; data: PaginatedResponse<T> } | null>(null);
+  // Only the newest request may write. Typing in a search box fires one per keystroke and they
+  // don't come back in order, so a slower early response could otherwise land last and replace
+  // the results for what was actually typed.
+  const latestRequest = useRef(0);
+
+  const url = path === null ? null : `${path}${path.includes("?") ? "&" : "?"}page=${page}`;
 
   const reload = useCallback(() => {
-    if (path === null) return;
-    const separator = path.includes("?") ? "&" : "?";
-    api.get<PaginatedResponse<T>>(`${path}${separator}page=${page}`).then(setData);
-  }, [path, page]);
+    if (url === null) return;
+    const requestId = ++latestRequest.current;
+    api.get<PaginatedResponse<T>>(url).then((res) => {
+      if (requestId === latestRequest.current) setResult({ url, data: res });
+    });
+  }, [url]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
-  return { data, reload };
+  // The previous response stays available while the next one loads, so a page can dim what is
+  // already on screen instead of blanking it.
+  return { data: result?.data ?? null, loading: url !== null && result?.url !== url, reload };
 }
 
 /**

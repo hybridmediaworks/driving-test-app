@@ -108,7 +108,9 @@ class ImportVideosFromCrawl
 
     private function attachThumbnail(Video $video, ?string $youtubeId, string $title, ImportSummary $summary): void
     {
-        if ($youtubeId === null || self::hasUsableThumbnail($video)) {
+        // Some crawl rows carry an empty youtube_id rather than none at all, which built the URL
+        // `/vi//hqdefault.jpg` and spent a request to be told it doesn't resolve.
+        if (blank($youtubeId) || self::hasUsableThumbnail($video)) {
             return;
         }
 

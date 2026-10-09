@@ -15,6 +15,7 @@ use App\Http\Resources\Api\V1\Public\HazardResource;
 use App\Http\Resources\Api\V1\Public\HazardSimulatorResource;
 use App\Models\HazardSimulator;
 use App\Models\HazardSimulatorAttempt;
+use App\Support\LikeSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -82,6 +83,12 @@ class HazardSimulatorController extends Controller
 
         if ($request->filled('test_level')) {
             $query->where('hazard_simulators.test_level', $request->string('test_level')->toString());
+        }
+
+        // A simulator has no title of its own — it takes the joined video's, which is what the
+        // cards display and therefore what a search has to match.
+        if ($request->filled('search')) {
+            LikeSearch::apply($query, $request->string('search')->toString(), ['videos.title']);
         }
 
         return HazardSimulatorResource::collection($query->paginate($perPage)->withQueryString());
