@@ -168,9 +168,9 @@ export default function QuestionCard({
             const popularity = checkResult?.answer_popularity?.find((p) => p.answer_id === option.id)?.percentage;
 
             const boxClass = isCorrectOption
-              ? "border-green-300 bg-green-50"
+              ? "border-green-300 bg-green-50 dark:border-green-500/40 dark:bg-green-500/10"
               : isChosenWrong
-                ? "border-red-300 bg-red-50"
+                ? "border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10"
                 : isSelected && !isChecked
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10"
                   : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-700";

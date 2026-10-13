@@ -72,9 +72,15 @@ function orderQuestionsById(
     .filter((q): q is PublicQuizQuestion => q !== undefined);
 }
 
-function loadStoredFlags(quizId: number): Set<number> {
+// Per-quiz sets of question ids kept in this browser. `quiz-flags-` is the Quiz Vault bookmark set
+// (the key predates the rename, kept so existing marks survive); `quiz-reported-` is the questions
+// the learner has reported as mistakes. The two are independent.
+const VAULT_STORAGE_PREFIX = "quiz-flags-";
+const REPORTED_STORAGE_PREFIX = "quiz-reported-";
+
+function loadStoredIds(prefix: string, quizId: number): Set<number> {
   try {
-    const raw = localStorage.getItem(`quiz-flags-${quizId}`);
+    const raw = localStorage.getItem(`${prefix}${quizId}`);
     return raw ? new Set(JSON.parse(raw) as number[]) : new Set();
   } catch {
     return new Set();
@@ -249,8 +255,13 @@ function QuizTaker({
   const [checkedByQuestionId, setCheckedByQuestionId] = useState<
     Record<number, QuizAnswerCheckResponse>
   >({});
-  const [flaggedIds, setFlaggedIds] = useState<Set<number>>(() =>
-    loadStoredFlags(quiz.id),
+  // Questions bookmarked in the Quiz Vault (bookmark icon, or filed automatically by a wrong answer).
+  const [vaultIds, setVaultIds] = useState<Set<number>>(() =>
+    loadStoredIds(VAULT_STORAGE_PREFIX, quiz.id),
+  );
+  // Questions the learner has reported as mistakes ("Flag for Mistake"). Separate from the vault.
+  const [reportedIds, setReportedIds] = useState<Set<number>>(() =>
+    loadStoredIds(REPORTED_STORAGE_PREFIX, quiz.id),
   );
   const [progressFilter, setProgressFilter] = useState<
     "all" | "correct" | "incorrect" | "flagged"
@@ -459,7 +470,7 @@ function QuizTaker({
     (q) => checkedByQuestionId[q.id]?.is_correct === false,
   ).length;
   const flaggedCount = loadedQuestions.filter((q) =>
-    flaggedIds.has(q.id),
+    reportedIds.has(q.id),
   ).length;
 
   // ----- Voice-over (Web Speech API) -----
@@ -566,7 +577,7 @@ function QuizTaker({
       // follow what the server did rather than only what was tapped here — otherwise the question
       // is in the vault and the icon still reads as unsaved, which is no sign at all that it was
       // saved. The server is told first, so `in_vault` covers a hand-made bookmark too.
-      setFlaggedIds((prev) => {
+      setVaultIds((prev) => {
         if (prev.has(questionId) === res.in_vault) return prev;
         const next = new Set(prev);
         if (res.in_vault) next.add(questionId);
@@ -592,7 +603,7 @@ function QuizTaker({
     }
   }
 
-  function toggleFlag() {
+  function toggleVault() {
     if (!currentQuestion) return;
     // The `/me` session check can still be in flight on a hard refresh — wait it out rather than
     // flashing the sign-in prompt at someone who's actually already logged in.
@@ -605,11 +616,11 @@ function QuizTaker({
     }
 
     const questionId = currentQuestion.id;
-    const bookmarking = !flaggedIds.has(questionId);
+    const bookmarking = !vaultIds.has(questionId);
 
     // Mark it locally first so the icon answers the click, then tell the server. A failure rolls the
     // mark back rather than leaving the icon claiming a save that never happened.
-    setFlaggedIds((prev) => {
+    setVaultIds((prev) => {
       const next = new Set(prev);
       if (bookmarking) next.add(questionId);
       else next.delete(questionId);
@@ -625,7 +636,7 @@ function QuizTaker({
       : api.delete(`/challenge-bank/${questionId}`);
 
     request.catch(() => {
-      setFlaggedIds((prev) => {
+      setVaultIds((prev) => {
         const next = new Set(prev);
         if (bookmarking) next.delete(questionId);
         else next.add(questionId);
@@ -923,7 +934,7 @@ function QuizTaker({
         }
         // Resuming has to show the vault as it really is, not just the marks this browser
         // remembers — a question banked by a wrong answer was invisible here before.
-        setFlaggedIds((prev) => new Set([...prev, ...banked]));
+        setVaultIds((prev) => new Set([...prev, ...banked]));
         // Navigation only ever advances one question at a time (see nextQuestion/goToQuestion
         // below), so "how many questions were answered" and "how far the learner got" are always
         // the same index — land back on the first unanswered one, or the last question if every
@@ -1001,17 +1012,21 @@ function QuizTaker({
     setCurrentIndex(index);
   }
 
-  // Persist flag marks per-quiz so they survive reloads within this browser.
+  // Persist vault bookmarks and reported-mistake marks per-quiz so they survive reloads in this browser.
   useEffect(() => {
     try {
       localStorage.setItem(
-        `quiz-flags-${quiz.id}`,
-        JSON.stringify([...flaggedIds]),
+        `${VAULT_STORAGE_PREFIX}${quiz.id}`,
+        JSON.stringify([...vaultIds]),
+      );
+      localStorage.setItem(
+        `${REPORTED_STORAGE_PREFIX}${quiz.id}`,
+        JSON.stringify([...reportedIds]),
       );
     } catch {
       // ignore quota / private-mode errors
     }
-  }, [flaggedIds, quiz.id]);
+  }, [vaultIds, reportedIds, quiz.id]);
 
   // Auto-dismiss the success toast.
   useEffect(() => {
@@ -1138,9 +1153,9 @@ function QuizTaker({
               </div>
               <div className="flex sm:gap-3 gap-2 items-center justify-center">
                 <Bookmark
-                  onClick={toggleFlag}
+                  onClick={toggleVault}
                   className={`h-6 w-6 cursor-pointer ${
-                    currentQuestion && flaggedIds.has(currentQuestion.id)
+                    currentQuestion && vaultIds.has(currentQuestion.id)
                       ? "fill-amber-400 text-amber-500"
                       : "text-neutral-500 dark:text-neutral-400"
                   }`}
@@ -1409,7 +1424,7 @@ function QuizTaker({
                     if (progressFilter === "incorrect")
                       return check?.is_correct === false;
                     if (progressFilter === "flagged")
-                      return flaggedIds.has(question.id);
+                      return reportedIds.has(question.id);
                     return true;
                   })
                   .map(({ question, index }) => {
@@ -1419,9 +1434,9 @@ function QuizTaker({
                     const cellClass = isCurrent
                       ? "border-transparent bg-linear-to-r from-blue-500 to-blue-700 text-white"
                       : check?.is_correct === true
-                        ? "border-green-200 bg-green-50 text-green-500"
+                        ? "border-green-200 bg-green-50 dark:border-green-500/30 dark:bg-green-500/10 text-green-500"
                         : check?.is_correct === false
-                          ? "border-red-200 bg-red-50 text-red-500"
+                          ? "border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 text-red-500"
                           : answers[question.id] !== undefined
                             ? "border-blue-200 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
                             : "border-border bg-background text-neutral-500 dark:text-neutral-400";
@@ -1434,8 +1449,11 @@ function QuizTaker({
                           isLocked ? "cursor-not-allowed opacity-60" : ""
                         }`}
                       >
-                        {flaggedIds.has(question.id) && (
+                        {vaultIds.has(question.id) && (
                           <span className="absolute right-0 top-0 h-0 w-0 border-l-[10px] border-t-[10px] border-l-transparent border-t-amber-400" />
+                        )}
+                        {reportedIds.has(question.id) && (
+                          <span className="absolute left-0 top-0 h-0 w-0 border-r-[10px] border-t-[10px] border-r-transparent border-t-red-400" />
                         )}
                         {index + 1}
                       </button>
@@ -1520,6 +1538,9 @@ function QuizTaker({
           onOpenChange={setShowReportDialog}
           quizId={quiz.id}
           question={currentQuestion}
+          onReported={(questionId) =>
+            setReportedIds((prev) => new Set(prev).add(questionId))
+          }
           onToast={(message, variant) => setToast({ message, variant })}
           t={t}
         />

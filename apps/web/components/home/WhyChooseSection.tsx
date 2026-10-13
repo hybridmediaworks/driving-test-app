@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import StateSelectModal from "@/components/home/StateSelectModal";
@@ -16,57 +16,45 @@ type Art = { src: string; width: number; height: number };
 type Card = {
   vehicle: string;
   title: string;
-  icon: Art;
-  background: string;
-  /** Flat tint sampled from the artwork, so the card stays coloured where the art is letterboxed. */
-  tint: string;
+  /** Artwork that already contains the card surface, icon and check marks; text is laid over it. */
+  art: Art;
   segment: string;
   points: string[];
-  check: string;
 };
 
 const CARDS: Card[] = [
   {
     vehicle: "Car",
     title: "Car",
-    icon: { src: "/license-types/car-icon.png", width: 146, height: 146 },
-    background: "/license-types/card-car.png",
-    tint: "#F6F8FD",
+    art: { src: "/license-types/car-card-remastered.png", width: 1000, height: 704 },
     segment: "",
     points: [
       "Real DMV style practice questions.",
       "Clear explanations for every answer.",
       "Ideal for first time drivers.",
     ],
-    check: "bg-blue-500",
   },
   {
     vehicle: "CDL",
     title: "CDL",
-    icon: { src: "/license-types/truck-icon.png", width: 142, height: 142 },
-    background: "/license-types/card-cdl.png",
-    tint: "#FDFAF6",
+    art: { src: "/license-types/card-cdl-remastered.png", width: 1000, height: 704 },
     segment: "cdl",
     points: [
       "Practice tests for CDL exams.",
       "Covers core topics and endorsements.",
       "Track your readiness before test day.",
     ],
-    check: "bg-amber-400",
   },
   {
     vehicle: "Motorcycle",
     title: "Motorcycle",
-    icon: { src: "/license-types/moto-icon.png", width: 151, height: 151 },
-    background: "/license-types/card-motorcycle.png",
-    tint: "#F5FCF7",
+    art: { src: "/license-types/card-motorcycle-remastered.png", width: 1000, height: 704 },
     segment: "motorcycle",
     points: [
       "Motorcycle specific DMV questions.",
       "Road rules and safety essentials.",
       "Built for quick, focused practice.",
     ],
-    check: "bg-green-500",
   },
 ];
 
@@ -87,6 +75,59 @@ function SteeringWheelIcon({ className }: { className?: string }) {
       <circle cx="12" cy="12" r="2.5" />
       <path d="M12 14.5V21M9.9 10.4 4.2 7.1M14.1 10.4l5.7-3.3" />
     </svg>
+  );
+}
+
+// The artwork is 1000x704 with the card drawn at 60,20 -> 940,602. The image is oversized and
+// offset so that drawn card fills this box exactly, and every overlay is placed as a percentage
+// of the box (type in cqw), so the text stays registered to the baked-in icon and check marks.
+function LicenseCard({
+  card,
+  href,
+  onCtaClick,
+}: {
+  card: Card;
+  href?: string;
+  onCtaClick: () => void;
+}) {
+  return (
+    <article className="relative mx-auto aspect-[880/582] w-full max-w-[640px] [container-type:inline-size] lg:max-w-none lg:self-center">
+      <Image
+        src={card.art.src}
+        width={card.art.width}
+        height={card.art.height}
+        sizes={CARD_SIZES}
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute top-[-3.44%] left-[-6.82%] h-auto w-[113.64%] max-w-none select-none"
+      />
+
+      <h3 className="absolute top-[18.6%] left-[21.3%] -translate-y-1/2 font-sora text-[8.4cqw] leading-none font-bold tracking-tight text-neutral-900">
+        {card.title}
+      </h3>
+
+      <ul>
+        {card.points.map((point, i) => (
+          <li
+            key={point}
+            style={{ top: `${37.8 + i * 11}%` }}
+            className="absolute left-[11.9%] -translate-y-1/2 text-[max(11px,2.95cqw)] leading-none whitespace-nowrap text-neutral-700"
+          >
+            {point}
+          </li>
+        ))}
+      </ul>
+
+      <Button
+        href={href}
+        onClick={onCtaClick}
+        text="Start Practicing"
+        icon={ArrowRight}
+        iconPosition="right"
+        size="sm"
+        className="absolute top-[70.1%] left-[4.55%] h-[17.7%] w-[39.4%] gap-[2cqw]! p-0! text-[max(11px,3.1cqw)]! shadow-[0_1cqw_2.4cqw_-0.8cqw_rgba(37,99,235,0.55)] [&_svg]:size-[3.4cqw]"
+      />
+    </article>
   );
 }
 
@@ -119,9 +160,6 @@ export default function WhyChooseSection() {
         className="pointer-events-none absolute inset-0 object-cover object-top select-none"
       />
 
-      {/* Wider than the page's usual max-w-container (1360px): at that width each card is ~426px
-          and the bullets can't fit on one line without running across the vehicle in the card
-          art. 1600px puts the cards near the ~566px the design was drawn at. */}
       <div className="relative mx-auto max-w-container px-5">
         <div className="flex flex-col items-center gap-4 text-center">
           <span className="inline-flex items-center gap-2 rounded-full bg-blue-100/70 px-4 py-2 text-xs font-bold tracking-[1.2px] text-blue-700 uppercase dark:bg-blue-500/15 dark:text-blue-300">
@@ -131,11 +169,11 @@ export default function WhyChooseSection() {
             Choose your license type
           </span>
 
-          <Heading as="h2" weight="bold" id="choose-license-type">
+          <Heading as="h2" id="choose-license-type" className="tracking-[-0.02em]">
             Get ready for the{" "}
-            <span className="relative inline-block whitespace-nowrap text-blue-600">
+            <span className="relative inline-block whitespace-nowrap">
               road ahead
-              <HandUnderline color="#2563EB" />
+              <HandUnderline color="#22C55E" />
             </span>
           </Heading>
 
@@ -145,72 +183,14 @@ export default function WhyChooseSection() {
           </Paragraph>
         </div>
 
-        {/* One column until lg: three columns below that leaves each card too narrow for the
-            bullets, and a full-width card still has room for the vehicle art on the right. */}
         <div className="mt-10 grid grid-cols-1 gap-5 lg:mt-14 lg:grid-cols-3">
           {CARDS.map((card) => (
-            <article
+            <LicenseCard
               key={card.vehicle}
-              style={{ backgroundColor: card.tint }}
-              className="relative flex min-h-[20rem] flex-col overflow-hidden rounded-3xl p-6 shadow-card sm:min-h-[22rem] lg:min-h-[292px]"
-            >
-              {}
-              <Image
-                src={card.background}
-                fill
-                sizes={CARD_SIZES}
-                alt=""
-                aria-hidden
-                className="pointer-events-none object-contain object-bottom select-none lg:object-cover lg:object-right-bottom"
-              />
-
-              {}
-              <div className="relative flex flex-1 flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  <Image
-                    src={card.icon.src}
-                    width={card.icon.width}
-                    height={card.icon.height}
-                    sizes="56px"
-                    alt=""
-                    aria-hidden
-                    className="size-15 shrink-0 rounded-xl object-contain"
-                  />
-                  {}
-                  <h3 className="font-sora text-[32px] leading-none font-bold tracking-tight text-neutral-900 sm:text-[40px]">
-                    {card.title}
-                  </h3>
-                </div>
-
-                {}
-                <ul className="flex flex-col gap-3 lg:max-w-[74%]">
-                  {card.points.map((point) => (
-                    <li key={point} className="flex items-start gap-2.5">
-                      <span
-                        className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${card.check}`}
-                      >
-                        <Check className="size-3.5 stroke-3 text-white" />
-                      </span>
-                      <span className="text-[13px] leading-5 text-neutral-700 lg:whitespace-nowrap">
-                        {point}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-auto pb-10 sm:pb-6 lg:pb-0">
-                  <Button
-                    href={hrefFor(card)}
-                    onClick={() => onCtaClick(card)}
-                    text="Start Practicing"
-                    icon={ArrowRight}
-                    iconPosition="right"
-                    size="sm"
-                    className="h-13 px-6"
-                  />
-                </div>
-              </div>
-            </article>
+              card={card}
+              href={hrefFor(card)}
+              onCtaClick={() => onCtaClick(card)}
+            />
           ))}
         </div>
       </div>

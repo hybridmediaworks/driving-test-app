@@ -38,6 +38,7 @@ export default function ReportMistakeDialog({
   onOpenChange,
   quizId,
   question,
+  onReported,
   onToast,
   t,
 }: {
@@ -45,6 +46,8 @@ export default function ReportMistakeDialog({
   onOpenChange: (open: boolean) => void;
   quizId: number;
   question: PublicQuizQuestion;
+  /** Called once the report has been accepted, so the quiz can mark the question as flagged. */
+  onReported: (questionId: number) => void;
   onToast: (message: string, variant: "success" | "error") => void;
   t: TFunction;
 }) {
@@ -87,6 +90,7 @@ export default function ReportMistakeDialog({
         reporter_name: name.trim() || null,
         reporter_email: email.trim() || null,
       });
+      onReported(question.id);
       onOpenChange(false);
       onToast(t("reportSubmitted"), "success");
     } catch (err) {
