@@ -23,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('11:00')
             ->withoutOverlapping()
             ->onOneServer();
+
+        // Refresh the disposable-email domain blocklist behind the `indisposable` rule.
+        $schedule->command('disposable:update')
+            ->weekly()
+            ->onOneServer();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
