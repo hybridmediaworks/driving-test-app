@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Refresh the disposable-email domain blocklist behind the `indisposable` rule.
         $schedule->command('disposable:update')
-            ->weekly()
+            ->dailyAt('02:00')
             ->onOneServer();
     })
     ->withMiddleware(function (Middleware $middleware): void {
