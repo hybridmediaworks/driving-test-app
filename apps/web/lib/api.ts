@@ -19,6 +19,19 @@ export function setToken(token: string | null): void {
   }
 }
 
+// `crypto.randomUUID` only exists in secure contexts (HTTPS / localhost), so on a plain-HTTP host
+// (e.g. an IP-addressed staging server) it is undefined and would silently disable guest resume.
+// `crypto.getRandomValues` is available on insecure origins too, so fall back to a v4 UUID built
+// from it.
+function generateUuid(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 // Persistent anonymous identity, generated once per browser and reused for every request — lets a
 // guest's in-progress quiz attempt be found again after closing the tab, without requiring signup.
 function getGuestToken(): string | null {
@@ -26,7 +39,7 @@ function getGuestToken(): string | null {
   try {
     const existing = localStorage.getItem("guest_token");
     if (existing) return existing;
-    const generated = crypto.randomUUID();
+    const generated = generateUuid();
     localStorage.setItem("guest_token", generated);
     return generated;
   } catch {

@@ -8,6 +8,7 @@ import { useWebLayout } from "@/lib/web-layout-context";
 import { stateToSlug } from "@/lib/usStates";
 import { questionsToPass } from "@/lib/quizPassMark";
 import { TRUSTPILOT_MAX, TRUSTPILOT_REVIEW_COUNT, TRUSTPILOT_SCORE } from "@/lib/socialProof";
+import { vehicleHeroImage } from "@/lib/vehicleImages";
 import { useResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useStateStats } from "@/lib/useStateStats";
 import { ArrowRight, BadgeCheck, Clock, RotateCcw, SignalHigh } from "lucide-react";
@@ -78,7 +79,7 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
                 "Test not found"
               ) : (
                 <>
-                  Free{" "}
+                  Start your Free{" "}
                   <span className="relative inline-block whitespace-nowrap">
                     {selectedState}
                     <HandUnderline />
@@ -172,7 +173,7 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
             <div className="relative z-10 -mx-5.5 -mt-14 w-[calc(100%+44px)] sm:-mx-11 sm:-mt-20.75 sm:w-[calc(100%+88px)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={quiz?.cover_image_url ?? "/signature-license.png"}
+                src={quiz?.cover_image_url ?? vehicleHeroImage(selectedVehicle).src}
                 alt=""
                 className="relative w-full rounded-xl md:rounded-2xl shadow-[inset_0_1.565px_0_0_rgba(255,255,255,0.22),inset_0_0_0_1.565px_rgba(255,255,255,0.09),0_37.571px_78.273px_-34.44px_rgba(8,9,12,0.55),0_12.524px_31.309px_-18.786px_rgba(8,9,12,0.45)]"
               />

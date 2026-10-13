@@ -1,5 +1,6 @@
 "use client";
 
+import { vehicleHeroImage } from "@/lib/vehicleImages";
 import Button from "@/components/ui/Button";
 import HandUnderline from "@/components/ui/HandUnderline";
 import Heading from "@/components/ui/Heading";
@@ -27,6 +28,7 @@ export default function HeroSection() {
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
   const isCdl = selectedVehicle === "CDL";
   const isMotorcycle = selectedVehicle === "Motorcycle";
+  const heroImage = vehicleHeroImage(selectedVehicle);
   const nextQuizSlug = useNextQuizSlug("permit_test");
   // Jump straight to the test the learner should take now (first one if nothing's been taken yet,
   // otherwise wherever their progression left off) instead of a generic free+premium browse list.
@@ -57,11 +59,21 @@ export default function HeroSection() {
           <div className="space-y-8 xl:max-w-155">
             {isCdl ? (
               <Heading as="h1" className="mb-4.5">
-                {selectedState} CDL Practice Tests - All Endorsements
+                Start your Free{" "}
+                <span className="relative inline-block whitespace-nowrap">
+                  {selectedState}
+                  <HandUnderline />
+                </span>{" "}
+                CDL Practice Tests - All Endorsements
               </Heading>
             ) : isMotorcycle ? (
               <Heading as="h1" className="mb-4.5">
-                {selectedState} Motorcycle Practice Tests 2026
+                Start your Free{" "}
+                <span className="relative inline-block whitespace-nowrap">
+                  {selectedState}
+                  <HandUnderline />
+                </span>{" "}
+                Motorcycle Practice Tests 2026
               </Heading>
             ) : (
               <Heading as="h1" className="mb-4.5">
@@ -90,8 +102,8 @@ export default function HeroSection() {
           </div>
           <div className="max-w-151.5 relative rounded-[48px]">
             <img
-              src="/statehub-banner.png"
-              alt=""
+              src={heroImage.src}
+              alt={heroImage.alt}
               className="r w-full relative rounded-xl md:rounded-[24px] shadow-[0_12px_40.793px_-21.212px_rgba(23,37,84,0.12),0_3.263px_4.895px_-1.632px_rgba(0,0,0,0.03),0_9.79px_13.054px_-3.263px_rgba(0,0,0,0.08)]"
             />
             <div className="p-4 md:p-6 bg-white dark:bg-neutral-800 rounded-[24px] absolute -bottom-5 md:-bottom-7 left-2 md:-left-6 shadow-hover">
