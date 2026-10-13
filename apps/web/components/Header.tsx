@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import PublicAccountMenu from "@/components/PublicAccountMenu";
 import Button from "@/components/ui/Button";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, useEntitlement } from "@/lib/auth-context";
 import { stateToSlug, usStates } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
@@ -74,6 +74,7 @@ export default function Header({
 }) {
   const router = useRouter();
   const { user } = useAuth();
+  const { isPremium } = useEntitlement();
   const {
     selectedState,
     hasStoredState,
@@ -300,24 +301,25 @@ export default function Header({
           {user ? (
             <PublicAccountMenu user={user} />
           ) : (
-            <>
-              <Button
-                className="p-3! font-medium"
-                variant="ghost"
-                href="/login"
-              >
-                Login
-              </Button>
-              <Button
-                size="md"
-                variant="gold"
-                className="gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600!"
-                href="/pricing"
-              >
-                <Gem className="h-5 w-5" />
-                Upgrade to Premium
-              </Button>
-            </>
+            <Button
+              className="p-3! font-medium"
+              variant="ghost"
+              href="/login"
+            >
+              Login
+            </Button>
+          )}
+          {/* Signed-in free users need the upgrade path too, not just guests. */}
+          {!isPremium && (
+            <Button
+              size="md"
+              variant="gold"
+              className="gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600!"
+              href="/pricing"
+            >
+              <Gem className="h-5 w-5" />
+              Upgrade to Premium
+            </Button>
           )}
         </div>
 
@@ -484,24 +486,24 @@ export default function Header({
             {user ? (
               <PublicAccountMenu user={user} />
             ) : (
-              <>
-                <Button
-                  className="flex-1 justify-center py-3! font-medium"
-                  variant="ghost"
-                  href="/login"
-                >
-                  Login
-                </Button>
-                <Button
-                  size="md"
-                  variant="gold"
-                  className="flex-1 justify-center gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600!"
-                  href="/pricing"
-                >
-                  <Gem className="h-5 w-5" />
-                  Upgrade to Premium
-                </Button>
-              </>
+              <Button
+                className="flex-1 justify-center py-3! font-medium"
+                variant="ghost"
+                href="/login"
+              >
+                Login
+              </Button>
+            )}
+            {!isPremium && (
+              <Button
+                size="md"
+                variant="gold"
+                className="flex-1 justify-center gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600!"
+                href="/pricing"
+              >
+                <Gem className="h-5 w-5" />
+                Upgrade to Premium
+              </Button>
             )}
           </div>
         </div>
