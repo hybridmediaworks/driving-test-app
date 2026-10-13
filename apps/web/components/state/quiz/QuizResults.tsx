@@ -186,7 +186,7 @@ export default function QuizResults({
                 </div>
 
                 {/* Quick cram guide card (exact reference layout — compact so text fits one line). */}
-                <div className="mt-5 rounded-2xl border border-blue-100 bg-linear-to-br from-blue-50/70 to-white p-5 shadow-[0_14px_40px_-14px_rgba(37,99,235,0.28)]">
+                <div className="mt-5 rounded-2xl border border-blue-100 bg-linear-to-br from-blue-50/70 to-white p-5 dark:border-white/10 dark:from-blue-500/10 dark:to-neutral-800 shadow-[0_14px_40px_-14px_rgba(37,99,235,0.28)]">
                   <div className="flex items-start gap-4">
                     <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-[18px] bg-linear-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/40">
                       <span className="text-[8px] font-bold uppercase leading-none tracking-wide opacity-90">Top</span>
@@ -236,13 +236,13 @@ export default function QuizResults({
             ) : hasWeakAreas ? (
               <div className="flex flex-wrap gap-2">
                 {insight!.weak_areas.map((area) => (
-                  <span key={area} className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
+                  <span key={area} className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600 dark:bg-red-500/15 dark:text-red-400">
                     {area}
                   </span>
                 ))}
               </div>
             ) : (
-              <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
+              <span className="inline-block rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600 dark:bg-green-500/15 dark:text-green-400">
                 {t("noWeakAreas")}
               </span>
             )}

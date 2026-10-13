@@ -21,7 +21,7 @@ export default function ReadinessUpsell({
   const pct = Math.max(3, Math.min(100, Math.round((seenCount / TOTAL_NUM) * 100)));
 
   return (
-    <div className="mt-3 rounded-2xl border border-amber-200 bg-linear-to-b from-amber-50 to-white p-5 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
+    <div className="mt-3 rounded-2xl border border-amber-200 bg-linear-to-b from-amber-50 to-white p-5 dark:border-amber-400/30 dark:from-amber-500/10 dark:to-neutral-800 shadow-[0_16px_50px_-26px_rgba(23,37,84,0.20)]">
       <div className="flex items-center gap-2">
         <span className="text-2xl leading-none">🎯</span>
         <Paragraph size="lg" color="dark" className="font-bold">

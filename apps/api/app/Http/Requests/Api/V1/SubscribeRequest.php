@@ -18,7 +18,7 @@ class SubscribeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'indisposable'],
             'state' => ['nullable', 'string', 'max:255'],
             'source' => ['nullable', 'string', 'max:100'],
             'vehicle_type' => ['nullable', 'string', Rule::in(['car', 'motorcycle', 'cdl'])],
