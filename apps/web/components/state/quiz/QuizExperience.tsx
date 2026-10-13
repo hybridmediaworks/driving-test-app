@@ -1434,9 +1434,9 @@ function QuizTaker({
                     const cellClass = isCurrent
                       ? "border-transparent bg-linear-to-r from-blue-500 to-blue-700 text-white"
                       : check?.is_correct === true
-                        ? "border-green-200 bg-green-50 text-green-500"
+                        ? "border-green-200 bg-green-50 dark:border-green-500/30 dark:bg-green-500/10 text-green-500"
                         : check?.is_correct === false
-                          ? "border-red-200 bg-red-50 text-red-500"
+                          ? "border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 text-red-500"
                           : answers[question.id] !== undefined
                             ? "border-blue-200 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
                             : "border-border bg-background text-neutral-500 dark:text-neutral-400";

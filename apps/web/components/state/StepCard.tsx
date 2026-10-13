@@ -65,7 +65,7 @@ export default function StepCard({
           step.style === "large" ? "lg:col-span-2" : ""
         }`}
       >
-        <div className="flex min-w-10 min-h-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:text-blue-300">
+        <div className="flex min-w-10 min-h-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
           <BookMarked className="w-4.5 h-4.5" />
         </div>
         <Paragraph color="muted" size="sm">
