@@ -94,7 +94,7 @@ export default function ExtraSupportSection() {
     {
       title: "10 Things You Should Do Before Your DMV Exam",
       image: "/state-hub/support-checklist.png",
-      href: `/cheat-sheets?${query}`,
+      href: "/before-your-exam",
     },
   ];
 
