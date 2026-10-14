@@ -83,7 +83,8 @@ export default function HeroSection() {
                   : "Everything you need to pass the written test, from traffic signs to tricky road rules — all in one place."}
             </Paragraph>
             <Button className="w-full md:w-fit" href={quizHref}>
-              Start Free Practice Test <ArrowRight />
+              Start Free {selectedState} {isCdl ? "CDL" : isMotorcycle ? "Motorcycle" : "Permit"} Practice Test{" "}
+              <ArrowRight />
             </Button>
             <Paragraph className="flex gap-3 items-center flex-wrap font-semibold">
               <img src="/trustpilotstar.svg" alt="" /> Trustpilot 4.7/5 from

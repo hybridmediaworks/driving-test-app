@@ -127,7 +127,10 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
             </div>
           ) : (
             <Button className="w-full to-blue-800! md:w-fit" href={quizHref} disabled={!quiz}>
-              {quiz?.locked ? `Unlock ${quiz.title}` : "Start Your First Free Practice Test"} <ArrowRight />
+              {quiz?.locked
+                ? `Unlock ${quiz.title}`
+                : `Start Free ${selectedState} ${isDrivingTest ? "Driving" : "Permit"} Practice Test`}{" "}
+              <ArrowRight />
             </Button>
           )}
 
