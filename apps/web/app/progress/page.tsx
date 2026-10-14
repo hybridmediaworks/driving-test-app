@@ -8,7 +8,7 @@ import { useEntitlement } from "@/lib/auth-context";
 import { useLearnerProgress } from "@/lib/useLearnerProgress";
 import { useLadderPhases } from "@/lib/usePhaseCompletion";
 import { splitLadderPhases } from "@/lib/stateHubSections";
-import { useWebLayout } from "@/lib/web-layout-context";
+import { useWebLayout, WebLayoutProvider } from "@/lib/web-layout-context";
 
 function weekdayLetters(date: string): string {
   const [year, month, day] = date.split("-").map(Number);
@@ -26,6 +26,14 @@ function weekdayLetters(date: string): string {
  * refined once there's something concrete to compare it against.
  */
 export default function ProgressPage() {
+  return (
+    <WebLayoutProvider>
+      <ProgressPageInner />
+    </WebLayoutProvider>
+  );
+}
+
+function ProgressPageInner() {
   const { isPremium, loading: entitlementLoading } = useEntitlement();
   const { selectedState, selectedVehicle } = useWebLayout();
   const { progress, loading: progressLoading } = useLearnerProgress();
