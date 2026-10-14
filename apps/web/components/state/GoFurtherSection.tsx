@@ -79,8 +79,10 @@ export default function GoFurtherSection() {
     .find((p) => p.header.headerTitle === "The exam simulator")
     ?.steps.find((s) => !s.placeholder && s.slug)?.slug;
   const canStartSimulator = isPremium && Boolean(simulatorSlug) && Boolean(selectedState);
+  // The quiz's own detail page (no /quiz suffix) is a preview with its own Start button -- "starts
+  // the quiz" means the player itself.
   const examSimulatorHref = canStartSimulator
-    ? `/${stateToSlug(selectedState)}/${simulatorSlug}`
+    ? `/${stateToSlug(selectedState)}/${simulatorSlug}/quiz`
     : "/exam-simulator";
 
   const cards: ResourceCard[] = [
