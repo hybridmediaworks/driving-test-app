@@ -1055,6 +1055,11 @@ function QuizTaker({
         showUpsell={!isPremium}
         stateName={stateName}
         stateCode={stateCode}
+        quizzesHref={
+          quiz.state && quiz.vehicle_type
+            ? `/quizzes?state=${quiz.state.code}&vehicle_type=${quiz.vehicle_type.name}&test_track=${quiz.test_track}`
+            : undefined
+        }
         onRetry={restart}
         onContinue={onContinue}
         onSelectQuestion={viewQuestion}

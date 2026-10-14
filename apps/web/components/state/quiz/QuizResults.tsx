@@ -38,6 +38,7 @@ export default function QuizResults({
   showUpsell = false,
   stateName = "",
   stateCode = "",
+  quizzesHref,
   onRetry,
   onContinue,
   onSelectQuestion,
@@ -50,6 +51,10 @@ export default function QuizResults({
   showUpsell?: boolean;
   stateName?: string;
   stateCode?: string;
+  // Premium learners aren't shown the /pricing upsell below — this is the "All tests" link they
+  // get in its place instead (reference: driving-tests.org's results page reuses its own
+  // all-tests hub link here rather than a dedicated button).
+  quizzesHref?: string;
   onRetry: () => void;
   onContinue: () => void | Promise<void>;
   onSelectQuestion: (index: number) => void;
@@ -218,10 +223,16 @@ export default function QuizResults({
               {t("newQuestionsMeta", { count: total, min: estMinutes })}
             </p>
 
-            {showUpsell && (
+            {showUpsell ? (
               <Button href="/pricing" variant="ghost" className="mt-3 w-full rounded-2xl! border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
                 {t("getAllQuestionsCta", { total: `${TOTAL_BANK}+`, state: stateCode })}
               </Button>
+            ) : (
+              quizzesHref && (
+                <Button href={quizzesHref} variant="ghost" className="mt-3 w-full rounded-2xl! border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
+                  All tests
+                </Button>
+              )
             )}
           </div>
         </div>
