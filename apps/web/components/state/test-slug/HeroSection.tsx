@@ -46,6 +46,9 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
   const stats = useStateStats();
 
   const isDrivingTest = quiz?.test_track === "driving_test";
+  // "DMV Motorcycle Permit Practice Test" / "DMV CDL Permit Practice Test"; plain cars keep the
+  // generic "DMV Permit Practice Test" wording.
+  const vehicleLabel = selectedVehicle === "Motorcycle" || selectedVehicle === "CDL" ? `${selectedVehicle} ` : "";
   const quizHref = `/${stateSlug}/${testSlug}/quiz`;
   const duration = formatMinutes(quiz?.duration_seconds);
   const toPass = quiz ? questionsToPass(quiz) : null;
@@ -76,12 +79,13 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
                 "Test not found"
               ) : (
                 <>
-                  Free{" "}
+                  Start your Free{" "}
                   <span className="relative inline-block whitespace-nowrap">
                     {selectedState}
                     <HandUnderline />
                   </span>{" "}
-                  DMV {isDrivingTest ? "Driving" : "Permit"} Practice Test 2026
+                  DMV {vehicleLabel}
+                  {isDrivingTest ? "Driving" : "Permit"} Practice Test 2026
                 </>
               )}
             </Heading>

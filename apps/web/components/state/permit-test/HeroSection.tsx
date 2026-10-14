@@ -59,11 +59,21 @@ export default function HeroSection() {
           <div className="space-y-8 xl:max-w-155">
             {isCdl ? (
               <Heading as="h1" className="mb-4.5">
-                {selectedState} CDL Practice Tests - All Endorsements
+                Start your Free{" "}
+                <span className="relative inline-block whitespace-nowrap">
+                  {selectedState}
+                  <HandUnderline />
+                </span>{" "}
+                CDL Practice Tests - All Endorsements
               </Heading>
             ) : isMotorcycle ? (
               <Heading as="h1" className="mb-4.5">
-                {selectedState} Motorcycle Practice Tests 2026
+                Start your Free{" "}
+                <span className="relative inline-block whitespace-nowrap">
+                  {selectedState}
+                  <HandUnderline />
+                </span>{" "}
+                Motorcycle Practice Tests 2026
               </Heading>
             ) : (
               <Heading as="h1" className="mb-4.5">
