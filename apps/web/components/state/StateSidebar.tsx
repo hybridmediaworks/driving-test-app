@@ -311,7 +311,7 @@ export default function StateSidebar({
       </section>
 
       <Link
-        href="/dashboard"
+        href="/progress"
         className="rounded-2xl border border-border bg-white dark:bg-neutral-800 px-4 py-3 text-center text-sm font-semibold text-blue-700 dark:text-blue-300 shadow-card hover:underline"
       >
         See full progress &rarr;
