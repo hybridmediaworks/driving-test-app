@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Actions\Auth\ClaimGuestData;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
-use App\Models\ChallengeBankItem;
-use App\Models\HazardSimulatorAttempt;
-use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -19,6 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly ClaimGuestData $claimGuestData,
+    ) {}
+
     /**
      * Register
      *
@@ -80,47 +82,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Link a guest's quiz history to the account they just signed in to / registered.
-     *
-     * While signed out, the app tags attempts with a per-install `X-Guest-Token`. On auth we
-     * re-assign those still-anonymous attempts to this user (and clear the guest token) so their
-     * history, stats, and pass-chance carry over. Harmless when there's no token or no guest
-     * attempts. Runs for web and mobile alike (both send the header).
+     * Link a guest's quiz history to the account they just signed in to / registered — see
+     * ClaimGuestData.
      */
     private function claimGuestData(Request $request, User $user): void
     {
-        $guestToken = $request->header('X-Guest-Token') ?: $request->input('guest_token');
-        if (! is_string($guestToken) || $guestToken === '') {
-            return;
-        }
-
-        QuizAttempt::query()
-            ->where('guest_token', $guestToken)
-            ->whereNull('user_id')
-            ->update(['user_id' => $user->id, 'guest_token' => null]);
-
-        HazardSimulatorAttempt::query()
-            ->where('guest_token', $guestToken)
-            ->whereNull('user_id')
-            ->update(['user_id' => $user->id, 'guest_token' => null]);
-
-        // Carry the guest's Challenge Bank over too. Drop any guest row for a question the account
-        // already banked first — otherwise re-assigning it would collide with the account's own
-        // unique(user_id, quiz_question_id) row.
-        $alreadyBanked = ChallengeBankItem::query()
-            ->where('user_id', $user->id)
-            ->pluck('quiz_question_id');
-
-        ChallengeBankItem::query()
-            ->where('guest_token', $guestToken)
-            ->whereNull('user_id')
-            ->whereIn('quiz_question_id', $alreadyBanked)
-            ->delete();
-
-        ChallengeBankItem::query()
-            ->where('guest_token', $guestToken)
-            ->whereNull('user_id')
-            ->update(['user_id' => $user->id, 'guest_token' => null]);
+        ($this->claimGuestData)($user, $request->header('X-Guest-Token') ?: $request->input('guest_token'));
     }
 
     /**

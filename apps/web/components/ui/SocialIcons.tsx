@@ -60,21 +60,14 @@ export function Google(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function Apple(props: SVGProps<SVGSVGElement>) {
-  return (
-    <IconBase {...props}>
-      <path d="M16.37 12.75c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.77-3.32-1.8-1.41-.14-2.76.83-3.48.83-.72 0-1.83-.81-3-.79a4.45 4.45 0 0 0-3.77 2.28c-1.61 2.79-.41 6.92 1.16 9.18.77 1.1 1.68 2.35 2.88 2.3 1.16-.05 1.59-.75 2.99-.75 1.4 0 1.79.75 3.01.72 1.24-.02 2.03-1.13 2.79-2.24a9.9 9.9 0 0 0 1.26-2.6 4.04 4.04 0 0 1-2.48-3.67zM14.07 6.01c.64-.78 1.07-1.85.95-2.93-.92.04-2.04.61-2.7 1.39-.59.69-1.11 1.79-.97 2.85 1.03.08 2.08-.52 2.72-1.31z" />
-    </IconBase>
-  );
-}
-
-export function Microsoft(props: SVGProps<SVGSVGElement>) {
+export function FacebookLogo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
-      <path fill="#F25022" d="M1 1h10.5v10.5H1z" />
-      <path fill="#7FBA00" d="M12.5 1H23v10.5H12.5z" />
-      <path fill="#00A4EF" d="M1 12.5h10.5V23H1z" />
-      <path fill="#FFB900" d="M12.5 12.5H23V23H12.5z" />
+      <circle cx="12" cy="12" r="12" fill="#1877F2" />
+      <path
+        fill="#ffffff"
+        d="M16.67 15.47l.53-3.47h-3.33V9.75c0-.95.47-1.88 1.96-1.88h1.51V4.92s-1.37-.23-2.69-.23c-2.74 0-4.53 1.66-4.53 4.67V12H7.08v3.47h3.04V23.9a12.1 12.1 0 0 0 3.75 0v-8.43h2.8z"
+      />
     </svg>
   );
 }

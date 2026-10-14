@@ -98,4 +98,19 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(PassGuaranteeClaim::class);
     }
+
+    /**
+     * Google / Facebook identities this user can sign in with.
+     *
+     * @return HasMany<SocialAccount, $this>
+     */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
+    public function hasPassword(): bool
+    {
+        return $this->password !== null;
+    }
 }

@@ -16,11 +16,13 @@ import InputError from "@/components/ui/InputError";
 import { Label } from "@/components/ui/Label";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { api, ApiError } from "@/lib/api";
-import { useLogout } from "@/lib/auth-context";
+import { useAuth, useLogout } from "@/lib/auth-context";
 import HeadingSmall from "./HeadingSmall";
 
 export default function DeleteUser() {
   const { logout } = useLogout();
+  const { user } = useAuth();
+  const hasPassword = user?.has_password ?? true;
   const [password, setPassword] = useState("");
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -33,7 +35,7 @@ export default function DeleteUser() {
     setError(undefined);
 
     try {
-      await api.delete("/profile", { password });
+      await api.delete("/profile", hasPassword ? { password } : undefined);
       setOpen(false);
       await logout("/");
     } catch (err) {
@@ -69,21 +71,25 @@ export default function DeleteUser() {
                 <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
                 <DialogDescription>
                   Once your account is deleted, all of its resources and data will also be permanently deleted.
-                  Please enter your password to confirm you would like to permanently delete your account.
+                  {hasPassword && " Please enter your password to confirm you would like to permanently delete your account."}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="grid gap-2">
-                <Label htmlFor="password" className="sr-only">
-                  Password
-                </Label>
-                <PasswordInput
-                  id="password"
-                  ref={passwordRef}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                {hasPassword && (
+                  <>
+                    <Label htmlFor="password" className="sr-only">
+                      Password
+                    </Label>
+                    <PasswordInput
+                      id="password"
+                      ref={passwordRef}
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </>
+                )}
                 <InputError message={error} />
               </div>
 

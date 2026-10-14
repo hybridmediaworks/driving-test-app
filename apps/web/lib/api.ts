@@ -3,7 +3,7 @@ import { createApiClient, ApiError } from "@driving-test-app/shared";
 // The browser and the server both call the API directly at NEXT_PUBLIC_API_URL. In production the
 // web app and the API share an origin, so browser calls are same-origin (no CORS). NEXT_PUBLIC_ is
 // inlined at build time, so it must be set to the public API URL the browser can reach.
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api/v1";
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
