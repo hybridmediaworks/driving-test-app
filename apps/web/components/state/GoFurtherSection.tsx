@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import { stateAbbreviations } from "@/lib/usStates";
+import { useEntitlement } from "@/lib/auth-context";
+import { useLadderPhases } from "@/lib/usePhaseCompletion";
+import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
 const vehicleSlugs: Record<string, string> = {
@@ -67,6 +69,22 @@ export default function GoFurtherSection() {
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
   const query = `state=${stateCode}&vehicle_type=${vehicleType}`;
 
+  // Same resolution ExamSimulatorSection uses for its own CTA: a premium learner skips the
+  // /exam-simulator browse list and goes straight into the next simulator quiz they haven't
+  // taken yet (or the first one, if none yet) — this card used to always send everyone to the
+  // list regardless of entitlement.
+  const { isPremium } = useEntitlement();
+  const phases = useLadderPhases();
+  const simulatorSlug = phases
+    .find((p) => p.header.headerTitle === "The exam simulator")
+    ?.steps.find((s) => !s.placeholder && s.slug)?.slug;
+  const canStartSimulator = isPremium && Boolean(simulatorSlug) && Boolean(selectedState);
+  // The quiz's own detail page (no /quiz suffix) is a preview with its own Start button -- "starts
+  // the quiz" means the player itself.
+  const examSimulatorHref = canStartSimulator
+    ? `/${stateToSlug(selectedState)}/${simulatorSlug}/quiz`
+    : "/exam-simulator";
+
   const cards: ResourceCard[] = [
     {
       icon: BookMarked,
@@ -103,8 +121,8 @@ export default function GoFurtherSection() {
       title: "The exam simulator",
       description:
         "A full-length timed run under the same conditions as the real exam.",
-      linkText: "Open the simulator",
-      href: "/exam-simulator",
+      linkText: canStartSimulator ? "Start the simulator" : "Open the simulator",
+      href: examSimulatorHref,
     },
     {
       icon: Compass,

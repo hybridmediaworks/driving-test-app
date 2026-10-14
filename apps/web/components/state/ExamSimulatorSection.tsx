@@ -59,8 +59,10 @@ export default function ExamSimulatorSection() {
 
   const canStart =
     isPremium && Boolean(simulatorSlug) && Boolean(selectedState);
+  // The quiz's own detail page (no /quiz suffix) is a preview with its own Start button -- "Start
+  // the simulator" means the player itself, not a second click through a preview page.
   const ctaHref = canStart
-    ? `/${stateToSlug(selectedState)}/${simulatorSlug}`
+    ? `/${stateToSlug(selectedState)}/${simulatorSlug}/quiz`
     : "/pricing";
 
   return (
