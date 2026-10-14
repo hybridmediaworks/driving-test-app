@@ -13,7 +13,11 @@ COPY apps/api/package.json ./apps/api/
 COPY apps/web/package.json ./apps/web/
 COPY apps/mobile/package.json ./apps/mobile/
 COPY packages/shared/package.json ./packages/shared/
-RUN pnpm install --frozen-lockfile
+# The store is a BuildKit cache mount, so even when the lockfile moves and this layer has to
+# re-run, the packages come off the disk instead of off the network — the log used to read
+# "reused 0, downloaded 1388" on every single deploy.
+RUN --mount=type=cache,target=/pnpm-store \
+    pnpm install --frozen-lockfile --store-dir /pnpm-store
 
 # Only what the web build reads. `COPY . .` put the whole repo into this layer, so editing a PHP
 # file — nothing to do with Next — invalidated it and rebuilt the frontend from scratch, which is
@@ -22,7 +26,10 @@ COPY packages ./packages
 COPY apps/web ./apps/web
 
 ENV NEXT_PUBLIC_API_URL=/api/v1
-RUN pnpm --filter web build
+# Next keeps its compiler output in .next/cache. Carried across builds it turns a full rebuild
+# into an incremental one, which is most of what this stage costs.
+RUN --mount=type=cache,target=/repo/apps/web/.next/cache \
+    pnpm --filter web build
 
 # ---- Stage 2: runtime image — Laravel (php artisan serve) + Next.js (node) behind Nginx ----
 FROM php:8.3-cli-bookworm AS runtime
@@ -44,7 +51,9 @@ WORKDIR /var/www
 # then the application code, so editing a controller does not re-resolve every package.
 WORKDIR /var/www/apps/api
 COPY apps/api/composer.json apps/api/composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts --no-autoloader
+RUN --mount=type=cache,target=/tmp/composer-cache \
+    COMPOSER_CACHE_DIR=/tmp/composer-cache \
+    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts --no-autoloader
 
 COPY apps/api ./
 RUN composer dump-autoload --optimize --no-dev && composer run-script post-autoload-dump

@@ -52,8 +52,14 @@ jobs:
             # Only clear the build cache when the disk is actually tight. Wiping it on every deploy
             # (which this did, on the old 8GB box, to survive ENOSPC during `pnpm install`) means
             # every build starts from zero — PHP extensions recompiled, pnpm re-installed, Next
-            # rebuilt — so a one-line change costs the same ~10 minutes as a rewrite. With room on
+            # rebuilt — so a one-line change costs the same ~14 minutes as a rewrite. With room on
             # the volume the cache is what makes a small deploy small.
+            #
+            # `image prune` and the classic builder interact badly: a build that FAILS leaves its
+            # completed layers as dangling <none> images with no tagged descendant, so this line
+            # deletes them and the retry starts from zero. (Layers from a successful build survive,
+            # being ancestors of the tagged image.) Under BuildKit the cache lives in its own store
+            # that only `builder prune` touches, so the two no longer fight.
             #
             # MySQL runs as its own container on the `dt` network and must survive this: dangling
             # images and stopped containers only, never `docker system prune`, never `-a` while the
@@ -72,7 +78,10 @@ jobs:
             fi
             df -h /
 
-            sudo docker build -t driving-test-app:latest .
+            # sudo drops the environment, so the variable is set as part of the command itself.
+            # BuildKit prints a duration per step, which is the only way to tell which part of this
+            # build is actually costing the minutes rather than guessing at it.
+            time sudo DOCKER_BUILDKIT=1 docker build --progress=plain -t driving-test-app:latest .
             sudo docker stop driving-test-app || true
             sudo docker rm driving-test-app || true
             sudo docker run -d --name driving-test-app --restart unless-stopped \
