@@ -41,16 +41,17 @@ class ProfileController extends Controller
     /**
      * Delete my account
      *
-     * Requires the current password. Revokes every Sanctum token for this user, not just the one
-     * used for this request, then deletes the account.
+     * Requires the current password (unless the account has none — social login only). Revokes
+     * every Sanctum token for this user, not just the one used for this request, then deletes the
+     * account.
      */
     public function destroy(Request $request): JsonResponse
     {
-        $request->validate(['password' => ['required', 'string']]);
-
         $user = $request->user();
 
-        if (! Hash::check($request->string('password')->toString(), $user->password)) {
+        $request->validate(['password' => [Rule::requiredIf($user->hasPassword()), 'nullable', 'string']]);
+
+        if ($user->hasPassword() && ! Hash::check($request->string('password')->toString(), $user->password)) {
             throw ValidationException::withMessages([
                 'password' => __('The password is incorrect.'),
             ]);
@@ -64,17 +65,20 @@ class ProfileController extends Controller
 
     /**
      * Change my password
+     *
+     * `current_password` is only required when the account already has one — a social-login-only
+     * account uses this to set its first password.
      */
     public function updatePassword(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $data = $request->validate([
-            'current_password' => ['required', 'string'],
+            'current_password' => [Rule::requiredIf($user->hasPassword()), 'nullable', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        if (! Hash::check($data['current_password'], $user->password)) {
+        if ($user->hasPassword() && ! Hash::check((string) $data['current_password'], $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => __('The password is incorrect.'),
             ]);

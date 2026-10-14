@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\V1\Admin\VideoController as AdminVideoController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
+use App\Http\Controllers\Api\V1\Auth\SocialAuthController;
 use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\ChallengeBankController;
 use App\Http\Controllers\Api\V1\ExamFeedbackController;
@@ -63,6 +64,13 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware('signed')
         ->name('verification.verify');
+
+    Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->middleware('throttle:30,1');
+    Route::get('auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+        ->middleware('throttle:30,1');
+    Route::post('auth/social/exchange', [SocialAuthController::class, 'exchange'])
+        ->middleware('throttle:10,1');
 
     // Public quiz-taking — guests may browse, take, and submit tests.
     Route::get('quizzes', [PublicQuizController::class, 'index']);

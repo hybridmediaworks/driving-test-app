@@ -72,6 +72,18 @@ return [
         'remix_sign_image_weight' => (int) env('IDEOGRAM_REMIX_SIGN_IMAGE_WEIGHT', 95),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', rtrim((string) env('APP_URL'), '/').'/api/v1/auth/google/callback'),
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI', rtrim((string) env('APP_URL'), '/').'/api/v1/auth/facebook/callback'),
+    ],
+
     // Mobile store subscriptions (Apple / Google) are processed by RevenueCat; its server webhook
     // authenticates with this shared secret (set the same value in the RevenueCat dashboard).
     'revenuecat' => [

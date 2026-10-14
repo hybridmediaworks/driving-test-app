@@ -8,8 +8,11 @@ import InputError from "@/components/ui/InputError";
 import { Label } from "@/components/ui/Label";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export default function SecurityPage() {
+  const { user, setUser } = useAuth();
+  const hasPassword = user?.has_password ?? true;
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -23,10 +26,11 @@ export default function SecurityPage() {
 
     try {
       await api.put("/password", {
-        current_password: currentPassword,
+        ...(hasPassword ? { current_password: currentPassword } : {}),
         password,
         password_confirmation: passwordConfirmation,
       });
+      if (user && !hasPassword) setUser({ ...user, has_password: true });
       setCurrentPassword("");
       setPassword("");
       setPasswordConfirmation("");
@@ -46,23 +50,29 @@ export default function SecurityPage() {
     <SettingsLayout>
       <div className="space-y-6">
         <HeadingSmall
-          title="Update password"
-          description="Ensure your account is using a long, random password to stay secure"
+          title={hasPassword ? "Update password" : "Set a password"}
+          description={
+            hasPassword
+              ? "Ensure your account is using a long, random password to stay secure"
+              : "You sign in with Google or Facebook. Add a password to also log in with your email."
+          }
         />
 
         <form className="space-y-6" onSubmit={submit}>
-          <div className="grid gap-2">
-            <Label htmlFor="current_password">Current password</Label>
-            <PasswordInput
-              id="current_password"
-              className="mt-1 block w-full"
-              autoComplete="current-password"
-              placeholder="Current password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-            <InputError message={errors.current_password?.[0]} />
-          </div>
+          {hasPassword && (
+            <div className="grid gap-2">
+              <Label htmlFor="current_password">Current password</Label>
+              <PasswordInput
+                id="current_password"
+                className="mt-1 block w-full"
+                autoComplete="current-password"
+                placeholder="Current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+              <InputError message={errors.current_password?.[0]} />
+            </div>
+          )}
 
           <div className="grid gap-2">
             <Label htmlFor="password">New password</Label>

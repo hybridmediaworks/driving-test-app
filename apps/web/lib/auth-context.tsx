@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { User } from "@driving-test-app/shared";
+import type { AuthResponse, User } from "@driving-test-app/shared";
 import { api, setToken, ApiError } from "./api";
 import { invalidatePhaseLadder } from "./phaseLadder";
 import { invalidateResolvedQuiz } from "./useResolvedQuiz";
@@ -12,6 +12,7 @@ type AuthContextValue = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<void>;
+  loginWithSocialCode: (code: string) => Promise<User>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
 };
@@ -53,6 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     invalidateResolvedQuiz();
   }
 
+  async function loginWithSocialCode(code: string) {
+    const res = await api.post<AuthResponse>("/auth/social/exchange", { code });
+    setToken(res.token);
+    setUser(res.user);
+    invalidatePhaseLadder();
+    invalidateResolvedQuiz();
+    return res.user;
+  }
+
   async function logout() {
     try {
       await api.post("/logout");
@@ -66,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithSocialCode, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

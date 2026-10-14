@@ -11,6 +11,7 @@ import {
   authLinkClass,
   AuthPasswordInput,
   AuthSubmitButton,
+  SocialSignIn,
 } from "@/components/auth/AuthFormParts";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 import { ApiError, useAuth } from "@/lib/auth-context";
@@ -131,6 +132,8 @@ function RegisterPageInner() {
 
         <AuthSubmitButton processing={processing}>Create account</AuthSubmitButton>
       </form>
+
+      <SocialSignIn redirect={redirect} />
 
       <AuthFooter>
         Already have an account?{" "}

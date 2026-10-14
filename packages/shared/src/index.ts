@@ -1,4 +1,5 @@
 export * from "./types/user";
+export * from "./types/auth";
 export * from "./types/quiz";
 export * from "./types/flashcards";
 export * from "./types/cheat-sheets";

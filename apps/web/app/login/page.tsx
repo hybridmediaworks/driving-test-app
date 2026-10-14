@@ -18,6 +18,7 @@ import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Label } from "@/components/ui/Label";
 import { ApiError, useAuth } from "@/lib/auth-context";
+import { socialErrorMessage } from "@/lib/socialAuth";
 import { isValidState, stateToSlug } from "@/lib/usStates";
 
 function LoginPageInner() {
@@ -122,7 +123,7 @@ function LoginPageInner() {
         <AuthSubmitButton processing={processing}>Log in</AuthSubmitButton>
       </form>
 
-      <SocialSignIn />
+      <SocialSignIn redirect={redirect} error={socialErrorMessage(searchParams.get("social_error"))} />
 
       <AuthFooter>
         Don&apos;t have an account?{" "}

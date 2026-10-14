@@ -1,13 +1,15 @@
 "use client";
 
+import type { SocialProvider } from "@driving-test-app/shared";
 import { ArrowRight, type LucideIcon } from "lucide-react";
-import type { ComponentProps, ReactNode } from "react";
+import { useEffect, useState, type ComponentProps, type ComponentType, type ReactNode, type SVGProps } from "react";
 import { Input } from "@/components/ui/Input";
 import InputError from "@/components/ui/InputError";
 import { Label } from "@/components/ui/Label";
 import PasswordInput from "@/components/ui/PasswordInput";
-import { Apple, Google, Microsoft } from "@/components/ui/SocialIcons";
+import { FacebookLogo, Google } from "@/components/ui/SocialIcons";
 import Spinner from "@/components/ui/Spinner";
+import { startSocialLogin } from "@/lib/socialAuth";
 import { cn } from "@/lib/utils";
 
 export const authLabelClass = "text-[13px] font-medium sm:text-sm text-neutral-800 xl:text-base dark:text-neutral-200";
@@ -18,10 +20,9 @@ export const authLinkClass =
 const inputClass =
   "h-10 rounded-xl border-neutral-200 bg-white pl-9 text-base! text-neutral-900 placeholder:text-neutral-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/30 sm:h-12 sm:pl-12 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder:text-neutral-500";
 
-const SOCIAL_PROVIDERS = [
-  { name: "Google", Icon: Google },
-  { name: "Apple", Icon: Apple },
-  { name: "Microsoft", Icon: Microsoft },
+const SOCIAL_PROVIDERS: { id: SocialProvider; name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
+  { id: "google", name: "Google", Icon: Google },
+  { id: "facebook", name: "Facebook", Icon: FacebookLogo },
 ];
 
 export function AuthField({
@@ -91,7 +92,28 @@ export function AuthSubmitButton({ processing, children }: { processing: boolean
   );
 }
 
-export function SocialSignIn() {
+/**
+ * Google / Facebook buttons. Each one leaves the page for the provider's sign-in and comes
+ * back through /auth/callback, which then continues to `redirect` (when given).
+ */
+export function SocialSignIn({ redirect = null, error }: { redirect?: string | null; error?: string | null }) {
+  const [pending, setPending] = useState<SocialProvider | null>(null);
+
+  // Coming back with the browser's Back button restores this page from the bfcache with the
+  // spinner still showing — clear it so the buttons work again.
+  useEffect(() => {
+    const reset = (e: PageTransitionEvent) => {
+      if (e.persisted) setPending(null);
+    };
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
+
+  function start(provider: SocialProvider) {
+    setPending(provider);
+    startSocialLogin(provider, redirect);
+  }
+
   return (
     <>
       <div className="mt-4 flex items-center gap-4 sm:mt-6 xl:mt-7">
@@ -101,16 +123,26 @@ export function SocialSignIn() {
         </span>
         <span className="h-px flex-1 bg-neutral-200 dark:bg-neutral-700" />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-3 xl:gap-4">
-        {SOCIAL_PROVIDERS.map(({ name, Icon }) => (
+      {error && (
+        <p role="alert" className="mt-3 text-center text-sm text-red-600 sm:mt-5 dark:text-red-400">
+          {error}
+        </p>
+      )}
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 xl:gap-4">
+        {SOCIAL_PROVIDERS.map(({ id, name, Icon }) => (
           <button
-            key={name}
+            key={id}
             type="button"
-            disabled
-            title={`Sign in with ${name} — coming soon`}
-            className="flex h-10 min-w-0 cursor-not-allowed items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-1 text-xs font-medium text-neutral-900 sm:h-12 sm:gap-2 sm:text-sm xl:gap-3 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+            disabled={pending !== null}
+            onClick={() => start(id)}
+            aria-label={`Continue with ${name}`}
+            className="flex h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-1 text-xs font-medium text-neutral-900 transition hover:bg-neutral-50 focus-visible:ring-4 focus-visible:ring-blue-500/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70 sm:h-12 sm:gap-2 sm:text-sm xl:gap-3 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
           >
-            <Icon aria-hidden="true" className="size-4 shrink-0 sm:size-5" />
+            {pending === id ? (
+              <Spinner className="shrink-0 sm:size-5" />
+            ) : (
+              <Icon aria-hidden="true" className="size-4 shrink-0 sm:size-5" />
+            )}
             <span className="truncate">{name}</span>
           </button>
         ))}
