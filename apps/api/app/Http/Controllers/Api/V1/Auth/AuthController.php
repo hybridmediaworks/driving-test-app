@@ -6,6 +6,7 @@ use App\Actions\Auth\ClaimGuestData;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
+use App\Rules\NotDisposableEmail;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'indisposable:mx', 'unique:users,email'],
+            'email' => ['required', 'string', 'email', 'max:255', new NotDisposableEmail, 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'email.unique' => 'This email already exists.',

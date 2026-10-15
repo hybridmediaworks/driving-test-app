@@ -20,10 +20,8 @@ function RegisterPageInner() {
   const router = useRouter();
   const { register } = useAuth();
   const searchParams = useSearchParams();
-  // Same purpose as the login page's redirect param — e.g. resuming a checkout the user
-  // started before we sent them here to create an account. Registration doesn't require a
-  // verified email to check out (no verification middleware on the billing routes), so it's
-  // safe to go straight there instead of the default /verify-email reminder.
+  // Only forwarded to the login link and social sign-in. A new account must verify its email
+  // before anything else, so a pending checkout resumes from the verification link instead.
   const redirect = searchParams.get("redirect");
 
   const [name, setName] = useState("");
@@ -40,7 +38,7 @@ function RegisterPageInner() {
 
     try {
       await register(name, email, password, passwordConfirmation);
-      router.push(redirect || "/verify-email");
+      router.push("/verify-email");
     } catch (err) {
       if (err instanceof ApiError && err.errors) {
         setErrors(err.errors);

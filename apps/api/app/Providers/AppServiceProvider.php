@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\DisposableEmail\DisposableMailServers;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(DisposableMailServers::class, fn (): DisposableMailServers => new DisposableMailServers(
+            config('disposable-email.mail_servers_storage'),
+        ));
     }
 
     /**

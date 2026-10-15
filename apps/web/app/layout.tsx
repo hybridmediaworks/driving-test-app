@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import VerifiedEmailGate from "@/components/auth/VerifiedEmailGate";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -87,7 +88,9 @@ export default function RootLayout({
         className="min-h-full flex flex-col font-sans"
         suppressHydrationWarning
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <VerifiedEmailGate>{children}</VerifiedEmailGate>
+        </AuthProvider>
       </body>
     </html>
   );
