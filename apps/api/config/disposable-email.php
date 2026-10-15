@@ -1,6 +1,6 @@
 <?php
 
-use Propaganistas\LaravelDisposableEmail\Fetcher\DefaultFetcher;
+use App\Support\DisposableEmail\DisposableDomainsFetcher;
 
 return [
 
@@ -19,6 +19,7 @@ return [
 
     'sources' => [
         'https://cdn.jsdelivr.net/gh/disposable/disposable-email-domains@master/domains.json',
+        'https://raw.githubusercontent.com/7c/fakefilter/main/json/data.json',
     ],
 
     /*
@@ -36,7 +37,7 @@ return [
     |
     */
 
-    'fetcher' => DefaultFetcher::class,
+    'fetcher' => DisposableDomainsFetcher::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -50,6 +51,8 @@ return [
     */
 
     'storage' => storage_path('framework/disposable_domains.json'),
+
+    'mail_servers_storage' => storage_path('framework/disposable_mail_servers.json'),
 
     /*
     |--------------------------------------------------------------------------

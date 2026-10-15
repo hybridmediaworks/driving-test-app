@@ -28,6 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('disposable:update')
             ->dailyAt('02:00')
             ->onOneServer();
+
+        $schedule->command('disposable:update-mail-servers')
+            ->dailyAt('02:15')
+            ->withoutOverlapping()
+            ->onOneServer();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

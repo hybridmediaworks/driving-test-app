@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { AuthResponse, User } from "@driving-test-app/shared";
 import { api, setToken, ApiError } from "./api";
+import { syncEmailUnverifiedCookie } from "./emailVerificationGate";
 import { invalidatePhaseLadder } from "./phaseLadder";
 import { invalidateResolvedQuiz } from "./useResolvedQuiz";
 
@@ -15,21 +16,33 @@ type AuthContextValue = {
   loginWithSocialCode: (code: string) => Promise<User>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const refreshSeq = useRef(0);
+
+  const setUser = useCallback((next: User | null) => {
+    syncEmailUnverifiedCookie(next);
+    setUserState(next);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    const seq = ++refreshSeq.current;
+    const next = await api.get<{ user: User }>("/me").then(
+      (res) => res.user,
+      () => null,
+    );
+    if (seq === refreshSeq.current) setUser(next);
+  }, [setUser]);
 
   useEffect(() => {
-    api
-      .get<{ user: User }>("/me")
-      .then((res) => setUser(res.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
+    refreshUser().finally(() => setLoading(false));
+  }, [refreshUser]);
 
   async function login(email: string, password: string) {
     const res = await api.post<{ user: User; token: string }>("/login", { email, password });
@@ -76,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithSocialCode, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithSocialCode, logout, setUser, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

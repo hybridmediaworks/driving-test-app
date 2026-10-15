@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\DisposableEmail\DisposableMailServers;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
+use Propaganistas\LaravelDisposableEmail\DisposableDomains;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,7 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(DisposableMailServers::class, fn (): DisposableMailServers => new DisposableMailServers(
+            config('disposable-email.mail_servers_storage'),
+        ));
     }
 
     /**
@@ -30,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
         // Our Subscription subclass exists solely to cast the app-owned `past_due_since` column
         // (see app/Models/Subscription.php) that stock Cashier's model doesn't know about.
         Cashier::useSubscriptionModel(Subscription::class);
+
+        $this->callAfterResolving(DisposableDomains::class, function (DisposableDomains $domains): void {
+            $domains->setMxResolver(fn (string $domain): array => @dns_get_record($domain, DNS_MX) ?: []);
+        });
 
         // NOTE: the Scramble docs are currently PUBLIC (RestrictedDocsAccess was removed from
         // config/scramble.php so the /docs/api Swagger UI opens on the live server in a plain

@@ -1,16 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import { api } from "@/lib/api";
-import { useLogout } from "@/lib/auth-context";
+import { useAuth, useLogout } from "@/lib/auth-context";
 
 export default function VerifyEmailPage() {
+  const router = useRouter();
+  const { user, refreshUser } = useAuth();
   const { logout, pending: loggingOut } = useLogout();
   const [processing, setProcessing] = useState(false);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (user?.email_verified_at) router.replace("/");
+  }, [user, router]);
+
+  useEffect(() => {
+    function recheck() {
+      if (document.visibilityState === "visible") refreshUser();
+    }
+
+    document.addEventListener("visibilitychange", recheck);
+    return () => document.removeEventListener("visibilitychange", recheck);
+  }, [refreshUser]);
 
   async function resend() {
     setProcessing(true);

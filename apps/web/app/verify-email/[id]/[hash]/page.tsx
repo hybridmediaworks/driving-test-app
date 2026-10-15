@@ -1,16 +1,19 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { consumePendingCheckoutPlan } from "@/lib/pendingCheckout";
 
 export default function VerifyEmailLinkPage({ params }: { params: Promise<{ id: string; hash: string }> }) {
   const { id, hash } = use(params);
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshUser } = useAuth();
   const [status, setStatus] = useState<"verifying" | "success" | "resuming-checkout" | "error">("verifying");
   const [message, setMessage] = useState("");
 
@@ -19,11 +22,12 @@ export default function VerifyEmailLinkPage({ params }: { params: Promise<{ id: 
 
     api
       .get<{ message: string }>(`/email/verify/${id}/${hash}?${query}`)
-      .then((res) => {
+      .then(async () => {
+        await refreshUser();
+
         // A guest who was mid-checkout before this email detour left their chosen plan here
-        // (see app/pricing's handleCheckout) — registering already authenticated them, and
-        // checkout doesn't require a verified email, so send them straight back to it instead
-        // of a generic "now log in" dead end.
+        // (see app/pricing's handleCheckout) — now verified, so checkout is allowed; send them
+        // straight back to it instead of a generic "now log in" dead end.
         const pendingPlanKey = consumePendingCheckoutPlan();
         if (pendingPlanKey) {
           setStatus("resuming-checkout");
@@ -32,7 +36,7 @@ export default function VerifyEmailLinkPage({ params }: { params: Promise<{ id: 
         }
 
         setStatus("success");
-        setMessage(res.message);
+        router.replace("/");
       })
       .catch((err) => {
         setStatus("error");
@@ -54,13 +58,18 @@ export default function VerifyEmailLinkPage({ params }: { params: Promise<{ id: 
             <Spinner /> Verified — taking you back to checkout…
           </div>
         )}
-        {status === "success" && <div className="text-sm font-medium text-green-600">{message}</div>}
-        {status === "error" && <div className="text-sm font-medium text-red-600">{message}</div>}
-
-        {(status === "success" || status === "error") && (
-          <Button href="/login" className="w-full justify-center">
-            Continue to log in
-          </Button>
+        {status === "success" && (
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <Spinner /> Verified — taking you to the homepage…
+          </div>
+        )}
+        {status === "error" && (
+          <>
+            <div className="text-sm font-medium text-red-600">{message}</div>
+            <Button href="/login" className="w-full justify-center">
+              Continue to log in
+            </Button>
+          </>
         )}
       </div>
     </AuthLayout>
