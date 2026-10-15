@@ -2,6 +2,14 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 import type { PublicFlashcard } from "@driving-test-app/shared";
 
+/** Study link for one card: the current filters, narrowed to the card's own category, opening on it. */
+export function deckHref(card: PublicFlashcard, filterQuery: string): string {
+  const params = new URLSearchParams(filterQuery);
+  if (card.category?.name) params.set("category", card.category.name);
+  params.set("start", String(card.id));
+  return `/flashcards/study?${params.toString()}`;
+}
+
 /**
  * One flashcard in a browse grid.
  *

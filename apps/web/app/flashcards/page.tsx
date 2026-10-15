@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import BrowseFilters from "@/components/browse/BrowseFilters";
 import BrowseGrid from "@/components/browse/BrowseGrid";
 import BrowseHeader from "@/components/browse/BrowseHeader";
-import FlashcardCard from "@/components/flashcards/FlashcardCard";
+import FlashcardCard, { deckHref } from "@/components/flashcards/FlashcardCard";
 import Button from "@/components/ui/Button";
 import Paginator from "@/components/ui/Paginator";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
@@ -24,6 +24,8 @@ function FlashcardsBrowseInner() {
   const rows = flashcards?.data ?? [];
   // Carries the filters through, so you study exactly the deck you were just looking at.
   const studyHref = `/flashcards/study${filterQuery ? `?${filterQuery}` : ""}`;
+  // With a category picked, name the deck on the button, like the test buttons name their test.
+  const deckTitle = searchParams.get("category") ? rows[0]?.category?.title : null;
 
   return (
     <WebLayoutProvider>
@@ -36,7 +38,7 @@ function FlashcardsBrowseInner() {
               description="Quick recall practice for signs, rules, and terms."
               total={flashcards?.meta.total ?? null}
               unit="cards"
-              action={<Button href={studyHref}>Start studying</Button>}
+              action={<Button href={studyHref}>{deckTitle ? `Start studying ${deckTitle}` : "Start studying"}</Button>}
             />
 
             <BrowseFilters
@@ -55,7 +57,7 @@ function FlashcardsBrowseInner() {
               emptyHint="Try a different state or vehicle type, or clear the filters to see everything."
             >
               {rows.map((card) => (
-                <FlashcardCard key={card.id} card={card} studyHref={studyHref} />
+                <FlashcardCard key={card.id} card={card} studyHref={deckHref(card, filterQuery)} />
               ))}
             </BrowseGrid>
 
