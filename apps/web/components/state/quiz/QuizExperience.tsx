@@ -26,6 +26,7 @@ import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import Slider from "@/components/ui/Slider";
 import Switch from "@/components/ui/Switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import QuestionCard from "@/components/state/quiz/QuestionCard";
 import HintPanel from "@/components/state/quiz/HintPanel";
 import KeyboardShortcutsDialog from "@/components/state/quiz/KeyboardShortcutsDialog";
@@ -1157,14 +1158,22 @@ function QuizTaker({
                 </Paragraph>
               </div>
               <div className="flex sm:gap-3 gap-2 items-center justify-center">
-                <Bookmark
-                  onClick={toggleVault}
-                  className={`h-6 w-6 cursor-pointer ${
-                    currentQuestion && vaultIds.has(currentQuestion.id)
-                      ? "fill-amber-400 text-amber-500"
-                      : "text-neutral-500 dark:text-neutral-400"
-                  }`}
-                />
+                <Tooltip>
+                  <TooltipTrigger
+                    aria-label={t("vaultTooltip")}
+                    render={
+                      <Bookmark
+                        onClick={toggleVault}
+                        className={`h-6 w-6 cursor-pointer ${
+                          currentQuestion && vaultIds.has(currentQuestion.id)
+                            ? "fill-amber-400 text-amber-500"
+                            : "text-neutral-500 dark:text-neutral-400"
+                        }`}
+                      />
+                    }
+                  />
+                  <TooltipContent>{t("vaultTooltip")}</TooltipContent>
+                </Tooltip>
                 <div className="relative" ref={settingsRef}>
                   <Settings
                     onClick={() => setSettingsOpen((v) => !v)}
