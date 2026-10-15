@@ -56,7 +56,7 @@ export default function BillingSuccessPage() {
                 <CheckCircle2 className="mx-auto h-10 w-10 text-green-600" />
                 <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">You&apos;re all set</h1>
                 <Paragraph color="muted">Your plan is active. Enjoy full access.</Paragraph>
-                <Button href="/dashboard">Go to dashboard</Button>
+                <Button href="/">Go to homepage</Button>
               </>
             )}
 
@@ -67,7 +67,7 @@ export default function BillingSuccessPage() {
                   Your payment is still being confirmed — this can take a minute. Check your dashboard shortly, or
                   refresh this page.
                 </Paragraph>
-                <Button href="/dashboard">Go to dashboard</Button>
+                <Button href="/">Go to homepage</Button>
               </>
             )}
           </div>

@@ -6,6 +6,7 @@ use App\Models\EmailSubscriber;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Propaganistas\LaravelDisposableEmail\Facades\DisposableDomains;
 use Tests\TestCase;
 
 class DisposableEmailTest extends TestCase
@@ -40,6 +41,17 @@ class DisposableEmailTest extends TestCase
     public function test_register_rejects_disposable_email(string $email): void
     {
         $this->register($email)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email' => self::MESSAGE]);
+
+        $this->assertSame(0, User::query()->count());
+    }
+
+    public function test_register_rejects_unlisted_domain_on_disposable_mail_server(): void
+    {
+        DisposableDomains::setMxResolver(fn () => [['type' => 'MX', 'target' => 'mail.mailinator.com.']]);
+
+        $this->register('someone@brand-new-temp-domain.com')
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['email' => self::MESSAGE]);
 

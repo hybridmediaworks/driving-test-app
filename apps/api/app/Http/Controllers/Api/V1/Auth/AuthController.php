@@ -31,7 +31,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'indisposable', 'unique:users,email'],
+            'email' => ['required', 'string', 'email', 'max:255', 'indisposable:mx', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'email.unique' => 'This email already exists.',
