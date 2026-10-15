@@ -7,10 +7,16 @@ export default function QuizPreview({
   data,
   isExam,
   onStart,
+  resume = null,
+  onResume,
+  disabled = false,
 }: {
   data: QuizShowResponse;
   isExam: boolean;
   onStart: () => void;
+  resume?: { answered: number; remainingSeconds: number | null } | null;
+  onResume?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="space-y-4 rounded-3xl border border-gray-100 dark:border-white/10 bg-white dark:bg-neutral-800 p-8 text-center shadow-sm">
@@ -44,9 +50,32 @@ export default function QuizPreview({
           </Paragraph>
           <Button href="/pricing">View plans</Button>
         </div>
+      ) : resume ? (
+        <div className="space-y-3 rounded-2xl bg-blue-50 dark:bg-blue-500/10 p-6">
+          <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">You have an exam in progress</p>
+          <Paragraph color="muted" size="sm">
+            {resume.answered} of {data.quiz.total_questions} answered
+            {resume.remainingSeconds != null && ` · ${formatClock(resume.remainingSeconds)} left`}
+          </Paragraph>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <Button onClick={onResume} disabled={disabled}>
+              Resume exam
+            </Button>
+            <Button onClick={onStart} variant="ghost" disabled={disabled}>
+              Start over
+            </Button>
+          </div>
+        </div>
       ) : (
-        <Button onClick={onStart}>{isExam ? "Start exam" : "Start test"}</Button>
+        <Button onClick={onStart} disabled={disabled}>
+          {isExam ? "Start exam" : "Start test"}
+        </Button>
       )}
     </div>
   );
+}
+
+function formatClock(totalSeconds: number): string {
+  const seconds = Math.max(totalSeconds, 0);
+  return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }

@@ -2,36 +2,46 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PublicQuiz, PublicQuizQuestion, QuizAttempt } from "@driving-test-app/shared";
+import AccessLostDialog, { usePremiumAccessLost } from "@/components/auth/AccessLostDialog";
 import QuestionCard from "@/components/quiz/QuestionCard";
 import Button from "@/components/ui/Button";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { clearExamProgress, saveExamProgress, type ExamProgress } from "@/lib/examProgress";
 import ExamTimer from "./ExamTimer";
 
 export default function ExamPlayer({
   quiz,
   questions,
+  ownerKey,
+  initialProgress,
+  exitHref,
   onComplete,
 }: {
   quiz: PublicQuiz;
   questions: PublicQuizQuestion[];
+  ownerKey: string;
+  initialProgress: ExamProgress | null;
+  exitHref: string;
   onComplete: (attempt: QuizAttempt) => void;
 }) {
-  const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const { refreshUser } = useAuth();
+  const [progressOwner] = useState(ownerKey);
+  const [index, setIndex] = useState(() => Math.min(initialProgress?.index ?? 0, questions.length - 1));
+  const [answers, setAnswers] = useState<Record<number, number>>(() => initialProgress?.answers ?? {});
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => initialProgress?.elapsedSeconds ?? 0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [startedAt] = useState(() => Date.now());
+  const accessLost = usePremiumAccessLost(quiz.is_premium);
 
-  // ExamTimer only invokes its onExpire callback once, on the interval it started with on
-  // mount — so submit() must be a stable function that reads current answers via a ref rather
-  // than closing over `answers` directly, or an auto-submit at minute 30 would send whatever
-  // `answers` was at minute 0.
   const answersRef = useRef(answers);
   useEffect(() => {
     answersRef.current = answers;
   }, [answers]);
 
+  const elapsedRef = useRef(elapsedSeconds);
   const submittingRef = useRef(false);
+  const expiredRef = useRef(false);
 
   const question = questions[index];
   const isLast = index === questions.length - 1;
@@ -53,17 +63,43 @@ export default function ExamPlayer({
           question_id: Number(questionId),
           answer_id: answerId,
         })),
-        duration_seconds: Math.round((Date.now() - startedAt) / 1000),
+        duration_seconds: elapsedRef.current,
       });
+      clearExamProgress(progressOwner, quiz.id);
       onComplete(res.attempt);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to submit your exam. Please try again.");
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        await refreshUser();
+        setError("We couldn't submit your exam. Make sure you're signed in with Premium access, then try again.");
+      } else {
+        setError(err instanceof ApiError ? err.message : "Failed to submit your exam. Please try again.");
+      }
       submittingRef.current = false;
       setSubmitting(false);
     }
-    // quiz.id / startedAt / onComplete are all fixed for this component's lifetime.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const paused = accessLost || submitting;
+
+  useEffect(() => {
+    if (paused) return;
+
+    const interval = setInterval(() => {
+      elapsedRef.current += 1;
+      setElapsedSeconds(elapsedRef.current);
+      if (quiz.duration_seconds != null && elapsedRef.current >= quiz.duration_seconds && !expiredRef.current) {
+        expiredRef.current = true;
+        void submit();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [paused, quiz.duration_seconds, submit]);
+
+  useEffect(() => {
+    if (submittingRef.current) return;
+    saveExamProgress(progressOwner, quiz.id, { answers, index, elapsedSeconds });
+  }, [progressOwner, quiz.id, answers, index, elapsedSeconds]);
 
   return (
     <div className="space-y-5">
@@ -74,7 +110,9 @@ export default function ExamPlayer({
             style={{ width: `${((index + 1) / questions.length) * 100}%` }}
           />
         </div>
-        {quiz.duration_seconds != null && <ExamTimer durationSeconds={quiz.duration_seconds} onExpire={submit} />}
+        {quiz.duration_seconds != null && (
+          <ExamTimer durationSeconds={quiz.duration_seconds} remainingSeconds={quiz.duration_seconds - elapsedSeconds} />
+        )}
       </div>
 
       <QuestionCard
@@ -99,6 +137,8 @@ export default function ExamPlayer({
           <Button onClick={() => setIndex((i) => i + 1)}>Next</Button>
         )}
       </div>
+
+      <AccessLostDialog open={accessLost} exitHref={exitHref} />
     </div>
   );
 }

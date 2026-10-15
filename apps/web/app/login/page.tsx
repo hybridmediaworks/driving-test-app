@@ -17,7 +17,8 @@ import {
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Label } from "@/components/ui/Label";
-import { ApiError, useAuth } from "@/lib/auth-context";
+import { ApiError, useAuth, useRedirectIfAuthenticated } from "@/lib/auth-context";
+import { safeRedirect } from "@/lib/redirect";
 import { socialErrorMessage } from "@/lib/socialAuth";
 import { isValidState, stateToSlug } from "@/lib/usStates";
 
@@ -27,7 +28,8 @@ function LoginPageInner() {
   const searchParams = useSearchParams();
   // Where to land after a successful login — e.g. back at /pricing to resume a checkout the
   // user started before we sent them here to authenticate. Falls back to the dashboard.
-  const redirect = searchParams.get("redirect");
+  const redirect = safeRedirect(searchParams.get("redirect"));
+  useRedirectIfAuthenticated(redirect || "/");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { AuthResponse, User } from "@driving-test-app/shared";
-import { api, setToken, ApiError } from "./api";
+import { api, getToken, setToken, ApiError } from "./api";
 import { syncEmailUnverifiedCookie } from "./emailVerificationGate";
+import { currentPath, loginHref } from "./redirect";
 import { invalidatePhaseLadder } from "./phaseLadder";
 import { invalidateResolvedQuiz } from "./useResolvedQuiz";
 
@@ -33,15 +34,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     const seq = ++refreshSeq.current;
-    const next = await api.get<{ user: User }>("/me").then(
-      (res) => res.user,
-      () => null,
-    );
+    const next = getToken()
+      ? await api.get<{ user: User }>("/me").then(
+          (res) => res.user,
+          () => null,
+        )
+      : null;
     if (seq === refreshSeq.current) setUser(next);
   }, [setUser]);
 
   useEffect(() => {
     refreshUser().finally(() => setLoading(false));
+  }, [refreshUser]);
+
+  useEffect(() => {
+    function syncAcrossTabs(event: StorageEvent) {
+      if (event.key !== null && event.key !== "auth_token") return;
+      invalidatePhaseLadder();
+      invalidateResolvedQuiz();
+      refreshUser();
+    }
+
+    window.addEventListener("storage", syncAcrossTabs);
+    return () => window.removeEventListener("storage", syncAcrossTabs);
   }, [refreshUser]);
 
   async function login(email: string, password: string) {
@@ -113,18 +128,30 @@ export function useLogout() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
-  async function performLogout(redirectTo = "/login") {
+  async function performLogout(redirectTo?: string) {
     if (pending) return;
     setPending(true);
     try {
       await logout();
-      router.replace(redirectTo);
+      router.replace(redirectTo ?? loginHref(currentPath()));
     } finally {
       setPending(false);
     }
   }
 
   return { logout: performLogout, pending };
+}
+
+export function useRedirectIfAuthenticated(to: string) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const checked = useRef(false);
+
+  useEffect(() => {
+    if (loading || checked.current) return;
+    checked.current = true;
+    if (user) router.replace(to);
+  }, [loading, user, to, router]);
 }
 
 /**

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { QuizCategory, State, VehicleType } from "@driving-test-app/shared";
 import Spinner from "@/components/ui/Spinner";
@@ -174,20 +174,25 @@ export default function BrowseFilters({
         />
         <div className={cn("grid flex-1 gap-3", fields.length > 2 ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2")}>
           {fields.map((field) => (
-            <select
-              key={field}
-              value={searchParams.get(field) ?? ""}
-              onChange={(e) => updateFilter(field, e.target.value)}
-              aria-label={PLACEHOLDER[field]}
-              className="h-11 min-w-0 rounded-xl border border-border bg-card px-3 text-sm transition-colors outline-none focus-visible:border-chart-1 focus-visible:ring-3 focus-visible:ring-chart-1/25"
-            >
-              <option value="">{PLACEHOLDER[field]}</option>
-              {options[field].map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+            <div key={field} className="relative min-w-0">
+              <select
+                value={searchParams.get(field) ?? ""}
+                onChange={(e) => updateFilter(field, e.target.value)}
+                aria-label={PLACEHOLDER[field]}
+                className="h-11 w-full min-w-0 cursor-pointer appearance-none truncate rounded-xl border border-border bg-card pr-10 pl-3.5 text-sm transition-colors outline-none hover:border-chart-1/40 focus-visible:border-chart-1 focus-visible:ring-3 focus-visible:ring-chart-1/25"
+              >
+                <option value="">{PLACEHOLDER[field]}</option>
+                {options[field].map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+            </div>
           ))}
         </div>
       </div>
