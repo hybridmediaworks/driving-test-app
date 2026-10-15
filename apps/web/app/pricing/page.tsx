@@ -172,6 +172,7 @@ function PricingInner() {
   }, []);
 
   async function handleCheckout(plan: Plan) {
+    if (authLoading) return;
     if (!user) {
       // Covers the login/register detour (URL param) and the email-verification-link detour
       // (localStorage, since that link is server-generated and can't carry our own params).
@@ -325,7 +326,7 @@ function PricingInner() {
                       <Button
                         variant={isPopular ? "primary" : "outline"}
                         className="w-full"
-                        disabled={isCheckingOut}
+                        disabled={isCheckingOut || authLoading}
                         onClick={() => handleCheckout(plan)}
                       >
                         {isCheckingOut ? (

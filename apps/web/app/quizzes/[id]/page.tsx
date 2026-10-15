@@ -10,6 +10,8 @@ import Header from "@/components/Header";
 import QuizPreview from "@/components/quiz/QuizPreview";
 import QuizExperience from "@/components/state/quiz/QuizExperience";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { clearExamProgress, examOwnerKey, loadExamProgress, type ExamProgress } from "@/lib/examProgress";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
 type ExamStage = "preview" | "playing" | "results";
@@ -20,6 +22,9 @@ function QuizDetailInner({ id }: { id: string }) {
   const [notFoundError, setNotFoundError] = useState<string | null>(null);
   const [examStage, setExamStage] = useState<ExamStage>("preview");
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
+  const [examProgress, setExamProgress] = useState<ExamProgress | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const ownerKey = examOwnerKey(user?.id);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,19 +89,47 @@ function QuizDetailInner({ id }: { id: string }) {
   const isExam = data.quiz.quiz_type?.name === "final";
 
   if (isExam) {
+    const savedProgress =
+      examStage === "preview" && !authLoading && !data.locked ? loadExamProgress(ownerKey, data.quiz.id) : null;
+
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <Header variant="home" hideNav />
         <main className="flex-1">
           <div className="mx-auto max-w-2xl space-y-6 px-5 py-10 lg:py-14">
             {examStage === "preview" && (
-              <QuizPreview data={data} isExam onStart={() => setExamStage("playing")} />
+              <QuizPreview
+                data={data}
+                isExam
+                disabled={authLoading}
+                resume={
+                  savedProgress && {
+                    answered: Object.keys(savedProgress.answers).length,
+                    remainingSeconds:
+                      data.quiz.duration_seconds != null
+                        ? data.quiz.duration_seconds - savedProgress.elapsedSeconds
+                        : null,
+                  }
+                }
+                onResume={() => {
+                  setExamProgress(savedProgress);
+                  setExamStage("playing");
+                }}
+                onStart={() => {
+                  clearExamProgress(ownerKey, data.quiz.id);
+                  setExamProgress(null);
+                  setExamStage("playing");
+                }}
+              />
             )}
 
             {data.questions && examStage === "playing" && (
               <ExamPlayer
                 quiz={data.quiz}
                 questions={data.questions}
+                ownerKey={ownerKey}
+                initialProgress={examProgress}
+                exitHref="/quizzes"
                 onComplete={(a) => {
                   setAttempt(a);
                   setExamStage("results");

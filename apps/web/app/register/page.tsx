@@ -14,7 +14,8 @@ import {
   SocialSignIn,
 } from "@/components/auth/AuthFormParts";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
-import { ApiError, useAuth } from "@/lib/auth-context";
+import { ApiError, useAuth, useRedirectIfAuthenticated } from "@/lib/auth-context";
+import { safeRedirect } from "@/lib/redirect";
 
 function RegisterPageInner() {
   const router = useRouter();
@@ -22,7 +23,8 @@ function RegisterPageInner() {
   const searchParams = useSearchParams();
   // Only forwarded to the login link and social sign-in. A new account must verify its email
   // before anything else, so a pending checkout resumes from the verification link instead.
-  const redirect = searchParams.get("redirect");
+  const redirect = safeRedirect(searchParams.get("redirect"));
+  useRedirectIfAuthenticated(redirect || "/");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

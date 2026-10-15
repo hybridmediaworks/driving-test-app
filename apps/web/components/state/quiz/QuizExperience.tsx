@@ -34,6 +34,7 @@ import StreakBadge from "@/components/state/quiz/StreakBadge";
 import ReportMistakeDialog from "@/components/state/quiz/ReportMistakeDialog";
 import Toast, { type ToastVariant } from "@/components/ui/Toast";
 import QuizResults from "@/components/state/quiz/QuizResults";
+import AccessLostDialog, { usePremiumAccessLost } from "@/components/auth/AccessLostDialog";
 import { api, ApiError } from "@/lib/api";
 import { invalidatePhaseLadder } from "@/lib/phaseLadder";
 import { invalidateResolvedQuiz } from "@/lib/useResolvedQuiz";
@@ -214,6 +215,7 @@ function QuizTaker({
   initialView?: "results";
 }) {
   const { user, loading: authLoading } = useAuth();
+  const accessLost = usePremiumAccessLost(quiz.is_premium);
   const { isPremium } = useEntitlement();
   const pathname = usePathname();
   const router = useRouter();
@@ -1070,6 +1072,7 @@ function QuizTaker({
 
   return (
     <>
+      <AccessLostDialog open={accessLost} exitHref={exitHref} />
       <audio
         ref={ambientAudioRef}
         src={currentTrackUrl ?? undefined}

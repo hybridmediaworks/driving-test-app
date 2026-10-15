@@ -1,11 +1,8 @@
 import type { SocialAuthError, SocialProvider } from "@driving-test-app/shared";
 import { API_URL } from "./api";
+import { safeRedirect } from "./redirect";
 
 const REDIRECT_KEY = "social_auth_redirect";
-
-function safeRedirect(redirect: string | null): string | null {
-  return redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : null;
-}
 
 export function startSocialLogin(provider: SocialProvider, redirect: string | null): void {
   try {

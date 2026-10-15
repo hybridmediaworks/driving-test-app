@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
+import { currentPath, loginHref } from "@/lib/redirect";
 import AppSidebar from "./AppSidebar";
 import AppSidebarHeader from "./AppSidebarHeader";
 
@@ -22,7 +23,7 @@ export default function AppLayout({
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace("/login");
+      router.replace(loginHref(currentPath()));
       return;
     }
     if (!user.email_verified_at) {
