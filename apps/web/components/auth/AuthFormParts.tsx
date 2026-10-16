@@ -20,10 +20,17 @@ export const authLinkClass =
 const inputClass =
   "h-10 rounded-xl border-neutral-200 bg-white pl-9 text-base! text-neutral-900 placeholder:text-neutral-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/30 sm:h-12 sm:pl-12 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder:text-neutral-500";
 
-const SOCIAL_PROVIDERS: { id: SocialProvider; name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
-  { id: "google", name: "Google", Icon: Google },
-  { id: "facebook", name: "Facebook", Icon: FacebookLogo },
+const SOCIAL_PROVIDERS: {
+  id: SocialProvider;
+  name: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  enabled: boolean;
+}[] = [
+  { id: "google", name: "Google", Icon: Google, enabled: true },
+  { id: "facebook", name: "Facebook", Icon: FacebookLogo, enabled: false },
 ];
+
+const ENABLED_SOCIAL_PROVIDERS = SOCIAL_PROVIDERS.filter((provider) => provider.enabled);
 
 export function AuthField({
   id,
@@ -128,8 +135,10 @@ export function SocialSignIn({ redirect = null, error }: { redirect?: string | n
           {error}
         </p>
       )}
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 xl:gap-4">
-        {SOCIAL_PROVIDERS.map(({ id, name, Icon }) => (
+      <div
+        className={`mt-3 grid gap-2 sm:mt-5 sm:gap-3 xl:gap-4 ${ENABLED_SOCIAL_PROVIDERS.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
+      >
+        {ENABLED_SOCIAL_PROVIDERS.map(({ id, name, Icon }) => (
           <button
             key={id}
             type="button"
