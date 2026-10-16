@@ -3,14 +3,14 @@
 import DrivingVideosSection from "@/components/state/DrivingVideosSection";
 import GoFurtherSection from "@/components/state/GoFurtherSection";
 import HandbookSection from "@/components/state/HandbookSection";
-import PhaseLadderSection from "@/components/state/PhaseLadderSection";
+import StudyRouteSection from "@/components/state/permit-test/StudyRouteSection";
 import HeroSection from "./driving-test/HeroSection";
 
 export default function DrivingTestContent() {
   return (
     <>
       <HeroSection />
-      <PhaseLadderSection />
+      <StudyRouteSection track="driving" />
       <DrivingVideosSection />
       <HandbookSection />
       <GoFurtherSection />

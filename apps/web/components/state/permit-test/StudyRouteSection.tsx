@@ -53,7 +53,8 @@ function formatStudyTime(minutes: number): string {
 
 type Filter = "all" | "free";
 
-export default function StudyRouteSection() {
+export default function StudyRouteSection({ track = "permit" }: { track?: "permit" | "driving" }) {
+  const isDriving = track === "driving";
   const phases = useLadderPhases();
   const { selectedState, selectedVehicle } = useWebLayout();
   const isPremium = useEntitlement().isPremiumFor(selectedVehicle);
@@ -86,11 +87,14 @@ export default function StudyRouteSection() {
   const premiumTests = premiumLocked.length - premiumMarathons;
   const firstPremiumLocked = filter === "all" && showAccessTag ? premiumLocked[0] : undefined;
 
-  const simulatorQuestions = phases
-    .find((p) => p.header.headerTitle === "The exam simulator")
-    ?.steps.find((s) => !s.placeholder)?.totalQuestions;
-  const examLabel =
-    selectedVehicle === "CDL"
+  const simulatorQuestions = isDriving
+    ? allSteps.find((s) => s.quizType === "Final Exam Simulation")?.totalQuestions
+    : phases
+        .find((p) => p.header.headerTitle === "The exam simulator")
+        ?.steps.find((s) => !s.placeholder)?.totalQuestions;
+  const examLabel = isDriving
+    ? "road test"
+    : selectedVehicle === "CDL"
       ? "CDL knowledge test"
       : selectedVehicle === "Motorcycle"
         ? "motorcycle knowledge test"
@@ -110,7 +114,10 @@ export default function StudyRouteSection() {
     .join(" and ");
 
   return (
-    <section id="study-route" className="bg-background2 px-5 pt-15 pb-15 lg:pt-28 lg:pb-24">
+    <section
+      id="study-route"
+      className={`bg-background2 px-5 pb-15 lg:pb-24 ${isDriving ? "pt-0" : "pt-15 lg:pt-28"}`}
+    >
       <div className="mx-auto max-w-container">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
@@ -121,8 +128,9 @@ export default function StudyRouteSection() {
               {title}
             </Heading>
             <Paragraph size="lg" color="muted" className="mt-3 max-w-150">
-              Start with the essentials and work up to the rules that cost people points. Your next test is always one
-              tap away.
+              {isDriving
+                ? "Work through real road situations and skills tests before you sit behind the wheel. Your next test is always one tap away."
+                : "Start with the essentials and work up to the rules that cost people points. Your next test is always one tap away."}
             </Paragraph>
           </div>
           {showFilter && (
@@ -345,7 +353,7 @@ export default function StudyRouteSection() {
                   {selectedState} {examLabel}
                 </p>
               </div>
-              <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">
+              <p className="basis-full pl-15 text-sm font-semibold text-neutral-600 sm:basis-auto sm:pl-0 dark:text-neutral-300">
                 {simulatorQuestions ? `${simulatorQuestions} questions · ` : ""}
                 {DEFAULT_PASSING_SCORE_PERCENT}% to pass
               </p>

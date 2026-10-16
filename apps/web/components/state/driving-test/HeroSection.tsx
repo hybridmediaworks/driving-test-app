@@ -7,7 +7,7 @@ import { useWebLayout } from "@/lib/web-layout-context";
 import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
 import { useNextQuizSlug } from "@/lib/usePhaseCompletion";
 import { ArrowRight, BadgeCheck, Play } from "lucide-react";
-import LiveDataSection from "../LiveDataSection";
+import EverythingYouNeedSection from "@/components/state/permit-test/EverythingYouNeedSection";
 
 const vehicleSlugs: Record<string, string> = {
   Car: "car",
@@ -49,20 +49,7 @@ export default function HeroSection() {
           </div>
         </div>
       </section>
-      <section className="md:space-y-15 lg:pt-30 pt-15 px-5 bg-background2">
-        <div className="mx-auto max-w-266 space-y-4 text-center">
-          <Heading size="xl" className="font-semibold font-sora">
-            Everything you need to pass the {selectedState} driving test in
-            one place.
-          </Heading>
-          <Paragraph size="lg" className="mx-auto max-w-230">
-            Practice simulators, real instructional videos, and
-            hazard-perception drills that mirror what examiners actually
-            check for on the road — so there are no surprises on test day.
-          </Paragraph>
-        </div>
-        <LiveDataSection />
-      </section>
+      <EverythingYouNeedSection track="driving" />
     </>
   );
 }
