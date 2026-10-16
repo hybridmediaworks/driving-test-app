@@ -55,12 +55,25 @@ export default function ExamSimulatorSection() {
         </div>
 
         <div className="mt-10 grid gap-7 lg:mt-12 lg:grid-cols-[minmax(0,1fr)_294px]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/state-hub/exam-simulator.png"
-            alt="Exam simulator: a road sign question with answer choices and a progress grid"
-            className="w-full rounded-3xl shadow-hover"
-          />
+          <div className="relative overflow-hidden rounded-3xl shadow-hover">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/state-hub/exam-simulator.png"
+              alt="Exam simulator: a road sign question with answer choices and a progress grid"
+              className={`w-full ${canStart ? "" : "blur-[3px] max-sm:h-80 max-sm:object-cover max-sm:object-left-top"}`}
+            />
+            {!canStart && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/55 px-6 text-center lg:gap-6 dark:bg-neutral-900/60">
+                <Gem aria-hidden strokeWidth={1.25} className="size-14 text-yellow-500 sm:size-20 lg:size-28" />
+                <p className="font-sora text-[26px] leading-tight font-semibold tracking-[-0.96px] text-black sm:text-[36px] lg:text-[48px] lg:leading-14 dark:text-neutral-100">
+                  Unlock Premium Now
+                </p>
+                <Paragraph className="max-w-86 text-center">
+                  Unlock unlimited questions, ad-free studying, and a money-back guarantee.
+                </Paragraph>
+              </div>
+            )}
+          </div>
 
           <div className="flex flex-col gap-3">
             {CALLOUTS.map((callout, index) => (
@@ -81,17 +94,15 @@ export default function ExamSimulatorSection() {
                 </div>
               </div>
             ))}
-            <Link
-              href={ctaHref}
-              className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-yellow-400 px-5 text-sm font-bold text-neutral-900 shadow-xs transition-colors hover:bg-yellow-500 lg:mt-auto"
-            >
-              {canStart ? (
+            {canStart && (
+              <Link
+                href={ctaHref}
+                className="mt-3 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-yellow-400 px-5 text-sm font-bold text-neutral-900 shadow-xs transition-colors hover:bg-yellow-500 lg:mt-auto"
+              >
                 <Play aria-hidden className="size-4 fill-current" />
-              ) : (
-                <Gem aria-hidden className="size-4" />
-              )}
-              {canStart ? "Start the simulator" : "Unlock the full simulator"}
-            </Link>
+                Start the simulator
+              </Link>
+            )}
           </div>
         </div>
       </div>
