@@ -7,6 +7,7 @@ use App\Enums\Feature;
 use App\Models\Quiz;
 use App\Models\QuizCategory;
 use App\Models\User;
+use App\Models\VehicleType;
 use App\Services\Entitlement\EntitlementResolver;
 
 /**
@@ -51,7 +52,10 @@ class ResolveQuizProgression
     {
         // Admins count as entitled too (the QA bypass in Entitlement::isPremium), so they get the
         // same open ladder without a rule of their own.
-        $isEntitled = $this->entitlement->resolve($user)->hasFeature(Feature::PremiumQuiz);
+        $isEntitled = $this->entitlement->resolve($user)->hasFeature(
+            Feature::PremiumQuiz,
+            VehicleType::query()->where('name', $vehicleType)->value('id'),
+        );
 
         $quizzes = Quiz::query()
             ->where('is_active', true)

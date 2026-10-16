@@ -23,6 +23,7 @@ import PublicAccountMenu from "@/components/PublicAccountMenu";
 import Button from "@/components/ui/Button";
 import LoginButton from "@/components/auth/LoginButton";
 import { useAuth, useEntitlement } from "@/lib/auth-context";
+import { pricingHref } from "@/lib/pricing";
 import { stateToSlug, usStates } from "@/lib/usStates";
 import { useWebLayout } from "@/lib/web-layout-context";
 
@@ -69,13 +70,15 @@ const testTypeOptions = [
 export default function Header({
   variant = "home",
   hideNav = false,
+  navigateOnVehicleChange = true,
 }: {
   variant?: string;
   hideNav?: boolean;
+  navigateOnVehicleChange?: boolean;
 }) {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { isPremium } = useEntitlement();
+  const { premiumVehicleTypes } = useEntitlement();
   const {
     selectedState,
     hasStoredState,
@@ -85,6 +88,12 @@ export default function Header({
     setSelectedTestType,
     isPermitOnlyVehicle,
   } = useWebLayout();
+  const missingVehicles = vehicleOptions
+    .map((option) => option.label)
+    .filter((label) => !premiumVehicleTypes.includes(label.toLowerCase()));
+  const showUpgrade = !user?.is_admin && missingVehicles.length > 0;
+  const upgradeVehicle = missingVehicles.includes(selectedVehicle) ? selectedVehicle : missingVehicles[0];
+  const upgradeLabel = premiumVehicleTypes.length > 0 ? "Unlock More Vehicles" : "Upgrade to Premium";
   const [activeDropdown, setActiveDropdown] = useState<Dropdown>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileStatesOpen, setMobileStatesOpen] = useState(false);
@@ -123,7 +132,7 @@ export default function Header({
     setMobileCarOpen(false);
     setMobileMenuOpen(false);
 
-    if (!selectedState) return;
+    if (!selectedState || !navigateOnVehicleChange) return;
 
     router.push(`/${stateToSlug(selectedState)}${vehiclePaths[vehicle]}`);
   }
@@ -305,15 +314,15 @@ export default function Header({
             <LoginButton className={`p-3! font-medium ${loading ? "invisible" : ""}`} />
           )}
           {/* Signed-in free users need the upgrade path too, not just guests. */}
-          {!isPremium && (
+          {showUpgrade && (
             <Button
               size="md"
               variant="gold"
               className={`gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600! ${loading ? "invisible" : ""}`}
-              href="/pricing"
+              href={pricingHref(upgradeVehicle)}
             >
               <Gem className="h-5 w-5" />
-              Upgrade to Premium
+              {upgradeLabel}
             </Button>
           )}
         </div>
@@ -483,15 +492,15 @@ export default function Header({
             ) : (
               <LoginButton className={`flex-1 justify-center py-3! font-medium ${loading ? "invisible" : ""}`} />
             )}
-            {!isPremium && (
+            {showUpgrade && (
               <Button
                 size="md"
                 variant="gold"
                 className={`flex-1 justify-center gap-2 bg-yellow-500! font-semibold text-neutral-700 dark:text-neutral-300! shadow-xs hover:bg-yellow-600! ${loading ? "invisible" : ""}`}
-                href="/pricing"
+                href={pricingHref(upgradeVehicle)}
               >
                 <Gem className="h-5 w-5" />
-                Upgrade to Premium
+                {upgradeLabel}
               </Button>
             )}
           </div>

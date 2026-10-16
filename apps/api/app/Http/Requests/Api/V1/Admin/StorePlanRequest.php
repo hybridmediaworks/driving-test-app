@@ -26,6 +26,7 @@ class StorePlanRequest extends FormRequest
         return [
             'key' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9]+(?:_[a-z0-9]+)*$/', 'unique:plans,key'],
             'name' => ['required', 'string', 'max:255'],
+            'vehicle_type_id' => ['nullable', 'integer', 'exists:vehicle_types,id'],
             'type' => ['required', Rule::enum(PlanType::class)],
             'billing_interval' => ['nullable', Rule::enum(BillingInterval::class)],
             'price_cents' => ['required', 'integer', 'min:0'],

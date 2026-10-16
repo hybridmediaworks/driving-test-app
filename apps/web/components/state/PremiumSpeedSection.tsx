@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useEntitlement } from "@/lib/auth-context";
+import { useSelectedVehicle } from "@/lib/web-layout-context";
 
 /**
  * "2x faster prep — Students with Premium finish prep faster" — the full-bleed roundabout banner
@@ -16,7 +17,7 @@ import { useEntitlement } from "@/lib/auth-context";
  * padding, so removing this one doesn't leave a gap.
  */
 export default function PremiumSpeedSection() {
-  const { isPremium } = useEntitlement();
+  const isPremium = useEntitlement().isPremiumFor(useSelectedVehicle());
   if (isPremium) return null;
 
   return (

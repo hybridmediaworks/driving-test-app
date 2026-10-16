@@ -25,6 +25,8 @@ class PlanController extends Controller
         $perPage = min(max($perPage, 5), 100);
 
         $plans = Plan::query()
+            ->with('vehicleType')
+            ->orderBy('vehicle_type_id')
             ->orderBy('sort_order')
             ->paginate($perPage)
             ->withQueryString();

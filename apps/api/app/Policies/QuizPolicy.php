@@ -38,6 +38,6 @@ class QuizPolicy
             return true;
         }
 
-        return $this->entitlement->resolve($user)->hasFeature(Feature::PremiumQuiz);
+        return $this->entitlement->resolve($user)->hasFeature(Feature::PremiumQuiz, $quiz->vehicle_type_id);
     }
 }

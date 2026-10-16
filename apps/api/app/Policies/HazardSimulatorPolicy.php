@@ -33,6 +33,6 @@ class HazardSimulatorPolicy
             return true;
         }
 
-        return $this->entitlement->resolve($user)->hasFeature(Feature::Videos);
+        return $this->entitlement->resolve($user)->hasFeature(Feature::Videos, $simulator->video?->vehicle_type_id);
     }
 }

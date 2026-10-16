@@ -16,6 +16,8 @@ function formatPrice(priceCents: number): string {
   return (priceCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
+const VEHICLE_LABELS: Record<string, string> = { car: "Car", motorcycle: "Motorcycle", cdl: "CDL" };
+
 function PlansIndexInner() {
   const { page, setPage } = useUrlQuery();
   const { data: plans, reload } = usePaginatedList<AdminPlan>("/admin/plans", page);
@@ -62,7 +64,8 @@ function PlansIndexInner() {
                           {p.name}
                         </Link>
                         <p className="text-sm text-muted-foreground">
-                          <code className="text-xs">{p.key}</code> · {formatPrice(p.price_cents)}
+                          <code className="text-xs">{p.key}</code> · {VEHICLE_LABELS[p.vehicle_type ?? ""] ?? "All vehicles"} ·{" "}
+                          {formatPrice(p.price_cents)}
                           {p.type === "one_time" ? " one-time" : p.billing_interval === "week" ? " / week" : " / month"} · {p.max_seats}{" "}
                           seat(s)
                         </p>

@@ -36,6 +36,7 @@ export default function QuizResults({
   wrongQuestionIds,
   passingThreshold = 80,
   showUpsell = false,
+  upsellHref = "/pricing",
   stateName = "",
   stateCode = "",
   quizzesHref,
@@ -49,6 +50,7 @@ export default function QuizResults({
   wrongQuestionIds: number[];
   passingThreshold?: number;
   showUpsell?: boolean;
+  upsellHref?: string;
   stateName?: string;
   stateCode?: string;
   // Premium learners aren't shown the /pricing upsell below — this is the "All tests" link they
@@ -224,7 +226,7 @@ export default function QuizResults({
             </p>
 
             {showUpsell ? (
-              <Button href="/pricing" variant="ghost" className="mt-3 w-full rounded-2xl! border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
+              <Button href={upsellHref} variant="ghost" className="mt-3 w-full rounded-2xl! border border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
                 {t("getAllQuestionsCta", { total: `${TOTAL_BANK}+`, state: stateCode })}
               </Button>
             ) : (

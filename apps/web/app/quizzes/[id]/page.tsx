@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import QuizPreview from "@/components/quiz/QuizPreview";
 import QuizExperience from "@/components/state/quiz/QuizExperience";
 import { api, ApiError } from "@/lib/api";
+import { pricingHref } from "@/lib/pricing";
 import { useAuth } from "@/lib/auth-context";
 import { clearExamProgress, examOwnerKey, loadExamProgress, type ExamProgress } from "@/lib/examProgress";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
@@ -61,7 +62,7 @@ function QuizDetailInner({ id }: { id: string }) {
       const next = idx >= 0 ? list[idx + 1] : undefined;
 
       if (!next) router.push("/quizzes");
-      else if (next.locked) router.push("/pricing");
+      else if (next.locked) router.push(pricingHref(quiz.vehicle_type?.name));
       else router.push(`/quizzes/${next.id}`);
     } catch {
       router.push("/quizzes");

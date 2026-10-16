@@ -34,6 +34,6 @@ class CheatSheetPolicy
             return true;
         }
 
-        return $this->entitlement->resolve($user)->hasFeature(Feature::CheatSheets);
+        return $this->entitlement->resolve($user)->hasFeature(Feature::CheatSheets, $cheatSheet->vehicle_type_id);
     }
 }

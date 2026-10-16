@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreCheckoutRequest;
 use App\Http\Resources\Api\V1\InvoiceResource;
 use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\User;
 use App\Services\Entitlement\EntitlementResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +34,18 @@ class BillingController extends Controller
      */
     public function checkout(StoreCheckoutRequest $request): JsonResponse
     {
-        $plan = Plan::query()->where('key', $request->string('plan_key'))->firstOrFail();
+        $plan = Plan::query()->with('vehicleType')->where('key', $request->string('plan_key'))->firstOrFail();
+
+        $entitlement = $this->entitlement->resolve($request->user());
+        $alreadyCovered = $plan->vehicle_type_id === null
+            ? $entitlement->hasPaidAccess() && $entitlement->vehicleTypeIds === null
+            : $entitlement->coversVehicle($plan->vehicle_type_id);
+
+        if ($alreadyCovered) {
+            return response()->json([
+                'message' => __('You already have Premium for :vehicle.', ['vehicle' => $plan->vehicleType?->title ?? __('every vehicle')]),
+            ], 422);
+        }
 
         $url = ($this->createCheckoutSession)($request->user(), $plan);
 
@@ -50,20 +63,18 @@ class BillingController extends Controller
     public function subscription(Request $request): JsonResponse
     {
         $user = $request->user();
-        $subscription = $user->subscription('default');
 
         // A customer with no subscription row is the shape a missed webhook leaves behind: checkout
         // created the Stripe customer, the charge went through, and nothing ever wrote the
         // subscription here. Ask Stripe directly before reporting them as free — this is the call
         // the post-checkout page polls, so the account repairs itself instead of needing a webhook
         // redelivery. Anyone who really has no subscription costs one API call.
-        if ($subscription === null && $user->stripe_id !== null) {
-            if (($this->syncSubscriptions)($user) > 0) {
-                $subscription = $user->subscription('default');
-            }
+        if ($user->subscriptions->isEmpty() && $user->stripe_id !== null && ($this->syncSubscriptions)($user) > 0) {
+            $user->load('subscriptions');
         }
 
         $entitlement = $this->entitlement->resolve($user);
+        $subscriptions = $this->currentSubscriptions($user);
 
         return response()->json([
             'tier' => $entitlement->tier,
@@ -71,14 +82,36 @@ class BillingController extends Controller
             'access_until' => $entitlement->accessUntil,
             'family_group_id' => $entitlement->familyGroupId,
             'is_premium' => $entitlement->isPremium(),
-            'subscription' => $subscription === null ? null : [
+            'premium_vehicle_types' => $this->entitlement->premiumVehicleTypeNames($entitlement),
+            'subscription' => $subscriptions[0] ?? null,
+            'subscriptions' => $subscriptions,
+        ]);
+    }
+
+    private function currentSubscriptions(User $user): array
+    {
+        $subscriptions = $user->subscriptions->filter(fn (Subscription $subscription) => $subscription->valid() || $subscription->pastDue());
+
+        $plans = Plan::query()
+            ->with('vehicleType')
+            ->whereIn('stripe_price_id', $subscriptions->pluck('stripe_price')->filter()->all())
+            ->get()
+            ->keyBy('stripe_price_id');
+
+        return $subscriptions->map(function (Subscription $subscription) use ($plans): array {
+            $plan = $plans->get($subscription->stripe_price);
+
+            return [
+                'id' => $subscription->id,
+                'plan_name' => $plan?->name,
+                'vehicle_type' => $plan?->vehicleType?->name,
                 'stripe_status' => $subscription->stripe_status,
                 'canceled' => $subscription->canceled(),
                 'ends_at' => $subscription->ends_at,
                 'on_trial' => $subscription->onTrial(),
                 'trial_ends_at' => $subscription->trial_ends_at,
-            ],
-        ]);
+            ];
+        })->values()->all();
     }
 
     /**
@@ -89,10 +122,21 @@ class BillingController extends Controller
      */
     public function cancelSubscription(Request $request): JsonResponse
     {
-        $subscription = $request->user()->subscription('default');
+        $request->validate(['subscription_id' => ['nullable', 'integer']]);
+
+        $cancellable = $request->user()->subscriptions
+            ->filter(fn (Subscription $subscription) => $subscription->valid() && ! $subscription->canceled());
+
+        $subscription = $request->filled('subscription_id')
+            ? $cancellable->firstWhere('id', $request->integer('subscription_id'))
+            : ($cancellable->count() === 1 ? $cancellable->first() : null);
 
         if ($subscription === null) {
-            return response()->json(['message' => __('You do not have an active subscription.')], 422);
+            return response()->json([
+                'message' => $cancellable->count() > 1 && ! $request->filled('subscription_id')
+                    ? __('You have more than one subscription — choose which one to cancel.')
+                    : __('You do not have an active subscription.'),
+            ], 422);
         }
 
         $subscription->cancel();

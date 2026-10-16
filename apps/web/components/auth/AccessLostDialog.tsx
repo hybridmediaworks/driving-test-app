@@ -4,13 +4,22 @@ import { usePathname } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useAuth, useEntitlement } from "@/lib/auth-context";
+import { pricingHref } from "@/lib/pricing";
 
-export function usePremiumAccessLost(isPremiumContent: boolean): boolean {
-  const { loading, isPremium } = useEntitlement();
-  return isPremiumContent && !loading && !isPremium;
+export function usePremiumAccessLost(isPremiumContent: boolean, vehicle?: string | null): boolean {
+  const { loading, isPremiumFor } = useEntitlement();
+  return isPremiumContent && !loading && !isPremiumFor(vehicle);
 }
 
-export default function AccessLostDialog({ open, exitHref }: { open: boolean; exitHref: string }) {
+export default function AccessLostDialog({
+  open,
+  exitHref,
+  vehicle,
+}: {
+  open: boolean;
+  exitHref: string;
+  vehicle?: string | null;
+}) {
   const { user } = useAuth();
   const pathname = usePathname();
   const signedOut = user === null;
@@ -33,7 +42,7 @@ export default function AccessLostDialog({ open, exitHref }: { open: boolean; ex
               Sign in to continue
             </Button>
           ) : (
-            <Button href="/pricing" className="w-full">
+            <Button href={pricingHref(vehicle)} className="w-full">
               See plans
             </Button>
           )}

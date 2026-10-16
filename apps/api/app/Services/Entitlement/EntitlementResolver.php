@@ -2,13 +2,15 @@
 
 namespace App\Services\Entitlement;
 
+use App\Enums\BillingInterval;
 use App\Enums\EntitlementStatus;
 use App\Enums\EntitlementTier;
 use App\Enums\FamilyInviteStatus;
 use App\Enums\FamilyMemberRole;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use App\Models\VehicleType;
 
 /**
  * The single source of truth for "what can this user access." Sanctum tokens never expire
@@ -30,59 +32,56 @@ class EntitlementResolver
         // triggered the insert. Coerce rather than trust the raw value is already a bool.
         $isAdmin = (bool) $user->is_admin;
 
-        $familyEntitlement = $this->resolveFamilyMembership($user, $isAdmin);
-        if ($familyEntitlement !== null) {
-            return $familyEntitlement;
-        }
+        $grants = array_values(array_filter([
+            $this->familyGrant($user),
+            ...$this->subscriptionGrants($user),
+            $this->storeGrant($user),
+        ]));
 
-        $subscription = $user->subscription('default');
-
-        if ($subscription !== null && $subscription->active()) {
+        if ($grants === []) {
             return new Entitlement(
-                tier: $this->tierForStripePrice($subscription->stripe_price),
-                status: EntitlementStatus::Active,
-                // null while still auto-renewing; only set once canceled (access continues until
-                // this date, matching Cashier's own cancel()-not-cancelNow() behavior).
-                accessUntil: $subscription->ends_at,
+                tier: EntitlementTier::Free,
+                status: EntitlementStatus::Expired,
+                accessUntil: null,
                 familyGroupId: null,
                 isAdmin: $isAdmin,
+                vehicleTypeIds: [],
             );
         }
 
-        if ($subscription !== null && $subscription->pastDue() && $subscription->past_due_since !== null) {
-            $graceDeadline = $subscription->past_due_since->copy()->addDays((int) config('billing.past_due_grace_days'));
+        usort($grants, fn (AccessGrant $a, AccessGrant $b): int => $this->statusRank($a) <=> $this->statusRank($b));
+        $primary = $grants[0];
 
-            if (now()->lessThan($graceDeadline)) {
-                return new Entitlement(
-                    tier: $this->tierForStripePrice($subscription->stripe_price),
-                    status: EntitlementStatus::GracePeriod,
-                    accessUntil: $graceDeadline,
-                    familyGroupId: null,
-                    isAdmin: $isAdmin,
-                );
+        $vehicleTypeIds = [];
+        foreach ($grants as $grant) {
+            if ($grant->vehicleTypeId === null) {
+                $vehicleTypeIds = null;
+                break;
             }
-        }
-
-        // Premium bought through the mobile stores (Apple/Google), synced from RevenueCat's webhook
-        // into `revenuecat_premium_until`. Any paid tier unlocks every feature (hasFeature ===
-        // isPremium), so a store subscription is granted the same access as a Stripe one.
-        if ($user->revenuecat_premium_until !== null && $user->revenuecat_premium_until->isFuture()) {
-            return new Entitlement(
-                tier: EntitlementTier::MonthlySubscriber,
-                status: EntitlementStatus::Active,
-                accessUntil: $user->revenuecat_premium_until,
-                familyGroupId: null,
-                isAdmin: $isAdmin,
-            );
+            $vehicleTypeIds[] = $grant->vehicleTypeId;
         }
 
         return new Entitlement(
-            tier: EntitlementTier::Free,
-            status: EntitlementStatus::Expired,
-            accessUntil: null,
-            familyGroupId: null,
+            tier: $primary->tier,
+            status: $primary->status,
+            accessUntil: $primary->accessUntil,
+            familyGroupId: collect($grants)->first(fn (AccessGrant $grant) => $grant->familyGroupId !== null)?->familyGroupId,
             isAdmin: $isAdmin,
+            vehicleTypeIds: $vehicleTypeIds === null ? null : array_values(array_unique($vehicleTypeIds)),
         );
+    }
+
+    public function premiumVehicleTypeNames(Entitlement $entitlement): array
+    {
+        if (! $entitlement->hasPaidAccess()) {
+            return [];
+        }
+
+        return VehicleType::query()
+            ->when($entitlement->vehicleTypeIds !== null, fn ($query) => $query->whereIn('id', $entitlement->vehicleTypeIds))
+            ->orderBy('id')
+            ->pluck('name')
+            ->all();
     }
 
     private function guest(): Entitlement
@@ -93,12 +92,18 @@ class EntitlementResolver
             accessUntil: null,
             familyGroupId: null,
             isAdmin: false,
+            vehicleTypeIds: [],
         );
     }
 
-    private function resolveFamilyMembership(User $user, bool $isAdmin): ?Entitlement
+    private function statusRank(AccessGrant $grant): int
     {
-        $membership = $user->familyMembership()->with('familyGroup')->first();
+        return $grant->status === EntitlementStatus::Active ? 0 : 1;
+    }
+
+    private function familyGrant(User $user): ?AccessGrant
+    {
+        $membership = $user->familyMembership()->with('familyGroup.plan')->first();
 
         if ($membership === null || $membership->invite_status !== FamilyInviteStatus::Claimed) {
             return null;
@@ -109,31 +114,89 @@ class EntitlementResolver
             return null;
         }
 
-        $tier = $membership->role === FamilyMemberRole::Owner
-            ? EntitlementTier::LifetimeFamilyOwner
-            : EntitlementTier::LifetimeFamilyMember;
-
-        return new Entitlement(
-            tier: $tier,
+        return new AccessGrant(
+            tier: $membership->role === FamilyMemberRole::Owner
+                ? EntitlementTier::LifetimeFamilyOwner
+                : EntitlementTier::LifetimeFamilyMember,
             status: EntitlementStatus::Active,
             accessUntil: null, // lifetime — no expiry
+            vehicleTypeId: $group->plan?->vehicle_type_id,
             familyGroupId: $group->id,
-            isAdmin: $isAdmin,
         );
     }
 
-    private function tierForStripePrice(?string $stripePriceId): EntitlementTier
+    private function subscriptionGrants(User $user): array
     {
-        if ($stripePriceId === null) {
-            return EntitlementTier::Free;
+        $subscriptions = $user->subscriptions;
+        if ($subscriptions->isEmpty()) {
+            return [];
         }
 
-        $plan = Plan::query()->where('stripe_price_id', $stripePriceId)->first();
+        $plans = Plan::query()
+            ->whereIn('stripe_price_id', $subscriptions->pluck('stripe_price')->filter()->all())
+            ->get()
+            ->keyBy('stripe_price_id');
 
-        return match ($plan?->key) {
+        $grants = [];
+
+        foreach ($subscriptions as $subscription) {
+            $plan = $plans->get($subscription->stripe_price);
+            if ($plan === null) {
+                continue;
+            }
+
+            if ($subscription->active()) {
+                $grants[] = new AccessGrant(
+                    tier: $this->tierFor($plan),
+                    status: EntitlementStatus::Active,
+                    accessUntil: $subscription->ends_at,
+                    vehicleTypeId: $plan->vehicle_type_id,
+                );
+
+                continue;
+            }
+
+            if ($subscription->pastDue() && $subscription->past_due_since !== null) {
+                $graceDeadline = $subscription->past_due_since->copy()->addDays((int) config('billing.past_due_grace_days'));
+
+                if (now()->lessThan($graceDeadline)) {
+                    $grants[] = new AccessGrant(
+                        tier: $this->tierFor($plan),
+                        status: EntitlementStatus::GracePeriod,
+                        accessUntil: $graceDeadline,
+                        vehicleTypeId: $plan->vehicle_type_id,
+                    );
+                }
+            }
+        }
+
+        return $grants;
+    }
+
+    // Premium bought through the mobile stores (Apple/Google), synced from RevenueCat's webhook
+    // into `revenuecat_premium_until`.
+    private function storeGrant(User $user): ?AccessGrant
+    {
+        if ($user->revenuecat_premium_until === null || ! $user->revenuecat_premium_until->isFuture()) {
+            return null;
+        }
+
+        return new AccessGrant(
+            tier: EntitlementTier::MonthlySubscriber,
+            status: EntitlementStatus::Active,
+            accessUntil: $user->revenuecat_premium_until,
+            vehicleTypeId: null,
+        );
+    }
+
+    private function tierFor(Plan $plan): EntitlementTier
+    {
+        return match ($plan->key) {
             'weekly' => EntitlementTier::WeeklySubscriber,
             'monthly' => EntitlementTier::MonthlySubscriber,
-            default => EntitlementTier::Free,
+            default => $plan->billing_interval === BillingInterval::Week
+                ? EntitlementTier::WeeklySubscriber
+                : EntitlementTier::MonthlySubscriber,
         };
     }
 }

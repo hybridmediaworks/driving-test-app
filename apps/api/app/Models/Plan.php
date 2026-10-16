@@ -6,6 +6,7 @@ use App\Enums\BillingInterval;
 use App\Enums\PlanType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Plan extends Model
@@ -14,6 +15,7 @@ class Plan extends Model
 
     protected $fillable = [
         'key',
+        'vehicle_type_id',
         'name',
         'type',
         'billing_interval',
@@ -33,6 +35,16 @@ class Plan extends Model
             'billing_interval' => BillingInterval::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    public function vehicleType(): BelongsTo
+    {
+        return $this->belongsTo(VehicleType::class);
+    }
+
+    public function subscriptionType(): string
+    {
+        return $this->vehicleType?->name ?? 'default';
     }
 
     /**

@@ -45,8 +45,9 @@ const CALLOUTS = [
 ];
 
 export default function ExamSimulatorSection() {
-  const { selectedState } = useWebLayout();
-  const { isPremium } = useEntitlement();
+  const { selectedState, selectedVehicle } = useWebLayout();
+  const { isPremiumFor } = useEntitlement();
+  const isPremium = isPremiumFor(selectedVehicle);
   const phases = useLadderPhases();
   const stateCode = stateAbbreviations[selectedState] ?? "";
 

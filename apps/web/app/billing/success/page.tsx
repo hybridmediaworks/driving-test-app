@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
 const POLL_ATTEMPTS = 6;
@@ -16,16 +17,22 @@ const POLL_INTERVAL_MS = 2000;
 export default function BillingSuccessPage() {
   const [status, setStatus] = useState<"checking" | "confirmed" | "pending">("checking");
   const attemptsRef = useRef(0);
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
+    const vehicle = new URLSearchParams(window.location.search).get("vehicle");
 
     async function poll() {
       while (!cancelled && attemptsRef.current < POLL_ATTEMPTS) {
         attemptsRef.current += 1;
         try {
           const subscription = await api.get<MySubscription>("/billing/subscription");
-          if (subscription.is_premium) {
+          const active = vehicle
+            ? subscription.premium_vehicle_types.includes(vehicle)
+            : subscription.is_premium;
+          if (active) {
+            await refreshUser();
             if (!cancelled) setStatus("confirmed");
             return;
           }
@@ -41,7 +48,7 @@ export default function BillingSuccessPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshUser]);
 
   return (
     <WebLayoutProvider>

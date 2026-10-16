@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Flame, Pencil } from "lucide-react";
+import { Check, Flame, Pencil, X } from "lucide-react";
 import type { UserProgress } from "@driving-test-app/shared";
 import ExamPrepTree from "@/components/state/ExamPrepTree";
 import ExamDateDialog from "@/components/state/permit-test/ExamDateDialog";
@@ -91,13 +91,15 @@ function ExamDate({ onSaved }: { onSaved: () => void }) {
 export default function StateSidebar({
   progress,
   onReload,
+  onHide,
 }: {
   progress: UserProgress;
   onReload: () => void;
+  onHide?: () => void;
 }) {
   const { user } = useAuth();
-  const { isPremium } = useEntitlement();
   const { selectedState, selectedVehicle } = useWebLayout();
+  const isPremium = useEntitlement().isPremiumFor(selectedVehicle);
   const phases = useLadderPhases();
 
   if (!user) return null;
@@ -130,9 +132,22 @@ export default function StateSidebar({
     <aside className="flex w-full flex-col gap-4" aria-label="Your progress">
       {/* Permit card */}
       <section className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-4 shadow-card">
-        <p className="text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
-          {`${selectedState} Learner's Permit`}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-[11px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
+            {`${selectedState} Learner's Permit`}
+          </p>
+          {onHide && (
+            <button
+              type="button"
+              onClick={onHide}
+              aria-label="Hide your progress"
+              title="Hide your progress"
+              className="-mt-1 -mr-1 flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-700 dark:hover:text-neutral-200"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
 
         <div className="mt-3 flex items-center gap-2.5">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-500/10 text-sm font-semibold text-blue-700 dark:text-blue-300">

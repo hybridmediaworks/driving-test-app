@@ -36,6 +36,7 @@ import Toast, { type ToastVariant } from "@/components/ui/Toast";
 import QuizResults from "@/components/state/quiz/QuizResults";
 import AccessLostDialog, { usePremiumAccessLost } from "@/components/auth/AccessLostDialog";
 import { api, ApiError } from "@/lib/api";
+import { pricingHref } from "@/lib/pricing";
 import { invalidatePhaseLadder } from "@/lib/phaseLadder";
 import { invalidateResolvedQuiz } from "@/lib/useResolvedQuiz";
 import { useAuth, useEntitlement } from "@/lib/auth-context";
@@ -169,7 +170,7 @@ export default function QuizExperience({
         ) : locked ? (
           <div className="py-20 text-center space-y-4">
             <Paragraph color="muted">{t("premiumQuizNotice")}</Paragraph>
-            <Button href="/pricing">
+            <Button href={pricingHref(quiz.vehicle_type?.name)}>
               <Gem className="w-5" /> {t("upgradeToPremium")}
             </Button>
           </div>
@@ -215,8 +216,9 @@ function QuizTaker({
   initialView?: "results";
 }) {
   const { user, loading: authLoading } = useAuth();
-  const accessLost = usePremiumAccessLost(quiz.is_premium);
-  const { isPremium } = useEntitlement();
+  const accessLost = usePremiumAccessLost(quiz.is_premium, quiz.vehicle_type?.name);
+  const { isPremiumFor } = useEntitlement();
+  const isPremium = isPremiumFor(quiz.vehicle_type?.name);
   const pathname = usePathname();
   const router = useRouter();
   const loginHref = `/login?redirect=${encodeURIComponent(pathname)}`;
@@ -613,7 +615,7 @@ function QuizTaker({
     // The vault is Premium only, so anyone without it goes to the plans page rather than being told
     // about a feature and left where they were. The redirect comes back here afterwards.
     if (!isPremium) {
-      router.push(`/pricing?redirect=${encodeURIComponent(pathname)}`);
+      router.push(`${pricingHref(quiz.vehicle_type?.name)}${quiz.vehicle_type ? "&" : "?"}redirect=${encodeURIComponent(pathname)}`);
       return;
     }
 
@@ -1055,6 +1057,7 @@ function QuizTaker({
           .map((q) => q.id)}
         passingThreshold={quiz.passing_score_percent ?? 80}
         showUpsell={!isPremium}
+        upsellHref={pricingHref(quiz.vehicle_type?.name)}
         stateName={stateName}
         stateCode={stateCode}
         quizzesHref={
@@ -1072,7 +1075,7 @@ function QuizTaker({
 
   return (
     <>
-      <AccessLostDialog open={accessLost} exitHref={exitHref} />
+      <AccessLostDialog open={accessLost} exitHref={exitHref} vehicle={quiz.vehicle_type?.name} />
       <audio
         ref={ambientAudioRef}
         src={currentTrackUrl ?? undefined}
@@ -1124,7 +1127,7 @@ function QuizTaker({
               </Button>
             )}
             {!isPremium && (
-              <Button href="/pricing" size="sm" variant="gold">
+              <Button href={pricingHref(quiz.vehicle_type?.name)} size="sm" variant="gold">
                 <Gem className="w-5" /> {t("upgrade")}
               </Button>
             )}

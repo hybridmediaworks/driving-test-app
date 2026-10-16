@@ -6,6 +6,7 @@ export type BillingInterval = "week" | "month";
 export type Plan = {
   id: number;
   key: string;
+  vehicle_type: string | null;
   name: string;
   type: PlanType;
   billing_interval: BillingInterval | null;
@@ -19,6 +20,7 @@ export type Plan = {
 // Admin CRUD sees inactive plans and Stripe linkage too — stripe_price_id/stripe_product_id are
 // read-only here (derived by `php artisan billing:sync-plans`), never sent in a create/update body.
 export type AdminPlan = Plan & {
+  vehicle_type_id: number | null;
   stripe_price_id: string | null;
   stripe_product_id: string | null;
   is_active: boolean;
@@ -26,14 +28,20 @@ export type AdminPlan = Plan & {
   updated_at: string;
 };
 
+export type SubscriptionSummary = {
+  id: number;
+  plan_name: string | null;
+  vehicle_type: string | null;
+  stripe_status: string;
+  canceled: boolean;
+  ends_at: string | null;
+  on_trial: boolean;
+  trial_ends_at: string | null;
+};
+
 export type MySubscription = Entitlement & {
-  subscription: {
-    stripe_status: string;
-    canceled: boolean;
-    ends_at: string | null;
-    on_trial: boolean;
-    trial_ends_at: string | null;
-  } | null;
+  subscription: SubscriptionSummary | null;
+  subscriptions: SubscriptionSummary[];
 };
 
 export type Invoice = {

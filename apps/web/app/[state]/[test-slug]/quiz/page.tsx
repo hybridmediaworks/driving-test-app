@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { PaginatedResponse, PublicQuiz, QuizShowResponse } from "@driving-test-app/shared";
 import QuizExperience from "@/components/state/quiz/QuizExperience";
 import { api, ApiError } from "@/lib/api";
+import { pricingHref } from "@/lib/pricing";
 import { isValidState, slugToStateName, stateAbbreviations } from "@/lib/usStates";
 import { useWebLayout, WebLayoutProvider } from "@/lib/web-layout-context";
 
@@ -80,7 +81,7 @@ function QuizPageInner({ state, testSlug }: { state: string; testSlug: string })
       if (!next) {
         router.push(`/${state}`); // last quiz in this category — back to the state overview
       } else if (next.locked) {
-        router.push("/pricing");
+        router.push(pricingHref(vehicleType));
       } else {
         router.push(`/${state}/${next.slug}`);
       }
