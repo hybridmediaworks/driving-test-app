@@ -1,14 +1,20 @@
 "use client";
 
-import { Diamond, Shield, Signpost, Wine, type LucideIcon } from "lucide-react";
+import { Diamond, Eye, Gauge, Shield, Signpost, SquareParking, TrafficCone, Wine, type LucideIcon } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
-import { isMarathonStep } from "@/lib/phaseLadder";
-import { useLadderPhases } from "@/lib/usePhaseCompletion";
 import { useStateStats } from "@/lib/useStateStats";
 import { useWebLayout } from "@/lib/web-layout-context";
 
-const TOPICS: { title: string; description: string; icon: LucideIcon; tone: string }[] = [
+function formatSessionLength(seconds: number | null): string | null {
+  if (seconds === null) return null;
+  const minutes = Math.round(seconds / 60);
+  return minutes > 0 ? `${minutes} min` : `${Math.round(seconds)} sec`;
+}
+
+type Topic ={ title: string; description: string; icon: LucideIcon; tone: string };
+
+const PERMIT_TOPICS: Topic[] = [
   {
     title: "Traffic laws",
     description: "Right of way, speed limits and the rules of the road.",
@@ -35,52 +41,82 @@ const TOPICS: { title: string; description: string; icon: LucideIcon; tone: stri
   },
 ];
 
-export default function EverythingYouNeedSection() {
+const DRIVING_TOPICS: Topic[] = [
+  {
+    title: "Vehicle control",
+    description: "Smooth starts, steady speed and confident braking.",
+    icon: Gauge,
+    tone: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+  },
+  {
+    title: "Observation",
+    description: "Mirrors, blind spots and spotting hazards early.",
+    icon: Eye,
+    tone: "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400",
+  },
+  {
+    title: "Intersections",
+    description: "Right of way, signals and full, legal stops.",
+    icon: TrafficCone,
+    tone: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+  },
+  {
+    title: "Maneuvers",
+    description: "Parking, backing up and three-point turns.",
+    icon: SquareParking,
+    tone: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
+  },
+];
+
+export default function EverythingYouNeedSection({ track = "permit" }: { track?: "permit" | "driving" }) {
+  const isDriving = track === "driving";
+  const topics = isDriving ? DRIVING_TOPICS : PERMIT_TOPICS;
   const { selectedState, selectedVehicle } = useWebLayout();
   const stats = useStateStats();
-  const phases = useLadderPhases();
-  const personLabel = selectedVehicle === "Motorcycle" ? "riders" : "students";
+  const personLabel = selectedVehicle === "Motorcycle" ? "Riders" : "Students";
 
-  const practiceQuestions = phases
-    .flatMap((phase) => phase.steps)
-    .filter((step) => !step.placeholder && !isMarathonStep(step))
-    .reduce((sum, step) => sum + Number(step.totalQuestions ?? 0), 0);
+  const sessionLength = formatSessionLength(stats?.avg_session_seconds ?? null);
 
   const figures = [
     {
       value: stats ? stats.students_practiced_total.toLocaleString() : "—",
-      label: `${personLabel} practicing`,
-      tone: "text-blue-600 dark:text-blue-400",
+      label: `${personLabel} practiced`,
+      tone: "text-blue-500",
     },
-    { value: "4.7/5", label: "on Trustpilot", tone: "text-neutral-900 dark:text-neutral-100" },
+    {
+      value: stats ? stats.questions_answered_total.toLocaleString() : "—",
+      label: "Questions answered",
+      tone: "text-red-500",
+    },
+    {
+      value: sessionLength ?? "—",
+      label: "Average study session",
+      tone: "text-yellow-500",
+    },
     {
       value: stats?.pass_rate != null ? `${stats.pass_rate}%` : "—",
-      label: "pass rate",
-      tone: "text-green-600 dark:text-green-400",
-    },
-    {
-      value: practiceQuestions > 0 ? practiceQuestions.toLocaleString() : "—",
-      label: "practice questions",
-      tone: "text-neutral-900 dark:text-neutral-100",
+      label: "Pass rate on our tests",
+      tone: "text-green-500",
     },
   ];
 
   return (
-    <section className="bg-background2 px-5 pt-15 lg:pt-28">
+    <section className={`bg-background2 px-5 pt-15 lg:pt-28 ${isDriving ? "pb-15 lg:pb-28" : ""}`}>
       <div className="mx-auto max-w-container">
         <div className="mx-auto max-w-225 text-center">
           <Heading size="md" weight="bold">
             Everything you need to pass the <br className="hidden md:inline" />
-            {selectedState} permit test, in one place
+            {selectedState} {isDriving ? "driving" : "permit"} test, in one place
           </Heading>
           <Paragraph size="lg" color="muted" className="mx-auto mt-4 max-w-145">
-            The written test covers four areas. Our questions mirror the official exam, so there are no
-            surprises on test day.
+            {isDriving
+              ? "The road test checks four skills. Our simulators and videos mirror what examiners look for, so there are no surprises on test day."
+              : "The written test covers four areas. Our questions mirror the official exam, so there are no surprises on test day."}
           </Paragraph>
         </div>
 
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {TOPICS.map(({ title, description, icon: Icon, tone }) => (
+          {topics.map(({ title, description, icon: Icon, tone }) => (
             <div
               key={title}
               className="rounded-2xl border border-border bg-white dark:bg-neutral-800 p-6 shadow-xs"
@@ -101,7 +137,7 @@ export default function EverythingYouNeedSection() {
         <div className="mt-10 grid grid-cols-2 lg:grid-cols-[1.3fr_repeat(4,1fr)] rounded-3xl border border-border bg-white dark:bg-neutral-800 shadow-xs">
           <div className="col-span-2 lg:col-span-1 border-b lg:border-b-0 border-border p-6 lg:px-7 lg:py-8">
             <p className="font-bold leading-snug text-neutral-900 dark:text-neutral-100">
-              How {selectedState} {personLabel} are practicing
+              How {selectedState} {personLabel.toLowerCase()} are practicing
             </p>
             <p className="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
               Across all our {selectedState} tests
