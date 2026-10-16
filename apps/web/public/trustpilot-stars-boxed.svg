@@ -1,0 +1,15 @@
+<svg width="128" height="24" viewBox="0 0 128 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<path id="star" d="M12.6792 18.3019L18.1887 16.9057L20.4906 24L12.6792 18.3019ZM25.3585 9.13208H15.6604L12.6792 0L9.69811 9.13208H0L7.84906 14.7925L4.86792 23.9245L12.717 18.2641L17.5472 14.7925L25.3585 9.13208Z"/>
+</defs>
+<rect x="0" width="24" height="24" fill="#00B67A"/>
+<rect x="26" width="24" height="24" fill="#00B67A"/>
+<rect x="52" width="24" height="24" fill="#00B67A"/>
+<rect x="78" width="24" height="24" fill="#00B67A"/>
+<rect x="104" width="24" height="24" fill="#00B67A"/>
+<use href="#star" transform="translate(4.14 4.56) scale(0.62)" fill="#FFFFFF"/>
+<use href="#star" transform="translate(30.14 4.56) scale(0.62)" fill="#FFFFFF"/>
+<use href="#star" transform="translate(56.14 4.56) scale(0.62)" fill="#FFFFFF"/>
+<use href="#star" transform="translate(82.14 4.56) scale(0.62)" fill="#FFFFFF"/>
+<use href="#star" transform="translate(108.14 4.56) scale(0.62)" fill="#FFFFFF"/>
+</svg>
