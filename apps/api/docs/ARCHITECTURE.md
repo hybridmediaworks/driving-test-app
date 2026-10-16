@@ -131,7 +131,40 @@ Full API reference (endpoints, request/response shapes, verification) lives in [
 - **Real limitation to know about**: a Bearer token can only be attached to a request made by *code* (fetch/XHR, curl, Postman, a browser extension) — a plain browser tab navigating straight to `/docs/api` has no way to attach one, so an admin cannot just click the link and log in through the page. In practice this means either use a REST client that supports Bearer auth, or add a browser extension that injects the header, when accessing the docs UI live as an admin. `/docs/api.json` has the same constraint.
 - A few routes (`storeAttempt`'s guest-or-authenticated dual mode, `keep_media_ids` being a JSON-encoded string inside a multipart field) are unusual enough that Scramble's inference may need a manual PHPDoc override to describe precisely — not yet done, works correctly by inference for now.
 
+## Social login
+
+Sign in with Google or Facebook (web), via `laravel/socialite` (both drivers are built in). Code: `SocialAuthController` (HTTP flow), `App\Actions\Auth\ResolveSocialUser` (which local user an identity signs in as), `App\Enums\SocialProvider` (per-provider rules), `social_accounts` table (`SocialAccount` model).
+
+**Flow.** This API is token-only with no session, so the redirect flow is run statelessly and finishes by handing the web app a code, not a token:
+
+1. The web app navigates the browser to `GET /api/v1/auth/{provider}/redirect`. That sets an encrypted, HttpOnly `oauth_state_{provider}` cookie holding a random `state` and redirects to the provider with the same `state`.
+2. The provider returns the browser to `GET /api/v1/auth/{provider}/callback`. The `state` it echoes back must match the cookie, which ties the flow to the browser that started it (RFC 9700 §2.1, blocks login CSRF).
+3. The callback redirects to the web app's `/auth/callback?code=…`. The code is random, single-use, valid for 60 seconds, and stored only as a hash in the cache. On failure it sends `?error=<SocialAuthError>` instead.
+4. That page calls `POST /api/v1/auth/social/exchange {code}` and gets `{user, token}`, the same response as `/login`. Guest data is claimed from `X-Guest-Token` the same way.
+
+The Sanctum token is never put in a URL, so it can't end up in browser history, logs, or `Referer` headers.
+
+**Which account an identity signs in as** (`ResolveSocialUser`):
+
+- If the identity is already linked (`provider` + `provider_user_id`), it signs in as that user, even if the email has changed since.
+- If not, it is matched by email, **but only when the provider has verified that email** (`SocialProvider::verifiesEmail`). Google sends an `email_verified` claim. Facebook sends none and doesn't document that the email it returns is confirmed, so it's treated as unverified. If a Facebook email matches an existing account, the login is refused with `email_in_use` instead of being linked.
+- If a verified email matches an account whose email was **never verified**, the verified owner takes the account over. Its password, tokens, and other linked identities are wiped, because whoever registered it may not own the address (this is called account pre-hijacking).
+- If nothing matches, a new account is created with no password (`users.password` is nullable). It is marked verified if the provider verified the email. Otherwise it gets the normal verification email.
+
+Accounts without a password (`has_password: false` on `UserResource`) can set one with `PUT /password` (no `current_password` needed), or with forgot-password. They can delete their account without entering a password.
+
+**Setup.** Credentials go in `.env` (see `.env.example` and `config/services.php`). A provider with no credentials returns `error=unavailable` instead of breaking. Callback URL to register with each provider: `{APP_URL}/api/v1/auth/{provider}/callback`. Facebook asks only for `email` (plus the default public profile), so it needs no Facebook App Review.
+
+**Adding a provider** (e.g. GitHub, Apple):
+
+1. API: add a case to `App\Enums\SocialProvider` and fill in its `match` arm. PHP's `match` throws `UnhandledMatchError` on a missing arm, so a forgotten one fails loudly. In particular, decide whether the provider really verifies emails. If you're unsure, return `false`.
+2. API: add a `config/services.php` block. For a driver Socialite doesn't ship, `composer require socialiteproviders/<name>` and register it with an `Event::listen(SocialiteWasCalled …)` in `AppServiceProvider`, as described in the package's README.
+   - A provider that returns with a cross-site form POST (Sign in with Apple) also needs the callback route to accept POST, and needs its state cookie to be `SameSite=None; Secure` (see `SocialAuthController::stateCookie`).
+3. Shared: add it to the `SocialProvider` type in `packages/shared/src/types/auth.ts`.
+4. Web: add an entry (id, label, icon) to `SOCIAL_PROVIDERS` in `components/auth/AuthFormParts.tsx`.
+
 ## Already installed
 
 - `spatie/laravel-medialibrary` — see [Media](#media).
 - `dedoc/scramble` — see [API docs](#api-docs-openapi--swagger).
+- `laravel/socialite` — see [Social login](#social-login).

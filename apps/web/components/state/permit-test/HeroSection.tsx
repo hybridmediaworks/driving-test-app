@@ -8,13 +8,14 @@ import Paragraph from "@/components/ui/Paragraph";
 import ReviewerBadge from "@/components/state/ReviewerBadge";
 import SignedOutOnly, { useIsSignedOut } from "@/components/state/SignedOutOnly";
 import SignedInHero from "@/components/state/permit-test/SignedInHero";
+import HeroQuizCard from "@/components/state/permit-test/HeroQuizCard";
 import { useAuth } from "@/lib/auth-context";
 import { useWebLayout } from "@/lib/web-layout-context";
 import { stateAbbreviations, stateToSlug } from "@/lib/usStates";
 import { useStateStats } from "@/lib/useStateStats";
 import { useNextQuizSlug } from "@/lib/usePhaseCompletion";
 import { ArrowRight, BadgeCheck } from "lucide-react";
-import LiveDataSection from "../LiveDataSection";
+import EverythingYouNeedSection from "@/components/state/permit-test/EverythingYouNeedSection";
 
 const vehicleSlugs: Record<string, string> = {
   Car: "car",
@@ -29,6 +30,7 @@ export default function HeroSection() {
   const isCdl = selectedVehicle === "CDL";
   const isMotorcycle = selectedVehicle === "Motorcycle";
   const heroImage = vehicleHeroImage(selectedVehicle);
+  const stateAbbr = selectedState ? stateAbbreviations[selectedState] : undefined;
   const nextQuizSlug = useNextQuizSlug("permit_test");
   // Jump straight to the test the learner should take now (first one if nothing's been taken yet,
   // otherwise wherever their progression left off) instead of a generic free+premium browse list.
@@ -54,86 +56,74 @@ export default function HeroSection() {
 
   return (
     <>
-      <section className="py-15 lg:py-24 px-5">
-        <div className="mx-auto max-w-container  flex flex-col xl:flex-row justify-between items-center xl:gap-4 md:gap-26 gap-18">
-          <div className="space-y-8 xl:max-w-155">
-            {isCdl ? (
-              <Heading as="h1" className="mb-4.5">
-                Start your Free{" "}
-                <span className="relative inline-block whitespace-nowrap">
-                  {selectedState}
-                  <HandUnderline />
-                </span>{" "}
-                CDL Practice Tests - All Endorsements
-              </Heading>
-            ) : isMotorcycle ? (
-              <Heading as="h1" className="mb-4.5">
-                Start your Free{" "}
-                <span className="relative inline-block whitespace-nowrap">
-                  {selectedState}
-                  <HandUnderline />
-                </span>{" "}
-                Motorcycle Practice Tests 2026
-              </Heading>
-            ) : (
-              <Heading as="h1" className="mb-4.5">
-                Start your Free{" "}
-                <span className="relative inline-block whitespace-nowrap">
-                  {selectedState}
-                  <HandUnderline />
-                </span>{" "}
-                DMV Practice Test.
-              </Heading>
+      <section className="pt-15 pb-20 lg:py-20 px-5">
+        <div className="mx-auto max-w-container flex flex-col xl:flex-row justify-between items-center gap-16 xl:gap-12">
+          <div className="w-full xl:max-w-155">
+            {stateAbbr && (
+              <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-white dark:bg-neutral-800 py-1 pl-1 pr-3.5 text-sm font-semibold text-neutral-900 dark:text-neutral-100 shadow-xs">
+                <span className="inline-flex h-6 min-w-8 items-center justify-center rounded-full bg-blue-600 px-1.5 text-[11px] font-bold text-white">
+                  {stateAbbr}
+                </span>
+                {selectedState} {isCdl ? "CDL knowledge test" : isMotorcycle ? "DMV motorcycle test" : "DMV written test"}
+              </span>
             )}
-            <Paragraph size="lg">
+            <Heading as="h1" weight="bold">
+              Start your free{" "}
+              <span className="relative inline-block whitespace-nowrap text-blue-600 dark:text-blue-400">
+                {selectedState}
+                <HandUnderline />
+              </span>{" "}
+              {isCdl
+                ? "CDL practice tests - all endorsements"
+                : isMotorcycle
+                  ? "motorcycle practice tests 2026"
+                  : "DMV practice test"}
+            </Heading>
+            <Paragraph size="lg" className="mt-6 max-w-120">
               {isCdl
                 ? "Practice the exact question formats your DMV uses. When you sit down for the real test, you'll know the answer before you finish reading the question. Pass, get your CDL, and start earning $60K+ within weeks - not months."
                 : isMotorcycle
                   ? `Practice with real exam-like questions that mirror your ${selectedState} DMV permit test - same format, same difficulty, same tricky answer choices.`
-                  : "Everything you need to pass the written test, from traffic signs to tricky road rules — all in one place."}
+                  : "Everything you need to pass the written test, from traffic signs to tricky road rules, in one guided route."}
             </Paragraph>
-            <Button className="w-full md:w-fit" href={quizHref}>
-              Start Free {selectedState} {isCdl ? "CDL" : isMotorcycle ? "Motorcycle" : "Permit"} Practice Test{" "}
-              <ArrowRight />
-            </Button>
-            <Paragraph className="flex gap-3 items-center flex-wrap font-semibold">
-              <img src="/trustpilotstar.svg" alt="" /> Trustpilot 4.7/5 from
-              38,000+ students
-            </Paragraph>
+            <div className="mt-8 flex flex-col md:flex-row gap-3">
+              <Button className="w-full md:w-fit rounded-xl!" href={quizHref}>
+                Start free practice test <ArrowRight className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full md:w-fit rounded-xl! bg-white! dark:bg-neutral-800! hover:bg-neutral-50! dark:hover:bg-neutral-700! shadow-xs"
+                href="#study-route"
+              >
+                See the study route
+              </Button>
+            </div>
+            <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-neutral-500 dark:text-neutral-400">
+              <img src="/trustpilot-stars-boxed.svg" alt="" className="h-5 w-auto" />
+              <span>
+                <span className="font-bold text-neutral-900 dark:text-neutral-100">Trustpilot 4.7/5</span> from
+                38,000+ students
+              </span>
+            </p>
           </div>
-          <div className="max-w-151.5 relative rounded-[48px]">
+          <div className="relative w-full max-w-151.5 shrink-0">
             <img
               src={heroImage.src}
               alt={heroImage.alt}
-              className="r w-full relative rounded-xl md:rounded-[24px] shadow-[0_12px_40.793px_-21.212px_rgba(23,37,84,0.12),0_3.263px_4.895px_-1.632px_rgba(0,0,0,0.03),0_9.79px_13.054px_-3.263px_rgba(0,0,0,0.08)]"
+              className="aspect-[3/2] w-full rounded-xl md:rounded-[24px] object-cover object-top shadow-[0_12px_40.793px_-21.212px_rgba(23,37,84,0.12),0_3.263px_4.895px_-1.632px_rgba(0,0,0,0.03),0_9.79px_13.054px_-3.263px_rgba(0,0,0,0.08)]"
             />
-            <div className="p-4 md:p-6 bg-white dark:bg-neutral-800 rounded-[24px] absolute -bottom-5 md:-bottom-7 left-2 md:-left-6 shadow-hover">
-              <Heading className="text-blue-500!" size="sm">
+            <div className="absolute top-4 -right-2 md:top-5 md:-right-3 rounded-2xl bg-white dark:bg-neutral-800 px-4 py-3 shadow-hover">
+              <p className="font-sora text-2xl md:text-[28px] font-bold leading-none text-blue-600 dark:text-blue-400">
                 97%
-              </Heading>
-              <Paragraph className="" color="muted">
-                pass rate
-              </Paragraph>
+              </p>
+              <p className="mt-1.5 text-xs md:text-sm text-neutral-500 dark:text-neutral-400">pass rate</p>
             </div>
+            {!isCdl && !isMotorcycle && <HeroQuizCard href={quizHref} />}
           </div>
         </div>
       </section>
       <SignedOutOnly>
-      <section className="z-10 -mb-52.5 pt-15 md:space-y-15 lg:pt-30 px-5 bg-[linear-gradient(180deg,var(--background2)_0%,var(--background)_100%)]">
-        <div className="mx-auto max-w-266 space-y-4 text-center">
-          <Heading size="xl" className="font-semibold font-sora">
-            Everything you need to pass the {selectedState} permit test in one
-            place.
-          </Heading>
-          <Paragraph size="lg" className="mx-auto max-w-230">
-            The {selectedState} DMV written test covers traffic laws,
-            safe-driving practices, road signs, and alcohol awareness. Our
-            questions mirror the official exam so there are no surprises on test
-            day.
-          </Paragraph>
-        </div>
-        <LiveDataSection />
-      </section>
+        <EverythingYouNeedSection />
       </SignedOutOnly>
     </>
   );

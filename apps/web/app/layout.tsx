@@ -76,6 +76,8 @@ export default function RootLayout({
     >
       <head>
         <script
+          type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+          suppressHydrationWarning
           // Applies the saved theme before paint to avoid a flash of the wrong theme.
           // Defaults to "light" (not "system") — dark is opt-in from the account menu's
           // Night Mode switch, so nobody gets flipped by their OS setting alone.

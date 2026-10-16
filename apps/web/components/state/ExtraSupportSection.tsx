@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Download } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { stateAbbreviations } from "@/lib/usStates";
@@ -75,6 +76,8 @@ export default function ExtraSupportSection() {
   const cards = [
     {
       title: `${selectedState} Permit Test Cheat Sheet`,
+      label: selectedState,
+      tone: "text-blue-600 dark:text-blue-400",
       image: "/state-hub/support-cheatsheet.png",
       // The exported cover has "West Virginia" baked into its phone screen, so the state name and
       // strapline are re-drawn over the flat blue panel instead of shipping WV art to 49 states.
@@ -83,40 +86,47 @@ export default function ExtraSupportSection() {
     },
     {
       title: "The 120 Most Common US Road Signs",
+      label: "Road signs",
+      tone: "text-red-600 dark:text-red-400",
       image: "/state-hub/support-signs.png",
       href: `/flashcards?${query}`,
     },
     {
       title: "The Top 100 Most Common US DMV Questions",
+      label: "Questions",
+      tone: "text-amber-600 dark:text-amber-400",
       image: "/state-hub/support-questions.png",
       href: `/quizzes?${query}&test_track=${selectedTestType}`,
     },
     {
       title: "10 Things You Should Do Before Your DMV Exam",
+      label: "Checklist",
+      tone: "text-green-600 dark:text-green-400",
       image: "/state-hub/support-checklist.png",
       href: "/before-your-exam",
     },
   ];
 
   return (
-    <section id="extra-support" className="scroll-mt-6 bg-background2 px-5 py-15 lg:py-30">
-      <div className="mx-auto max-w-container space-y-15">
-        <div className="max-w-[706px] space-y-4">
-          <Heading as="h2">The extra support</Heading>
-          <Paragraph color="muted">
-            Now that you&rsquo;ve got all this Driver&rsquo;s Ed knowledge in
-            your brain, let&rsquo;s keep it fresh. Take these downloadable
-            guides and references with you on-the-go. Brush up whenever you
-            need.
+    <section id="extra-support" className="scroll-mt-6 bg-background2 px-5 py-15 lg:py-28">
+      <div className="mx-auto max-w-container">
+        <div className="max-w-[706px]">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-600 dark:text-blue-400">
+            The extra support
+          </p>
+          <Heading as="h2" size="md" weight="bold" className="mt-3">
+            Guides to keep it fresh
+          </Heading>
+          <Paragraph color="muted" className="mt-3">
+            Downloadable references to take on the go. Brush up whenever you need.
           </Paragraph>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {cards.map((card) => (
-            <Link
+            <div
               key={card.title}
-              href={card.href}
-              className="group flex flex-col gap-6 overflow-hidden rounded-3xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-neutral-800 pb-8 shadow-hover transition-transform duration-300 hover:-translate-y-1"
+              className="group relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-neutral-800 pb-6 shadow-hover transition-transform duration-300 hover:-translate-y-1"
             >
               {card.cover ?? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -126,10 +136,26 @@ export default function ExtraSupportSection() {
                   className="w-full rounded-[20px] object-cover"
                 />
               )}
-              <h3 className="px-8 font-sora text-2xl leading-8 font-semibold text-black dark:text-neutral-100">
-                {card.title}
-              </h3>
-            </Link>
+              <div className="flex flex-1 flex-col px-5">
+                <p className={`text-xs font-bold uppercase tracking-[0.08em] ${card.tone}`}>{card.label}</p>
+                <h3 className="mt-2 font-sora text-lg leading-snug font-bold text-neutral-900 dark:text-neutral-100">
+                  <Link href={card.href} className="after:absolute after:inset-0 after:content-['']">
+                    {card.title}
+                  </Link>
+                </h3>
+                <div className="mt-auto pt-4">
+                  <a
+                    href="#"
+                    onClick={(e) => e.preventDefault()}
+                    aria-label={`Download ${card.title}`}
+                    className="relative z-10 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline dark:text-blue-400"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>

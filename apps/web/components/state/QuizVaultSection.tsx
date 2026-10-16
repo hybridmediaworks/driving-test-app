@@ -1,70 +1,75 @@
 "use client";
 
-import Link from "next/link";
-import { Bookmark, BookOpen } from "lucide-react";
+import { Bookmark, Check, RefreshCw, X } from "lucide-react";
 import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 
-/**
- * "The Quiz Vault" — the two-up Missed / Bookmarked cards beside the laptop mockup
- * (Figma node 4147:8408). Both cards open the real vault, which keeps these as two lists.
- */
-const CARDS = [
+const STEPS = [
   {
-    icon: BookOpen,
-    title: "Missed Questions",
-    body: "Kept until you get them right",
-    href: "/vault",
+    icon: X,
+    tone: "bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400",
+    title: "Miss a question",
+    body: "It's saved to your vault automatically.",
   },
   {
-    icon: Bookmark,
-    title: "Bookmarked Questions",
-    body: "Saved as you practise",
-    href: "/vault",
+    icon: RefreshCw,
+    tone: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+    title: "Retest only your weak spots",
+    body: "Short rounds, no repeats of what you already know.",
+  },
+  {
+    icon: Check,
+    tone: "bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400",
+    title: "Get it right, it's mastered",
+    body: "Miss it again and it simply goes back in.",
   },
 ];
 
 export default function QuizVaultSection() {
   return (
-    <section className="bg-linear-to-b from-background to-background2 px-5 py-15 lg:py-30">
-      <div className="mx-auto flex max-w-container flex-col items-center gap-10 lg:flex-row lg:gap-15">
-        <div className="flex w-full flex-col justify-between gap-10 lg:w-[533px] lg:shrink-0">
-          <div className="space-y-4">
-            <Heading as="h2">The Quiz Vault</Heading>
-            <Paragraph color="muted" className="max-w-[420px]">
-              Your personalized Quiz Vault automatically retests you on all your
-              missed questions until you nail every single one. No shame - we
-              all have weaknesses!
-            </Paragraph>
-          </div>
+    <section className="bg-background px-5 py-15 lg:py-28">
+      <div className="mx-auto flex max-w-container flex-col gap-12 lg:flex-row lg:items-center lg:gap-15">
+        <div className="w-full lg:max-w-120 lg:shrink-0">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-600 dark:text-blue-400">
+            The quiz vault
+          </p>
+          <Heading as="h2" size="md" weight="bold" className="mt-3 max-w-112">
+            Every question you miss comes back until you own it
+          </Heading>
+          <Paragraph color="muted" className="mt-5">
+            No shame, we all have weak spots. The vault catches them for you. Try a round on the right.
+          </Paragraph>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {CARDS.map(({ icon: Icon, title, body, href }) => (
-              <Link
-                key={title}
-                href={href}
-                className="flex flex-col items-start gap-4 rounded-3xl border border-background2 bg-white dark:bg-neutral-800 p-6 drop-shadow-[0px_20px_20px_rgba(11,11,13,0.1)] transition-transform duration-300 hover:-translate-y-1"
-              >
-                <span className="flex size-15 items-center justify-center rounded-lg border border-blue-50 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
-                  <Icon className="size-8" />
+          <ol className="relative mt-8 space-y-6">
+            <span
+              aria-hidden
+              className="absolute top-9 bottom-9 left-4.5 border-l-2 border-dotted border-neutral-300 dark:border-neutral-600"
+            />
+            {STEPS.map(({ icon: Icon, tone, title, body }) => (
+              <li key={title} className="relative flex items-start gap-4">
+                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tone}`}>
+                  <Icon className="h-4 w-4" />
                 </span>
-                <div className="space-y-2">
-                  <h3 className="font-sora text-2xl leading-8 font-semibold text-neutral-900 dark:text-neutral-100">
-                    {title}
-                  </h3>
-                  <Paragraph>{body}</Paragraph>
+                <div>
+                  <p className="font-bold text-neutral-900 dark:text-neutral-100">{title}</p>
+                  <p className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">{body}</p>
                 </div>
-              </Link>
+              </li>
             ))}
-          </div>
+          </ol>
+
+          <p className="mt-6 flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+            <Bookmark className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+            Bookmark any question to save it for later, too.
+          </p>
         </div>
 
-        <div className="w-full min-w-0 lg:flex-1">
+        <div className="w-full min-w-0 lg:flex lg:flex-1 lg:justify-end">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/state-hub/quizvault-macbook.png"
-            alt="A DriveLane practice question and progress panel shown on a laptop"
-            className="h-auto w-full"
+            src="/state-hub/quiz-vault.png"
+            alt="Your vault: missed questions waiting to be retested, with a sample four-way stop question"
+            className="w-full max-w-162 rounded-[28px] shadow-hover"
           />
         </div>
       </div>
