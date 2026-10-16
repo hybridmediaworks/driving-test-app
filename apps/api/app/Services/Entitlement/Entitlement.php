@@ -15,19 +15,16 @@ final readonly class Entitlement
         public ?Carbon $accessUntil,
         public ?int $familyGroupId,
         public bool $isAdmin,
+        public ?array $vehicleTypeIds,
     ) {}
 
-    /**
-     * True for admins (a QA bypass, kept separate from the tier itself — see EntitlementResolver)
-     * or anyone on an active/grace-period paid tier. False for guest, free, or anyone expired,
-     * even if they were once paid.
-     */
     public function isPremium(): bool
     {
-        if ($this->isAdmin) {
-            return true;
-        }
+        return $this->isAdmin || $this->hasPaidAccess();
+    }
 
+    public function hasPaidAccess(): bool
+    {
         if (! in_array($this->status, [EntitlementStatus::Active, EntitlementStatus::GracePeriod], true)) {
             return false;
         }
@@ -35,14 +32,19 @@ final readonly class Entitlement
         return ! in_array($this->tier, [EntitlementTier::Guest, EntitlementTier::Free], true);
     }
 
-    /**
-     * Per-feature check, not a blanket alias for isPremium() — every paid tier unlocks every
-     * feature identically today (see docs/SUBSCRIPTION_ROADMAP.md), but keeping this as a real
-     * per-feature switch means a future divergence (e.g. Weekly excluding the AI tutor) only
-     * changes this one method, not every call site across the app.
-     */
-    public function hasFeature(Feature $feature): bool
+    public function coversVehicle(?int $vehicleTypeId): bool
     {
-        return $this->isPremium();
+        if (! $this->hasPaidAccess()) {
+            return false;
+        }
+
+        return $vehicleTypeId === null
+            || $this->vehicleTypeIds === null
+            || in_array($vehicleTypeId, $this->vehicleTypeIds, true);
+    }
+
+    public function hasFeature(Feature $feature, ?int $vehicleTypeId = null): bool
+    {
+        return $this->isAdmin || $this->coversVehicle($vehicleTypeId);
     }
 }

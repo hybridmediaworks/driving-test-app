@@ -13,13 +13,13 @@ import Heading from "@/components/ui/Heading";
 import Paragraph from "@/components/ui/Paragraph";
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Check, ChevronDown, Minus } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, useEntitlement } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
 import {
   consumePendingCheckoutPlan,
   setPendingCheckoutPlan,
 } from "@/lib/pendingCheckout";
-import { WebLayoutProvider } from "@/lib/web-layout-context";
+import { useWebLayout, WebLayoutProvider } from "@/lib/web-layout-context";
 
 // Weekly and Monthly currently unlock identical features (the backend's Feature enum has no
 // per-plan differentiation yet — see docs/SUBSCRIPTION_ROADMAP.md §1), hence one shared list
@@ -33,7 +33,7 @@ const STANDARD_PLAN_FEATURES = [
   "Pass Guarantee eligible",
 ];
 
-const FEATURES_BY_KEY: Record<string, string[]> = {
+const FEATURES_BY_KEY: Record<PlanKind, string[]> = {
   weekly: STANDARD_PLAN_FEATURES,
   monthly: STANDARD_PLAN_FEATURES,
   lifetime_family: [
@@ -44,7 +44,7 @@ const FEATURES_BY_KEY: Record<string, string[]> = {
   ],
 };
 
-const TAGLINE_BY_KEY: Record<string, string> = {
+const TAGLINE_BY_KEY: Record<PlanKind, string> = {
   weekly: "Try premium with zero commitment.",
   monthly: "Everything you need to pass, billed monthly.",
   lifetime_family: "One payment. Your whole household covered.",
@@ -140,6 +140,15 @@ function formatPrice(priceCents: number): string {
   });
 }
 
+const VEHICLE_OPTIONS = ["Car", "Motorcycle", "CDL"] as const;
+
+type PlanKind = "weekly" | "monthly" | "lifetime_family";
+
+function planKind(plan: Plan): PlanKind {
+  if (plan.type === "one_time") return "lifetime_family";
+  return plan.billing_interval === "week" ? "weekly" : "monthly";
+}
+
 function priceSuffix(plan: Plan): string {
   if (plan.type === "one_time") return "one-time";
   return plan.billing_interval === "week" ? "/ week" : "/ month";
@@ -147,6 +156,8 @@ function priceSuffix(plan: Plan): string {
 
 function PricingInner() {
   const { user, loading: authLoading } = useAuth();
+  const { premiumVehicleTypes } = useEntitlement();
+  const { selectedVehicle, setSelectedVehicle } = useWebLayout();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState<Plan[] | null>(null);
@@ -159,6 +170,15 @@ function PricingInner() {
   // renders from, so it doesn't need to (and per the set-state-in-effect lint rule, shouldn't)
   // trigger a re-render.
   const resumedCheckout = useRef(false);
+  const vehicleParam = searchParams.get("vehicle");
+  const appliedVehicleParam = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!vehicleParam || appliedVehicleParam.current === vehicleParam) return;
+    appliedVehicleParam.current = vehicleParam;
+    const label = VEHICLE_OPTIONS.find((vehicle) => vehicle.toLowerCase() === vehicleParam.toLowerCase());
+    if (label) setSelectedVehicle(label);
+  }, [vehicleParam, setSelectedVehicle]);
 
   useEffect(() => {
     api
@@ -170,6 +190,15 @@ function PricingInner() {
         ),
       );
   }, []);
+
+  const vehicleName = selectedVehicle.toLowerCase();
+  const visiblePlans = (plans ?? []).filter(
+    (plan) => plan.vehicle_type === null || plan.vehicle_type === vehicleName,
+  );
+  const hasFamilyPlan = visiblePlans.some(
+    (plan) => planKind(plan) === "lifetime_family",
+  );
+  const alreadyHasVehicle = premiumVehicleTypes.includes(vehicleName);
 
   async function handleCheckout(plan: Plan) {
     if (authLoading) return;
@@ -225,9 +254,9 @@ function PricingInner() {
   }, [authLoading, user, plans, searchParams]);
 
   return (
-    <WebLayoutProvider>
+    <>
       <div className="flex min-h-screen flex-col bg-background">
-        <Header variant="home" />
+        <Header variant="home" navigateOnVehicleChange={false} />
         <main className="flex-1">
           <section className="py-15 md:space-y-15 lg:py-30">
             <div className="mx-auto max-w-container space-y-12 px-5">
@@ -245,6 +274,36 @@ function PricingInner() {
                 <Paragraph className="max-w-156 text-center" size="xl">
                   No contracts. Cancel anytime in a couple clicks.
                 </Paragraph>
+                <div
+                  role="radiogroup"
+                  aria-label="Vehicle"
+                  className="mt-2 inline-flex rounded-full border border-border bg-white p-1 dark:bg-neutral-800"
+                >
+                  {VEHICLE_OPTIONS.map((vehicle) => {
+                    const active = selectedVehicle === vehicle;
+                    return (
+                      <button
+                        key={vehicle}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setSelectedVehicle(vehicle)}
+                        className={`cursor-pointer rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+                          active
+                            ? "bg-blue-600 text-white"
+                            : "text-neutral-600 hover:text-blue-600 dark:text-neutral-300"
+                        }`}
+                      >
+                        {vehicle}
+                      </button>
+                    );
+                  })}
+                </div>
+                {alreadyHasVehicle && (
+                  <Paragraph size="sm" color="primary" className="font-semibold">
+                    You already have Premium for {selectedVehicle}.
+                  </Paragraph>
+                )}
               </div>
 
               {loadError && (
@@ -256,9 +315,16 @@ function PricingInner() {
                 </p>
               )}
 
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                {(plans ?? []).map((plan) => {
-                  const isPopular = plan.key === "monthly";
+              <div
+                className={`grid grid-cols-1 gap-5 ${
+                  visiblePlans.length === 2
+                    ? "mx-auto max-w-4xl lg:grid-cols-2"
+                    : "lg:grid-cols-3"
+                }`}
+              >
+                {visiblePlans.map((plan) => {
+                  const kind = planKind(plan);
+                  const isPopular = kind === "monthly";
                   const isCheckingOut = checkingOutKey === plan.key;
 
                   return (
@@ -288,9 +354,7 @@ function PricingInner() {
                         >
                           {plan.name}
                         </Paragraph>
-                        {TAGLINE_BY_KEY[plan.key] && (
-                          <Paragraph>{TAGLINE_BY_KEY[plan.key]}</Paragraph>
-                        )}
+                        <Paragraph>{TAGLINE_BY_KEY[kind]}</Paragraph>
                         <div className="mb-4 flex items-end gap-2">
                           <Heading as="h2">
                             {formatPrice(plan.price_cents)}
@@ -312,7 +376,7 @@ function PricingInner() {
                         )}
                         <Separator />
                         <div className="space-y-2">
-                          {(FEATURES_BY_KEY[plan.key] ?? []).map((feature) => (
+                          {FEATURES_BY_KEY[kind].map((feature) => (
                             <Paragraph
                               key={feature}
                               className="flex items-start gap-2"
@@ -326,10 +390,12 @@ function PricingInner() {
                       <Button
                         variant={isPopular ? "primary" : "outline"}
                         className="w-full"
-                        disabled={isCheckingOut || authLoading}
+                        disabled={isCheckingOut || authLoading || alreadyHasVehicle}
                         onClick={() => handleCheckout(plan)}
                       >
-                        {isCheckingOut ? (
+                        {alreadyHasVehicle ? (
+                          "Included in your plan"
+                        ) : isCheckingOut ? (
                           "Redirecting…"
                         ) : plan.trial_days ? (
                           <>
@@ -374,7 +440,13 @@ function PricingInner() {
               </div>
               <div className="rounded-3xl bg-white dark:bg-neutral-800 border-border shadow-[0_20px_24px_-4px_rgba(20,60,120,0.08),0_8px_8px_-4px_rgba(20,60,120,0.03),0_1px_2px_0_rgba(0,0,0,0.05)] overflow-hidden">
                 <div className="overflow-x-auto">
-                  <div className="grid grid-cols-[1.8fr_1fr_1fr_1fr] min-w-175">
+                  <div
+                    className={`grid min-w-175 ${
+                      hasFamilyPlan
+                        ? "grid-cols-[1.8fr_1fr_1fr_1fr]"
+                        : "grid-cols-[1.8fr_1fr_1fr]"
+                    }`}
+                  >
                     <div className="px-6 py-5 bg-neutral-50 dark:bg-neutral-800 flex items-center">
                       <Paragraph
                         size="2xl"
@@ -402,15 +474,17 @@ function PricingInner() {
                         Monthly
                       </Paragraph>
                     </div>
-                    <div className="px-6 py-5 bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
-                      <Paragraph
-                        size="2xl"
-                        color="dark"
-                        className="font-semibold"
-                      >
-                        Lifetime Family
-                      </Paragraph>
-                    </div>
+                    {hasFamilyPlan && (
+                      <div className="px-6 py-5 bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
+                        <Paragraph
+                          size="2xl"
+                          color="dark"
+                          className="font-semibold"
+                        >
+                          Lifetime Family
+                        </Paragraph>
+                      </div>
+                    )}
 
                     {(showAllRows
                       ? compareRows
@@ -434,11 +508,13 @@ function PricingInner() {
                           >
                             <CompareCell value={row.monthly} />
                           </div>
-                          <div
-                            className={`px-6 py-5 flex items-center justify-center ${isLast ? "" : "border-b border-border"}`}
-                          >
-                            <CompareCell value={row.lifetimeFamily} />
-                          </div>
+                          {hasFamilyPlan && (
+                            <div
+                              className={`px-6 py-5 flex items-center justify-center ${isLast ? "" : "border-b border-border"}`}
+                            >
+                              <CompareCell value={row.lifetimeFamily} />
+                            </div>
+                          )}
                         </Fragment>
                       );
                     })}
@@ -446,7 +522,7 @@ function PricingInner() {
                     <button
                       type="button"
                       onClick={() => setShowAllRows((value) => !value)}
-                      className="col-span-4 flex items-center justify-center gap-1 p-6 border-t border-border cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                      className={`${hasFamilyPlan ? "col-span-4" : "col-span-3"} flex items-center justify-center gap-1 p-6 border-t border-border cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700`}
                     >
                       <ChevronDown
                         className={`h-4 w-4 text-blue-600 dark:text-blue-400 transition-transform ${showAllRows ? "rotate-180" : ""}`}
@@ -468,14 +544,16 @@ function PricingInner() {
         </main>
         <Footer />
       </div>
-    </WebLayoutProvider>
+    </>
   );
 }
 
 export default function Pricing() {
   return (
     <Suspense>
-      <PricingInner />
+      <WebLayoutProvider>
+        <PricingInner />
+      </WebLayoutProvider>
     </Suspense>
   );
 }

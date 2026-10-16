@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useState, type FormEvent } from "react";
 import type { AdminPlan, BillingInterval, PlanType } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
+import PlanVehicleSelect from "@/components/admin/PlanVehicleSelect";
 import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Input } from "@/components/ui/Input";
@@ -19,6 +20,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
   const [plan, setPlan] = useState<AdminPlan | null>(null);
   const [key, setKey] = useState("");
   const [name, setName] = useState("");
+  const [vehicleTypeId, setVehicleTypeId] = useState("");
   const [type, setType] = useState<PlanType>("recurring");
   const [billingInterval, setBillingInterval] = useState<BillingInterval>("month");
   const [price, setPrice] = useState("0");
@@ -34,6 +36,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
       setPlan(res.plan);
       setKey(res.plan.key);
       setName(res.plan.name);
+      setVehicleTypeId(res.plan.vehicle_type_id === null ? "" : String(res.plan.vehicle_type_id));
       setType(res.plan.type);
       setBillingInterval(res.plan.billing_interval ?? "month");
       setPrice((res.plan.price_cents / 100).toString());
@@ -53,6 +56,7 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
       await api.put(`/admin/plans/${id}`, {
         key,
         name,
+        vehicle_type_id: vehicleTypeId === "" ? null : Number(vehicleTypeId),
         type,
         billing_interval: type === "one_time" ? null : billingInterval,
         price_cents: Math.round(Number(price) * 100),
@@ -130,6 +134,13 @@ export default function EditPlanPage({ params }: { params: Promise<{ id: string 
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
               <InputError message={errors.name?.[0]} />
             </div>
+
+            <PlanVehicleSelect
+              value={vehicleTypeId}
+              onChange={setVehicleTypeId}
+              disabled={isSynced}
+              error={errors.vehicle_type_id?.[0]}
+            />
 
             <div className="grid gap-2">
               <Label htmlFor="type">Billing type</Label>

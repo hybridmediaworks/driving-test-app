@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Plan;
+use App\Models\VehicleType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 
 class PlanSeeder extends Seeder
 {
@@ -21,18 +23,18 @@ class PlanSeeder extends Seeder
         $plans = [
             [
                 'key' => 'weekly',
+                'vehicle' => 'car',
                 'name' => 'Weekly',
                 'type' => 'recurring',
                 'billing_interval' => 'week',
                 'price_cents' => 2900,
-                // The only plan with a free trial — card required at checkout, auto-converts to
-                // a paid weekly subscription if not canceled first.
                 'trial_days' => 7,
                 'max_seats' => 1,
                 'sort_order' => 0,
             ],
             [
                 'key' => 'monthly',
+                'vehicle' => 'car',
                 'name' => 'Monthly',
                 'type' => 'recurring',
                 'billing_interval' => 'month',
@@ -42,6 +44,7 @@ class PlanSeeder extends Seeder
             ],
             [
                 'key' => 'lifetime_family',
+                'vehicle' => 'car',
                 'name' => 'Lifetime Family',
                 'type' => 'one_time',
                 'billing_interval' => null,
@@ -49,11 +52,20 @@ class PlanSeeder extends Seeder
                 'max_seats' => 3,
                 'sort_order' => 2,
             ],
+            ['key' => 'cdl_weekly', 'vehicle' => 'cdl', 'name' => 'Weekly', 'type' => 'recurring', 'billing_interval' => 'week', 'price_cents' => 4900, 'trial_days' => 7, 'max_seats' => 1, 'sort_order' => 0],
+            ['key' => 'cdl_monthly', 'vehicle' => 'cdl', 'name' => 'Monthly', 'type' => 'recurring', 'billing_interval' => 'month', 'price_cents' => 8900, 'max_seats' => 1, 'sort_order' => 1],
+            ['key' => 'motorcycle_weekly', 'vehicle' => 'motorcycle', 'name' => 'Weekly', 'type' => 'recurring', 'billing_interval' => 'week', 'price_cents' => 2900, 'trial_days' => 7, 'max_seats' => 1, 'sort_order' => 0],
+            ['key' => 'motorcycle_monthly', 'vehicle' => 'motorcycle', 'name' => 'Monthly', 'type' => 'recurring', 'billing_interval' => 'month', 'price_cents' => 7500, 'max_seats' => 1, 'sort_order' => 1],
         ];
 
+        $vehicleIds = VehicleType::query()->pluck('id', 'name');
+
         foreach ($plans as $plan) {
+            $vehicle = Arr::pull($plan, 'vehicle');
+
             Plan::query()->updateOrCreate(['key' => $plan['key']], [
                 ...$plan,
+                'vehicle_type_id' => $vehicleIds[$vehicle] ?? null,
                 'is_active' => true,
             ]);
         }

@@ -14,6 +14,7 @@ export type Entitlement = {
   access_until: string | null;
   family_group_id: number | null;
   is_premium: boolean;
+  premium_vehicle_types: string[];
 };
 
 export type User = {

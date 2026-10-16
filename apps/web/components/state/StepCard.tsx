@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookMarked, Check, Gem, Lock } from "lucide-react";
 import Paragraph from "@/components/ui/Paragraph";
 import { useEntitlement } from "@/lib/auth-context";
+import { useSelectedVehicle } from "@/lib/web-layout-context";
 
 type Step = {
   title?: string;
@@ -46,7 +47,7 @@ export default function StepCard({
   /** Shows the mobile-only progress connector line driven by step.completed/justCompleted — only meaningful in the phase-progress step list (TestSteps). */
   connector?: boolean;
 }) {
-  const { isPremium } = useEntitlement();
+  const isPremium = useEntitlement().isPremiumFor(useSelectedVehicle());
   const isFilled = !!step.completed && !step.justCompleted;
   const isTrigger = !!step.justCompleted;
 

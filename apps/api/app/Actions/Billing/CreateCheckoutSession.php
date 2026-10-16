@@ -5,15 +5,23 @@ namespace App\Actions\Billing;
 use App\Enums\PlanType;
 use App\Models\Plan;
 use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 class CreateCheckoutSession
 {
     public function __invoke(User $user, Plan $plan): string
     {
+        if ($plan->stripe_price_id === null) {
+            throw ValidationException::withMessages([
+                'plan_key' => __('This plan isn\'t available for purchase yet.'),
+            ]);
+        }
+
         $frontendUrl = rtrim(config('app.frontend_url'), '/');
 
         $sessionOptions = [
-            'success_url' => "{$frontendUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}",
+            'success_url' => "{$frontendUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}"
+                .($plan->vehicleType !== null ? "&vehicle={$plan->vehicleType->name}" : ''),
             'cancel_url' => "{$frontendUrl}/billing/cancel",
             // Stripe's "Managed Payments" (auto-enabled on newer accounts) requires every product
             // to carry a tax_code and will otherwise reject the session outright. This app hasn't
@@ -23,7 +31,7 @@ class CreateCheckoutSession
         ];
 
         if ($plan->type === PlanType::Recurring) {
-            $subscription = $user->newSubscription('default', $plan->stripe_price_id);
+            $subscription = $user->newSubscription($plan->subscriptionType(), $plan->stripe_price_id);
             if ($plan->trial_days !== null) {
                 $subscription = $subscription->trialDays($plan->trial_days);
             }

@@ -34,6 +34,6 @@ class FlashcardPolicy
             return true;
         }
 
-        return $this->entitlement->resolve($user)->hasFeature(Feature::Flashcards);
+        return $this->entitlement->resolve($user)->hasFeature(Feature::Flashcards, $flashcard->vehicle_type_id);
     }
 }

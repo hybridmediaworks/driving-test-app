@@ -15,7 +15,8 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $entitlement = app(EntitlementResolver::class)->resolve($this->resource);
+        $resolver = app(EntitlementResolver::class);
+        $entitlement = $resolver->resolve($this->resource);
 
         return [
             'id' => $this->id,
@@ -33,6 +34,7 @@ class UserResource extends JsonResource
                 'access_until' => $entitlement->accessUntil,
                 'family_group_id' => $entitlement->familyGroupId,
                 'is_premium' => $entitlement->isPremium(),
+                'premium_vehicle_types' => $resolver->premiumVehicleTypeNames($entitlement),
             ],
         ];
     }

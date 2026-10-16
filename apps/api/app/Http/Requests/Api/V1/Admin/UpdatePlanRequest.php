@@ -36,6 +36,7 @@ class UpdatePlanRequest extends FormRequest
         return [
             'key' => ['required', 'string', 'max:50', 'regex:/^[a-z0-9]+(?:_[a-z0-9]+)*$/', Rule::unique('plans', 'key')->ignore($plan->id)],
             'name' => ['required', 'string', 'max:255'],
+            'vehicle_type_id' => ['nullable', 'integer', 'exists:vehicle_types,id'],
             'type' => ['required', Rule::enum(PlanType::class)],
             'billing_interval' => ['nullable', Rule::enum(BillingInterval::class)],
             'price_cents' => ['required', 'integer', 'min:0'],
@@ -60,6 +61,18 @@ class UpdatePlanRequest extends FormRequest
                 'billing_interval' => $plan->billing_interval?->value,
                 'type' => $plan->type->value,
             ];
+
+            if ($this->has('vehicle_type_id')) {
+                $incomingVehicle = $this->input('vehicle_type_id');
+                $incomingVehicle = $incomingVehicle === null ? null : (int) $incomingVehicle;
+
+                if ($incomingVehicle !== $plan->vehicle_type_id) {
+                    $validator->errors()->add(
+                        'vehicle_type_id',
+                        __('This plan is already synced to Stripe — its vehicle can\'t be changed here. Create a new plan instead.'),
+                    );
+                }
+            }
 
             foreach (self::MONEY_FIELDS as $field) {
                 $incoming = $this->input($field);

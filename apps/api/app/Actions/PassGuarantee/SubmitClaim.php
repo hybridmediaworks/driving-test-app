@@ -51,7 +51,7 @@ class SubmitClaim
         $planId = null;
 
         if ($entitlement->familyGroupId === null) {
-            $subscription = $user->subscription('default');
+            $subscription = $user->subscriptions->first(fn ($subscription) => $subscription->valid());
             $planId = $subscription === null
                 ? null
                 : Plan::query()->where('stripe_price_id', $subscription->stripe_price)->value('id');

@@ -32,7 +32,7 @@ export default function ExamPlayer({
   const [elapsedSeconds, setElapsedSeconds] = useState(() => initialProgress?.elapsedSeconds ?? 0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const accessLost = usePremiumAccessLost(quiz.is_premium);
+  const accessLost = usePremiumAccessLost(quiz.is_premium, quiz.vehicle_type?.name);
 
   const answersRef = useRef(answers);
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function ExamPlayer({
         )}
       </div>
 
-      <AccessLostDialog open={accessLost} exitHref={exitHref} />
+      <AccessLostDialog open={accessLost} exitHref={exitHref} vehicle={quiz.vehicle_type?.name} />
     </div>
   );
 }

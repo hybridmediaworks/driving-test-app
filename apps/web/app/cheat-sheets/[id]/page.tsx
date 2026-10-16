@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
 import { api, ApiError, downloadFile } from "@/lib/api";
+import { pricingHref } from "@/lib/pricing";
 import { WebLayoutProvider } from "@/lib/web-layout-context";
 
 export default function CheatSheetDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,7 +77,7 @@ export default function CheatSheetDetailPage({ params }: { params: Promise<{ id:
                     <Lock className="mx-auto h-8 w-8 text-amber-600" />
                     <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">This is a premium cheat sheet</h2>
                     <Paragraph color="muted">Upgrade to read the full sheet and download it as a PDF.</Paragraph>
-                    <Button href="/pricing">View plans</Button>
+                    <Button href={pricingHref(data.cheat_sheet.vehicle_type?.name)}>View plans</Button>
                   </div>
                 ) : (
                   <div className="space-y-6">

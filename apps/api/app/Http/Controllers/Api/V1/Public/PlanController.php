@@ -19,7 +19,7 @@ class PlanController extends Controller
     public function index(): AnonymousResourceCollection
     {
         return PlanResource::collection(
-            Plan::query()->where('is_active', true)->orderBy('sort_order')->get()
+            Plan::query()->with('vehicleType')->where('is_active', true)->orderBy('sort_order')->get()
         );
     }
 }

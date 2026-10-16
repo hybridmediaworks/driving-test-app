@@ -2,6 +2,7 @@ import { Lock } from "lucide-react";
 import type { QuizShowResponse } from "@driving-test-app/shared";
 import Button from "@/components/ui/Button";
 import Paragraph from "@/components/ui/Paragraph";
+import { pricingHref } from "@/lib/pricing";
 
 export default function QuizPreview({
   data,
@@ -48,7 +49,7 @@ export default function QuizPreview({
           <Paragraph color="muted" size="sm">
             Upgrade to unlock this quiz and start practicing.
           </Paragraph>
-          <Button href="/pricing">View plans</Button>
+          <Button href={pricingHref(data.quiz.vehicle_type?.name)}>View plans</Button>
         </div>
       ) : resume ? (
         <div className="space-y-3 rounded-2xl bg-blue-50 dark:bg-blue-500/10 p-6">

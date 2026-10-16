@@ -65,6 +65,7 @@ function Card({ card, className = "" }: { card: ResourceCard; className?: string
  */
 export default function GoFurtherSection() {
   const { selectedState, selectedVehicle, selectedTestType } = useWebLayout();
+  const isPremium = useEntitlement().isPremiumFor(selectedVehicle);
   const stateCode = stateAbbreviations[selectedState];
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
   const query = `state=${stateCode}&vehicle_type=${vehicleType}`;
@@ -73,7 +74,6 @@ export default function GoFurtherSection() {
   // /exam-simulator browse list and goes straight into the next simulator quiz they haven't
   // taken yet (or the first one, if none yet) — this card used to always send everyone to the
   // list regardless of entitlement.
-  const { isPremium } = useEntitlement();
   const phases = useLadderPhases();
   const simulatorSlug = phases
     .find((p) => p.header.headerTitle === "The exam simulator")

@@ -144,6 +144,10 @@ export function WebLayoutProvider({
   );
 }
 
+export function useSelectedVehicle(): string {
+  return useContext(WebLayoutContext)?.selectedVehicle ?? "Car";
+}
+
 export function useWebLayout(): WebLayoutContextValue {
   const ctx = useContext(WebLayoutContext);
   if (!ctx) throw new Error("useWebLayout must be used within WebLayoutProvider");

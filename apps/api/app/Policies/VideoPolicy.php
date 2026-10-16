@@ -35,6 +35,6 @@ class VideoPolicy
             return true;
         }
 
-        return $this->entitlement->resolve($user)->hasFeature(Feature::Videos);
+        return $this->entitlement->resolve($user)->hasFeature(Feature::Videos, $video->vehicle_type_id);
     }
 }

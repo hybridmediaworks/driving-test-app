@@ -42,8 +42,8 @@ export default function WrittenTestContent({ state, testSlug }: { state: string;
   const quizHref = `/${stateSlug}/${testSlug}/quiz`;
 
   const { selectedVehicle } = useWebLayout();
+  const isPremium = useEntitlement().isPremiumFor(selectedVehicle);
   const vehicleType = vehicleSlugs[selectedVehicle] ?? "car";
-  const { isPremium } = useEntitlement();
 
   const [quiz, setQuiz] = useState<Quiz | null | undefined>(undefined);
   const [stateInfo, setStateInfo] = useState<State | null>(null);

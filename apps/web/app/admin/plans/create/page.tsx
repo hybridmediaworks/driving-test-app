@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { BillingInterval, PlanType } from "@driving-test-app/shared";
 import AdminGuard from "@/components/admin/AdminGuard";
+import PlanVehicleSelect from "@/components/admin/PlanVehicleSelect";
 import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/ShadcnButton";
 import { Input } from "@/components/ui/Input";
@@ -16,6 +17,7 @@ export default function CreatePlanPage() {
   const router = useRouter();
   const [key, setKey] = useState("");
   const [name, setName] = useState("");
+  const [vehicleTypeId, setVehicleTypeId] = useState("");
   const [type, setType] = useState<PlanType>("recurring");
   const [billingInterval, setBillingInterval] = useState<BillingInterval>("month");
   const [price, setPrice] = useState("0");
@@ -35,6 +37,7 @@ export default function CreatePlanPage() {
       await api.post("/admin/plans", {
         key,
         name,
+        vehicle_type_id: vehicleTypeId === "" ? null : Number(vehicleTypeId),
         type,
         billing_interval: type === "one_time" ? null : billingInterval,
         price_cents: Math.round(Number(price) * 100),
@@ -94,6 +97,8 @@ export default function CreatePlanPage() {
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
               <InputError message={errors.name?.[0]} />
             </div>
+
+            <PlanVehicleSelect value={vehicleTypeId} onChange={setVehicleTypeId} error={errors.vehicle_type_id?.[0]} />
 
             <div className="grid gap-2">
               <Label htmlFor="type">Billing type</Label>

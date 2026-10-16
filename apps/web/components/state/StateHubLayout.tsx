@@ -1,8 +1,19 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { PanelRightOpen } from "lucide-react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import StateSidebar from "@/components/state/StateSidebar";
 import { useLearnerProgress } from "@/lib/useLearnerProgress";
+
+const RAIL_HIDDEN_KEY = "progressRailHidden";
+
+function readRailHidden(): boolean {
+  try {
+    return typeof window !== "undefined" && localStorage.getItem(RAIL_HIDDEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Whether the progress rail is alongside the page. Sections that lay themselves out edge-to-edge
@@ -48,6 +59,10 @@ const HUB_STYLES = `
   .rail-slide-in {
     animation: rail-slide-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+
+  .rail-slide-out {
+    animation: rail-slide-out 0.45s cubic-bezier(0.64, 0, 0.78, 0) both;
+  }
 }
 
 @keyframes rail-slide-in {
@@ -55,10 +70,17 @@ const HUB_STYLES = `
   to { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes rail-slide-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(calc(100% + 20px)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rail-slide-in { animation: none; }
+  .rail-slide-in, .rail-slide-out { animation: none; }
 }
 `;
+
+const RAIL_ANIMATES_QUERY = "(min-width: 80rem) and (prefers-reduced-motion: no-preference)";
 
 /**
  * The state hub's page shell. For a signed-in learner it puts the whole page — the site header
@@ -79,12 +101,47 @@ export default function StateHubLayout({
   children: ReactNode;
 }) {
   const { progress, reload } = useLearnerProgress();
+  const [railHidden, setRailHiddenState] = useState(readRailHidden);
+  const [railLeaving, setRailLeaving] = useState(false);
+
+  function hideRail() {
+    if (window.matchMedia(RAIL_ANIMATES_QUERY).matches) setRailLeaving(true);
+    else setRailHidden(true);
+  }
+
+  function setRailHidden(hidden: boolean) {
+    setRailHiddenState(hidden);
+    try {
+      if (hidden) localStorage.setItem(RAIL_HIDDEN_KEY, "1");
+      else localStorage.removeItem(RAIL_HIDDEN_KEY);
+    } catch {
+    }
+  }
 
   if (!progress)
     return (
       <>
         {header}
         {children}
+      </>
+    );
+
+  if (railHidden)
+    return (
+      <>
+        {header}
+        {children}
+        <div className="pointer-events-none fixed inset-y-0 right-0 z-40 flex items-center">
+          <button
+            type="button"
+            onClick={() => setRailHidden(false)}
+            aria-label="Show your progress"
+            className="pointer-events-auto flex cursor-pointer items-center gap-2 rounded-l-2xl border border-r-0 border-border bg-white py-3 pr-3 pl-3.5 text-sm font-semibold text-blue-700 shadow-card transition-colors animate-in fade-in slide-in-from-right duration-500 hover:bg-blue-50 motion-reduce:animate-none dark:bg-neutral-800 dark:text-blue-300 dark:hover:bg-blue-500/10"
+          >
+            <PanelRightOpen className="size-5" />
+            <span className="max-sm:sr-only">Your progress</span>
+          </button>
+        </div>
       </>
     );
 
@@ -107,8 +164,15 @@ export default function StateHubLayout({
           <div className="xl:sticky xl:top-5">
             {/* Separate element from the sticky one so the entrance transform never becomes the
                 containing block for sticky positioning. */}
-            <div className="rail-slide-in">
-              <StateSidebar progress={progress} onReload={reload} />
+            <div
+              className={railLeaving ? "rail-slide-out" : "rail-slide-in"}
+              onAnimationEnd={(e) => {
+                if (!railLeaving || e.target !== e.currentTarget) return;
+                setRailLeaving(false);
+                setRailHidden(true);
+              }}
+            >
+              <StateSidebar progress={progress} onReload={reload} onHide={hideRail} />
             </div>
           </div>
         </div>

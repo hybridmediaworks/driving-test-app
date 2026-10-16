@@ -162,11 +162,20 @@ export function useRedirectIfAuthenticated(to: string) {
 export function useEntitlement() {
   const { user, loading } = useAuth();
   const entitlement = user?.entitlement ?? null;
+  const isPremium = entitlement?.is_premium ?? false;
+  const premiumVehicleTypes = entitlement?.premium_vehicle_types ?? [];
+
+  function isPremiumFor(vehicle: string | null | undefined): boolean {
+    if (!vehicle || user?.is_admin) return isPremium;
+    return premiumVehicleTypes.includes(vehicle.toLowerCase());
+  }
 
   return {
     entitlement,
     loading,
-    isPremium: entitlement?.is_premium ?? false,
+    isPremium,
+    premiumVehicleTypes,
+    isPremiumFor,
     tier: entitlement?.tier ?? "guest",
   } as const;
 }

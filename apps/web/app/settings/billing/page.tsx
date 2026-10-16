@@ -27,13 +27,25 @@ const TIER_LABELS: Record<string, string> = {
   lifetime_family_member: "Lifetime Family (member)",
 };
 
+const VEHICLE_LABELS: Record<string, string> = {
+  car: "Car",
+  motorcycle: "Motorcycle",
+  cdl: "CDL",
+};
+
+const VEHICLE_LABELS_COUNT = Object.keys(VEHICLE_LABELS).length;
+
+function vehicleLabel(vehicle: string): string {
+  return VEHICLE_LABELS[vehicle] ?? vehicle;
+}
+
 export default function BillingSettingsPage() {
   const [subscription, setSubscription] = useState<MySubscription | null>(null);
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [family, setFamily] = useState<FamilyGroup | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [confirmingCancelId, setConfirmingCancelId] = useState<number | null>(null);
   const [canceling, setCanceling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
@@ -53,12 +65,12 @@ export default function BillingSettingsPage() {
     loadAll();
   }, []);
 
-  async function handleCancel() {
+  async function handleCancel(subscriptionId: number) {
     setCanceling(true);
     setCancelError(null);
     try {
-      await api.post("/billing/subscription/cancel");
-      setConfirmingCancel(false);
+      await api.post("/billing/subscription/cancel", { subscription_id: subscriptionId });
+      setConfirmingCancelId(null);
       loadAll();
     } catch (err) {
       setCancelError(err instanceof ApiError ? err.message : "Couldn't cancel your subscription. Please try again.");
@@ -112,61 +124,79 @@ export default function BillingSettingsPage() {
           {loadError && <p className="text-sm text-destructive">{loadError}</p>}
 
           {subscription && (
-            <div className="space-y-3 rounded-2xl border p-5">
+            <div className="space-y-4 rounded-2xl border p-5">
               <p className="text-sm">
-                <span className="font-semibold">Plan: </span>
-                {TIER_LABELS[subscription.tier] ?? subscription.tier}
+                <span className="font-semibold">Premium for: </span>
+                {subscription.premium_vehicle_types.length > 0
+                  ? subscription.premium_vehicle_types.map(vehicleLabel).join(", ")
+                  : "None — you're on the free plan"}
               </p>
-              <p className="text-sm">
-                <span className="font-semibold">Status: </span>
-                {subscription.subscription?.on_trial ? "Free trial" : subscription.status}
-              </p>
-              {subscription.subscription?.on_trial && subscription.subscription.trial_ends_at && (
-                <p className="rounded-lg bg-blue-50 dark:bg-blue-500/10 p-3 text-sm text-blue-900">
-                  You&apos;re on a free trial until{" "}
-                  <strong>{new Date(subscription.subscription.trial_ends_at).toLocaleDateString()}</strong>. After
-                  that, your card will be charged automatically for the {TIER_LABELS[subscription.tier] ?? subscription.tier}{" "}
-                  plan unless you cancel first.
-                </p>
-              )}
-              {subscription.subscription?.canceled && subscription.access_until && (
-                <p className="text-sm text-muted-foreground">
-                  Access continues until {new Date(subscription.access_until).toLocaleDateString()}.
+              {(subscription.tier === "lifetime_family_owner" || subscription.tier === "lifetime_family_member") && (
+                <p className="text-sm">
+                  <span className="font-semibold">Plan: </span>
+                  {TIER_LABELS[subscription.tier]}
                 </p>
               )}
 
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                {!subscription.is_premium && <Button href="/pricing">View plans</Button>}
+              {subscription.subscriptions.map((item) => (
+                <div key={item.id} className="space-y-2 rounded-xl bg-muted/50 p-4">
+                  <p className="text-sm font-semibold">
+                    {item.vehicle_type ? `${vehicleLabel(item.vehicle_type)} · ` : ""}
+                    {item.plan_name ?? "Subscription"}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-semibold">Status: </span>
+                    {item.on_trial ? "Free trial" : item.canceled ? "Canceled" : item.stripe_status}
+                  </p>
+                  {item.on_trial && item.trial_ends_at && !item.canceled && (
+                    <p className="rounded-lg bg-blue-50 dark:bg-blue-500/10 p-3 text-sm text-blue-900 dark:text-blue-200">
+                      You&apos;re on a free trial until{" "}
+                      <strong>{new Date(item.trial_ends_at).toLocaleDateString()}</strong>. After that, your card will
+                      be charged automatically unless you cancel first.
+                    </p>
+                  )}
+                  {item.canceled && item.ends_at && (
+                    <p className="text-sm text-muted-foreground">
+                      Access continues until {new Date(item.ends_at).toLocaleDateString()}.
+                    </p>
+                  )}
 
-                {subscription.subscription && !subscription.subscription.canceled && (
+                  {!item.canceled && confirmingCancelId !== item.id && (
+                    <Button variant="outline" size="sm" onClick={() => setConfirmingCancelId(item.id)}>
+                      Cancel subscription
+                    </Button>
+                  )}
+
+                  {confirmingCancelId === item.id && (
+                    <div className="space-y-2 rounded-lg bg-muted p-4">
+                      <p className="text-sm">
+                        Cancel this subscription? You&apos;ll keep access until the end of your current billing period.
+                      </p>
+                      {cancelError && <p className="text-sm text-destructive">{cancelError}</p>}
+                      <div className="flex gap-3">
+                        <Button variant="outline" onClick={() => handleCancel(item.id)} disabled={canceling}>
+                          {canceling ? "Canceling…" : "Yes, cancel"}
+                        </Button>
+                        <Button variant="outline" onClick={() => setConfirmingCancelId(null)}>
+                          Never mind
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                {subscription.premium_vehicle_types.length < VEHICLE_LABELS_COUNT && (
+                  <Button href="/pricing">{subscription.is_premium ? "Add another vehicle" : "View plans"}</Button>
+                )}
+
+                {subscription.subscriptions.length > 0 && (
                   <Button variant="outline" onClick={handlePortal} disabled={portalLoading}>
                     {portalLoading ? "Redirecting…" : "Manage payment method & invoices"}
                   </Button>
                 )}
-
-                {subscription.subscription && !subscription.subscription.canceled && !confirmingCancel && (
-                  <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
-                    Cancel subscription
-                  </Button>
-                )}
               </div>
-
-              {confirmingCancel && (
-                <div className="space-y-2 rounded-lg bg-muted p-4">
-                  <p className="text-sm">
-                    Cancel your subscription? You&apos;ll keep access until the end of your current billing period.
-                  </p>
-                  {cancelError && <p className="text-sm text-destructive">{cancelError}</p>}
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={handleCancel} disabled={canceling}>
-                      {canceling ? "Canceling…" : "Yes, cancel"}
-                    </Button>
-                    <Button variant="outline" onClick={() => setConfirmingCancel(false)}>
-                      Never mind
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
