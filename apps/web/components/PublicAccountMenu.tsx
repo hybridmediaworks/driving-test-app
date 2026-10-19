@@ -8,6 +8,7 @@ import UserInfo from "@/components/app/UserInfo";
 import Switch from "@/components/ui/Switch";
 import { useAppearance } from "@/lib/appearance";
 import { useAuth } from "@/lib/auth-context";
+import { useWebLayout, type StudyMode } from "@/lib/web-layout-context";
 
 /**
  * Account dropdown for the public marketing header, built the same manual (state + click-outside)
@@ -20,8 +21,6 @@ const studyModes = [
   { label: "Flashcards", value: "flashcards" },
 ] as const;
 
-type StudyMode = (typeof studyModes)[number]["value"];
-
 const rowClasses =
   "block w-full cursor-pointer px-4 py-3 text-left text-sm text-neutral-700 hover:bg-blue-50 hover:text-blue-600 dark:text-neutral-300 dark:hover:bg-blue-500/10 dark:hover:text-blue-400";
 
@@ -29,9 +28,7 @@ export default function PublicAccountMenu({ user }: { user: User }) {
   const { logout } = useAuth();
   const { appearance, updateAppearance } = useAppearance();
   const [open, setOpen] = useState(false);
-  // UI only for now — the picked mode isn't persisted or read by any surface yet; wire it into the
-  // study preferences (alongside state/vehicle/test type) when the Tests/Flashcards split lands.
-  const [studyMode, setStudyMode] = useState<StudyMode>("tests");
+  const { studyMode, setStudyMode } = useWebLayout();
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -85,7 +82,10 @@ export default function PublicAccountMenu({ user }: { user: User }) {
                       name="study-mode"
                       value={mode.value}
                       checked={isSelected}
-                      onChange={() => setStudyMode(mode.value)}
+                      onChange={() => {
+                        setStudyMode(mode.value as StudyMode);
+                        setOpen(false);
+                      }}
                       className="peer sr-only"
                     />
                     <span

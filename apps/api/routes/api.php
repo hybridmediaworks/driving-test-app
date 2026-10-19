@@ -112,6 +112,7 @@ Route::prefix('v1')->group(function (): void {
     // withheld per-card by FlashcardResource for premium cards the caller isn't entitled to.
     Route::get('flashcards', [PublicFlashcardController::class, 'index']);
     Route::get('flashcards/study', [PublicFlashcardController::class, 'study']);
+    Route::get('flashcards/sets', [PublicFlashcardController::class, 'sets']);
 
     // Public cheat-sheet browsing — title/summary/cover always visible; sections/PDF are gated
     // by CheatSheetPolicy::readFull, same locked-teaser shape as flashcards.

@@ -6,6 +6,9 @@ import { isValidState, slugToStateName } from "./usStates";
 const STORAGE_KEY = "selectedState";
 const VEHICLE_STORAGE_KEY = "selectedVehicle";
 const TEST_TYPE_STORAGE_KEY = "selectedTestType";
+const STUDY_MODE_STORAGE_KEY = "studyMode";
+export type StudyMode = "tests" | "flashcards";
+const validStudyModes: StudyMode[] = ["tests", "flashcards"];
 const validVehicles = ["Car", "CDL", "Motorcycle"];
 const validTestTracks = ["permit_test", "driving_test"];
 
@@ -32,6 +35,10 @@ type WebLayoutContextValue = {
   selectedTestType: string;
   setSelectedTestType: (testType: string) => void;
   hasResolvedTestType: boolean;
+  /** Whether the state page shows the practice tests or the flashcard sets (the account menu's
+   * "Study mode" switch). Remembered in this browser like the state/vehicle/track. */
+  studyMode: StudyMode;
+  setStudyMode: (mode: StudyMode) => void;
   /** The current vehicle has no driving-test track, so the track switcher has nothing to offer. */
   isPermitOnlyVehicle: boolean;
 };
@@ -59,6 +66,7 @@ export function WebLayoutProvider({
   const [selectedVehicle, setSelectedVehicleRaw] = useState("Car");
   const [selectedTestType, setSelectedTestTypeRaw] = useState("permit_test");
   const [hasResolvedTestType, setHasResolvedTestType] = useState(false);
+  const [studyMode, setStudyModeRaw] = useState<StudyMode>("tests");
 
   // Reads from localStorage/route slug only after mount to avoid SSR/client hydration mismatches.
   // useLayoutEffect (not useEffect) so this resolves before the browser paints the new page on a
@@ -85,9 +93,12 @@ export function WebLayoutProvider({
     const storedTestType =
       storedTestTypeRaw && validTestTracks.includes(storedTestTypeRaw) ? storedTestTypeRaw : "";
 
+    const storedStudyMode = localStorage.getItem(STUDY_MODE_STORAGE_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe: server/first client render both start empty, then sync to the real stored value
+    setStudyModeRaw(validStudyModes.includes(storedStudyMode as StudyMode) ? (storedStudyMode as StudyMode) : "tests");
+
     const initialState = validPropState || storedState || "";
     const initialVehicle = propVehicle || storedVehicle || "Car";
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe: server/first client render both start empty, then sync to the real stored value
     setSelectedStateRaw(initialState);
     setHasStoredState(!!storedState || !!validPropState);
     setSelectedVehicleRaw(initialVehicle);
@@ -125,6 +136,11 @@ export function WebLayoutProvider({
     localStorage.setItem(TEST_TYPE_STORAGE_KEY, value);
   }
 
+  function setStudyMode(value: StudyMode) {
+    setStudyModeRaw(value);
+    if (validStudyModes.includes(value)) localStorage.setItem(STUDY_MODE_STORAGE_KEY, value);
+  }
+
   return (
     <WebLayoutContext.Provider
       value={{
@@ -136,6 +152,8 @@ export function WebLayoutProvider({
         selectedTestType,
         setSelectedTestType,
         hasResolvedTestType,
+        studyMode,
+        setStudyMode,
         isPermitOnlyVehicle: permitOnlyVehicles.includes(selectedVehicle),
       }}
     >
