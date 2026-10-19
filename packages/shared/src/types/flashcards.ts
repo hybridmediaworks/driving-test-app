@@ -39,3 +39,10 @@ export type FlashcardReview = {
   status: FlashcardReviewStatus;
   reviewed_at: string | null;
 };
+
+/** One flashcard set from `GET /flashcards/sets`: the cards sharing a category and topic. */
+export type FlashcardSet = {
+  category: { id: number; name: string; title: string } | null;
+  topic: string | null;
+  count: number;
+};

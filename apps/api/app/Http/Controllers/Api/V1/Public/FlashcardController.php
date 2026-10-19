@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api\V1\Public;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\Public\FlashcardResource;
 use App\Models\Flashcard;
+use App\Models\QuizCategory;
 use App\Support\LikeSearch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class FlashcardController extends Controller
 {
@@ -57,6 +60,43 @@ class FlashcardController extends Controller
     }
 
     /**
+     * List flashcard sets
+     *
+     * Public — no authentication required. A "set" is the cards sharing one category and topic (a
+     * card with no topic is its own category-wide set). Returns each set's category, topic and card
+     * count so the state page's Flashcard Mode can show real sets instead of one flat pile. Takes
+     * the same `state` and `vehicle_type` filters as `index`; `category` is ignored on purpose,
+     * since the point is to see every category.
+     */
+    public function sets(Request $request): JsonResponse
+    {
+        $rows = $this->filteredQuery($request->duplicate(Arr::except($request->query(), ['category', 'topic', 'search'])))
+            ->reorder()
+            ->setEagerLoads([])
+            ->select('quiz_category_id', 'topic', DB::raw('count(*) as total'))
+            ->groupBy('quiz_category_id', 'topic')
+            ->get();
+
+        $categories = QuizCategory::query()
+            ->whereIn('id', $rows->pluck('quiz_category_id')->filter()->unique())
+            ->get(['id', 'name', 'title'])
+            ->keyBy('id');
+
+        $sets = $rows
+            ->map(fn (Flashcard $row): array => [
+                'category' => $row->quiz_category_id !== null && $categories->has($row->quiz_category_id)
+                    ? $categories[$row->quiz_category_id]->only(['id', 'name', 'title'])
+                    : null,
+                'topic' => $row->topic,
+                'count' => (int) $row->getAttribute('total'),
+            ])
+            ->sortBy(fn (array $set): string => ($set['category']['title'] ?? '~').'|'.($set['topic'] ?? ''))
+            ->values();
+
+        return response()->json(['data' => $sets]);
+    }
+
+    /**
      * @return Builder<Flashcard>
      */
     private function filteredQuery(Request $request): Builder
@@ -85,6 +125,10 @@ class FlashcardController extends Controller
         if ($request->filled('category')) {
             $name = $request->string('category')->toString();
             $query->where(fn ($q) => $q->whereNull('quiz_category_id')->orWhereHas('category', fn ($q2) => $q2->where('name', $name)));
+        }
+
+        if ($request->filled('topic')) {
+            $query->where('topic', $request->string('topic')->toString());
         }
 
         // Narrows the study deck too, not just the browse grid — `study` builds its query from the
