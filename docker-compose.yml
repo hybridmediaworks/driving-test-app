@@ -11,10 +11,22 @@ services:
       APP_DEBUG: "true"
       # Dev-only key for local smoke testing — generate your own for Render (php artisan key:generate --show).
       APP_KEY: "base64:ZHtmNFTzfU4E0qy7X3XnT2AaP0g1ZOnZz5qn+j5x7UA="
-      APP_URL: "http://localhost:8080"
-      FRONTEND_URL: "http://localhost:8080"
+      # Overridable from the shell or a .env file next to this one, so a shared/staging server doesn't
+      # email verification links that point at localhost. Defaults keep local behaviour unchanged.
+      APP_URL: "${APP_URL:-http://localhost:8080}"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:8080}"
       DB_CONNECTION: sqlite
       SESSION_DRIVER: database
       QUEUE_CONNECTION: sync
       FILESYSTEM_DISK: local
       LOG_CHANNEL: stderr
+      # Mail defaults to the "log" driver: emails (verification, password reset) are only written to
+      # the log and never delivered. To send real mail set MAIL_MAILER=smtp plus the host/credentials
+      # of a provider (Resend, Postmark, Mailgun, SES SMTP) in the shell or a .env file.
+      MAIL_MAILER: "${MAIL_MAILER:-log}"
+      MAIL_HOST: "${MAIL_HOST:-127.0.0.1}"
+      MAIL_PORT: "${MAIL_PORT:-2525}"
+      MAIL_USERNAME: "${MAIL_USERNAME:-}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+      MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-hello@example.com}"
+      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-Driving Test}"
