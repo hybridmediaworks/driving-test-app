@@ -50,6 +50,9 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
   // generic "DMV Permit Practice Test" wording.
   const vehicleLabel = selectedVehicle === "Motorcycle" || selectedVehicle === "CDL" ? `${selectedVehicle} ` : "";
   const quizHref = `/${stateSlug}/${testSlug}/quiz`;
+  // A free visitor on a premium test gets the upsell wording driving-tests.org uses ("Get Full
+  // <State> Exam Prep"), not "Unlock <internal quiz title>". A test locked only by progress keeps "Unlock".
+  const premiumLocked = !!quiz?.locked && !!quiz.is_premium;
   const duration = formatMinutes(quiz?.duration_seconds);
   const toPass = quiz ? questionsToPass(quiz) : null;
 
@@ -130,10 +133,16 @@ export default function HeroSection({ testSlug }: { testSlug: string }) {
               </Button>
             </div>
           ) : (
-            <Button className="w-full to-blue-800! md:w-fit" href={quizHref} disabled={!quiz}>
-              {quiz?.locked
-                ? `Unlock ${quiz.title}`
-                : `Start Free ${selectedState} ${isDrivingTest ? "Driving" : "Permit"} Practice Test`}{" "}
+            <Button
+              className="w-full to-blue-800! md:w-fit"
+              href={premiumLocked ? "/pricing" : quizHref}
+              disabled={!quiz}
+            >
+              {premiumLocked
+                ? `Get Full ${selectedState} Exam Prep`
+                : quiz?.locked
+                  ? `Unlock ${quiz.title}`
+                  : `Start Free ${selectedState} ${isDrivingTest ? "Driving" : "Permit"} Practice Test`}{" "}
               <ArrowRight />
             </Button>
           )}
