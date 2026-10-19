@@ -48,6 +48,7 @@ const en = {
   machineTranslatedNotice: "Machine-translated — verify with an official source before your exam.",
 
   flagForMistake: "Flag for Mistake",
+  vaultTooltip: "Save to Quiz Vault for later review",
   previous: "Previous",
   nextQuestion: "Next Question",
   seeResults: "See Results",
@@ -176,6 +177,7 @@ const es: Record<keyof typeof en, string> = {
   machineTranslatedNotice: "Traducido por IA — verifica con una fuente oficial antes de tu examen.",
 
   flagForMistake: "Reportar un error",
+  vaultTooltip: "Guardar en el Quiz Vault para repasar más tarde",
   previous: "Anterior",
   nextQuestion: "Siguiente pregunta",
   seeResults: "Ver resultados",
@@ -304,6 +306,7 @@ const ru: Record<keyof typeof en, string> = {
   machineTranslatedNotice: "Машинный перевод — перед экзаменом сверьтесь с официальным источником.",
 
   flagForMistake: "Сообщить об ошибке",
+  vaultTooltip: "Сохранить в Quiz Vault для повторения позже",
   previous: "Назад",
   nextQuestion: "Следующий вопрос",
   seeResults: "Показать результаты",
