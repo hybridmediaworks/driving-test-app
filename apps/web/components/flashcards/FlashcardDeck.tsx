@@ -13,13 +13,15 @@ import Flashcard from "./Flashcard";
 export default function FlashcardDeck({
   cards,
   onReview,
+  initialIndex = 0,
   emptyMessage = "No flashcards match your filters yet.",
 }: {
   cards: PublicFlashcard[];
+  initialIndex?: number;
   onReview?: (card: PublicFlashcard, status: "known" | "unknown") => void;
   emptyMessage?: string;
 }) {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(initialIndex);
   const [flipped, setFlipped] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
   const [unknownCount, setUnknownCount] = useState(0);
