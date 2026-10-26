@@ -191,7 +191,21 @@ function PricingInner() {
       );
   }, []);
 
-  const vehicleName = selectedVehicle.toLowerCase();
+  // A pass already owned isn't offered again: only the vehicles still to buy get a tab. The tab
+  // shown is the site's selected vehicle unless that one is owned, then the first one left. It is
+  // not written back to selectedVehicle, which also drives the state pages.
+  const ownedVehicles = VEHICLE_OPTIONS.filter((vehicle) =>
+    premiumVehicleTypes.includes(vehicle.toLowerCase()),
+  );
+  const buyableVehicles = VEHICLE_OPTIONS.filter(
+    (vehicle) => !ownedVehicles.includes(vehicle),
+  );
+  const ownsEveryVehicle = buyableVehicles.length === 0;
+  const pricingVehicle =
+    buyableVehicles.find((vehicle) => vehicle === selectedVehicle) ??
+    buyableVehicles[0] ??
+    selectedVehicle;
+  const vehicleName = pricingVehicle.toLowerCase();
   const visiblePlans = (plans ?? []).filter(
     (plan) => plan.vehicle_type === null || plan.vehicle_type === vehicleName,
   );
@@ -274,34 +288,38 @@ function PricingInner() {
                 <Paragraph className="max-w-156 text-center" size="xl">
                   No contracts. Cancel anytime in a couple clicks.
                 </Paragraph>
-                <div
-                  role="radiogroup"
-                  aria-label="Vehicle"
-                  className="mt-2 inline-flex rounded-full border border-border bg-white p-1 dark:bg-neutral-800"
-                >
-                  {VEHICLE_OPTIONS.map((vehicle) => {
-                    const active = selectedVehicle === vehicle;
-                    return (
-                      <button
-                        key={vehicle}
-                        type="button"
-                        role="radio"
-                        aria-checked={active}
-                        onClick={() => setSelectedVehicle(vehicle)}
-                        className={`cursor-pointer rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
-                          active
-                            ? "bg-blue-600 text-white"
-                            : "text-neutral-600 hover:text-blue-600 dark:text-neutral-300"
-                        }`}
-                      >
-                        {vehicle}
-                      </button>
-                    );
-                  })}
-                </div>
-                {alreadyHasVehicle && (
-                  <Paragraph size="sm" color="primary" className="font-semibold">
-                    You already have Premium for {selectedVehicle}.
+                {!ownsEveryVehicle && (
+                  <div
+                    role="radiogroup"
+                    aria-label="Vehicle"
+                    className="mt-2 inline-flex rounded-full border border-border bg-white p-1 dark:bg-neutral-800"
+                  >
+                    {buyableVehicles.map((vehicle) => {
+                      const active = pricingVehicle === vehicle;
+                      return (
+                        <button
+                          key={vehicle}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          onClick={() => setSelectedVehicle(vehicle)}
+                          className={`cursor-pointer rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+                            active
+                              ? "bg-blue-600 text-white"
+                              : "text-neutral-600 hover:text-blue-600 dark:text-neutral-300"
+                          }`}
+                        >
+                          {vehicle}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {ownedVehicles.length > 0 && (
+                  <Paragraph size="sm" color="primary" className="text-center font-semibold">
+                    {ownsEveryVehicle
+                      ? `You already have Premium for every vehicle (${ownedVehicles.join(", ")}). There are no more passes to buy.`
+                      : `You already have Premium for ${ownedVehicles.join(", ")}.`}
                   </Paragraph>
                 )}
               </div>
@@ -315,103 +333,105 @@ function PricingInner() {
                 </p>
               )}
 
-              <div
-                className={`grid grid-cols-1 gap-5 ${
-                  visiblePlans.length === 2
-                    ? "mx-auto max-w-4xl lg:grid-cols-2"
-                    : "lg:grid-cols-3"
-                }`}
-              >
-                {visiblePlans.map((plan) => {
-                  const kind = planKind(plan);
-                  const isPopular = kind === "monthly";
-                  const isCheckingOut = checkingOutKey === plan.key;
+              {!ownsEveryVehicle && (
+                <div
+                  className={`grid grid-cols-1 gap-5 ${
+                    visiblePlans.length === 2
+                      ? "mx-auto max-w-4xl lg:grid-cols-2"
+                      : "lg:grid-cols-3"
+                  }`}
+                >
+                  {visiblePlans.map((plan) => {
+                    const kind = planKind(plan);
+                    const isPopular = kind === "monthly";
+                    const isCheckingOut = checkingOutKey === plan.key;
 
-                  return (
-                    <div
-                      key={plan.key}
-                      className={`relative flex flex-col justify-between space-y-5 rounded-xl bg-white dark:bg-neutral-800 p-8 ${
-                        isPopular
-                          ? "border border-blue-600 shadow-[0_24px_50px_-26px_rgba(20,60,120,0.25),0_4px_6px_-2px_rgba(20,60,120,0.03)]"
-                          : "border shadow-card lg:my-11.5"
-                      }`}
-                    >
-                      <div className="space-y-5">
-                        {isPopular && (
-                          <div className="absolute left-0 flex w-full items-center justify-center -mt-11.5">
-                            <Paragraph
-                              className="rounded-full bg-linear-to-r from-blue-500 to-blue-700 px-3 pb-0.5 font-semibold"
-                              color="white"
-                            >
-                              Most popular
+                    return (
+                      <div
+                        key={plan.key}
+                        className={`relative flex flex-col justify-between space-y-5 rounded-xl bg-white dark:bg-neutral-800 p-8 ${
+                          isPopular
+                            ? "border border-blue-600 shadow-[0_24px_50px_-26px_rgba(20,60,120,0.25),0_4px_6px_-2px_rgba(20,60,120,0.03)]"
+                            : "border shadow-card lg:my-11.5"
+                        }`}
+                      >
+                        <div className="space-y-5">
+                          {isPopular && (
+                            <div className="absolute left-0 flex w-full items-center justify-center -mt-11.5">
+                              <Paragraph
+                                className="rounded-full bg-linear-to-r from-blue-500 to-blue-700 px-3 pb-0.5 font-semibold"
+                                color="white"
+                              >
+                                Most popular
+                              </Paragraph>
+                            </div>
+                          )}
+                          <Paragraph
+                            size="2xl"
+                            className="font-semibold mb-4"
+                            color="dark"
+                          >
+                            {plan.name}
+                          </Paragraph>
+                          <Paragraph>{TAGLINE_BY_KEY[kind]}</Paragraph>
+                          <div className="mb-4 flex items-end gap-2">
+                            <Heading as="h2">
+                              {formatPrice(plan.price_cents)}
+                            </Heading>
+                            <Paragraph className="pb-2">
+                              {" "}
+                              {priceSuffix(plan)}{" "}
                             </Paragraph>
                           </div>
-                        )}
-                        <Paragraph
-                          size="2xl"
-                          className="font-semibold mb-4"
-                          color="dark"
-                        >
-                          {plan.name}
-                        </Paragraph>
-                        <Paragraph>{TAGLINE_BY_KEY[kind]}</Paragraph>
-                        <div className="mb-4 flex items-end gap-2">
-                          <Heading as="h2">
-                            {formatPrice(plan.price_cents)}
-                          </Heading>
-                          <Paragraph className="pb-2">
-                            {" "}
-                            {priceSuffix(plan)}{" "}
-                          </Paragraph>
-                        </div>
-                        {plan.trial_days && (
-                          <Paragraph
-                            size="sm"
-                            color="primary"
-                            className="font-semibold"
-                          >
-                            {plan.trial_days}-day free trial, then{" "}
-                            {formatPrice(plan.price_cents)} {priceSuffix(plan)}
-                          </Paragraph>
-                        )}
-                        <Separator />
-                        <div className="space-y-2">
-                          {FEATURES_BY_KEY[kind].map((feature) => (
+                          {plan.trial_days && (
                             <Paragraph
-                              key={feature}
-                              className="flex items-start gap-2"
+                              size="sm"
+                              color="primary"
+                              className="font-semibold"
                             >
-                              <Check className="mt-0.5 shrink-0 text-blue-500" />
-                              <span>{feature}</span>
+                              {plan.trial_days}-day free trial, then{" "}
+                              {formatPrice(plan.price_cents)} {priceSuffix(plan)}
                             </Paragraph>
-                          ))}
+                          )}
+                          <Separator />
+                          <div className="space-y-2">
+                            {FEATURES_BY_KEY[kind].map((feature) => (
+                              <Paragraph
+                                key={feature}
+                                className="flex items-start gap-2"
+                              >
+                                <Check className="mt-0.5 shrink-0 text-blue-500" />
+                                <span>{feature}</span>
+                              </Paragraph>
+                            ))}
+                          </div>
                         </div>
+                        <Button
+                          variant={isPopular ? "primary" : "outline"}
+                          className="w-full"
+                          disabled={isCheckingOut || authLoading || alreadyHasVehicle}
+                          onClick={() => handleCheckout(plan)}
+                        >
+                          {alreadyHasVehicle ? (
+                            "Included in your plan"
+                          ) : isCheckingOut ? (
+                            "Redirecting…"
+                          ) : plan.trial_days ? (
+                            <>
+                              Start {plan.trial_days}-Day Free Trial{" "}
+                              <ArrowRight />
+                            </>
+                          ) : (
+                            <>
+                              Get {plan.name} <ArrowRight />
+                            </>
+                          )}
+                        </Button>
                       </div>
-                      <Button
-                        variant={isPopular ? "primary" : "outline"}
-                        className="w-full"
-                        disabled={isCheckingOut || authLoading || alreadyHasVehicle}
-                        onClick={() => handleCheckout(plan)}
-                      >
-                        {alreadyHasVehicle ? (
-                          "Included in your plan"
-                        ) : isCheckingOut ? (
-                          "Redirecting…"
-                        ) : plan.trial_days ? (
-                          <>
-                            Start {plan.trial_days}-Day Free Trial{" "}
-                            <ArrowRight />
-                          </>
-                        ) : (
-                          <>
-                            Get {plan.name} <ArrowRight />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <Paragraph size="sm" color="muted" className="text-center">
                 Prices in USD. Pass Guarantee: full refund if you complete an
