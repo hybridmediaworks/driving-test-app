@@ -814,6 +814,8 @@ function QuizTaker({
     setShowResults(false);
     setAttempt(null);
     setCheckedByQuestionId({});
+    // A failed submit's message belongs to the attempt being thrown away, not to question 1.
+    setSubmitError(null);
     streakRef.current = 0;
     setStreak(0);
     setStartingAttempt(true);
@@ -1004,8 +1006,13 @@ function QuizTaker({
       invalidatePhaseLadder();
       invalidateResolvedQuiz();
     } catch (err) {
+      // A 429 comes back as Laravel's bare "Too Many Attempts.", so say what to do instead.
       setSubmitError(
-        err instanceof ApiError ? err.message : t("submitFailedError"),
+        err instanceof ApiError && err.status === 429
+          ? t("submitRateLimitedError")
+          : err instanceof ApiError
+            ? err.message
+            : t("submitFailedError"),
       );
     } finally {
       setSubmitting(false);
