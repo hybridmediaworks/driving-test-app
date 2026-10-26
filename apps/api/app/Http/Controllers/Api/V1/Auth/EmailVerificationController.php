@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PendingCheckout;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,12 @@ class EmailVerificationController extends Controller
             event(new Verified($user));
         }
 
-        return response()->json(['message' => __('Email verified.')]);
+        // `checkout_plan`: the plan picked on /pricing before signing up (see PendingCheckout), so
+        // the client can send them on to payment even when the link was opened in another browser.
+        return response()->json([
+            'message' => __('Email verified.'),
+            'checkout_plan' => PendingCheckout::get($user),
+        ]);
     }
 
     /**

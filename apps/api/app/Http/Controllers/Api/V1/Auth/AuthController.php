@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Actions\Auth\ClaimGuestData;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
+use App\Models\Plan;
 use App\Models\User;
 use App\Rules\NotDisposableEmail;
+use App\Support\PendingCheckout;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,8 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', new NotDisposableEmail, 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            // The plan picked on /pricing before signing up, resumed once the email is verified.
+            'checkout_plan' => ['nullable', 'string', 'max:255'],
         ], [
             'email.unique' => 'This email already exists.',
         ]);
@@ -43,6 +47,12 @@ class AuthController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
+
+        // A stale or unknown key (it comes from the browser's storage) is ignored rather than
+        // failing the sign-up over a field the form doesn't show.
+        if (! empty($data['checkout_plan']) && Plan::query()->where('key', $data['checkout_plan'])->where('is_active', true)->exists()) {
+            PendingCheckout::remember($user, $data['checkout_plan']);
+        }
 
         $user->sendEmailVerificationNotification();
 

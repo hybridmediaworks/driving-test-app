@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import { api } from "@/lib/api";
 import { useAuth, useLogout } from "@/lib/auth-context";
+import { consumePendingCheckoutPlan } from "@/lib/pendingCheckout";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -15,8 +16,13 @@ export default function VerifyEmailPage() {
   const [processing, setProcessing] = useState(false);
   const [sent, setSent] = useState(false);
 
+  // Verified from another tab (the link opens a new one): this tab notices on return. If a plan
+  // was picked on /pricing before signing up, carry on to its checkout instead of the homepage.
   useEffect(() => {
-    if (user?.email_verified_at) router.replace("/");
+    if (!user?.email_verified_at) return;
+    const pendingPlanKey = consumePendingCheckoutPlan();
+    if (pendingPlanKey) window.location.assign(`/pricing?checkout=${pendingPlanKey}`);
+    else router.replace("/");
   }, [user, router]);
 
   useEffect(() => {

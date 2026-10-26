@@ -11,6 +11,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Entitlement\EntitlementResolver;
+use App\Support\PendingCheckout;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -48,6 +49,9 @@ class BillingController extends Controller
         }
 
         $url = ($this->createCheckoutSession)($request->user(), $plan);
+
+        // The sign-up detour (if any) is over once checkout opens; don't resume it a second time.
+        PendingCheckout::forget($request->user());
 
         return response()->json(['checkout_url' => $url]);
     }

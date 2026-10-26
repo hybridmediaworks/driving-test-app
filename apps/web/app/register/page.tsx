@@ -15,6 +15,7 @@ import {
 } from "@/components/auth/AuthFormParts";
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout";
 import { ApiError, useAuth, useRedirectIfAuthenticated } from "@/lib/auth-context";
+import { peekPendingCheckoutPlan } from "@/lib/pendingCheckout";
 import { safeRedirect } from "@/lib/redirect";
 
 function RegisterPageInner() {
@@ -39,7 +40,7 @@ function RegisterPageInner() {
     setErrors({});
 
     try {
-      await register(name, email, password, passwordConfirmation);
+      await register(name, email, password, passwordConfirmation, peekPendingCheckoutPlan());
       router.push("/verify-email");
     } catch (err) {
       if (err instanceof ApiError && err.errors) {

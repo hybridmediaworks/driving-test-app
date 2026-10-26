@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, getToken } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { consumePendingCheckoutPlan } from "@/lib/pendingCheckout";
 
@@ -21,17 +21,22 @@ export default function VerifyEmailLinkPage({ params }: { params: Promise<{ id: 
     const query = searchParams.toString();
 
     api
-      .get<{ message: string }>(`/email/verify/${id}/${hash}?${query}`)
-      .then(async () => {
+      .get<{ message: string; checkout_plan?: string | null }>(`/email/verify/${id}/${hash}?${query}`)
+      .then(async (res) => {
         await refreshUser();
 
         // A guest who was mid-checkout before this email detour left their chosen plan here
         // (see app/pricing's handleCheckout) — now verified, so checkout is allowed; send them
-        // straight back to it instead of a generic "now log in" dead end.
-        const pendingPlanKey = consumePendingCheckoutPlan();
+        // straight back to it instead of a generic "now log in" dead end. The server's copy covers
+        // a link opened in another browser, where this one's localStorage is empty; there /pricing
+        // asks them to log in first and then carries on to checkout.
+        const pendingPlanKey = consumePendingCheckoutPlan() ?? res.checkout_plan ?? null;
         if (pendingPlanKey) {
           setStatus("resuming-checkout");
-          window.location.assign(`/pricing?checkout=${pendingPlanKey}`);
+          const checkoutUrl = `/pricing?checkout=${pendingPlanKey}`;
+          // Not signed in in this browser: checkout needs an account, so log in first and land
+          // straight back in it (the same redirect /pricing itself uses for a guest).
+          window.location.assign(getToken() ? checkoutUrl : `/login?redirect=${encodeURIComponent(checkoutUrl)}`);
           return;
         }
 
