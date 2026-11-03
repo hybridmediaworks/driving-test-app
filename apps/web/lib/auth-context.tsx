@@ -13,7 +13,13 @@ type AuthContextValue = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, passwordConfirmation: string) => Promise<void>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+    checkoutPlan?: string | null,
+  ) => Promise<void>;
   loginWithSocialCode: (code: string) => Promise<User>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
@@ -69,12 +75,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     invalidateResolvedQuiz();
   }
 
-  async function register(name: string, email: string, password: string, passwordConfirmation: string) {
+  async function register(
+    name: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+    checkoutPlan?: string | null,
+  ) {
     const res = await api.post<{ user: User; token: string }>("/register", {
       name,
       email,
       password,
       password_confirmation: passwordConfirmation,
+      // The plan picked on /pricing (if any): the server keeps it so the verification link can
+      // resume checkout even when it's opened in a different browser.
+      checkout_plan: checkoutPlan ?? null,
     });
     setToken(res.token);
     setUser(res.user);

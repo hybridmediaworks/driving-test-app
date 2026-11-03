@@ -17,6 +17,15 @@ export function setPendingCheckoutPlan(planKey: string): void {
   }
 }
 
+/** Reads without clearing, for sign-up to pass the plan on to the server (see /register). */
+export function peekPendingCheckoutPlan(): string | null {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 /** Reads and clears in one step — a pending checkout is meant to be resumed exactly once. */
 export function consumePendingCheckoutPlan(): string | null {
   try {
