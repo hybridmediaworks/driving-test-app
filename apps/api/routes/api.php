@@ -65,12 +65,15 @@ Route::prefix('v1')->group(function (): void {
         ->middleware('signed')
         ->name('verification.verify');
 
+    // Every `throttle:max,minutes,name` below names its own bucket. Without the name all of them
+    // share one counter per caller, so e.g. answering a 65-question test (one `check` each) used up
+    // the 60/min allowance of the final submit and the test could not be finished.
     Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
-        ->middleware('throttle:30,1');
+        ->middleware('throttle:30,1,social-redirect');
     Route::get('auth/{provider}/callback', [SocialAuthController::class, 'callback'])
-        ->middleware('throttle:30,1');
+        ->middleware('throttle:30,1,social-callback');
     Route::post('auth/social/exchange', [SocialAuthController::class, 'exchange'])
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:10,1,social-exchange');
 
     // Public quiz-taking — guests may browse, take, and submit tests.
     Route::get('quizzes', [PublicQuizController::class, 'index']);
@@ -82,27 +85,27 @@ Route::prefix('v1')->group(function (): void {
     // locked premium quiz reveals nothing.
     Route::get('quizzes/{quiz}/sample-questions', [PublicQuizController::class, 'sampleQuestions']);
     Route::post('quizzes/{quiz}/attempts', [PublicQuizController::class, 'storeAttempt'])
-        ->middleware('throttle:60,1');
+        ->middleware('throttle:60,1,quiz-submit');
     // Start (or resume) an in-progress attempt — called when the quiz player opens, before any
     // answer is submitted.
     Route::post('quizzes/{quiz}/attempts/start', [PublicQuizController::class, 'startAttempt'])
-        ->middleware('throttle:60,1');
+        ->middleware('throttle:60,1,quiz-start');
     // This caller's latest completed attempt — powers "View results". Deliberately not the
     // account-only `/attempts` below: that one has no way to resolve a guest's own results.
     Route::get('quizzes/{quiz}/attempts/latest', [PublicQuizController::class, 'latestAttempt']);
     // Instant per-question feedback (practice mode) — reveals correctness + explanation for the
     // one answer just submitted. Higher ceiling since it fires once per answered question.
     Route::post('quizzes/{quiz}/questions/{question}/check', [PublicQuizController::class, 'checkAnswer'])
-        ->middleware('throttle:120,1');
+        ->middleware('throttle:120,1,quiz-check');
     // AI tutor hint / follow-up question — tighter limit since each call hits an LLM.
     Route::post('quizzes/{quiz}/questions/{question}/assist', [PublicQuizController::class, 'assist'])
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:10,1,quiz-assist');
     // Report a mistake/typo in a question.
     Route::post('quizzes/{quiz}/questions/{question}/report', [PublicQuizController::class, 'report'])
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:10,1,quiz-report');
     // Results-screen weak areas + dynamic coach message (LLM-backed).
     Route::post('quizzes/{quiz}/results-insight', [PublicQuizController::class, 'resultsInsight'])
-        ->middleware('throttle:20,1');
+        ->middleware('throttle:20,1,quiz-insight');
 
     // Self-hosted question asset (Lottie JSON) — served through the API rather than raw /storage so
     // the player's cross-origin fetch gets CORS headers. See QuizQuestionAssetController::content.
@@ -131,12 +134,12 @@ Route::prefix('v1')->group(function (): void {
     Route::get('hazard-simulators', [PublicHazardSimulatorController::class, 'index']);
     Route::get('hazard-simulators/{hazardSimulator:slug}', [PublicHazardSimulatorController::class, 'show']);
     Route::post('hazard-simulators/{hazardSimulator:slug}/attempts/start', [PublicHazardSimulatorController::class, 'startAttempt'])
-        ->middleware('throttle:60,1');
+        ->middleware('throttle:60,1,hazard-start');
     // Live hit/miss feedback — fires once per click during the scored phase, so a higher ceiling.
     Route::post('hazard-simulators/{hazardSimulator:slug}/attempts/{attempt}/mark', [PublicHazardSimulatorController::class, 'mark'])
-        ->middleware('throttle:300,1');
+        ->middleware('throttle:300,1,hazard-mark');
     Route::post('hazard-simulators/{hazardSimulator:slug}/attempts/{attempt}', [PublicHazardSimulatorController::class, 'storeAttempt'])
-        ->middleware('throttle:60,1');
+        ->middleware('throttle:60,1,hazard-submit');
 
     // Public handbook browsing — not premium-gated (see HandbookResource), full chapters/sections
     // always included.
@@ -160,9 +163,9 @@ Route::prefix('v1')->group(function (): void {
     // Public so signed-out guests get one too: it's scoped by the same `X-Guest-Token` attempts use
     // (and claimed into their account on login/register), while a Bearer token scopes it to the
     // account instead. Identity is resolved inside ChallengeBankController.
-    Route::get('challenge-bank', [ChallengeBankController::class, 'index'])->middleware('throttle:120,1');
-    Route::post('challenge-bank', [ChallengeBankController::class, 'store'])->middleware('throttle:60,1');
-    Route::delete('challenge-bank/{question}', [ChallengeBankController::class, 'destroy'])->middleware('throttle:120,1');
+    Route::get('challenge-bank', [ChallengeBankController::class, 'index'])->middleware('throttle:120,1,challenge-bank-index');
+    Route::post('challenge-bank', [ChallengeBankController::class, 'store'])->middleware('throttle:60,1,challenge-bank-store');
+    Route::delete('challenge-bank/{question}', [ChallengeBankController::class, 'destroy'])->middleware('throttle:120,1,challenge-bank-destroy');
 
     // "Verified by" reviewer roster shown on state/quiz trust badges, each with a public
     // /experts/{slug} profile page. Admin-managed.
@@ -172,12 +175,12 @@ Route::prefix('v1')->group(function (): void {
     // Public marketing signup — captures an email for the daily-question newsletter from the home
     // page hero. Throttled since it's unauthenticated and writes.
     Route::post('newsletter/subscribe', [EmailSubscriberController::class, 'store'])
-        ->middleware('throttle:10,1');
+        ->middleware('throttle:10,1,newsletter-subscribe');
 
     // One-click unsubscribe from a daily-question email. Custom-key route-model binding means an
     // invalid/unknown token 404s automatically rather than needing a manual lookup.
     Route::post('newsletter/unsubscribe/{emailSubscriber:unsubscribe_token}', [EmailSubscriberController::class, 'unsubscribe'])
-        ->middleware('throttle:20,1');
+        ->middleware('throttle:20,1,newsletter-unsubscribe');
 
     // No auth:sanctum — Cashier's own VerifyWebhookSignature middleware (applied in the base
     // controller's constructor) is the real guard here, driven by STRIPE_WEBHOOK_SECRET.
@@ -204,12 +207,12 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/me/progress', [ProgressController::class, 'index']);
             Route::put('/me/exam-date', [ProgressController::class, 'updateExamDate']);
             Route::post('/me/exam-feedback', [ExamFeedbackController::class, 'store'])
-                ->middleware('throttle:10,1');
+                ->middleware('throttle:10,1,exam-feedback');
 
             Route::post('flashcards/{flashcard}/review', [FlashcardReviewController::class, 'store'])
-                ->middleware('throttle:60,1');
+                ->middleware('throttle:60,1,flashcard-review');
 
-            Route::post('billing/checkout', [BillingController::class, 'checkout'])->middleware('throttle:10,1');
+            Route::post('billing/checkout', [BillingController::class, 'checkout'])->middleware('throttle:10,1,billing-checkout');
             Route::get('billing/subscription', [BillingController::class, 'subscription']);
             Route::post('billing/subscription/cancel', [BillingController::class, 'cancelSubscription']);
             Route::get('billing/invoices', [BillingController::class, 'invoices']);

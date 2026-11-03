@@ -57,6 +57,7 @@ const en = {
   translationNotReadyToast: "Translation isn't ready for this quiz yet — showing English for now.",
   translationFailedToast: "Couldn't translate this quiz right now — showing English.",
   submitFailedError: "Failed to submit your answers. Please try again.",
+  submitRateLimitedError: "Too many requests in a short time. Wait a few seconds, then press See Results again.",
 
   correctAnswerBadge: "Correct answer",
   yourAnswerBadge: "Your answer",
@@ -186,6 +187,7 @@ const es: Record<keyof typeof en, string> = {
   translationNotReadyToast: "La traducción de este examen aún no está lista — mostrando inglés por ahora.",
   translationFailedToast: "No se pudo traducir este examen ahora — mostrando inglés.",
   submitFailedError: "No se pudieron enviar tus respuestas. Inténtalo de nuevo.",
+  submitRateLimitedError: "Demasiadas solicitudes en poco tiempo. Espera unos segundos y vuelve a pulsar Ver resultados.",
 
   correctAnswerBadge: "Respuesta correcta",
   yourAnswerBadge: "Tu respuesta",
@@ -315,6 +317,7 @@ const ru: Record<keyof typeof en, string> = {
   translationNotReadyToast: "Перевод этого теста ещё не готов — пока показан английский.",
   translationFailedToast: "Не удалось перевести этот тест сейчас — показан английский.",
   submitFailedError: "Не удалось отправить ваши ответы. Попробуйте ещё раз.",
+  submitRateLimitedError: "Слишком много запросов за короткое время. Подождите несколько секунд и снова нажмите «Показать результаты».",
 
   correctAnswerBadge: "Правильный ответ",
   yourAnswerBadge: "Ваш ответ",
